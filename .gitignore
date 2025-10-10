@@ -1,0 +1,16 @@
+# Build folders
+bin/
+obj/
+.vs/
+*.user
+
+# NuGet packages
+packages/
+
+# Temporary files
+*.log
+*.tmp
+
+# OS-specific
+Thumbs.db
+desktop.ini
