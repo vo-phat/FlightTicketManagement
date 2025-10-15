@@ -101,6 +101,7 @@ namespace FlightTicketManagement.GUI.Features.Auth {
                 BackColor = Color.Transparent,
                 Anchor = AnchorStyles.Top | AnchorStyles.Right
             };
+
             row.Controls.Add(link);
 
             // Căn phải link trong row

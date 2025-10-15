@@ -18,18 +18,18 @@ namespace FlightTicketManagement.GUI.Features.Auth {
             content.Controls.Add(tfUser);
 
             // Password
-            var tfPass = new UnderlinedTextField(labelText: "Mật khẩu", placeholder: "") {
+            var tfPassword = new UnderlinedTextField(labelText: "Mật khẩu", placeholder: "") {
                 Width = 360,
                 Location = new Point(tfUser.Left, tfUser.Bottom + 18)
             };
-            tfPass.UseSystemPasswordChar = true;
-            tfPass.PasswordChar = '•';
+            tfPassword.UseSystemPasswordChar = true;
+            tfPassword.PasswordChar = '•';
 
-            content.Controls.Add(tfPass);
+            content.Controls.Add(tfPassword);
 
             // Link căn phải: “Đăng nhập”
             var rowLinks = CreateRightAlignedLinkRow(
-                tfPass,
+                tfPassword,
                 "Quay lại Đăng nhập",
                 (_, __) => Navigate(new LoginForm())
             );
@@ -39,10 +39,11 @@ namespace FlightTicketManagement.GUI.Features.Auth {
             var btnRegister = new PrimaryButton("Đăng ký", Properties.Resources.login) {
                 Width = 210,
                 Height = 42,
-                Location = new Point(tfPass.Left, rowLinks.Bottom + 18)
+                Location = new Point(tfPassword.Left, rowLinks.Bottom + 18)
             };
             CenterX(btnRegister);
             content.Controls.Add(btnRegister);
+            this.AcceptButton = btnRegister;
         }
     }
 }

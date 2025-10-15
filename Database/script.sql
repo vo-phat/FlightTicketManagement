@@ -56,12 +56,12 @@ CREATE TABLE Aircrafts (
 -- 7. Tuyến bay
 CREATE TABLE Routes (
     route_id INT AUTO_INCREMENT PRIMARY KEY,
-    from_airport_id INT,
-    to_airport_id INT,
+    departure_place_id INT,
+    arrival_place_id INT,
     distance_km INT,
     duration_minutes INT,
-    FOREIGN KEY (from_airport_id) REFERENCES Airports(airport_id),
-    FOREIGN KEY (to_airport_id) REFERENCES Airports(airport_id)
+    FOREIGN KEY (departure_place_id) REFERENCES Airports(airport_id),
+    FOREIGN KEY (arrival_place_id) REFERENCES Airports(airport_id)
 );
 
 -- 8. Chuyến bay

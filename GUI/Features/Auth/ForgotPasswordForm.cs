@@ -24,13 +24,15 @@ namespace FlightTicketManagement.GUI.Features.Auth {
             );
             content.Controls.Add(rowLink);
 
-            var btnSend = new PrimaryButton("Gửi mã xác thực", Properties.Resources.login) {
+            var btnSendCode = new PrimaryButton("Gửi mã xác thực", Properties.Resources.login) {
                 Width = 240,
                 Height = 42,
                 Location = new Point(tfEmail.Left, rowLink.Bottom + 6)
             };
-            CenterX(btnSend);
-            content.Controls.Add(btnSend);
+            CenterX(btnSendCode);
+            content.Controls.Add(btnSendCode);
+
+            this.AcceptButton = btnSendCode;
         }
     }
 }
