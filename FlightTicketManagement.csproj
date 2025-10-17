@@ -9,16 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="BUS\" />
-    <Folder Include="BUS\Account\" />
-    <Folder Include="DAO\" />
-    <Folder Include="DAO\Account\" />
-    <Folder Include="DTO\" />
-    <Folder Include="DTO\Account\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="GUI\Features\Settings\Settings.cs">
+    <Compile Update="GUI\Features\Setting\Settings.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Update="GUI\Features\Account\AccountControl.cs">
@@ -27,7 +18,7 @@
     <Compile Update="GUI\Features\Stats\StatsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Update="GUI\Features\Location\LocationControl.cs">
+    <Compile Update="GUI\Features\Airport\AirportControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Update="GUI\Features\Ticket\TicketControl.cs">

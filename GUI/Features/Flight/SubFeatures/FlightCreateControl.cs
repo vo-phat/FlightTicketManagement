@@ -73,7 +73,7 @@ namespace FlightTicketManagement.GUI.Features.Flight.SubFeatures {
 
 
             // ===== Nút tạo mới =====
-            var btnCreate = new PrimaryButton("✈️ Tạo chuyến bay") {
+            var btnCreate = new PrimaryButton("➕ Tạo chuyến bay") {
                 Height = 40,
                 Width = 180,
                 Margin = new Padding(0, 12, 0, 12),

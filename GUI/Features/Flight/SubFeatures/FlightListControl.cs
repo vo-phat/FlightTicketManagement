@@ -20,7 +20,8 @@ namespace FlightTicketManagement.GUI.Features.Flight.SubFeatures {
         private FlowLayoutPanel filterPanel;
         private FlowLayoutPanel btnPanel;
         private Label lblTitle;
-        private DateTimePickerCustom dtpFlightDate;
+        private DateTimePickerCustom dtpDepartureDate;
+        private DateTimePickerCustom dtpArrivalDate;
         private UnderlinedTextField txtDeparturePlace;
         private UnderlinedTextField txtArrivalPlace;
 
@@ -54,10 +55,16 @@ namespace FlightTicketManagement.GUI.Features.Flight.SubFeatures {
                 WrapContents = false
             };
 
-            dtpFlightDate = new DateTimePickerCustom("Ngày bay", "") {
+            dtpDepartureDate = new DateTimePickerCustom("Ngày đi", "") {
                 Width = 200,
                 Margin = new Padding(0, 0, 24, 0)
             };
+
+            dtpArrivalDate = new DateTimePickerCustom("Ngày về", "") {
+                Width = 200,
+                Margin = new Padding(0, 0, 24, 0)
+            };
+
             txtDeparturePlace = new UnderlinedTextField("Nơi cất cánh", "") {
                 Width = 200,
                 Margin = new Padding(0, 0, 24, 0)
@@ -66,7 +73,7 @@ namespace FlightTicketManagement.GUI.Features.Flight.SubFeatures {
                 Width = 200,
                 Margin = new Padding(0, 0, 24, 0)
             };
-            filterPanel.Controls.AddRange(new Control[] { dtpFlightDate, txtDeparturePlace, txtArrivalPlace });
+            filterPanel.Controls.AddRange(new Control[] { dtpDepartureDate, dtpArrivalDate, txtDeparturePlace, txtArrivalPlace });
 
             btnPanel = new FlowLayoutPanel {
                 Dock = DockStyle.Fill,
@@ -74,7 +81,7 @@ namespace FlightTicketManagement.GUI.Features.Flight.SubFeatures {
                 FlowDirection = FlowDirection.RightToLeft,
                 WrapContents = false
             };
-            var btnSearchFlight = new PrimaryButton("Tìm chuyến bay") {
+            var btnSearchFlight = new PrimaryButton("🔍 Tìm chuyến bay") {
                 Width = 160,
                 Height = 36,
                 Margin = new Padding(0, 0, 0, 0)
