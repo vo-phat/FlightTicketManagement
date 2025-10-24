@@ -1,8 +1,8 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Buttons;
+using GUI.Components.Buttons;
 
-namespace FlightTicketManagement.GUI.Features.CabinClass {
+namespace GUI.Features.CabinClass {
     public class CabinClassControl : UserControl {
         private Button btnList, btnCreate;
         private SubFeatures.CabinClassListControl list;

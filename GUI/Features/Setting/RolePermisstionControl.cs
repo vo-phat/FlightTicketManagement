@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Buttons;
-using FlightTicketManagement.GUI.Features.Settings.SubFeatures;
+using GUI.Components.Buttons;
+using GUI.Features.Setting.SubFeatures;
 
-namespace FlightTicketManagement.GUI.Features.Settings {
+namespace GUI.Features.Setting {
     public class RolePermissionControl : UserControl {
         private Button btnByRoleTab, btnByAccountTab;
         private Panel contentPanel;

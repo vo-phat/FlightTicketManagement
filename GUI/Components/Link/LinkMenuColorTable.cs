@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 
-namespace FlightTicketManagement.GUI.Components.Link {
+namespace GUI.Components.Link {
     public class LinkMenuColorTable : ProfessionalColorTable {
         // Nền dropdown trắng
         public override Color ToolStripDropDownBackground => Color.White;

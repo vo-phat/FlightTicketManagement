@@ -1,8 +1,8 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Buttons;
+using GUI.Components.Buttons;
 
-namespace FlightTicketManagement.GUI.Features.Airline {
+namespace GUI.Features.Airline {
     public class AirlineControl : UserControl {
         private Button btnList, btnCreate;
         private SubFeatures.AirlineListControl list;

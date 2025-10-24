@@ -1,4 +1,4 @@
-namespace FlightTicketManagement.GUI.Features.Stats {
+namespace GUI.Features.Stats {
     public class StatsControl : UserControl {
         public StatsControl() {
             InitializeControl();

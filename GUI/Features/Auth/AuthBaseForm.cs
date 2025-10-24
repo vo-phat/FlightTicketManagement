@@ -1,9 +1,10 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Inputs;   // UnderlinedTextField
-using FlightTicketManagement.GUI.Components.Buttons; // PrimaryButton
+using GUI.Properties;
+using GUI.Components.Buttons;
+using GUI.Components.Inputs;
 
-namespace FlightTicketManagement.GUI.Features.Auth {
+namespace GUI.Features.Auth {
     public class AuthBaseForm : Form {
         protected Panel content;       // nơi đặt controls chính
         protected Label? title;
@@ -12,7 +13,7 @@ namespace FlightTicketManagement.GUI.Features.Auth {
             // --- Khung form & nền ---
             DoubleBuffered = true;
             StartPosition = FormStartPosition.CenterScreen;
-            BackgroundImage = Properties.Resources.login;    // ảnh nền máy bay
+            BackgroundImage = Resources.login;    // ảnh nền máy bay
             BackgroundImageLayout = ImageLayout.Stretch;
             FormBorderStyle = FormBorderStyle.Sizable;
             MinimumSize = new Size(860, 720);

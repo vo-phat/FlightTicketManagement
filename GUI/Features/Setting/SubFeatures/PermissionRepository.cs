@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FlightTicketManagement.GUI.Features.Settings.SubFeatures {
+namespace GUI.Features.Setting.SubFeatures {
     internal static class PermissionRepository {
         // ===== Permissions =====
         public static List<PermissionItem> GetAllPermissions() => new() {

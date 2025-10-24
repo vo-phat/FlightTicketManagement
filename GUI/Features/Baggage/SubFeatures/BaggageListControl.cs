@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Tables;
-using FlightTicketManagement.GUI.Components.Buttons;
-using FlightTicketManagement.GUI.Components.Inputs;
+using GUI.Components.Buttons;
+using GUI.Components.Inputs;
+using GUI.Components.Tables;
 
-namespace FlightTicketManagement.GUI.Features.Baggage.SubFeatures {
+namespace GUI.Features.Baggage.SubFeatures {
     public class BaggageListControl : UserControl {
         public class BaggageRow {
             public int BaggageId { get; set; }

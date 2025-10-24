@@ -1,7 +1,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace FlightTicketManagement.GUI.Features.Flight {
+namespace GUI.Features.Flight.SubFeatures {
     public class FlightDetailControl : UserControl {
         private TableLayoutPanel main;        // root giống FlightListControl
         private Label lblTitle;

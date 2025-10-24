@@ -1,4 +1,4 @@
-namespace FlightTicketManagement.GUI.Features.Account {
+namespace GUI.Features.Account {
     public class AccountControl : UserControl {
         public AccountControl() {
             InitializeControl();

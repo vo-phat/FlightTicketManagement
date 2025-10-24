@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Drawing.Drawing2D;
 
-namespace FlightTicketManagement.GUI.Components.Tables {
+namespace GUI.Components.Tables {
     [DesignerCategory("Code")]
     [ToolboxItem(true)]
     public class TableCustom : DataGridView {

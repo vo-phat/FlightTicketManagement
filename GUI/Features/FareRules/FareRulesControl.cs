@@ -1,8 +1,8 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Buttons;
+using GUI.Components.Buttons;
 
-namespace FlightTicketManagement.GUI.Features.FareRules {
+namespace GUI.Features.FareRules {
     public class FareRulesControl : UserControl {
         private Button btnList, btnCreate;
         private SubFeatures.FareRuleListControl list;

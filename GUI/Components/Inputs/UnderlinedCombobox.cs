@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace FlightTicketManagement.GUI.Components.Inputs {
+namespace GUI.Components.Inputs {
     // ComboBox có label + underline, nền đồng bộ với parent, dùng mũi tên native
     public class UnderlinedComboBox : UserControl {
         private readonly Label _lblCaption;

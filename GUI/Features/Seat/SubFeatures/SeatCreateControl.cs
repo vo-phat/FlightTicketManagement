@@ -2,10 +2,10 @@ using System;
 using System.Drawing;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Inputs;
-using FlightTicketManagement.GUI.Components.Buttons;
+using GUI.Components.Buttons;
+using GUI.Components.Inputs;
 
-namespace FlightTicketManagement.GUI.Features.Seat.SubFeatures {
+namespace GUI.Features.Seat.SubFeatures {
     public class SeatCreateControl : UserControl {
         private TableLayoutPanel root, form;
         private Label lblTitle;

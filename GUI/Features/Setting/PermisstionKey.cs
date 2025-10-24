@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FlightTicketManagement.GUI.Features.Setting {
+namespace GUI.Features.Setting {
     public static class Perm {
         public const string Home_View = "home.view";
         public const string Flights_Read = "flights.read";

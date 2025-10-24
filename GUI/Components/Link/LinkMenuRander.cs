@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 
-namespace FlightTicketManagement.GUI.Components.Link {
+namespace GUI.Components.Link {
     public class LinkMenuRenderer : ToolStripProfessionalRenderer {
         private readonly Color _link = Color.FromArgb(0, 92, 175);
         private readonly Color _hoverBg = Color.FromArgb(245, 247, 250);

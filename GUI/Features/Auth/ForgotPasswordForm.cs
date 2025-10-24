@@ -1,7 +1,9 @@
-﻿using FlightTicketManagement.GUI.Components.Buttons;
-using FlightTicketManagement.GUI.Components.Inputs;
+﻿using GUI.Components.Buttons;
+using GUI.Components.Inputs;
+using GUI.Properties;
+using GUI.Features.Auth;
 
-namespace FlightTicketManagement.GUI.Features.Auth {
+namespace GUI.Features.Auth {
     public class ForgotPasswordForm : AuthBaseForm {
         public ForgotPasswordForm() : base("Quên mật khẩu") {
             BuildUI();
@@ -24,7 +26,7 @@ namespace FlightTicketManagement.GUI.Features.Auth {
             );
             content.Controls.Add(rowLink);
 
-            var btnSendCode = new PrimaryButton("Gửi mã xác thực", Properties.Resources.login) {
+            var btnSendCode = new PrimaryButton("Gửi mã xác thực", Resources.login) {
                 Width = 240,
                 Height = 42,
                 Location = new Point(tfEmail.Left, rowLink.Bottom + 6)

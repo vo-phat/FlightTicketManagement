@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Inputs;
-using FlightTicketManagement.GUI.Components.Buttons;
-using FlightTicketManagement.GUI.Components.Tables;
+using GUI.Components.Buttons;
+using GUI.Components.Inputs;
+using GUI.Components.Tables;
 
-namespace FlightTicketManagement.GUI.Features.Route.SubFeatures {
+namespace GUI.Features.Route.SubFeatures {
     public class RouteListControl : UserControl {
         private TableCustom table;
 

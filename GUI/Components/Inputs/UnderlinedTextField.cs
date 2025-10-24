@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Drawing.Drawing2D;
 
-namespace FlightTicketManagement.GUI.Components.Inputs {
+namespace GUI.Components.Inputs {
     [DesignerCategory("Code")]
     [ToolboxItem(true)]
     public class UnderlinedTextField : UserControl {

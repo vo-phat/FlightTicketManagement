@@ -1,6 +1,7 @@
-﻿using FlightTicketManagement.GUI.Components.Buttons;
-using FlightTicketManagement.GUI.Components.Inputs;
-using FlightTicketManagement.GUI.Components.Tables;
+﻿using GUI.Features.FareRules.SubFeatures;
+using GUI.Components.Buttons;
+using GUI.Components.Inputs;
+using GUI.Components.Tables;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -9,7 +10,7 @@ using System.Linq;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
 
-namespace FlightTicketManagement.GUI.Features.FareRules.SubFeatures {
+namespace GUI.Features.FareRules.SubFeatures {
     public class FareRuleListControl : UserControl {
         // ====== UI ======
         private TableLayoutPanel root;

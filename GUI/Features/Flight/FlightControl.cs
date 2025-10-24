@@ -1,7 +1,7 @@
-using FlightTicketManagement.GUI.Features.Flight.SubFeatures;
-using FlightTicketManagement.GUI.Components.Buttons;
+using GUI.Components.Buttons;
+using GUI.Features.Flight.SubFeatures;
 
-namespace FlightTicketManagement.GUI.Features.Flight {
+namespace GUI.Features.Flight {
     public class FlightControl : UserControl {
         private Button btnList;
         private Button btnCreate;

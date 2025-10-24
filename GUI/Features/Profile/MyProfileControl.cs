@@ -1,10 +1,11 @@
-﻿using FlightTicketManagement.GUI.Components.Buttons;
-using FlightTicketManagement.GUI.Features.Auth;
+﻿using GUI.Components.Buttons;
+using GUI.Features.Auth;
+using GUI.Features.Profile.SubFeatures;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace FlightTicketManagement.GUI.Features.Profile {
+namespace GUI.Features.Profile {
     public class MyProfileControl : UserControl {
         private Button btnInfo;
         private Button btnChangePassword;

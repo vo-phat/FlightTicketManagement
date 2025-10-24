@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Buttons;
-using FlightTicketManagement.GUI.Features.Baggage.SubFeatures;
+using GUI.Components.Buttons;
+using GUI.Features.Baggage.SubFeatures;
 
-namespace FlightTicketManagement.GUI.Features.Baggage {
+namespace GUI.Features.Baggage {
     public class BaggageControl : UserControl {
         private Button btnList;
         private Button btnCheckin;

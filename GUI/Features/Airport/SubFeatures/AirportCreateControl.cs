@@ -1,10 +1,10 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Inputs;
-using FlightTicketManagement.GUI.Components.Buttons;
-using FlightTicketManagement.GUI.Components.Tables;
+using GUI.Components.Buttons;
+using GUI.Components.Tables;
+using GUI.Components.Inputs;
 
-namespace FlightTicketManagement.GUI.Features.Airport.SubFeatures {
+namespace GUI.Features.Airport.SubFeatures {
     public class AirportCreateControl : UserControl {
         private UnderlinedTextField _txtCode, _txtName, _txtCity;
         private UnderlinedComboBox _cbCountry, _cbTimezone;

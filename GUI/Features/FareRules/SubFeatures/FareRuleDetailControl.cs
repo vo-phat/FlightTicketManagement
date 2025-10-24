@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace FlightTicketManagement.GUI.Features.FareRules.SubFeatures {
+namespace GUI.Features.FareRules.SubFeatures {
     public class FareRuleDetailControl : UserControl {
         private Label vRuleId, vRoute, vCabin, vFareType, vSeason, vEffective, vExpiry, vPrice, vDesc;
 

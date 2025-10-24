@@ -1,8 +1,10 @@
-﻿using FlightTicketManagement.GUI.Components.Buttons;
-using FlightTicketManagement.GUI.Components.Inputs;
-using FlightTicketManagement.GUI.Features.MainApp;
+﻿using GUI.Components.Buttons;
+using GUI.Components.Inputs;
+using GUI.Features.Auth;
+using GUI.MainApp;
+using GUI.Properties;
 
-namespace FlightTicketManagement.GUI.Features.Auth {
+namespace GUI.Features.Auth {
     public class LoginForm : AuthBaseForm {
         public LoginForm() : base("Đăng nhập") {
             BuildUI();
@@ -37,7 +39,7 @@ namespace FlightTicketManagement.GUI.Features.Auth {
             content.Controls.Add(rowLinks);
 
             // Button
-            var btnLogin = new PrimaryButton("Đăng nhập", Properties.Resources.login) {
+            var btnLogin = new PrimaryButton("Đăng nhập", Resources.login) {
                 Width = 210,
                 Height = 42,
                 Location = new Point(tfPassword.Left, rowLinks.Bottom + 14)

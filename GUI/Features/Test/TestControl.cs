@@ -1,8 +1,9 @@
-﻿using FlightTicketManagement.GUI.Components.Buttons;
-using FlightTicketManagement.GUI.Components.Tables;
-using FlightTicketManagement.GUI.Components.Inputs;
+﻿using GUI.Components.Buttons;
+using GUI.Components.Tables;
+using GUI.Components.Inputs;
+using GUI.Properties;
 
-namespace FlightTicketManagement.GUI.Features.Test {
+namespace GUI.Features.Test {
     public class TestControl : Form {
         public TestControl() {
 
@@ -13,12 +14,12 @@ namespace FlightTicketManagement.GUI.Features.Test {
             BackColor = Color.WhiteSmoke;
 
             // primary button
-            var primaryButton = new PrimaryButton("Primary Button", Properties.Resources.login);
+            var primaryButton = new PrimaryButton("Primary Button", Resources.login);
             primaryButton.Location = new Point(200, 150);
             primaryButton.Click += (s, e) => MessageBox.Show("Bạn đã nhấn nút Primary Button!", "Thông báo");
 
             // secondary button
-            var secondaryButton = new SecondaryButton("Secondary Button", Properties.Resources.login);
+            var secondaryButton = new SecondaryButton("Secondary Button", Resources.login);
             secondaryButton.Location = new Point(400, 300);
             secondaryButton.Click += (s, e) => MessageBox.Show("Bạn đã nhấn nút Secondary Button!", "Thông báo");
 

@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 
-namespace FlightTicketManagement.GUI.Features.CabinClass.SubFeatures {
+namespace GUI.Features.CabinClass.SubFeatures {
     public class CabinClassDetailControl : UserControl {
         private Label vCode, vName, vTier, vPriority, vBaggage, vPitch, vDesc;
 

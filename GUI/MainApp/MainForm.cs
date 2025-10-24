@@ -1,21 +1,23 @@
-using FlightTicketManagement.GUI.Components.Link;
-using FlightTicketManagement.GUI.Features.Account;
-using FlightTicketManagement.GUI.Features.Aircraft;
-using FlightTicketManagement.GUI.Features.Airline;
-using FlightTicketManagement.GUI.Features.Airport;
-using FlightTicketManagement.GUI.Features.Auth;
-using FlightTicketManagement.GUI.Features.CabinClass;
-using FlightTicketManagement.GUI.Features.FareRules;
-using FlightTicketManagement.GUI.Features.Flight;
-using FlightTicketManagement.GUI.Features.Profile;
-using FlightTicketManagement.GUI.Features.Route;
-using FlightTicketManagement.GUI.Features.Seat;
-using FlightTicketManagement.GUI.Features.Stats;
-using FlightTicketManagement.GUI.Features.Ticket;
-using FlightTicketManagement.GUI.Features.Payments;
-using FlightTicketManagement.GUI.Features.Settings;
+using GUI.Components.Link;
+using GUI.Features.Account;
+using GUI.Features.Aircraft;
+using GUI.Features.Airline;
+using GUI.Features.Airport;
+using GUI.Features.Auth;
+using GUI.Features.Baggage;
+using GUI.Features.CabinClass;
+using GUI.Features.FareRules;
+using GUI.Features.Flight;
+using GUI.Features.Profile;
+using GUI.Features.Route;
+using GUI.Features.Seat;
+using GUI.Features.Stats;
+using GUI.Features.Ticket;
+using GUI.Features.Payments;
+using GUI.Features.Setting;
+using GUI.Properties;
 
-namespace FlightTicketManagement.GUI.Features.MainApp {
+namespace GUI.MainApp {
     public enum AppRole { 
         User, Staff, Admin 
     }
@@ -74,7 +76,7 @@ namespace FlightTicketManagement.GUI.Features.MainApp {
 
             // Logo (click -> về Trang chủ)
             var logo = new PictureBox {
-                Image = Properties.Resources.logo,
+                Image = Resources.logo,
                 SizeMode = PictureBoxSizeMode.Zoom,
                 Size = new Size(120, 44),
                 Dock = DockStyle.Left,
@@ -275,7 +277,7 @@ namespace FlightTicketManagement.GUI.Features.MainApp {
             mainContentPanel.BringToFront();
 
             defaultPicture = new PictureBox {
-                Image = Properties.Resources.home,
+                Image = Resources.home,
                 SizeMode = PictureBoxSizeMode.Zoom,
                 Dock = DockStyle.Fill,
                 BackColor = Color.White
@@ -340,19 +342,19 @@ namespace FlightTicketManagement.GUI.Features.MainApp {
         }
 
         private void OpenBaggageCheckin() {
-            var control = new FlightTicketManagement.GUI.Features.Baggage.BaggageControl();
+            var control = new BaggageControl();
             control.SwitchTab(1);
             LoadControl(control);
         }
 
         private void OpenBaggageTracking() {
-            var control = new FlightTicketManagement.GUI.Features.Baggage.BaggageControl();
+            var control = new BaggageControl();
             control.SwitchTab(2);
             LoadControl(control);
         }
 
         private void OpenBaggageReports() {
-            var control = new FlightTicketManagement.GUI.Features.Baggage.BaggageControl();
+            var control = new BaggageControl();
             control.SwitchTab(0);
             LoadControl(control);
         }

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Inputs;
-using FlightTicketManagement.GUI.Components.Buttons;
+using GUI.Components.Buttons;
+using GUI.Components.Inputs;
 
-namespace FlightTicketManagement.GUI.Features.Profile {
+namespace GUI.Features.Profile.SubFeatures {
     public class ProfileInfoModel {
         public string Email { get; set; } = "";
         public string FullName { get; set; } = "";

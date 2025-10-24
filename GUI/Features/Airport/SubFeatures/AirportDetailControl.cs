@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 
-namespace FlightTicketManagement.GUI.Features.Airport.SubFeatures {
+namespace GUI.Features.Airport.SubFeatures {
     public class AirportDetailControl : UserControl {
         private Label vCode, vName, vCity, vCountry, vTz;
 

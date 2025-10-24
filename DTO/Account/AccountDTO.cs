@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FlightTicketManagement.DTO.Account {
+namespace DTO.Account {
     internal class AccountDTO {
     }
 }

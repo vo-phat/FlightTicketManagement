@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Inputs;
-using FlightTicketManagement.GUI.Components.Buttons;
-using FlightTicketManagement.GUI.Components.Tables;
+using GUI.Components.Inputs;
+using GUI.Components.Buttons;
+using GUI.Components.Tables;
 
-namespace FlightTicketManagement.GUI.Features.FareRules.SubFeatures {
+namespace GUI.Features.FareRules.SubFeatures {
     public class FareRuleCreateControl : UserControl {
         public FareRuleCreateControl() { InitializeComponent(); }
 

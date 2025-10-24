@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Inputs;
-using FlightTicketManagement.GUI.Components.Buttons;
-using FlightTicketManagement.GUI.Components.Tables;
+using GUI.Components.Buttons;
+using GUI.Components.Inputs;
+using GUI.Components.Tables;
 
-namespace FlightTicketManagement.GUI.Features.Seat.SubFeatures {
+namespace GUI.Features.Seat.SubFeatures {
     public class SeatListControl : UserControl {
         private const string ACTION_COL = "Action";
         private const string TXT_VIEW = "Xem";

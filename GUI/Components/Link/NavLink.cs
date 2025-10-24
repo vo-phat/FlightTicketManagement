@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace FlightTicketManagement.GUI.Components.Link {
+namespace GUI.Components.Link {
     // LinkLabel cho navbar: có trạng thái Active + dropdown menu
     public class NavLink : LinkLabel {
         public bool IsActive {

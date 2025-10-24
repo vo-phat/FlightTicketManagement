@@ -1,10 +1,10 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Inputs;
-using FlightTicketManagement.GUI.Components.Buttons;
-using FlightTicketManagement.GUI.Components.Tables;
+using GUI.Components.Buttons;
+using GUI.Components.Tables;
+using GUI.Components.Inputs;
 
-namespace FlightTicketManagement.GUI.Features.CabinClass.SubFeatures {
+namespace GUI.Features.CabinClass.SubFeatures {
     public class CabinClassCreateControl : UserControl {
         // để dễ reuse/SetInitialData sau này
         private UnderlinedTextField _txtCode, _txtName, _txtPriority, _txtBaggage, _txtPitch, _txtDesc;

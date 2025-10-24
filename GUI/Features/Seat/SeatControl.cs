@@ -1,9 +1,9 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Buttons;
+using GUI.Components.Buttons;
 
-namespace FlightTicketManagement.GUI.Features.Seat {
+namespace GUI.Features.Seat {
     public class SeatControl : UserControl {
         private Panel header;
         private FlowLayoutPanel tabs;

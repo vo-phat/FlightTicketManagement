@@ -1,8 +1,8 @@
-﻿using FlightTicketManagement.GUI.Features.Auth;
-using FlightTicketManagement.GUI.Features.Test;
-using FlightTicketManagement.GUI.Features.MainApp;
+using GUI.Features.Auth;
+using GUI.Features.Test;
+using GUI.MainApp;
 
-namespace FlightTicketManagement.GUI.Features.MainApp {
+namespace GUI {
     internal static class Program {
         [STAThread]
         static void Main() {

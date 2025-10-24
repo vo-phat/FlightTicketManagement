@@ -1,10 +1,10 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Inputs;
-using FlightTicketManagement.GUI.Components.Buttons;
-using FlightTicketManagement.GUI.Components.Tables;
+using GUI.Components.Inputs;
+using GUI.Components.Buttons;
+using GUI.Components.Tables;
 
-namespace FlightTicketManagement.GUI.Features.Aircraft {
+namespace GUI.Features.Aircraft.SubFeatures {
     public class AircraftCreateControl : UserControl {
         public AircraftCreateControl() { InitializeComponent(); }
 

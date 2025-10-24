@@ -1,8 +1,8 @@
 using System.Drawing;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Buttons;
+using GUI.Components.Buttons;
 
-namespace FlightTicketManagement.GUI.Features.Ticket {
+namespace GUI.Features.Ticket {
     public class TicketControl : UserControl {
         private Button btnSearchCreate, btnOps;
         private Panel contentPanel;

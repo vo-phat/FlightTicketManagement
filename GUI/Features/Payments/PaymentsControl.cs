@@ -1,8 +1,9 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Buttons;
+using GUI.Components.Buttons;
+using GUI.Features.Payments.SubFeatures;
 
-namespace FlightTicketManagement.GUI.Features.Payments {
+namespace GUI.Features.Payments {
     public class PaymentsControl : UserControl {
         private Button btnPOS, btnOnline;
         private Panel contentPanel;

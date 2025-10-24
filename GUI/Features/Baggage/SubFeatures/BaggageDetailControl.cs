@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Tables;
+using GUI.Components.Tables;
 
-namespace FlightTicketManagement.GUI.Features.Baggage.SubFeatures {
+namespace GUI.Features.Baggage.SubFeatures {
     public class BaggageDetailControl : UserControl {
         private Label lblTitle;
         private TableLayoutPanel grid;
         private Panel card;
+        private Label secTitle;
+        private TableLayoutPanel main;
         private TableCustom historyTable;
 
         public BaggageDetailControl() {
@@ -15,74 +17,68 @@ namespace FlightTicketManagement.GUI.Features.Baggage.SubFeatures {
         }
 
         private void InitializeComponent() {
-            Dock = DockStyle.Fill;
-            BackColor = Color.FromArgb(232, 240, 252);
-
-            lblTitle = new Label {
-                Text = "📦 Theo dõi / Chi tiết hành lý",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 20, FontStyle.Bold),
-                ForeColor = Color.Black,
-                Padding = new Padding(24, 20, 24, 0),
-                Dock = DockStyle.Top
-            };
-
-            card = new Panel {
-                BackColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                Padding = new Padding(16),
-                Margin = new Padding(24, 8, 24, 24),
-                Dock = DockStyle.Fill
-            };
-
-            var secTitle = new Label {
-                Text = "Thông tin hành lý",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 12, FontStyle.Bold),
-                Margin = new Padding(0, 0, 0, 16),
-                Dock = DockStyle.Top
-            };
-
-            grid = new TableLayoutPanel {
-                Dock = DockStyle.Top,
-                AutoSize = true,
-                ColumnCount = 2
-            };
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 200));
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-
+            lblTitle = new Label();
+            card = new Panel();
+            grid = new TableLayoutPanel();
+            secTitle = new Label();
+            main = new TableLayoutPanel();
+            card.SuspendLayout();
+            main.SuspendLayout();
+            SuspendLayout();
+            // 
+            // lblTitle
+            // 
+            lblTitle.Location = new Point(3, 0);
+            lblTitle.Name = "lblTitle";
+            lblTitle.Size = new Size(100, 23);
+            lblTitle.TabIndex = 0;
+            // 
+            // card
+            // 
             card.Controls.Add(grid);
             card.Controls.Add(secTitle);
-
-            historyTable = new TableCustom {
-                Dock = DockStyle.Bottom,
-                Height = 160,
-                Margin = new Padding(0, 12, 0, 0),
-                AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false,
-                ReadOnly = true,
-                RowHeadersVisible = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
-            };
-            historyTable.Columns.Add("changedAt", "Thời điểm");
-            historyTable.Columns.Add("oldStatus", "Trạng thái cũ");
-            historyTable.Columns.Add("newStatus", "Trạng thái mới");
-            card.Controls.Add(historyTable);
-
-            var main = new TableLayoutPanel {
-                Dock = DockStyle.Fill,
-                BackColor = Color.Transparent,
-                ColumnCount = 1,
-                RowCount = 2
-            };
-            main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            main.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            card.Location = new Point(3, 26);
+            card.Name = "card";
+            card.Size = new Size(194, 71);
+            card.TabIndex = 1;
+            // 
+            // grid
+            // 
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 200F));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            grid.Location = new Point(0, 0);
+            grid.Name = "grid";
+            grid.Size = new Size(200, 100);
+            grid.TabIndex = 0;
+            // 
+            // secTitle
+            // 
+            secTitle.Location = new Point(0, 0);
+            secTitle.Name = "secTitle";
+            secTitle.Size = new Size(100, 23);
+            secTitle.TabIndex = 1;
+            // 
+            // main
+            // 
+            main.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
             main.Controls.Add(lblTitle, 0, 0);
             main.Controls.Add(card, 0, 1);
-
+            main.Location = new Point(0, 0);
+            main.Name = "main";
+            main.RowStyles.Add(new RowStyle());
+            main.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            main.Size = new Size(200, 100);
+            main.TabIndex = 0;
+            // 
+            // BaggageDetailControl
+            // 
+            BackColor = Color.FromArgb(232, 240, 252);
             Controls.Add(main);
+            Name = "BaggageDetailControl";
+            Size = new Size(1460, 409);
+            card.ResumeLayout(false);
+            main.ResumeLayout(false);
+            ResumeLayout(false);
         }
 
         private static Label Key(string text) => new Label {

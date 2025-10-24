@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using FlightTicketManagement.GUI.Components.Inputs;
-using FlightTicketManagement.GUI.Components.Buttons;
-using FlightTicketManagement.GUI.Components.Tables;
+using GUI.Components.Buttons;
+using GUI.Features.Payments;
+using GUI.Components.Inputs;
+using GUI.Components.Tables;
 
-namespace FlightTicketManagement.GUI.Features.Payments {
+namespace GUI.Features.Payments.SubFeatures {
     public class PaymentsOnlineControl : UserControl {
         private TableCustom table;
         private Label lblTitle;

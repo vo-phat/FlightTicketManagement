@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Drawing.Drawing2D;
 
-namespace FlightTicketManagement.GUI.Components.Buttons {
+namespace GUI.Components.Buttons {
     [DefaultEvent("Click")]
     [DefaultProperty("Text")]
     [ToolboxItem(true)]

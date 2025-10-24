@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace FlightTicketManagement.GUI.Features.Payments {
+namespace GUI.Features.Payments.SubFeatures {
     internal class PaymentDetailForm : Form {
         public PaymentDetailForm(DataGridViewRow srcRow) {
             Text = $"Chi tiết thanh toán #{srcRow.Cells["paymentId"].Value}";

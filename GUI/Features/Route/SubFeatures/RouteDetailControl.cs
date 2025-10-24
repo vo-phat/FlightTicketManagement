@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 
-namespace FlightTicketManagement.GUI.Features.Route.SubFeatures {
+namespace GUI.Features.Route.SubFeatures {
     public class RouteDetailControl : UserControl {
         private Label vFrom, vTo, vDist, vDur;
 
