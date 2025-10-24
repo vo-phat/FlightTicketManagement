@@ -1,0 +1,23 @@
+{
+  "User": [
+    "home.view",
+    "flights.read",
+    "tickets.create_search",
+    "tickets.mine",
+    "customers.profiles",
+    "notifications.read"
+  ],
+  "Staff": [
+    "home.view",
+    "flights.read",
+    "tickets.create_search",
+    "tickets.operate",
+    "baggage.checkin",
+    "baggage.track",
+    "payments.pos",
+    "reports.view",
+    "customers.profiles",
+    "notifications.read"
+  ],
+  "Admin": [ "*" ] // '*' = tất cả
+}

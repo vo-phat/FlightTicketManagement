@@ -45,19 +45,27 @@ namespace FlightTicketManagement.GUI.Features.Flight.SubFeatures {
                 inputPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 60));
 
             // === Cột 1 ===
-            inputPanel.Controls.Add(new UnderlinedTextField("Mã chuyến bay", "") { MinimumSize = new Size(0, 56), Width = 250 }, 0, 0);
-            inputPanel.Controls.Add(new UnderlinedTextField("Nơi cất cánh", "") { MinimumSize = new Size(0, 56), Width = 250 }, 0, 1);
-            inputPanel.Controls.Add(new UnderlinedTextField("Mã máy bay", "") { MinimumSize = new Size(0, 56), Width = 250 }, 0, 2);
-            inputPanel.Controls.Add(new UnderlinedTextField("Giá vé cơ bản", "") { MinimumSize = new Size(0, 56), Width = 250 }, 0, 3);
+            inputPanel.Controls.Add(new UnderlinedTextField("Mã chuyến bay", "") { 
+                MinimumSize = new Size(0, 72), Width = 300 }, 0, 0);
+            inputPanel.Controls.Add(new UnderlinedTextField("Nơi cất cánh", "") { 
+                MinimumSize = new Size(0, 72), Width = 300 }, 0, 1);
+            inputPanel.Controls.Add(new UnderlinedTextField("Mã máy bay", "") { 
+                MinimumSize = new Size(0, 72), Width = 300 }, 0, 2);
+            inputPanel.Controls.Add(new UnderlinedTextField("Giá vé cơ bản", "") { 
+                MinimumSize = new Size(0, 72), Width = 300 }, 0, 3);
 
             // === Cột 2 ===
-            inputPanel.Controls.Add(new UnderlinedTextField("Nơi hạ cánh", "") { MinimumSize = new Size(0, 56), Width = 250 }, 1, 1);
-            inputPanel.Controls.Add(new UnderlinedTextField("Mã tuyến bay", "") { MinimumSize = new Size(0, 56), Width = 250 }, 1, 2);
-            inputPanel.Controls.Add(new DateTimePickerCustom("Thời gian khởi hành", "") { Width = 250, Height = 56 }, 1, 3);
-            inputPanel.Controls.Add(new DateTimePickerCustom("Thời gian hạ cánh", "") { Width = 250, Height = 56 }, 1, 4);
+            inputPanel.Controls.Add(new UnderlinedTextField("Nơi hạ cánh", "") { 
+                MinimumSize = new Size(0, 72), Width = 300 }, 1, 1);
+            inputPanel.Controls.Add(new UnderlinedTextField("Mã tuyến bay", "") { 
+                MinimumSize = new Size(0, 72), Width = 300 }, 1, 2);
+            inputPanel.Controls.Add(new DateTimePickerCustom("Thời gian khởi hành", "") { 
+                Width = 300, Height = 72 }, 1, 3);
+            inputPanel.Controls.Add(new DateTimePickerCustom("Thời gian hạ cánh", "") { 
+                Width = 300, Height = 72 }, 1, 4);
 
             // === Hàng thời lượng bay (có thể tự tính hoặc nhập tay) ===
-            inputPanel.Controls.Add(new UnderlinedTextField("Thời gian bay (phút)", "") { MinimumSize = new Size(0, 56), Width = 250 }, 0, 4);
+            inputPanel.Controls.Add(new UnderlinedTextField("Thời gian bay (phút)", "") { MinimumSize = new Size(0, 72), Width = 300 }, 0, 4);
 
             // Sau khi Add các control vào inputPanel:
             for (int r = 0; r < inputPanel.RowCount; r++) {

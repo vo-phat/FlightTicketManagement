@@ -5,7 +5,7 @@ using FlightTicketManagement.GUI.Components.Tables;
 using FlightTicketManagement.GUI.Components.Buttons;
 using FlightTicketManagement.GUI.Components.Inputs;
 
-namespace FlightTicketManagement.GUI.Features.Flight.SubFeatures {
+namespace FlightTicketManagement.GUI.Features.Flight {
     public class FlightListControl : UserControl {
         private TableCustom table;
 
@@ -56,22 +56,22 @@ namespace FlightTicketManagement.GUI.Features.Flight.SubFeatures {
             };
 
             dtpDepartureDate = new DateTimePickerCustom("Ngày đi", "") {
-                Width = 200,
-                Margin = new Padding(0, 0, 24, 0)
+                Width = 300,
+                Margin = new Padding(0, 0, 32, 0)
             };
 
             dtpArrivalDate = new DateTimePickerCustom("Ngày về", "") {
-                Width = 200,
-                Margin = new Padding(0, 0, 24, 0)
+                Width = 300,
+                Margin = new Padding(0, 0, 32, 0)
             };
 
             txtDeparturePlace = new UnderlinedTextField("Nơi cất cánh", "") {
-                Width = 200,
-                Margin = new Padding(0, 0, 24, 0)
+                Width = 300,
+                Margin = new Padding(0, 0, 32, 0)
             };
             txtArrivalPlace = new UnderlinedTextField("Nơi hạ cánh", "") {
-                Width = 200,
-                Margin = new Padding(0, 0, 24, 0)
+                Width = 300,
+                Margin = new Padding(0, 0, 32, 0)
             };
             filterPanel.Controls.AddRange(new Control[] { dtpDepartureDate, dtpArrivalDate, txtDeparturePlace, txtArrivalPlace });
 

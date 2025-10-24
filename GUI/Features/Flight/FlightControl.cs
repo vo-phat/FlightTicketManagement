@@ -54,7 +54,6 @@ namespace FlightTicketManagement.GUI.Features.Flight {
             var buttonPanel = btnList.Parent as FlowLayoutPanel;
             if (buttonPanel != null) {
                 buttonPanel.Controls.Clear();
-                // Tab nào được chọn thì là PrimaryButton, còn lại là SecondaryButton
                 if (idx == 0) {
                     btnList = new PrimaryButton("Danh sách chuyến bay");
                     btnCreate = new SecondaryButton("Tạo chuyến bay mới");

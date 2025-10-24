@@ -36,11 +36,13 @@ namespace FlightTicketManagement.GUI.Components.Inputs {
                 Font = new Font("Segoe UI", 14f, FontStyle.Bold),
                 CalendarForeColor = Color.FromArgb(0, 92, 175),
                 CalendarMonthBackground = Color.White,
-                MinDate = DateTime.Today,
                 Width = 140,
-                BackColor = Color.White
+                BackColor = Color.White,
+                MinDate = DateTime.MinValue, // Mặc định không giới hạn ngày quá khứ
+                MaxDate = DateTime.MaxValue  // Mặc định không giới hạn ngày tương lai
             };
-            // Loại bỏ viền (border) nếu có
+
+            // Bỏ viền mặc định
             _dtp.Paint += (s, e) => {
                 ControlPaint.DrawBorder(e.Graphics, _dtp.ClientRectangle, Color.White, ButtonBorderStyle.None);
             };
@@ -53,17 +55,54 @@ namespace FlightTicketManagement.GUI.Components.Inputs {
             PlaceholderText = placeholder;
         }
 
-        [Category("Appearance")]
-        public string LabelText { get => _lbl.Text; set { _lbl.Text = value; Invalidate(); } }
+        // ====== PROPERTIES ======
 
         [Category("Appearance")]
-        public string PlaceholderText { get => _placeholder; set { _placeholder = value ?? string.Empty; Invalidate(); } }
+        public string LabelText {
+            get => _lbl.Text;
+            set { _lbl.Text = value; Invalidate(); }
+        }
+
+        [Category("Appearance")]
+        public string PlaceholderText {
+            get => _placeholder;
+            set { _placeholder = value ?? string.Empty; Invalidate(); }
+        }
         private string _placeholder = string.Empty;
 
         [Category("Behavior")]
-        public DateTime Value { get => _dtp.Value; set { _dtp.Value = value; Invalidate(); } }
+        public DateTime Value {
+            get => _dtp.Value;
+            set { _dtp.Value = value; Invalidate(); }
+        }
 
         [Category("Behavior")]
         public DateTimePicker DateTimePicker => _dtp;
+
+        // ✅ Thuộc tính định dạng ngày tháng
+        [Category("Behavior"), Description("Định dạng hiển thị ngày tháng (ví dụ: dd/MM/yyyy).")]
+        public string CustomFormat {
+            get => _dtp.CustomFormat;
+            set {
+                if (!string.IsNullOrWhiteSpace(value)) {
+                    _dtp.Format = DateTimePickerFormat.Custom;
+                    _dtp.CustomFormat = value;
+                }
+            }
+        }
+
+        // ✅ Thuộc tính giới hạn ngày tối đa
+        [Category("Behavior"), Description("Giới hạn ngày tối đa có thể chọn.")]
+        public DateTime MaxDate {
+            get => _dtp.MaxDate;
+            set { _dtp.MaxDate = value; }
+        }
+
+        // ✅ Thuộc tính giới hạn ngày tối thiểu (nếu cần)
+        [Category("Behavior"), Description("Giới hạn ngày tối thiểu có thể chọn.")]
+        public DateTime MinDate {
+            get => _dtp.MinDate;
+            set { _dtp.MinDate = value; }
+        }
     }
 }

@@ -9,9 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Update="GUI\Features\Setting\Settings.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
     <Compile Update="GUI\Features\Account\AccountControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

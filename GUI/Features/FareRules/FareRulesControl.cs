@@ -14,8 +14,8 @@ namespace FlightTicketManagement.GUI.Features.FareRules {
         private void InitializeComponent() {
             Dock = DockStyle.Fill; BackColor = Color.WhiteSmoke;
 
-            btnList = new PrimaryButton("Danh sách Fare Rules");
-            btnCreate = new SecondaryButton("Tạo Fare Rule");
+            btnList = new PrimaryButton("Danh sách Quy tắc");
+            btnCreate = new SecondaryButton("Tạo Quy tắc");
             btnList.Click += (_, __) => SwitchTab(0);
             btnCreate.Click += (_, __) => SwitchTab(1);
 
@@ -42,7 +42,7 @@ namespace FlightTicketManagement.GUI.Features.FareRules {
             detail.Visible = false;
 
             var top = btnList.Parent as FlowLayoutPanel; top!.Controls.Clear();
-            if (idx == 0) { btnList = new PrimaryButton("Danh sách Fare Rules"); btnCreate = new SecondaryButton("Tạo Fare Rule"); } else { btnList = new SecondaryButton("Danh sách Fare Rules"); btnCreate = new PrimaryButton("Tạo Fare Rule"); }
+            if (idx == 0) { btnList = new PrimaryButton("Danh sách Quy tắc"); btnCreate = new SecondaryButton("Tạo Quy tắc"); } else { btnList = new SecondaryButton("Danh sách Quy tắc"); btnCreate = new PrimaryButton("Tạo Quy tắc"); }
             btnList.Click += (_, __) => SwitchTab(0);
             btnCreate.Click += (_, __) => SwitchTab(1);
             top.Controls.Add(btnList); top.Controls.Add(btnCreate);

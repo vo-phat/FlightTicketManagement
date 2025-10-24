@@ -5,9 +5,10 @@ using FlightTicketManagement.GUI.Components.Buttons;
 namespace FlightTicketManagement.GUI.Features.Aircraft {
     public class AircraftControl : UserControl {
         private Button btnList, btnCreate;
-        private SubFeatures.AircraftListControl list;
-        private SubFeatures.AircraftCreateControl create;
-        private SubFeatures.AircraftDetailControl detail;
+        private Panel contentPanel;
+        private AircraftListControl list;
+        private AircraftCreateControl create;
+        private AircraftDetailControl detail;
 
         public AircraftControl() { InitializeComponent(); }
 
@@ -29,16 +30,21 @@ namespace FlightTicketManagement.GUI.Features.Aircraft {
             };
             top.Controls.AddRange(new Control[] { btnList, btnCreate });
 
-            list = new SubFeatures.AircraftListControl { Dock = DockStyle.Fill };
-            create = new SubFeatures.AircraftCreateControl { Dock = DockStyle.Fill };
-            detail = new SubFeatures.AircraftDetailControl { Dock = DockStyle.Fill };
+            contentPanel = new Panel { Dock = DockStyle.Fill, BackColor = Color.WhiteSmoke };
 
-            Controls.Add(list);
-            Controls.Add(create);
-            Controls.Add(detail);
+            list = new AircraftListControl { Dock = DockStyle.Fill };
+            create = new AircraftCreateControl { Dock = DockStyle.Fill };
+            detail = new AircraftDetailControl { Dock = DockStyle.Fill };
+
+            contentPanel.Controls.Add(list);
+            contentPanel.Controls.Add(create);
+            contentPanel.Controls.Add(detail);
+
+            Controls.Add(contentPanel);
             Controls.Add(top);
 
             SwitchTab(0);
+            list.BringToFront();
         }
 
         private void SwitchTab(int idx) {
@@ -46,14 +52,23 @@ namespace FlightTicketManagement.GUI.Features.Aircraft {
             create.Visible = (idx == 1);
             detail.Visible = false;
 
+            // cập nhật style nút
             var top = btnList.Parent as FlowLayoutPanel;
             top!.Controls.Clear();
-
-            if (idx == 0) { btnList = new PrimaryButton("Danh sách máy bay"); btnCreate = new SecondaryButton("Tạo máy bay mới"); } else { btnList = new SecondaryButton("Danh sách máy bay"); btnCreate = new PrimaryButton("Tạo máy bay mới"); }
-
+            if (idx == 0) {
+                btnList = new PrimaryButton("Danh sách máy bay");
+                btnCreate = new SecondaryButton("Tạo máy bay mới");
+            } else {
+                btnList = new SecondaryButton("Danh sách máy bay");
+                btnCreate = new PrimaryButton("Tạo máy bay mới");
+            }
             btnList.Click += (_, __) => SwitchTab(0);
             btnCreate.Click += (_, __) => SwitchTab(1);
             top.Controls.AddRange(new Control[] { btnList, btnCreate });
+
+            // ép UC hiển thị
+            if (idx == 0) list.BringToFront();
+            else if (idx == 1) create.BringToFront();
         }
     }
 }
