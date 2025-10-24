@@ -202,16 +202,16 @@ namespace FlightTicketManagement.GUI.Features.MainApp {
             navFlow.SuspendLayout();
             navFlow.Controls.Clear();
 
-        var spec = BuildSpec().Where(x => x.IsVisible(_role)).ToList();
+            var spec = BuildSpec().Where(x => x.IsVisible(_role)).ToList();
 
-        for (int i = 0; i < spec.Count; i++) {
-            var item = spec[i];
+            for (int i = 0; i < spec.Count; i++) {
+                var item = spec[i];
 
-            // Tạo Link
-            var link = new NavLink(item.Text) {
-                IsActive = (item.Key == _active),
-                Margin = new Padding(6, 4, 6, 0)
-            };
+                // Tạo Link
+                var link = new NavLink(item.Text) {
+                    IsActive = (item.Key == _active),
+                    Margin = new Padding(6, 4, 6, 0)
+                };
 
                 if (item.SubItems.Any()) {
                     var menu = new ContextMenuStrip {
@@ -241,19 +241,23 @@ namespace FlightTicketManagement.GUI.Features.MainApp {
                         link.Click += (_, __) => { ActivateTab(item.Key); item.OnClick(); };
                     }
                 }
+                if (item.OnClick != null)
+                {
+                    link.Click += (_, __) => { ActivateTab(item.Key); item.OnClick(); };
+                }
 
 
                 navFlow.Controls.Add(link);
 
-            if (i < spec.Count - 1) {
-                navFlow.Controls.Add(new Label {
-                    AutoSize = true,
-                    ForeColor = Color.FromArgb(140, 140, 140),
-                    Font = new Font("Segoe UI", 11f, FontStyle.Regular),
-                    Margin = new Padding(0, 4, 0, 0)
-                });
+                if (i < spec.Count - 1) {
+                    navFlow.Controls.Add(new Label {
+                        AutoSize = true,
+                        ForeColor = Color.FromArgb(140, 140, 140),
+                        Font = new Font("Segoe UI", 11f, FontStyle.Regular),
+                        Margin = new Padding(0, 4, 0, 0)
+                    });
+                }
             }
-        }
 
         navFlow.ResumeLayout();
     }
