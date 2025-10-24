@@ -4,7 +4,7 @@ using FlightTicketManagement.GUI.Components.Inputs;
 using FlightTicketManagement.GUI.Components.Buttons;
 using FlightTicketManagement.GUI.Components.Tables;
 
-namespace FlightTicketManagement.GUI.Features.Aircraft.SubFeatures {
+namespace FlightTicketManagement.GUI.Features.Aircraft {
     public class AircraftCreateControl : UserControl {
         public AircraftCreateControl() { InitializeComponent(); }
 

@@ -1,25 +1,25 @@
-using FlightTicketManagement.GUI.Components.Buttons;
 using FlightTicketManagement.GUI.Components.Link;
 using FlightTicketManagement.GUI.Features.Account;
 using FlightTicketManagement.GUI.Features.Aircraft;
 using FlightTicketManagement.GUI.Features.Airline;
 using FlightTicketManagement.GUI.Features.Airport;
+using FlightTicketManagement.GUI.Features.Auth;
 using FlightTicketManagement.GUI.Features.CabinClass;
 using FlightTicketManagement.GUI.Features.FareRules;
 using FlightTicketManagement.GUI.Features.Flight;
+using FlightTicketManagement.GUI.Features.Profile;
 using FlightTicketManagement.GUI.Features.Route;
 using FlightTicketManagement.GUI.Features.Seat;
-using FlightTicketManagement.GUI.Features.Settings;
 using FlightTicketManagement.GUI.Features.Stats;
 using FlightTicketManagement.GUI.Features.Ticket;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Windows.Forms;
+using FlightTicketManagement.GUI.Features.Payments;
+using FlightTicketManagement.GUI.Features.Settings;
 
 namespace FlightTicketManagement.GUI.Features.MainApp {
-    public enum AppRole { User, Staff, Admin }
+    public enum AppRole { 
+        User, Staff, Admin 
+    }
+
     public enum NavKey {
         Home, Flights, BookingsTickets, Baggage, Catalogs,
         Payments, Customers, Notifications, Reports, System, MyProfile
@@ -97,16 +97,16 @@ namespace FlightTicketManagement.GUI.Features.MainApp {
         // ===== Đặc tả menu (ẩn/hiện theo quyền) =================================
         private List<NavItem> BuildSpec() {
             return new List<NavItem> {
-                new() {
-                    Key = NavKey.Home, Text = "🏠 Trang chủ",
-                    IsVisible = r => true,
-                    OnClick = () => LoadControl(new Label {
-                        Text = "Bảng điều khiển",
-                        Dock = DockStyle.Fill,
-                        TextAlign = ContentAlignment.MiddleCenter,
-                        Font = new Font("Segoe UI", 18, FontStyle.Bold)
-                    })
-                },
+                //new() {
+                //    Key = NavKey.Home, Text = "🏠 Trang chủ",
+                //    IsVisible = r => true,
+                //    OnClick = () => LoadControl(new Label {
+                //        Text = "Bảng điều khiển",
+                //        Dock = DockStyle.Fill,
+                //        TextAlign = ContentAlignment.MiddleCenter,
+                //        Font = new Font("Segoe UI", 18, FontStyle.Bold)
+                //    })
+                //},
                 new() {
                     Key = NavKey.Flights, Text = "✈️ Chuyến bay",
                     IsVisible = r => true,
@@ -159,41 +159,37 @@ namespace FlightTicketManagement.GUI.Features.MainApp {
                         ("POS / Giao dịch", r => r is AppRole.Staff or AppRole.Admin, () => OpenPayments())
                     }
                 },
-                new() {
-                    Key = NavKey.Customers, Text = "👤 Khách hàng",
-                    IsVisible = r => true,
-                    SubItems = {
-                        ("Hồ sơ hành khách", r => true, () => OpenPassengerProfiles()),
-                        ("Tài khoản & Quyền", r => r == AppRole.Admin, () => LoadControl(new AccountControl()))
-                    }
-                },
-                new() {
-                    Key = NavKey.Notifications, Text = "🔔 Thông báo",
-                    IsVisible = r => true,
-                    OnClick = () => OpenNotifications()
-                },
+                //new() {
+                //    Key = NavKey.Customers, Text = "👤 Khách hàng",
+                //    IsVisible = r => true,
+                //    SubItems = {
+                //        ("Hồ sơ hành khách", r => true, () => OpenPassengerProfiles()),
+                //        ("Tài khoản & Quyền", r => r == AppRole.Admin, () => LoadControl(new AccountControl()))
+                //    }
+                //},
+                //new() {
+                //    Key = NavKey.Notifications, Text = "🔔 Thông báo",
+                //    IsVisible = r => true,
+                //    OnClick = () => OpenNotifications()
+                //},
                 new() {
                     Key = NavKey.Reports, Text = "📈 Báo cáo",
                     IsVisible = r => r is AppRole.Staff or AppRole.Admin,
                     OnClick = () => LoadControl(new StatsControl())
                 },
                 new() {
+                    Key = NavKey.MyProfile, Text = "🙍 Hồ sơ của tôi",
+                    IsVisible = r => true,
+                    OnClick = () => ShowControl("MyProfile", () => new MyProfileControl(1)) // truyền vào account_id từ database
+                },
+                new() {
                     Key = NavKey.System, Text = "⚙️ Hệ thống",
                     IsVisible = r => r == AppRole.Admin,
                     SubItems = {
                         ("Vai trò & phân quyền", r => r == AppRole.Admin, () => OpenRoles()),
-                        ("Cấu hình ứng dụng", r => r == AppRole.Admin, () => LoadControl(new SettingsControl()))
+                        //("Cấu hình ứng dụng", r => r == AppRole.Admin, () => LoadControl(new SettingsControl()))
                     }
                 },
-                new() {
-                    Key = NavKey.MyProfile, Text = "🙍 Hồ sơ của tôi",
-                    IsVisible = r => true,
-                    SubItems = {
-                        ("Thông tin cá nhân", r => true, () => OpenMyProfile()),
-                        ("Đổi mật khẩu", r => true, () => OpenChangePassword()),
-                        ("Đăng xuất", r => true, () => DoLogout())
-                    }
-                }
             };
         }
 
@@ -240,6 +236,8 @@ namespace FlightTicketManagement.GUI.Features.MainApp {
                     } else if (item.OnClick != null) {
                         link.Click += (_, __) => { ActivateTab(item.Key); item.OnClick(); };
                     }
+                } else if (item.OnClick != null) {
+                    link.Click += (_, __) => { ActivateTab(item.Key); item.OnClick(); };
                 }
                 if (item.OnClick != null)
                 {
@@ -342,15 +340,21 @@ namespace FlightTicketManagement.GUI.Features.MainApp {
         }
 
         private void OpenBaggageCheckin() {
-            MessageBox.Show("Check-in hành lý / gán tag.", "Baggage");
+            var control = new FlightTicketManagement.GUI.Features.Baggage.BaggageControl();
+            control.SwitchTab(1);
+            LoadControl(control);
         }
 
         private void OpenBaggageTracking() {
-            MessageBox.Show("Theo dõi trạng thái hành lý.", "Baggage Tracking");
+            var control = new FlightTicketManagement.GUI.Features.Baggage.BaggageControl();
+            control.SwitchTab(2);
+            LoadControl(control);
         }
 
         private void OpenBaggageReports() {
-            MessageBox.Show("Báo cáo thất lạc hành lý (Admin).", "Baggage Reports");
+            var control = new FlightTicketManagement.GUI.Features.Baggage.BaggageControl();
+            control.SwitchTab(0);
+            LoadControl(control);
         }
 
         private void OpenAirlines() {
@@ -374,32 +378,19 @@ namespace FlightTicketManagement.GUI.Features.MainApp {
         }
 
         private void OpenPayments() {
-            MessageBox.Show("POS / Giao dịch (Staff/Admin).", "Payments");
+            ShowControl("Payments", () => new PaymentsControl());
         }
 
-        private void OpenPassengerProfiles() {
-            MessageBox.Show("Hồ sơ hành khách.", "Passenger Profiles");
-        }
+        //private void OpenPassengerProfiles() {
+        //    MessageBox.Show("Hồ sơ hành khách.", "Passenger Profiles");
+        //}
 
-        private void OpenNotifications() {
-            MessageBox.Show("Thông báo (lọc theo account_id với User).", "Notifications");
-        }
+        //private void OpenNotifications() {
+        //    MessageBox.Show("Thông báo (lọc theo account_id với User).", "Notifications");
+        //}
 
         private void OpenRoles() {
-            LoadControl(new AccountControl());
-        }
-
-        private void OpenMyProfile() {
-            MessageBox.Show("Thông tin cá nhân của tôi.", "My Profile");
-        }
-
-        private void OpenChangePassword() {
-            MessageBox.Show("Đổi mật khẩu.", "Change Password");
-        }
-
-        private void DoLogout() {
-            // TODO: clear session/token, điều hướng về màn hình đăng nhập
-            Close();
+            LoadControl(new RolePermissionControl());
         }
 
         // ===== Public: đổi quyền runtime (nếu cần) ===============================

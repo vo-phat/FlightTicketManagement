@@ -184,17 +184,7 @@ CREATE TABLE Payments (
     FOREIGN KEY (booking_id) REFERENCES Bookings(booking_id)
 );
 
--- 19. Thông báo
-CREATE TABLE Notifications (
-    notification_id INT AUTO_INCREMENT PRIMARY KEY,
-    account_id INT,
-    message TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    is_read BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (account_id) REFERENCES Accounts(account_id)
-);
-
--- 20. Hành lý
+-- 19. Hành lý
 CREATE TABLE Baggage (
     baggage_id INT AUTO_INCREMENT PRIMARY KEY,
     ticket_id INT NOT NULL,                       -- Liên kết với vé
@@ -212,7 +202,7 @@ CREATE TABLE Baggage (
     FOREIGN KEY (flight_id) REFERENCES Flights(flight_id)
 );
 
--- 21. Lịch sử trạng thái hành lý
+-- 20. Lịch sử trạng thái hành lý
 CREATE TABLE Baggage_History (
     history_id INT AUTO_INCREMENT PRIMARY KEY,
     baggage_id INT NOT NULL,

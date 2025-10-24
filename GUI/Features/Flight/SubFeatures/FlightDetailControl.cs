@@ -1,7 +1,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace FlightTicketManagement.GUI.Features.Flight.SubFeatures {
+namespace FlightTicketManagement.GUI.Features.Flight {
     public class FlightDetailControl : UserControl {
         private TableLayoutPanel main;        // root giống FlightListControl
         private Label lblTitle;
@@ -19,8 +19,12 @@ namespace FlightTicketManagement.GUI.Features.Flight.SubFeatures {
 
         private void InitializeComponent() {
             SuspendLayout();
-            Dock = DockStyle.Fill;
-            BackColor = Color.FromArgb(232, 240, 252); // đồng bộ list
+            // 
+            // FlightDetailControl
+            // 
+            BackColor = Color.FromArgb(232, 240, 252);
+            Name = "FlightDetailControl";
+            Size = new Size(1460, 430);
             ResumeLayout(false);
         }
 

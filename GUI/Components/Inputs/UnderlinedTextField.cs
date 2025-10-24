@@ -79,10 +79,36 @@ namespace FlightTicketManagement.GUI.Components.Inputs {
         [Category("Behavior"), Description("Ký tự ẩn mật khẩu khi UseSystemPasswordChar = false.")]
         public char PasswordChar { get => _tb.PasswordChar; set { _tb.PasswordChar = value; SetPlaceholder(_placeholder); Invalidate(); } }
 
+        // ===== ReadOnly mới thêm =====
+        [Category("Behavior"), Description("Chỉ đọc (không cho sửa) nhưng vẫn hiển thị bình thường.")]
+        public bool ReadOnly {
+            get => _tb.ReadOnly;
+            set {
+                if (_tb.ReadOnly == value) return;
+                _tb.ReadOnly = value;
+
+                // UX: khi readonly -> không cho tab-focus & đổi cursor
+                _tb.TabStop = !value;
+                _tb.Cursor = value ? Cursors.Arrow : Cursors.IBeam;
+
+                UpdateReadOnlyStyle();
+                ReadOnlyChanged?.Invoke(this, EventArgs.Empty);
+                Invalidate();
+            }
+        }
+
+        [Category("Property Changed")]
+        public event EventHandler? ReadOnlyChanged;
+
+        // Màu khi ReadOnly
+        [Category("Appearance")] public Color ReadOnlyLineColor { get; set; } = Color.FromArgb(200, 200, 200);
+        [Category("Appearance")] public Color ReadOnlyTextColor { get; set; } = Color.FromArgb(90, 90, 90);
+
         [Category("Appearance")] public Color LineColor { get; set; } = Color.FromArgb(40, 40, 40);
         [Category("Appearance")] public Color LineColorFocused { get; set; } = Color.FromArgb(0, 92, 175);
         [Category("Appearance")] public int LineThickness { get; set; } = 2;
         [Category("Appearance")] public int FocusedLineThickness { get; set; } = 3;
+
         [Category("Layout"), Description("Khoảng cách từ đáy TextBox đến gạch chân (px).")]
         public int UnderlineSpacing { get; set; } = 2;
 
@@ -136,6 +162,7 @@ namespace FlightTicketManagement.GUI.Components.Inputs {
             _tb.BringToFront();
             SyncTextBoxBackColor();
             SetPlaceholder(_placeholder);
+            UpdateReadOnlyStyle(); // áp style ban đầu theo trạng thái mặc định
         }
 
         private void SyncTextBoxBackColor() {
@@ -168,8 +195,10 @@ namespace FlightTicketManagement.GUI.Components.Inputs {
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
             int underlineY = Math.Min(_tb.Bottom + UnderlineSpacing, Height - 1);
-            var color = _focused ? LineColorFocused : LineColor;
-            var thick = _focused ? FocusedLineThickness : LineThickness;
+
+            // Nếu ReadOnly thì không dùng màu Focused
+            var color = ReadOnly ? ReadOnlyLineColor : (_focused ? LineColorFocused : LineColor);
+            var thick = ReadOnly ? LineThickness : (_focused ? FocusedLineThickness : LineThickness);
 
             using var pen = new Pen(color, thick) { Alignment = PenAlignment.Inset };
             g.DrawLine(pen, 0, underlineY, Width, underlineY);
@@ -179,6 +208,16 @@ namespace FlightTicketManagement.GUI.Components.Inputs {
             int w = Math.Max(220, proposedSize.Width);
             int h = Padding.Top + _lbl.Height + _tb.Height + UnderlineSpacing + FocusedLineThickness + Padding.Bottom + 2;
             return new Size(w, h);
+        }
+
+        private void UpdateReadOnlyStyle() {
+            if (ReadOnly) {
+                // Giữ nền theo Parent, chỉ đổi màu chữ nhạt hơn
+                _tb.ForeColor = ReadOnlyTextColor;
+            } else {
+                _tb.ForeColor = TextForeColor; // quay về màu cấu hình
+            }
+            Invalidate();
         }
     }
 }
