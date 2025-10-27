@@ -141,7 +141,7 @@ namespace DAO.Database
             }
         }
 
-        protected long ExecuteInsertAndGetId(string query, Dictionary<string, object> parameters = null)
+        protected int ExecuteInsertAndGetId(string query, Dictionary<string, object> parameters = null)
         {
             MySqlConnection connection = null;
             MySqlCommand command = null;
@@ -159,7 +159,7 @@ namespace DAO.Database
                 }
 
                 command.ExecuteNonQuery();
-                return command.LastInsertedId;
+                return Convert.ToInt32(command.LastInsertedId);
             }
             catch (MySqlException ex)
             {

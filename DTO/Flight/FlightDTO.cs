@@ -26,11 +26,12 @@ namespace DTO.Flight
             get => _flightId;
             set
             {
-                if (value <= 0)
+                if (value < 0)
                     throw new ArgumentException("Flight ID không thể âm");
                 _flightId = value;
             }
         }
+
         public string FlightNumber
         {
             get => _flightNumber;
@@ -38,11 +39,14 @@ namespace DTO.Flight
             {
                 if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentException("Số hiệu chuyến bay không được để trống");
+
                 if (value.Length > 20)
-                    throw new ArgumentException("Số hiệu chuyến bay không được quá 20");
-                _flightNumber = value;
+                    throw new ArgumentException("Số hiệu chuyến bay không được quá 20 ký tự");
+
+                _flightNumber = value.Trim().ToUpper();
             }
         }
+
         public int AircraftId
         {
             get => _aircraftId;
@@ -53,6 +57,7 @@ namespace DTO.Flight
                 _aircraftId = value;
             }
         }
+
         public int RouteId
         {
             get => _routeId;
@@ -63,35 +68,19 @@ namespace DTO.Flight
                 _routeId = value;
             }
         }
+
         public DateTime? DepartureTime
         {
             get => _departureTime;
-            set
-            {
-                if (value.HasValue)
-                {
-                    if (value.Value.Year < 2025 || value.Value.Year > 2030)
-                        throw new ArgumentException("Thời gian khởi hành không hợp lệ");
-                }
-                _departureTime = value;
-            }
+            set => _departureTime = value;
         }
+
         public DateTime? ArrivalTime
         {
             get => _arrivalTime;
-            set
-            {
-                if (value.HasValue)
-                {
-                    if (value.Value.Year < 2025 || value.Value.Year > 2030)
-                        throw new ArgumentException("Thời gian đến không hợp lệ");
-
-                    if (_departureTime.HasValue && value.Value <= _departureTime.Value)
-                        throw new ArgumentException("Thời gian đến phải sau thời gian khởi hành");
-                }
-                _arrivalTime = value;
-            }
+            set => _arrivalTime = value;
         }
+
         public FlightStatus Status
         {
             get => _status;
@@ -131,33 +120,60 @@ namespace DTO.Flight
         public bool IsValid(out string errorMessage)
         {
             errorMessage = string.Empty;
+
             if (string.IsNullOrWhiteSpace(_flightNumber))
             {
                 errorMessage = "Số hiệu chuyến bay không được để trống";
                 return false;
             }
+
             if (_aircraftId <= 0)
             {
                 errorMessage = "Phải chọn máy bay";
                 return false;
             }
-            if(_routeId <= 0)
+
+            if (_routeId <= 0)
             {
                 errorMessage = "Phải chọn tuyến bay";
                 return false;
             }
+
+            if (!_departureTime.HasValue)
+            {
+                errorMessage = "Phải nhập thời gian khởi hành";
+                return false;
+            }
+
             if (!_arrivalTime.HasValue)
             {
                 errorMessage = "Phải nhập thời gian đến";
                 return false;
             }
-            if(_arrivalTime.Value <= _departureTime.Value)
+
+            // Validate datetime range
+            if (_departureTime.Value.Year < 2000 || _departureTime.Value.Year > 2100)
+            {
+                errorMessage = "Thời gian khởi hành không hợp lệ (năm phải từ 2000-2100)";
+                return false;
+            }
+
+            if (_arrivalTime.Value.Year < 2000 || _arrivalTime.Value.Year > 2100)
+            {
+                errorMessage = "Thời gian đến không hợp lệ (năm phải từ 2000-2100)";
+                return false;
+            }
+
+            // Validate arrival after departure
+            if (_arrivalTime.Value <= _departureTime.Value)
             {
                 errorMessage = "Thời gian đến phải sau thời gian khởi hành";
                 return false;
             }
+
             return true;
         }
+
         public TimeSpan? GetFlightDuration()
         {
             if(_departureTime.HasValue && _arrivalTime.HasValue)
