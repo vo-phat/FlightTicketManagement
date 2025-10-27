@@ -33,6 +33,7 @@
             this.btnTestBaseDAO = new System.Windows.Forms.Button();
             this.txtResult = new System.Windows.Forms.TextBox();
             this.btnClear = new System.Windows.Forms.Button();
+            this.btnTestFlightDAO = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnTestConnection
@@ -105,6 +106,20 @@
             this.txtResult.TabIndex = 4;
             this.txtResult.WordWrap = false;
             // 
+            // Config button
+            // 
+            this.btnTestFlightDAO.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(126)))), ((int)(((byte)(34)))));
+            this.btnTestFlightDAO.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnTestFlightDAO.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.btnTestFlightDAO.ForeColor = System.Drawing.Color.White;
+            this.btnTestFlightDAO.Location = new System.Drawing.Point(12, 196);
+            this.btnTestFlightDAO.Name = "btnTestFlightDAO";
+            this.btnTestFlightDAO.Size = new System.Drawing.Size(200, 40);
+            this.btnTestFlightDAO.TabIndex = 5;
+            this.btnTestFlightDAO.Text = "4. Test Flight DAO";
+            this.btnTestFlightDAO.UseVisualStyleBackColor = false;
+            this.btnTestFlightDAO.Click += new System.EventHandler(this.btnTestFlightDAO_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -116,6 +131,7 @@
             this.Controls.Add(this.btnTestBaseDAO);
             this.Controls.Add(this.btnTestDTO);
             this.Controls.Add(this.btnTestConnection);
+            this.Controls.Add(this.btnTestFlightDAO);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Flight Ticket Management - Test Console";
@@ -130,5 +146,7 @@
         private System.Windows.Forms.Button btnTestBaseDAO;
         private System.Windows.Forms.Button btnClear;
         private System.Windows.Forms.TextBox txtResult;
+        private System.Windows.Forms.Button btnTestFlightDAO;
+
     }
 }
