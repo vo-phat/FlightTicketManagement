@@ -15,7 +15,8 @@ namespace GUI {
             //    }
             //}
 
-            Application.Run(new MainForm());
+            //Application.Run(new MainForm());
+            Application.Run(new Form1());
         }
     }
 }

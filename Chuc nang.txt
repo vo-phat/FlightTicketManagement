@@ -1,0 +1,52 @@
+1. Chuyến bay:
+ - Quản lý chuyến bay:
+   + Danh sách chuyến bay, tìm chuyến bay
+   + Tạo chuyến bay mới
+- Quy tắc giá vé:
+   + Danh sách quy tắc: Xóa lọc, tìm kiếm
+   + Tạo quy tắc: Lưu quy tắc vừa tạo
+2. Đặt chỗ/Vé:
+- Tạo/tìm đặt chỗ:
+	+ Tạo tìm đặt chỗ: (Lọc, tạo đặt nhanh)
+	+ Quản lý vé: Lọc, Xem vé, Check-in, Hủy vé (CHƯA CÓ GIAO DIỆN)
+- Lịch sử vé (Admin) (CHƯA CÓ GIAO DIỆN)
+3. Hành lý:
+- Check-in hành lý/gán tag:
+	+ Danh sách hành lý: (Tìm hành lý)
+	+ Gán tag/Check-in: Lưu tag vừa tạo
+	+ Theo dõi/ Chi tiết (CHƯA CÓ GIAO DIỆN)
+- Báo cáo thất lạc (CHƯA CÓ GIAO DIỆN)
+4. Danh mục:
+- Hãng hàng không:
+	+ Danh sách hãng: Tìm hãng, xem, sửa, xóa
+	+ Tạo hãng mới: Lưu hãng vừa tạo
+- Máy bay: 
+	+ Danh sách máy bay: tìm máy bay, xem, sửa, xóa
+	+ Tạo máy bay mới: Lưu máy bay vừa tạo
+- Sân bay:
+	+ Danh sách sân bay: tìm, xem, sửa xóa (CHƯA CÓ GIAO DIỆN)
+	+ Tạo sân bay mới: Lưu sân bay vừa tạo
+- Tuyến bay:
+	+ Danh sách tuyến bay: tìm, xem, sửa xóa
+	+ Tạo tuyến bay mới: Lưu tuyến bay vừa tạo
+- Hạng vé:
+	+ Danh sách cabin: tìm, xem, sửa xóa
+	+ Tạo cabin mới: Lưu sân bay vừa tạo
+- Ghế máy bay:
+	+ Danh sách ghế: Lọc danh sách, xóa lọc danh sách, tìm kiếm, xem thông tin ghế, sửa, xóa ghế
+	+ Tạo ghế mới: Lưu ghế vừa tạo
+	+ Ghế theo chuyến: Lọc danh sách, xóa lọc danh sách, tìm kiếm, xem thông tin ghế, sửa, chặn ghế
+	+ Xem sơ đồ ghế: lọc theo chuyến bay, máy bay, hạng
+5. Thanh toán:
+- POS/Giao dịch:
+	+ POS/Thanh toán thường tại quầy: Lọc, tạo hóa đơn (CHƯA CÓ GIAO DIỆN), xem hóa đơn, hoàn tiền cho hóa 	  đơn
+	+ Thanh toán online (Credit card, bank, e-wallet): Lọc hóa đơn, xem, xác nhận đã thanh toán, hoàn tiền
+6. Báo cáo: 
+- Thống kê doanh thu hàng tháng (CHƯA CÓ GIAO DIỆN)
+7. Hồ sơ của tôi:
+- Thông tin cá nhân: lưu thay đổi
+- Đổi mật khẩu: lưu thay đổi
+- Đăng xuất
+8. Hệ thống:
+- Phân quyền theo vai trò admin, staff, user
+- Quản lý quyên cho tài khoản
