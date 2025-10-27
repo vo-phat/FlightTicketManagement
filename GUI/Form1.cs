@@ -38,7 +38,7 @@ namespace GUI
                 // Test connection
                 if (DatabaseConnection.TestConnection())
                 {
-                    result.AppendLine("✅ Kết nối database THÀNH CÔNG!");
+                    result.AppendLine("Kết nối database THÀNH CÔNG!");
                     result.AppendLine();
                     result.AppendLine($"Server: localhost:3306");
                     result.AppendLine($"Database: flightticketmanagement");
@@ -47,7 +47,7 @@ namespace GUI
                 }
                 else
                 {
-                    result.AppendLine("❌ KHÔNG THỂ KẾT NỐI DATABASE!");
+                    result.AppendLine("KHÔNG THỂ KẾT NỐI DATABASE!");
                     result.AppendLine();
                     result.AppendLine("Kiểm tra:");
                     result.AppendLine("- XAMPP MySQL đã chạy chưa?");
@@ -59,7 +59,7 @@ namespace GUI
             }
             catch (Exception ex)
             {
-                txtResult.Text = $"❌ LỖI:\r\n\r\n{ex.Message}\r\n\r\nStack Trace:\r\n{ex.StackTrace}";
+                txtResult.Text = $"LỖI:\r\n\r\n{ex.Message}\r\n\r\nStack Trace:\r\n{ex.StackTrace}";
             }
         }
 
@@ -92,7 +92,7 @@ namespace GUI
 
                 if (flight.IsValid(out string error))
                 {
-                    result.AppendLine($"✅ DTO hợp lệ!");
+                    result.AppendLine($"DTO hợp lệ!");
                     result.AppendLine($"Flight Number: {flight.FlightNumber}");
                     result.AppendLine($"Aircraft ID: {flight.AircraftId}");
                     result.AppendLine($"Route ID: {flight.RouteId}");
@@ -104,7 +104,7 @@ namespace GUI
                 }
                 else
                 {
-                    result.AppendLine($"❌ DTO không hợp lệ: {error}");
+                    result.AppendLine($"DTO không hợp lệ: {error}");
                 }
 
                 result.AppendLine();
@@ -116,12 +116,12 @@ namespace GUI
                 var invalidFlight = new FlightDTO();
                 if (!invalidFlight.IsValid(out string validationError))
                 {
-                    result.AppendLine($"✅ Validation hoạt động đúng!");
+                    result.AppendLine($"Validation hoạt động đúng!");
                     result.AppendLine($"Lỗi bắt được: {validationError}");
                 }
                 else
                 {
-                    result.AppendLine($"❌ Validation không hoạt động!");
+                    result.AppendLine($"Validation không hoạt động!");
                 }
 
                 result.AppendLine();
@@ -136,14 +136,14 @@ namespace GUI
                         "VN456",
                         1,
                         1,
-                        DateTime.Now.AddDays(1).AddHours(2), // Khởi hành SAU
-                        DateTime.Now.AddDays(1)              // Đến TRƯỚC ❌
+                        DateTime.Now.AddDays(1).AddHours(2),
+                        DateTime.Now.AddDays(1)
                     );
-                    result.AppendLine($"❌ Exception KHÔNG được throw!");
+                    result.AppendLine($"Exception KHÔNG được throw!");
                 }
                 catch (ArgumentException ex)
                 {
-                    result.AppendLine($"✅ Exception được throw đúng!");
+                    result.AppendLine($"Exception được throw đúng!");
                     result.AppendLine($"Message: {ex.Message}");
                 }
 
@@ -166,7 +166,7 @@ namespace GUI
             }
             catch (Exception ex)
             {
-                txtResult.Text = $"❌ LỖI:\r\n\r\n{ex.Message}\r\n\r\nStack Trace:\r\n{ex.StackTrace}";
+                txtResult.Text = $" LỖI:\r\n\r\n{ex.Message}\r\n\r\nStack Trace:\r\n{ex.StackTrace}";
             }
         }
 
@@ -189,7 +189,7 @@ namespace GUI
             }
             catch (Exception ex)
             {
-                txtResult.Text = $"❌ LỖI:\r\n\r\n{ex.Message}\r\n\r\nStack Trace:\r\n{ex.StackTrace}";
+                txtResult.Text = $" LỖI:\r\n\r\n{ex.Message}\r\n\r\nStack Trace:\r\n{ex.StackTrace}";
             }
         }
 
