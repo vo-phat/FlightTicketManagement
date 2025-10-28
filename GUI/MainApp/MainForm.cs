@@ -340,22 +340,22 @@ namespace GUI.MainApp {
         private void OpenTicketHistory() {
             MessageBox.Show("Lịch sử vé (Admin).", "Ticket History");
         }
-
+         //Baggage
         private void OpenBaggageCheckin() {
             var control = new BaggageControl();
-            control.SwitchTab(1);
+            control.SwitchTab(0);
             LoadControl(control);
         }
 
         private void OpenBaggageTracking() {
             var control = new BaggageControl();
-            control.SwitchTab(2);
+            control.SwitchTab(1);
             LoadControl(control);
         }
 
         private void OpenBaggageReports() {
             var control = new BaggageControl();
-            control.SwitchTab(0);
+            control.SwitchTab(2);
             LoadControl(control);
         }
 

@@ -1,66 +1,90 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
 using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-using GUI.Components.Buttons;
+using GUI.Features.Ticket.subTicket;
+namespace GUI.Features.Ticket
+{
+    public partial class TicketControl : UserControl
+    {
+        private BookingSearchControl bookingSearchControl;
+        private HistoryTicketControl historyTicketControl;
+        private TicketOpsControl ticketOpsControl;
+        public TicketControl()
+        {
+            InitializeComponent();
+            /// content
+            bookingSearchControl = new BookingSearchControl();
+            historyTicketControl = new HistoryTicketControl();
+            ticketOpsControl = new TicketOpsControl();
 
-namespace GUI.Features.Ticket {
-    public class TicketControl : UserControl {
-        private Button btnSearchCreate, btnOps;
-        private Panel contentPanel;
-        private BookingSearchControl searchControl;
-        private TicketOpsControl opsControl;
+            pnlBookingSearch.Dock = DockStyle.Fill;
+            pnlHistoryTicket.Dock = DockStyle.Fill;
+            pnlTicketOps.Dock = DockStyle.Fill;
 
-        public TicketControl() { InitializeComponent(); }
+            bookingSearchControl.Dock = DockStyle.Fill;
+            historyTicketControl.Dock = DockStyle.Fill;
+            ticketOpsControl.Dock = DockStyle.Fill;
 
-        private void InitializeComponent() {
-            Dock = DockStyle.Fill;
-            BackColor = Color.WhiteSmoke;
+            //pnl content con
+            pnlBookingSearch.Controls.Add(bookingSearchControl);
+            pnlHistoryTicket.Controls.Add(historyTicketControl);
+            pnlTicketOps.Controls.Add(ticketOpsControl);
 
-            btnSearchCreate = new PrimaryButton("Tạo/Tìm đặt chỗ");
-            btnOps = new SecondaryButton("Quản lý vé");
-            btnSearchCreate.Click += (_, __) => SwitchTab(0);
-            btnOps.Click += (_, __) => SwitchTab(1);
+            
+            // pnl content cha
+            pnlContentTicket.Controls.Add(pnlBookingSearch);
+            pnlContentTicket.Controls.Add(pnlHistoryTicket);
+            pnlContentTicket.Controls.Add(pnlTicketOps);
+            pnlContentTicket.BringToFront();
 
-            var top = new FlowLayoutPanel {
-                Dock = DockStyle.Top,
-                Height = 56,
-                BackColor = Color.White,
-                Padding = new Padding(24, 12, 0, 0),
-                AutoSize = true
-            };
-            top.Controls.AddRange(new Control[] { btnSearchCreate, btnOps });
-
-            contentPanel = new Panel { Dock = DockStyle.Fill, BackColor = Color.WhiteSmoke };
-            searchControl = new BookingSearchControl { Dock = DockStyle.Fill };
-            opsControl = new TicketOpsControl { Dock = DockStyle.Fill };
-
-            contentPanel.Controls.Add(searchControl);
-            contentPanel.Controls.Add(opsControl);
-
-            Controls.Add(contentPanel);
-            Controls.Add(top);
-
-            SwitchTab(0);
-            searchControl.BringToFront();
+            /// butoon
+            pnlHeaderTicket.Controls.Add(btnOpsTicket);
+            pnlHeaderTicket.Controls.Add(btnCreateFindTicket);
+            pnlHeaderTicket.Controls.Add(btnHistoryTicket);
+            pnlHeaderTicket.Dock = DockStyle.Top;
+            pnlContentTicket.Height = 60;
+            pnlHeaderTicket.BringToFront();
         }
 
-        private void SwitchTab(int idx) {
-            searchControl.Visible = (idx == 0);
-            opsControl.Visible = (idx == 1);
+        private void btnCreateFindTicket_Click(object sender, EventArgs e)
+        {
+            switchTab(0);
+        }
 
-            var top = btnSearchCreate.Parent as FlowLayoutPanel;
-            top!.Controls.Clear();
-            if (idx == 0) {
-                btnSearchCreate = new PrimaryButton("Tạo/Tìm đặt chỗ");
-                btnOps = new SecondaryButton("Quản lý vé");
-            } else {
-                btnSearchCreate = new SecondaryButton("Tạo/Tìm đặt chỗ");
-                btnOps = new PrimaryButton("Quản lý vé");
+        private void btnOpsTicket_Click(object sender, EventArgs e)
+        {
+            switchTab(1);
+        }
+
+        private void btnHistoryTicket_Click(object sender, EventArgs e)
+        {
+            switchTab(2);
+        }
+        public void switchTab(int i)
+        {
+            pnlBookingSearch.Visible = false;
+            pnlHistoryTicket.Visible = false;
+            pnlTicketOps.Visible = false;
+            switch (i)
+            {
+                case 0:
+                    pnlBookingSearch.Visible = true;
+                    break;
+                case 1:
+                    pnlHistoryTicket.Visible = true;
+                    break;
+                case 2:
+                    pnlTicketOps.Visible = true;
+                    break;
+                default:
+                    break;
             }
-            btnSearchCreate.Click += (_, __) => SwitchTab(0);
-            btnOps.Click += (_, __) => SwitchTab(1);
-            top.Controls.AddRange(new Control[] { btnSearchCreate, btnOps });
-
-            if (idx == 0) searchControl.BringToFront(); else opsControl.BringToFront();
         }
     }
 }
