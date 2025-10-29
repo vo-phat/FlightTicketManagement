@@ -9,12 +9,11 @@ namespace DTO.Ticket
 {
     public enum TicketStatus
     {
-        UNKNOWN,      // Trạng thái không xác định
         BOOKED,       // Đã đặt
-        CONFIRMED,    // Đã xác nhận/xuất vé
-        CHECKED_IN,
-        BOARDED,      // Đã lên máy bay
-        REFUNDED,     // Đã hoàn tiền
+        CONFIRMED ,    // Đã xác nhận/xuất vé
+        CHECKED_IN ,
+        BOARDED ,      // Đã lên máy bay
+        REFUNDED ,     // Đã hoàn tiền
         CANCELED      // Đã hủy
     }
     public class TicketDTO
@@ -22,21 +21,21 @@ namespace DTO.Ticket
         
         public int TicketId { get; set; }
 
-        
-        //public int PassengerId { get; set; }
 
-        
-        //public int FlightSeatId { get; set; }
+        public int PassengerId { get; set; }
 
-        
-        //public string TicketNumber { get; set; }
 
-        
-        //public DateTime IssueDate { get; set; }
+        public int FlightSeatId { get; set; }
 
-        
-        //public TicketStatus Status { get; set; }
 
-       
+        public string TicketNumber { get; set; }
+
+
+        public DateTime IssueDate { get; set; }
+
+
+        public TicketStatus Status { get; set; }
+
+
     }
 }

@@ -46,12 +46,6 @@
             dtpSearchFlightDateTicket = new DateTimePicker();
             cboSearchStatusTicket = new ComboBox();
             dgvBookingsTicket = new DataGridView();
-            colTicketId = new DataGridViewTextBoxColumn();
-            colPassengerId = new DataGridViewTextBoxColumn();
-            colFlightSeatId = new DataGridViewTextBoxColumn();
-            colTicketNumber = new DataGridViewTextBoxColumn();
-            colIssueDate = new DataGridViewTextBoxColumn();
-            colStatus = new DataGridViewTextBoxColumn();
             label8 = new Label();
             label9 = new Label();
             ((System.ComponentModel.ISupportInitialize)dgvBookingsTicket).BeginInit();
@@ -199,55 +193,12 @@
             // dgvBookingsTicket
             // 
             dgvBookingsTicket.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvBookingsTicket.Columns.AddRange(new DataGridViewColumn[] { colTicketId, colPassengerId, colFlightSeatId, colTicketNumber, colIssueDate, colStatus });
-            dgvBookingsTicket.Location = new Point(206, 358);
+            dgvBookingsTicket.Location = new Point(72, 352);
             dgvBookingsTicket.Name = "dgvBookingsTicket";
             dgvBookingsTicket.RowHeadersWidth = 51;
-            dgvBookingsTicket.Size = new Size(806, 188);
+            dgvBookingsTicket.Size = new Size(1091, 188);
             dgvBookingsTicket.TabIndex = 17;
             dgvBookingsTicket.CellContentClick += dgvBookingsTicket_CellContentClick;
-            // 
-            // colTicketId
-            // 
-            colTicketId.HeaderText = "TicketId";
-            colTicketId.MinimumWidth = 6;
-            colTicketId.Name = "colTicketId";
-            colTicketId.Width = 125;
-            // 
-            // colPassengerId
-            // 
-            colPassengerId.HeaderText = "PassengerId";
-            colPassengerId.MinimumWidth = 6;
-            colPassengerId.Name = "colPassengerId";
-            colPassengerId.Width = 125;
-            // 
-            // colFlightSeatId
-            // 
-            colFlightSeatId.HeaderText = "FlightSeatId";
-            colFlightSeatId.MinimumWidth = 6;
-            colFlightSeatId.Name = "colFlightSeatId";
-            colFlightSeatId.Width = 125;
-            // 
-            // colTicketNumber
-            // 
-            colTicketNumber.HeaderText = "TicketNumber";
-            colTicketNumber.MinimumWidth = 6;
-            colTicketNumber.Name = "colTicketNumber";
-            colTicketNumber.Width = 125;
-            // 
-            // colIssueDate
-            // 
-            colIssueDate.HeaderText = "IssueDate";
-            colIssueDate.MinimumWidth = 6;
-            colIssueDate.Name = "colIssueDate";
-            colIssueDate.Width = 125;
-            // 
-            // colStatus
-            // 
-            colStatus.HeaderText = "Status";
-            colStatus.MinimumWidth = 6;
-            colStatus.Name = "colStatus";
-            colStatus.Width = 125;
             // 
             // label8
             // 
@@ -320,11 +271,5 @@
         private DataGridView dgvBookingsTicket;
         private Label label8;
         private Label label9;
-        private DataGridViewTextBoxColumn colTicketId;
-        private DataGridViewTextBoxColumn colPassengerId;
-        private DataGridViewTextBoxColumn colFlightSeatId;
-        private DataGridViewTextBoxColumn colTicketNumber;
-        private DataGridViewTextBoxColumn colIssueDate;
-        private DataGridViewTextBoxColumn colStatus;
     }
 }
