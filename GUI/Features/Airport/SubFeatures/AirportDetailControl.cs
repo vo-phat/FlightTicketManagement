@@ -2,17 +2,30 @@
 using System.Windows.Forms;
 
 namespace GUI.Features.Airport.SubFeatures {
-    public class AirportDetailControl : UserControl {
+    public class AirportDetailControl : UserControl
+    {
         private Label vCode, vName, vCity, vCountry, vTz;
 
         public AirportDetailControl() { InitializeComponent(); BuildLayout(); }
 
-        private void InitializeComponent() { Dock = DockStyle.Fill; BackColor = Color.FromArgb(232, 240, 252); }
+        private void InitializeComponent()
+        {
+            SuspendLayout();
+            // 
+            // AirportDetailControl
+            // 
+            BackColor = Color.FromArgb(232, 240, 252);
+            Name = "AirportDetailControl";
+            Size = new Size(991, 582);
+            Load += AirportDetailControl_Load;
+            ResumeLayout(false);
+        }
 
         private static Label Key(string t) => new Label { Text = t, AutoSize = true, Font = new Font("Segoe UI", 10f, FontStyle.Bold), Margin = new Padding(0, 6, 12, 6) };
         private static Label Val(string n) => new Label { Name = n, AutoSize = true, Font = new Font("Segoe UI", 10f), Margin = new Padding(0, 6, 0, 6) };
 
-        private void BuildLayout() {
+        private void BuildLayout()
+        {
             var title = new Label { Text = "🛫 Chi tiết sân bay", AutoSize = true, Font = new Font("Segoe UI", 20, FontStyle.Bold), Padding = new Padding(24, 20, 24, 0), Dock = DockStyle.Top };
             var card = new Panel { BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle, Padding = new Padding(16), Margin = new Padding(24, 8, 24, 24), Dock = DockStyle.Fill };
 
@@ -41,8 +54,14 @@ namespace GUI.Features.Airport.SubFeatures {
             Controls.Add(main);
         }
 
-        public void LoadAirport(string code, string name, string city, string country, string tz) {
+        public void LoadAirport(string code, string name, string city, string country, string tz)
+        {
             vCode.Text = code; vName.Text = name; vCity.Text = city; vCountry.Text = country; vTz.Text = tz;
+        }
+
+        private void AirportDetailControl_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }
