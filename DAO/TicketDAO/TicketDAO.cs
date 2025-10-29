@@ -1,8 +1,10 @@
-﻿using DTO.Ticket;
+﻿using DTO.BaggageDTO;
+using DTO.Ticket;
 using MySqlConnector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,43 +12,39 @@ namespace DAO.TicketDAO
 {
     public class TicketDAO
     {
-        // Không khai báo biến thành viên ở đây, ngoại trừ các hằng số nếu cần.
-
-        // Phương thức để lấy tất cả các vé
         public List<TicketDTO> GetAllTickets()
         {
-            // 1. Tạo danh sách kết quả BÊN TRONG phương thức
+            Console.WriteLine($"qui cute   sfkjasjfklasfj Đang đọc vé có ID");
             var listTickets = new List<TicketDTO>();
-
-            // 2. Luôn dùng 'using' để quản lý kết nối
-            using (MySqlConnection conn = DbConnection.GetConnection()) // Giả sử anh có lớp DbConnection helper
+            using (MySqlConnection conn = DbConnection.GetConnection())
             {
                 try
                 {
                     conn.Open();
-
-                    // 3. Liệt kê rõ các cột cần lấy
-                    string sqlQuery = "SELECT ticket_id, ticket_passenger_id, flight_seat_id, ticket_number, issue_date, status FROM tickets";
-
+                    string sqlQuery = "SELECT ticket_id, ticket_passenger_id, flight_seat_id, ticket_number, issue_date FROM tickets";
                     using (MySqlCommand cmd = new MySqlCommand(sqlQuery, conn))
                     {
                         using (MySqlDataReader reader = cmd.ExecuteReader())
                         {
+                            // CHỈ SỬ DỤNG VÒNG LẶP WHILE
                             while (reader.Read())
                             {
-                                // 4. Tạo đối tượng DTO mới cho mỗi dòng dữ liệu
+                                // Mọi logic xử lý cho một dòng phải nằm BÊN TRONG vòng lặp này
+
+                                // In ra Console để kiểm tra
+                                Console.WriteLine($"Đang đọc vé có ID: {reader.GetInt32("ticket_id")}");
+
+                                // Tạo đối tượng TicketDTO
                                 var ticket = new TicketDTO
                                 {
                                     TicketId = reader.GetInt32("ticket_id"),
-                                    PassengerId = reader.GetInt32("ticket_passenger_id"),
-                                    FlightSeatId = reader.GetInt32("flight_seat_id"),
-                                    TicketNumber = reader.GetString("ticket_number"),
-                                    IssueDate = reader.GetDateTime("issue_date"),
-                                    // Chuyển đổi từ chuỗi trong DB sang enum trong DTO
-                                    Status = Enum.Parse<TicketStatus>(reader.GetString("status"), true) // true để không phân biệt hoa/thường
+                                    //PassengerId = reader.GetInt32("ticket_passenger_id"),
+                                    //FlightSeatId = reader.GetInt32("flight_seat_id"),
+                                    //TicketNumber = reader.GetString("ticket_number"),
+                                    // Bỏ qua issue_date vì anh đã comment lại
                                 };
 
-                                // 5. Thêm đối tượng mới tạo vào danh sách
+                                // Thêm vào danh sách
                                 listTickets.Add(ticket);
                             }
                         }
@@ -54,13 +52,11 @@ namespace DAO.TicketDAO
                 }
                 catch (Exception ex)
                 {
-                    // Ghi log lỗi ở đây
-                    Console.WriteLine("Lỗi khi lấy danh sách vé: " + ex.Message);
+                    Console.WriteLine("Lỗi khi lấy tất cả vé: " + ex.Message);
                 }
-                // Kết nối sẽ tự đóng ở đây
             }
 
-            // 6. Trả về danh sách kết quả
+            Console.WriteLine($"Tổng số vé đọc được: {listTickets.Count}");
             return listTickets;
         }
 

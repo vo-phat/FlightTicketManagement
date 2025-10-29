@@ -14,10 +14,9 @@ namespace DAO
 
         public static MySqlConnection GetConnection()
         {
-            MySqlConnection conn = new MySqlConnection(connStr);
-            conn.Open();
-            return conn;
+            // Chỉ tạo và trả về đối tượng kết nối.
+            // KHÔNG gọi conn.Open() ở đây.
+            return new MySqlConnection(connStr);
         }
     }
-
 }
