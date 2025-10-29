@@ -10,11 +10,11 @@ namespace DAO
     public static class DbConnection
     {
         private static readonly string connStr =
-            "Server=localhost;Database=flight_ticket_db;User ID=root;Password=;";
+            "Server=localhost;Database=flightticketmanagement;User ID=root;Password=;";
 
         public static MySqlConnection GetConnection()
         {
-            var conn = new MySqlConnection(connStr);
+            MySqlConnection conn = new MySqlConnection(connStr);
             conn.Open();
             return conn;
         }

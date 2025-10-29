@@ -36,23 +36,24 @@ namespace GUI.Features.Ticket
             pnlHistoryTicket.Controls.Add(historyTicketControl);
             pnlTicketOps.Controls.Add(ticketOpsControl);
 
-            
+
             // pnl content cha
             pnlContentTicket.Controls.Add(pnlBookingSearch);
             pnlContentTicket.Controls.Add(pnlHistoryTicket);
             pnlContentTicket.Controls.Add(pnlTicketOps);
             pnlContentTicket.BringToFront();
 
-            /// butoon
-            pnlHeaderTicket.Controls.Add(btnOpsTicket);
-            pnlHeaderTicket.Controls.Add(btnCreateFindTicket);
-            pnlHeaderTicket.Controls.Add(btnHistoryTicket);
+            ///// add butoon
+            //pnlHeaderTicket.Controls.Add(btnOpsTicket);
+            //pnlHeaderTicket.Controls.Add(btnCreateFindTicket);
+            //pnlHeaderTicket.Controls.Add(btnHistoryTicket);
+            // chỉnh header
             pnlHeaderTicket.Dock = DockStyle.Top;
-            pnlContentTicket.Height = 60;
+            pnlHeaderTicket.Height = 60;
             pnlHeaderTicket.BringToFront();
         }
 
-        private void btnCreateFindTicket_Click(object sender, EventArgs e)
+        private void btnBookingAndSearchTicket_Click(object sender, EventArgs e)
         {
             switchTab(0);
         }

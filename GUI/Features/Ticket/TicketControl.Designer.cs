@@ -78,7 +78,7 @@
             btnCreateFindTicket.TabIndex = 0;
             btnCreateFindTicket.Text = "Tạo/Tìm đặt chỗ";
             btnCreateFindTicket.UseVisualStyleBackColor = true;
-            btnCreateFindTicket.Click += btnCreateFindTicket_Click;
+            btnCreateFindTicket.Click += btnBookingAndSearchTicket_Click;
             // 
             // pnlContentTicket
             // 
@@ -87,26 +87,26 @@
             pnlContentTicket.Controls.Add(pnlBookingSearch);
             pnlContentTicket.Location = new Point(3, 92);
             pnlContentTicket.Name = "pnlContentTicket";
-            pnlContentTicket.Size = new Size(1136, 500);
+            pnlContentTicket.Size = new Size(1197, 665);
             pnlContentTicket.TabIndex = 1;
             // 
             // pnlTicketOps
             // 
-            pnlTicketOps.Location = new Point(606, 82);
+            pnlTicketOps.Location = new Point(720, 162);
             pnlTicketOps.Name = "pnlTicketOps";
             pnlTicketOps.Size = new Size(250, 125);
             pnlTicketOps.TabIndex = 2;
             // 
             // pnlHistoryTicket
             // 
-            pnlHistoryTicket.Location = new Point(392, 261);
+            pnlHistoryTicket.Location = new Point(429, 464);
             pnlHistoryTicket.Name = "pnlHistoryTicket";
             pnlHistoryTicket.Size = new Size(250, 125);
             pnlHistoryTicket.TabIndex = 1;
             // 
             // pnlBookingSearch
             // 
-            pnlBookingSearch.Location = new Point(82, 101);
+            pnlBookingSearch.Location = new Point(85, 254);
             pnlBookingSearch.Name = "pnlBookingSearch";
             pnlBookingSearch.Size = new Size(250, 125);
             pnlBookingSearch.TabIndex = 0;
@@ -118,7 +118,7 @@
             Controls.Add(pnlContentTicket);
             Controls.Add(pnlHeaderTicket);
             Name = "TicketControl";
-            Size = new Size(1142, 595);
+            Size = new Size(1203, 760);
             pnlHeaderTicket.ResumeLayout(false);
             pnlContentTicket.ResumeLayout(false);
             ResumeLayout(false);
