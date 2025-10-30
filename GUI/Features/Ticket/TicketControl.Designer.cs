@@ -47,7 +47,7 @@
             pnlHeaderTicket.Controls.Add(btnCreateFindTicket);
             pnlHeaderTicket.Location = new Point(3, 3);
             pnlHeaderTicket.Name = "pnlHeaderTicket";
-            pnlHeaderTicket.Size = new Size(1136, 83);
+            pnlHeaderTicket.Size = new Size(1316, 83);
             pnlHeaderTicket.TabIndex = 0;
             // 
             // btnHistoryTicket
@@ -85,9 +85,9 @@
             pnlContentTicket.Controls.Add(pnlTicketOps);
             pnlContentTicket.Controls.Add(pnlHistoryTicket);
             pnlContentTicket.Controls.Add(pnlBookingSearch);
-            pnlContentTicket.Location = new Point(3, 92);
+            pnlContentTicket.Location = new Point(0, 128);
             pnlContentTicket.Name = "pnlContentTicket";
-            pnlContentTicket.Size = new Size(1197, 665);
+            pnlContentTicket.Size = new Size(1621, 588);
             pnlContentTicket.TabIndex = 1;
             // 
             // pnlTicketOps
@@ -118,7 +118,8 @@
             Controls.Add(pnlContentTicket);
             Controls.Add(pnlHeaderTicket);
             Name = "TicketControl";
-            Size = new Size(1203, 760);
+            Size = new Size(1649, 810);
+            Load += TicketControl_Load;
             pnlHeaderTicket.ResumeLayout(false);
             pnlContentTicket.ResumeLayout(false);
             ResumeLayout(false);

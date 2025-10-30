@@ -45,7 +45,7 @@
             owedWeightCheckin = new TextBox();
             txtBaggageTypeCheckin = new TextBox();
             txtFlightCodeCheckin = new TextBox();
-            btnSaveAndPrintCheckin = new Button();
+            btnSaveAndPrintCheckin = new GUI.Components.Buttons.PrimaryButton();
             SuspendLayout();
             // 
             // label1
@@ -190,15 +190,41 @@
             // 
             // btnSaveAndPrintCheckin
             // 
-            btnSaveAndPrintCheckin.Location = new Point(905, 151);
+            btnSaveAndPrintCheckin.AutoSize = true;
+            btnSaveAndPrintCheckin.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnSaveAndPrintCheckin.BackColor = Color.FromArgb(155, 209, 243);
+            btnSaveAndPrintCheckin.BorderColor = Color.FromArgb(40, 40, 40);
+            btnSaveAndPrintCheckin.BorderThickness = 2;
+            btnSaveAndPrintCheckin.CornerRadius = 22;
+            btnSaveAndPrintCheckin.EnableHoverEffects = true;
+            btnSaveAndPrintCheckin.FlatAppearance.BorderSize = 0;
+            btnSaveAndPrintCheckin.FlatStyle = FlatStyle.Flat;
+            btnSaveAndPrintCheckin.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            btnSaveAndPrintCheckin.ForeColor = Color.White;
+            btnSaveAndPrintCheckin.HoverBackColor = Color.White;
+            btnSaveAndPrintCheckin.HoverBorderColor = Color.FromArgb(0, 92, 175);
+            btnSaveAndPrintCheckin.HoverForeColor = Color.FromArgb(0, 92, 175);
+            btnSaveAndPrintCheckin.Icon = null;
+            btnSaveAndPrintCheckin.IconSize = new Size(22, 22);
+            btnSaveAndPrintCheckin.IconSpacing = 10;
+            btnSaveAndPrintCheckin.Location = new Point(828, 203);
             btnSaveAndPrintCheckin.Name = "btnSaveAndPrintCheckin";
-            btnSaveAndPrintCheckin.Size = new Size(94, 29);
-            btnSaveAndPrintCheckin.TabIndex = 17;
+            btnSaveAndPrintCheckin.NormalBackColor = Color.FromArgb(155, 209, 243);
+            btnSaveAndPrintCheckin.NormalBorderColor = Color.FromArgb(40, 40, 40);
+            btnSaveAndPrintCheckin.NormalForeColor = Color.White;
+            btnSaveAndPrintCheckin.Padding = new Padding(24, 10, 24, 10);
+            btnSaveAndPrintCheckin.PreferredMaxWidth = 0;
+            btnSaveAndPrintCheckin.PressedBackColor = Color.FromArgb(225, 240, 255);
+            btnSaveAndPrintCheckin.PressedBorderColor = Color.FromArgb(0, 92, 175);
+            btnSaveAndPrintCheckin.PressedForeColor = Color.FromArgb(0, 92, 175);
+            btnSaveAndPrintCheckin.Size = new Size(204, 52);
+            btnSaveAndPrintCheckin.TabIndex = 18;
             btnSaveAndPrintCheckin.Text = "Lưu và in tag";
-            btnSaveAndPrintCheckin.UseVisualStyleBackColor = true;
-            btnSaveAndPrintCheckin.Click += btnSaveAndPrintCheckin_Click;
+            btnSaveAndPrintCheckin.TextAlign = ContentAlignment.MiddleLeft;
+            btnSaveAndPrintCheckin.UseVisualStyleBackColor = false;
+            btnSaveAndPrintCheckin.WordWrap = false;
             // 
-            // BaggageDetailControl
+            // BaggageCheckinControl
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -220,7 +246,7 @@
             Controls.Add(txtCodeCheckin);
             Controls.Add(txtNumTicketCheckin);
             Controls.Add(label1);
-            Name = "BaggageDetailControl";
+            Name = "BaggageCheckinControl";
             Size = new Size(1063, 565);
             ResumeLayout(false);
             PerformLayout();
@@ -245,6 +271,6 @@
         private TextBox owedWeightCheckin;
         private TextBox txtBaggageTypeCheckin;
         private TextBox txtFlightCodeCheckin;
-        private Button btnSaveAndPrintCheckin;
+        private Components.Buttons.PrimaryButton btnSaveAndPrintCheckin;
     }
 }
