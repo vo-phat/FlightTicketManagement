@@ -4,6 +4,7 @@ using MySqlConnector;
 using System;
 using System.Data;
 using System.Runtime.InteropServices;
+using DTO.Flight;
 namespace DAO.Flight
 {
     public class FlightDAO: BaseDAO
@@ -514,5 +515,66 @@ namespace DAO.Flight
             }
         }
         #endregion
+
+        /// <summary>
+        /// Lấy danh sách chuyến bay với thông tin JOIN (dùng cho List/Grid)
+        /// </summary>
+        public List<FlightViewModel> GetFlightViewModels()
+        {
+            List<FlightViewModel> flights = new List<FlightViewModel>();
+
+            string query = @"
+        SELECT 
+            f.flight_id,
+            f.flight_number,
+            f.departure_time,
+            f.arrival_time,
+            f.status,
+            
+            -- Departure airport
+            dep_airport.airport_code AS dep_code,
+            dep_airport.airport_name AS dep_name,
+            
+            -- Arrival airport
+            arr_airport.airport_code AS arr_code,
+            arr_airport.airport_name AS arr_name,
+            
+            -- Available seats (optional - có thể bỏ nếu chưa có data)
+            (SELECT COUNT(*) 
+             FROM Flight_Seats fs 
+             WHERE fs.flight_id = f.flight_id 
+             AND fs.seat_status = 'AVAILABLE') AS available_seats
+            
+        FROM Flights f
+        INNER JOIN Routes r ON f.route_id = r.route_id
+        INNER JOIN Airports dep_airport ON r.departure_place_id = dep_airport.airport_id
+        INNER JOIN Airports arr_airport ON r.arrival_place_id = arr_airport.airport_id
+        ORDER BY f.departure_time DESC";
+
+            try
+            {
+                ExecuteReader(query, reader =>
+                {
+                    flights.Add(new FlightViewModel(
+                        flightId: GetInt32(reader, "flight_id"),
+                        flightNumber: GetString(reader, "flight_number"),
+                        departureTime: GetDateTime(reader, "departure_time"),
+                        arrivalTime: GetDateTime(reader, "arrival_time"),
+                        status: FlightStatusExtensions.Parse(GetString(reader, "status")),
+                        departureAirportCode: GetString(reader, "dep_code"),
+                        departureAirportName: GetString(reader, "dep_name"),
+                        arrivalAirportCode: GetString(reader, "arr_code"),
+                        arrivalAirportName: GetString(reader, "arr_name"),
+                        availableSeats: GetInt32(reader, "available_seats")
+                    ));
+                });
+
+                return flights;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi lấy danh sách chuyến bay với thông tin chi tiết: {ex.Message}", ex);
+            }
+        }
     }
 }

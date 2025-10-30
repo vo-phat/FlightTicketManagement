@@ -1,51 +1,94 @@
+using System;
 using System.Drawing;
 using System.Windows.Forms;
+using BUS.Flight;
+using DTO.Flight;
+using GUI.Components.Buttons;
 
-namespace GUI.Features.Flight.SubFeatures {
-    public class FlightDetailControl : UserControl {
-        private TableLayoutPanel main;        // root giống FlightListControl
+namespace GUI.Features.Flight.SubFeatures
+{
+    public class FlightDetailControl : UserControl
+    {
+        #region Fields
+
+        private TableLayoutPanel main;
         private Label lblTitle;
-        private Panel card;                   // khung trắng
-        private TableLayoutPanel grid;        // bảng 2 cột key/value như bản đầu
+        private Panel card;
+        private TableLayoutPanel grid;
+        private FlowLayoutPanel bottomPanel;
 
-        // giữ field để set nhanh; đồng thời gán Name để bạn vẫn Controls["..."] được
-        private Label valueFlightId, valueDeparturePlace, valueArrivalPlace,
-                      valueDepartureTime, valueArrivalTime, valueSeatAvailable;
+        // Value labels
+        private Label valueFlightId;
+        private Label valueFlightNumber;
+        private Label valueAircraftId;
+        private Label valueRouteId;
+        private Label valueDepartureTime;
+        private Label valueArrivalTime;
+        private Label valueStatus;
+        private Label valueDuration;
 
-        public FlightDetailControl() {
+        // Buttons
+        private PrimaryButton btnEdit;
+        private SecondaryButton btnDelete;
+        private SecondaryButton btnClose;
+
+        // Current flight
+        private FlightDTO currentFlight;
+
+        #endregion
+
+        #region Events
+
+        public event Action<int> OnEditRequested;
+        public event Action OnClosed;
+
+        #endregion
+
+        #region Constructor
+
+        public FlightDetailControl()
+        {
             InitializeComponent();
             BuildLayout();
         }
 
-        private void InitializeComponent() {
+        #endregion
+
+        #region Initialization
+
+        private void InitializeComponent()
+        {
             SuspendLayout();
-            // 
-            // FlightDetailControl
-            // 
             BackColor = Color.FromArgb(232, 240, 252);
             Name = "FlightDetailControl";
             Size = new Size(1460, 430);
             ResumeLayout(false);
         }
 
-        private static Label Key(string text) => new Label {
+        private static Label Key(string text) => new Label
+        {
             Text = text,
             AutoSize = true,
-            Font = new Font("Segoe UI", 10f, FontStyle.Bold),
-            Margin = new Padding(0, 6, 12, 6)
+            Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+            Margin = new Padding(0, 8, 12, 8),
+            ForeColor = Color.FromArgb(70, 70, 70)
         };
 
-        private static Label Val(string name) => new Label {
+        private static Label Val(string name) => new Label
+        {
             Name = name,
-            Text = "",
+            Text = "-",
             AutoSize = true,
-            Font = new Font("Segoe UI", 10f, FontStyle.Regular),
-            Margin = new Padding(0, 6, 0, 6)
+            Font = new Font("Segoe UI", 11f, FontStyle.Regular),
+            Margin = new Padding(0, 8, 0, 8),
+            ForeColor = Color.FromArgb(33, 37, 41)
         };
 
-        private void BuildLayout() {
+        private void BuildLayout()
+        {
             // ===== Title =====
-            lblTitle = new Label {
+            lblTitle = new Label
+            {
                 Text = "🧾 Chi tiết chuyến bay",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
@@ -54,92 +97,108 @@ namespace GUI.Features.Flight.SubFeatures {
                 Dock = DockStyle.Top
             };
 
-            // ===== Card trắng chứa grid 2 cột =====
-            // ===== Card trắng chứa grid 2 cột =====
-            card = new Panel {
+            // ===== Card =====
+            card = new Panel
+            {
                 BackColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle,
-                Padding = new Padding(16),
+                Padding = new Padding(20),
                 Margin = new Padding(24, 8, 24, 24),
-                Dock = DockStyle.Fill
+                Dock = DockStyle.Fill,
+                AutoScroll = true
             };
 
-            // Hàng tiêu đề nhỏ trong card
-            var secTitle = new Label {
+            var secTitle = new Label
+            {
                 Text = "Thông tin chuyến bay",
                 AutoSize = true,
-                Font = new Font("Segoe UI", 12, FontStyle.Bold),
-                Margin = new Padding(0, 0, 0, 16),
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                Margin = new Padding(0, 0, 0, 20),
                 Dock = DockStyle.Top
             };
 
-            // Bảng grid
-            grid = new TableLayoutPanel {
+            // ===== Grid =====
+            grid = new TableLayoutPanel
+            {
                 Dock = DockStyle.Top,
                 AutoSize = true,
-                ColumnCount = 2
+                ColumnCount = 4, // 2 cặp key-value
+                Padding = new Padding(0, 0, 0, 20)
             };
+
+            // Column styles: Key1 | Value1 | Key2 | Value2
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180));
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
 
-            // ✅ Thêm tiêu đề trước, grid sau
-            card.Controls.Add(grid);
-            card.Controls.Add(secTitle);
-
-            // ===== Các dòng (đúng thứ tự & index, KHÔNG trùng như trước) =====
-            // 1
+            // Row 0: Flight ID | Flight Number
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            grid.Controls.Add(Key("Mã chuyến bay:"), 0, 0);
+            grid.Controls.Add(Key("ID:"), 0, 0);
             valueFlightId = Val("valueFlightId");
             grid.Controls.Add(valueFlightId, 1, 0);
+            grid.Controls.Add(Key("Số hiệu:"), 2, 0);
+            valueFlightNumber = Val("valueFlightNumber");
+            grid.Controls.Add(valueFlightNumber, 3, 0);
 
-            // 2
+            // Row 1: Aircraft ID | Route ID
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            grid.Controls.Add(Key("Nơi cất cánh:"), 0, 1);
-            valueDeparturePlace = Val("valueDeparturePlace");
-            grid.Controls.Add(valueDeparturePlace, 1, 1);
+            grid.Controls.Add(Key("Máy bay:"), 0, 1);
+            valueAircraftId = Val("valueAircraftId");
+            grid.Controls.Add(valueAircraftId, 1, 1);
+            grid.Controls.Add(Key("Tuyến bay:"), 2, 1);
+            valueRouteId = Val("valueRouteId");
+            grid.Controls.Add(valueRouteId, 3, 1);
 
-            // 3
+            // Row 2: Departure Time | Arrival Time
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            grid.Controls.Add(Key("Nơi hạ cánh:"), 0, 2);
-            valueArrivalPlace = Val("valueArrivalPlace");
-            grid.Controls.Add(valueArrivalPlace, 1, 2);
-
-            // 4
-            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            grid.Controls.Add(Key("Giờ cất cánh:"), 0, 3);
+            grid.Controls.Add(Key("Giờ khởi hành:"), 0, 2);
             valueDepartureTime = Val("valueDepartureTime");
-            grid.Controls.Add(valueDepartureTime, 1, 3);
-
-            // 5  (⚠️ fix: KHÔNG còn trùng row 4)
-            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            grid.Controls.Add(Key("Giờ hạ cánh:"), 0, 4);
+            grid.Controls.Add(valueDepartureTime, 1, 2);
+            grid.Controls.Add(Key("Giờ hạ cánh:"), 2, 2);
             valueArrivalTime = Val("valueArrivalTime");
-            grid.Controls.Add(valueArrivalTime, 1, 4);
+            grid.Controls.Add(valueArrivalTime, 3, 2);
 
-            // 6
+            // Row 3: Status | Duration
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            grid.Controls.Add(Key("Số ghế trống:"), 0, 5);
-            valueSeatAvailable = Val("valueSeatAvailable");
-            grid.Controls.Add(valueSeatAvailable, 1, 5);
+            grid.Controls.Add(Key("Trạng thái:"), 0, 3);
+            valueStatus = Val("valueStatus");
+            grid.Controls.Add(valueStatus, 1, 3);
+            grid.Controls.Add(Key("Thời gian bay:"), 2, 3);
+            valueDuration = Val("valueDuration");
+            grid.Controls.Add(valueDuration, 3, 3);
 
-            card.Controls.Add(grid);
-            grid.BringToFront();
-
-            // ===== Bottom actions (nút Đóng giống list) =====
-            var bottom = new FlowLayoutPanel {
+            // ===== Bottom actions =====
+            bottomPanel = new FlowLayoutPanel
+            {
                 Dock = DockStyle.Bottom,
                 FlowDirection = FlowDirection.RightToLeft,
                 AutoSize = true,
-                Padding = new Padding(0, 12, 12, 12)
+                Padding = new Padding(0, 20, 0, 0),
+                WrapContents = false
             };
-            var btnClose = new Button { Text = "Đóng", AutoSize = true };
-            btnClose.Click += (_, __) => FindForm()?.Close();
-            bottom.Controls.Add(btnClose);
-            card.Controls.Add(bottom);
+
+            btnClose = new SecondaryButton("✖ Đóng") { Width = 120, Height = 40 };
+            btnClose.Click += (s, e) => OnClosed?.Invoke();
+
+            btnDelete = new SecondaryButton("🗑 Xóa") { Width = 120, Height = 40, Margin = new Padding(0, 0, 12, 0) };
+            btnDelete.Click += BtnDelete_Click;
+
+            btnEdit = new PrimaryButton("✏ Sửa") { Width = 120, Height = 40, Margin = new Padding(0, 0, 12, 0) };
+            btnEdit.Click += BtnEdit_Click;
+
+            bottomPanel.Controls.Add(btnClose);
+            bottomPanel.Controls.Add(btnDelete);
+            bottomPanel.Controls.Add(btnEdit);
+
+            // ===== Assemble card =====
+            card.Controls.Add(grid);
+            card.Controls.Add(bottomPanel);
+            card.Controls.Add(secTitle);
 
             // ===== Main =====
-            main = new TableLayoutPanel {
+            main = new TableLayoutPanel
+            {
                 Dock = DockStyle.Fill,
                 BackColor = Color.Transparent,
                 ColumnCount = 1,
@@ -155,18 +214,157 @@ namespace GUI.Features.Flight.SubFeatures {
             Controls.Add(main);
         }
 
-        // Giữ đúng chữ ký FlightListControl đang gọi
-        public void LoadFlightInfo(string flightId, string departurePlace, string arrivalPlace,
-                                   string departureTime, string arrivalTime, string seatAvailable) {
-            // set qua field…
-            valueFlightId.Text = flightId ?? "";
-            valueDeparturePlace.Text = departurePlace ?? "";
-            valueArrivalPlace.Text = arrivalPlace ?? "";
-            valueDepartureTime.Text = departureTime ?? "";
-            valueArrivalTime.Text = arrivalTime ?? "";
-            valueSeatAvailable.Text = seatAvailable ?? "";
+        #endregion
 
-            // …và bạn vẫn có thể truy cập qua Controls["valueXxx"] nếu cần
+        #region Public Methods
+
+        /// <summary>
+        /// Load flight từ database theo ID
+        /// </summary>
+        public void LoadFlight(int flightId)
+        {
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+
+                var result = FlightBUS.Instance.GetFlightById(flightId);
+
+                if (!result.Success)
+                {
+                    MessageBox.Show(
+                        result.Message,
+                        "Lỗi tải dữ liệu",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                    return;
+                }
+
+                currentFlight = result.GetData<FlightDTO>();
+                DisplayFlightInfo();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Lỗi không xác định:\n{ex.Message}",
+                    "Lỗi",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+            finally
+            {
+                Cursor = Cursors.Default;
+            }
         }
+
+        /// <summary>
+        /// Hiển thị thông tin flight lên UI
+        /// </summary>
+        private void DisplayFlightInfo()
+        {
+            if (currentFlight == null) return;
+
+            lblTitle.Text = $"🧾 Chi tiết chuyến bay - {currentFlight.FlightNumber}";
+
+            valueFlightId.Text = currentFlight.FlightId.ToString();
+            valueFlightNumber.Text = currentFlight.FlightNumber;
+            valueAircraftId.Text = $"#{currentFlight.AircraftId}";
+            valueRouteId.Text = $"#{currentFlight.RouteId}";
+            valueDepartureTime.Text = currentFlight.DepartureTime?.ToString("dd/MM/yyyy HH:mm") ?? "N/A";
+            valueArrivalTime.Text = currentFlight.ArrivalTime?.ToString("dd/MM/yyyy HH:mm") ?? "N/A";
+            valueStatus.Text = currentFlight.Status.GetDescription();
+
+            var duration = currentFlight.GetFlightDuration();
+            valueDuration.Text = duration.HasValue
+                ? $"{duration.Value.Hours}h {duration.Value.Minutes}m"
+                : "N/A";
+
+            // Style cho status
+            valueStatus.Font = new Font("Segoe UI", 11f, FontStyle.Bold);
+            valueStatus.ForeColor = currentFlight.Status switch
+            {
+                FlightStatus.SCHEDULED => Color.FromArgb(0, 123, 255),
+                FlightStatus.DELAYED => Color.FromArgb(255, 193, 7),
+                FlightStatus.CANCELLED => Color.FromArgb(220, 53, 69),
+                FlightStatus.COMPLETED => Color.FromArgb(40, 167, 69),
+                _ => Color.Black
+            };
+
+            // Disable buttons nếu không thể sửa/xóa
+            bool canModify = currentFlight.Status == FlightStatus.SCHEDULED ||
+                            currentFlight.Status == FlightStatus.DELAYED;
+            btnEdit.Enabled = canModify;
+
+            bool canDelete = currentFlight.Status == FlightStatus.SCHEDULED;
+            btnDelete.Enabled = canDelete;
+        }
+
+        #endregion
+
+        #region Event Handlers
+
+        private void BtnEdit_Click(object sender, EventArgs e)
+        {
+            if (currentFlight == null) return;
+            OnEditRequested?.Invoke(currentFlight.FlightId);
+        }
+
+        private void BtnDelete_Click(object sender, EventArgs e)
+        {
+            if (currentFlight == null) return;
+
+            var result = MessageBox.Show(
+                $"Bạn có chắc chắn muốn xóa chuyến bay '{currentFlight.FlightNumber}'?\n\n" +
+                $"Hành động này không thể hoàn tác!",
+                "Xác nhận xóa",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning
+            );
+
+            if (result != DialogResult.Yes) return;
+
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+
+                var deleteResult = FlightBUS.Instance.DeleteFlight(currentFlight.FlightId);
+
+                if (deleteResult.Success)
+                {
+                    MessageBox.Show(
+                        deleteResult.Message,
+                        "Thành công",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                    );
+                    OnClosed?.Invoke(); // Đóng detail và quay về list
+                }
+                else
+                {
+                    MessageBox.Show(
+                        deleteResult.Message,
+                        "Lỗi xóa",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Lỗi không xác định:\n{ex.Message}",
+                    "Lỗi",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+            finally
+            {
+                Cursor = Cursors.Default;
+            }
+        }
+
+        #endregion
     }
 }
