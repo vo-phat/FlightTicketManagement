@@ -1,14 +1,24 @@
-﻿using System;
-using System.Drawing;
-using System.Windows.Forms;
+﻿using BUS.Airline;
+using DTO.Airline;
 using GUI.Components.Buttons;
-using GUI.Features.Airline.SubFeatures;
 using GUI.Components.Inputs;
 using GUI.Components.Tables;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Windows.Forms;
 
-namespace GUI.Features.Airline.SubFeatures {
-    public class AirlineListControl : UserControl {
-        private TableCustom table;
+namespace GUI.Features.Airline.SubFeatures
+{
+    public class AirlineListControl : UserControl
+    {
+        private readonly AirlineBUS _bus = new AirlineBUS();
+        private DataGridView table;
+
+        // Khai báo các control tìm kiếm
+        private UnderlinedTextField txtCode, txtName, txtCountry;
+        private PrimaryButton btnSearch, btnAdd;
 
         private const string ACTION_COL = "Action";
         private const string TXT_VIEW = "Xem";
@@ -16,176 +26,226 @@ namespace GUI.Features.Airline.SubFeatures {
         private const string TXT_DEL = "Xóa";
         private const string SEP = " / ";
 
-        private TableLayoutPanel root, filterWrap;
-        private FlowLayoutPanel filterLeft, filterRight;
-        private Label lblTitle;
-        private UnderlinedTextField txtCode, txtName, txtCountry;
+        // Sự kiện giao tiếp với Control cha
+        public event Action<AirlineDTO>? ViewRequested;
+        public event Action<AirlineDTO>? RequestEdit;
+        public event Action? DataChanged;
 
-        public AirlineListControl() { InitializeComponent(); }
+        public AirlineListControl()
+        {
+            InitializeComponent();
+            RefreshList();
+        }
 
-        private void InitializeComponent() {
+        private void InitializeComponent()
+        {
             SuspendLayout();
-            Dock = DockStyle.Fill;
             BackColor = Color.FromArgb(232, 240, 252);
+            Dock = DockStyle.Fill;
+            AutoScroll = true;
 
-            lblTitle = new Label {
-                Text = "🏢 Danh sách hãng hàng không",
+            // === TIÊU ĐỀ ===
+            var lblTitle = new Label { Text = "✈️ Danh sách hãng hàng không", Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point), ForeColor = Color.FromArgb(40, 55, 77), AutoSize = true, Dock = DockStyle.Top, Padding = new Padding(24, 20, 0, 12) };
+
+            // === PANEL BỘ LỌC ===
+            var filterPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Top,
                 AutoSize = true,
-                Font = new Font("Segoe UI", 20, FontStyle.Bold),
-                ForeColor = Color.Black,
-                Padding = new Padding(24, 20, 24, 0),
-                Dock = DockStyle.Top
+                Padding = new Padding(24, 8, 24, 8),
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false,
+                BackColor = Color.FromArgb(250, 253, 255)
             };
 
-            // Filters
-            filterLeft = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, WrapContents = false };
-            txtCode = new UnderlinedTextField("Mã hãng (code)", "") { Width = 160, Margin = new Padding(0, 0, 24, 0) };
-            txtName = new UnderlinedTextField("Tên hãng", "") { Width = 260, Margin = new Padding(0, 0, 24, 0) };
-            txtCountry = new UnderlinedTextField("Quốc gia", "") { Width = 180, Margin = new Padding(0, 0, 24, 0) };
-            filterLeft.Controls.AddRange(new Control[] { txtCode, txtName, txtCountry });
+            // --- INPUTS TÙY CHỈNH ---
+            txtCode = new UnderlinedTextField("Mã hãng", "") { Width = 140, Margin = new Padding(6, 4, 6, 4), InheritParentBackColor = true, LineThickness = 1 };
+            txtName = new UnderlinedTextField("Tên hãng", "") { Width = 200, Margin = new Padding(6, 4, 6, 4), InheritParentBackColor = true, LineThickness = 1 };
+            txtCountry = new UnderlinedTextField("Quốc gia", "") { Width = 180, Margin = new Padding(6, 4, 6, 4), InheritParentBackColor = true, LineThickness = 1 };
 
-            filterRight = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, FlowDirection = FlowDirection.RightToLeft, WrapContents = false };
-            var btnSearch = new PrimaryButton("🔍 Tìm hãng") { Width = 120, Height = 36 };
-            filterRight.Controls.Add(btnSearch);
+            btnSearch = new PrimaryButton("🔍 Tìm") { Width = 90, Height = 40, Margin = new Padding(10, 6, 6, 6) };
+            btnAdd = new PrimaryButton("➕ Thêm") { Width = 110, Height = 40, Margin = new Padding(6) };
 
-            filterWrap = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(24, 16, 24, 0), ColumnCount = 2 };
-            filterWrap.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
-            filterWrap.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            filterWrap.Controls.Add(filterLeft, 0, 0);
-            filterWrap.Controls.Add(filterRight, 1, 0);
+            btnSearch.Click += (s, e) => RefreshList();
+            btnAdd.Click += (s, e) => RequestEdit?.Invoke(new AirlineDTO());
 
-            // Table
-            table = new TableCustom {
+            filterPanel.Controls.AddRange(new Control[] { txtCode, txtName, txtCountry, btnSearch, btnAdd });
+
+            // === BẢNG DANH SÁCH TÙY CHỈNH ===
+            table = new TableCustom
+            {
                 Dock = DockStyle.Fill,
-                Margin = new Padding(24, 12, 24, 24),
-                ReadOnly = true,
-                RowHeadersVisible = false,
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.None
+                ReadOnly = true,
+                AllowUserToAddRows = false,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                CornerRadius = 16,
+                BorderThickness = 2,
+                BorderColor = Color.FromArgb(200, 200, 200),
             };
 
-            // Columns (Airlines)
-            table.Columns.Add("airlineCode", "Mã");
+            // 1. Cấu hình các Cột 
+            table.Columns.Add("airlineCode", "Mã hãng");
             table.Columns.Add("airlineName", "Tên hãng");
             table.Columns.Add("country", "Quốc gia");
-            table.Columns.Add("aircraftCount", "Số máy bay"); // gợi ý: COUNT(Aircrafts) by airline_id
-
-            var colAction = new DataGridViewTextBoxColumn { Name = ACTION_COL, HeaderText = "Thao tác", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells };
-            table.Columns.Add(colAction);
-            var colHiddenId = new DataGridViewTextBoxColumn { Name = "airlineIdHidden", Visible = false };
-            table.Columns.Add(colHiddenId);
-
-            // demo rows
-            table.Rows.Add("VN", "Vietnam Airlines", "Việt Nam", 120, null, 1);
-            table.Rows.Add("VJ", "VietJet Air", "Việt Nam", 80, null, 2);
-            table.Rows.Add("QH", "Bamboo Airways", "Việt Nam", 35, null, 3);
+            table.Columns.Add(ACTION_COL, "Thao tác");
+            table.Columns[ACTION_COL].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            table.Columns[ACTION_COL].Width = 160;
+            table.Columns.Add("airlineIdHidden", "ID");
+            table.Columns["airlineIdHidden"].Visible = false;
 
             table.CellPainting += Table_CellPainting;
             table.CellMouseMove += Table_CellMouseMove;
             table.CellMouseClick += Table_CellMouseClick;
 
-            // Root
-            root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3 };
-            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
-            root.Controls.Add(lblTitle, 0, 0);
-            root.Controls.Add(filterWrap, 0, 1);
-            root.Controls.Add(table, 0, 2);
+            // === GHÉP TOÀN BỘ GIAO DIỆN ===
+            Controls.Clear();
+            Controls.Add(table);
+            Controls.Add(filterPanel);
+            Controls.Add(lblTitle);
 
-            Controls.Add(root);
             ResumeLayout(false);
         }
 
-        // ===== Action column drawing (Xem / Sửa / Xóa) =====
-        private (Rectangle rcView, Rectangle rcEdit, Rectangle rcDel) GetRects(Rectangle cellBounds, Font font) {
-            int pad = 6;
-            int x = cellBounds.Left + pad;
-            int y = cellBounds.Top + (cellBounds.Height - font.Height) / 2;
+        private bool _isRefreshing = false;
 
+        public void RefreshList()
+        {
+            if (_isRefreshing) return;
+            _isRefreshing = true;
+
+            try
+            {
+                // 1. Lấy toàn bộ danh sách 
+                List<AirlineDTO> filteredList = _bus.GetAllAirlines();
+
+                // 2. Lấy giá trị tìm kiếm
+                string searchCode = txtCode.Text?.Trim().ToLower() ?? "";
+                string searchName = txtName.Text?.Trim().ToLower() ?? "";
+                string searchCountry = txtCountry.Text?.Trim().ToLower() ?? "";
+
+                // 3. Thực hiện LỌC BẰNG LINQ (từng thuộc tính)
+
+                if (!string.IsNullOrWhiteSpace(searchCode))
+                {
+                    filteredList = filteredList
+                        .Where(a => a.AirlineCode != null && a.AirlineCode.ToLower().Contains(searchCode))
+                        .ToList();
+                }
+
+                if (!string.IsNullOrWhiteSpace(searchName))
+                {
+                    filteredList = filteredList
+                        .Where(a => a.AirlineName != null && a.AirlineName.ToLower().Contains(searchName))
+                        .ToList();
+                }
+
+                if (!string.IsNullOrWhiteSpace(searchCountry))
+                {
+                    filteredList = filteredList
+                        .Where(a => a.Country != null && a.Country.ToLower().Contains(searchCountry))
+                        .ToList();
+                }
+
+                // 4. Đổ dữ liệu đã lọc vào bảng
+                table.Rows.Clear();
+                foreach (var a in filteredList)
+                {
+                    table.Rows.Add(
+                        a.AirlineCode,
+                        a.AirlineName,
+                        a.Country ?? "N/A",
+                        null,
+                        a.AirlineId
+                    );
+                }
+                table.InvalidateColumn(table.Columns[ACTION_COL].Index);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi tải dữ liệu: " + ex.Message);
+            }
+            finally
+            {
+                _isRefreshing = false;
+            }
+        }
+        // ... (Các phương thức vẽ và xử lý click giữ nguyên) ...
+
+        private (Rectangle rcView, Rectangle rcEdit, Rectangle rcDel) GetRects(Rectangle b, Font f)
+        {
+            int pad = 6, x = b.Left + pad, y = b.Top + (b.Height - f.Height) / 2;
             var flags = TextFormatFlags.NoPadding;
-            var szV = TextRenderer.MeasureText(TXT_VIEW, font, Size.Empty, flags);
-            var szS = TextRenderer.MeasureText(SEP, font, Size.Empty, flags);
-            var szE = TextRenderer.MeasureText(TXT_EDIT, font, Size.Empty, flags);
-            var szD = TextRenderer.MeasureText(TXT_DEL, font, Size.Empty, flags);
-
+            var szV = TextRenderer.MeasureText(TXT_VIEW, f, Size.Empty, flags);
+            var szS = TextRenderer.MeasureText(SEP, f, Size.Empty, flags);
+            var szE = TextRenderer.MeasureText(TXT_EDIT, f, Size.Empty, flags);
+            var szD = TextRenderer.MeasureText(TXT_DEL, f, Size.Empty, flags);
             var rcV = new Rectangle(new Point(x, y), szV); x += szV.Width + szS.Width;
             var rcE = new Rectangle(new Point(x, y), szE); x += szE.Width + szS.Width;
             var rcD = new Rectangle(new Point(x, y), szD);
             return (rcV, rcE, rcD);
         }
 
-        private void Table_CellPainting(object? s, DataGridViewCellPaintingEventArgs e) {
-            if (e.RowIndex < 0) return;
-            if (table.Columns[e.ColumnIndex].Name != ACTION_COL) return;
-
+        private void Table_CellPainting(object? s, DataGridViewCellPaintingEventArgs e)
+        {
+            if (e.RowIndex < 0 || table.Columns[e.ColumnIndex].Name != ACTION_COL) return;
             e.Handled = true;
             e.Paint(e.ClipBounds, DataGridViewPaintParts.Background | DataGridViewPaintParts.Border);
-
-            var font = e.CellStyle.Font ?? table.Font;
-            var r = GetRects(e.CellBounds, font);
-
-            Color link = Color.FromArgb(0, 92, 175);
-            Color sep = Color.FromArgb(120, 120, 120);
-            Color del = Color.FromArgb(220, 53, 69);
-
-            TextRenderer.DrawText(e.Graphics, TXT_VIEW, font, r.rcView.Location, link, TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(e.Graphics, SEP, font, new Point(r.rcView.Right, r.rcView.Top), sep, TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(e.Graphics, TXT_EDIT, font, r.rcEdit.Location, link, TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(e.Graphics, SEP, font, new Point(r.rcEdit.Right, r.rcEdit.Top), sep, TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(e.Graphics, TXT_DEL, font, r.rcDel.Location, del, TextFormatFlags.NoPadding);
+            var f = e.CellStyle.Font ?? table.Font;
+            var r = GetRects(e.CellBounds, f);
+            Color link = Color.FromArgb(0, 92, 175), sep = Color.FromArgb(120, 120, 120), del = Color.FromArgb(220, 53, 69);
+            TextRenderer.DrawText(e.Graphics, TXT_VIEW, f, r.rcView.Location, link, TextFormatFlags.NoPadding);
+            TextRenderer.DrawText(e.Graphics, SEP, f, new Point(r.rcView.Right, r.rcView.Top), sep, TextFormatFlags.NoPadding);
+            TextRenderer.DrawText(e.Graphics, TXT_EDIT, f, r.rcEdit.Location, link, TextFormatFlags.NoPadding);
+            TextRenderer.DrawText(e.Graphics, SEP, f, new Point(r.rcEdit.Right, r.rcEdit.Top), sep, TextFormatFlags.NoPadding);
+            TextRenderer.DrawText(e.Graphics, TXT_DEL, f, r.rcDel.Location, del, TextFormatFlags.NoPadding);
         }
 
-        private void Table_CellMouseMove(object? s, DataGridViewCellMouseEventArgs e) {
+        private void Table_CellMouseMove(object? s, DataGridViewCellMouseEventArgs e)
+        {
             if (e.RowIndex < 0 || e.ColumnIndex < 0) { table.Cursor = Cursors.Default; return; }
             if (table.Columns[e.ColumnIndex].Name != ACTION_COL) { table.Cursor = Cursors.Default; return; }
-
             var rect = table.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, false);
-            var font = table[e.ColumnIndex, e.RowIndex].InheritedStyle?.Font ?? table.Font;
-            var r = GetRects(rect, font);
+            var f = table[e.ColumnIndex, e.RowIndex].InheritedStyle?.Font ?? table.Font;
+            var r = GetRects(rect, f);
             var p = new Point(e.Location.X + rect.Left, e.Location.Y + rect.Top);
             table.Cursor = (r.rcView.Contains(p) || r.rcEdit.Contains(p) || r.rcDel.Contains(p)) ? Cursors.Hand : Cursors.Default;
         }
 
-        private void Table_CellMouseClick(object? s, DataGridViewCellMouseEventArgs e) {
+        private void Table_CellMouseClick(object? s, DataGridViewCellMouseEventArgs e)
+        {
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
             if (table.Columns[e.ColumnIndex].Name != ACTION_COL) return;
 
             var rect = table.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, false);
-            var font = table[e.ColumnIndex, e.RowIndex].InheritedStyle?.Font ?? table.Font;
-            var r = GetRects(rect, font);
+            var f = table[e.ColumnIndex, e.RowIndex].InheritedStyle?.Font ?? table.Font;
+            var r = GetRects(rect, f);
             var p = new Point(e.Location.X + rect.Left, e.Location.Y + rect.Top);
 
             var row = table.Rows[e.RowIndex];
-            string airlineId = row.Cells["airlineIdHidden"].Value?.ToString() ?? "";
-            string code = row.Cells["airlineCode"].Value?.ToString() ?? "(n/a)";
-            string name = row.Cells["airlineName"].Value?.ToString() ?? "(n/a)";
-            string country = row.Cells["country"].Value?.ToString() ?? "(n/a)";
-            string aircrafts = row.Cells["aircraftCount"].Value?.ToString() ?? "0";
+            int id = Convert.ToInt32(row.Cells["airlineIdHidden"].Value);
+            string code = row.Cells["airlineCode"].Value?.ToString() ?? "";
+            string name = row.Cells["airlineName"].Value?.ToString() ?? "";
+            string country = row.Cells["country"].Value?.ToString() ?? "";
 
-            if (r.rcView.Contains(p)) {
-                using (var frm = new AirlineDetailForm(code, name, country, aircrafts)) {
-                    frm.StartPosition = FormStartPosition.CenterParent;
-                    frm.ShowDialog(FindForm());
+            var dto = new AirlineDTO(id, code, name, country);
+
+            if (r.rcView.Contains(p))
+                ViewRequested?.Invoke(dto);
+            else if (r.rcEdit.Contains(p))
+                RequestEdit?.Invoke(dto);
+            else if (r.rcDel.Contains(p))
+            {
+                if (MessageBox.Show($"Bạn có chắc muốn xóa hãng '{name}'?", "Xác nhận xóa",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    string message;
+                    bool ok = _bus.DeleteAirline(id, out message);
+                    MessageBox.Show(message, ok ? "Thành công" : "Lỗi",
+                        MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+                    if (ok) RefreshList();
                 }
-            } else if (r.rcEdit.Contains(p)) {
-                MessageBox.Show($"Sửa hãng #{airlineId} ({code})", "Sửa", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            } else if (r.rcDel.Contains(p)) {
-                MessageBox.Show($"Xóa hãng #{airlineId} ({code})", "Xóa", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-        }
-    }
-
-    internal class AirlineDetailForm : Form {
-        public AirlineDetailForm(string code, string name, string country, string aircrafts) {
-            Text = $"Chi tiết hãng {code}";
-            Size = new Size(800, 520);
-            BackColor = Color.White;
-
-            var detail = new AirlineDetailControl { Dock = DockStyle.Fill };
-            detail.LoadAirlineInfo(code, name, country, aircrafts);
-            Controls.Add(detail);
         }
     }
 }

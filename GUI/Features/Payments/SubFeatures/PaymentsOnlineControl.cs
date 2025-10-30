@@ -70,6 +70,30 @@ namespace GUI.Features.Payments.SubFeatures {
                 FlowDirection = FlowDirection.RightToLeft,
                 WrapContents = false
             };
+            var btnVNPAY = new PrimaryButton("💳 Thanh toán VNPAY") { Width = 180, Height = 36 };
+            btnVNPAY.Click += (_, __) => {
+                try
+                {
+                    var paymentBUS = new BUS.Payment.PaymentVNPAYBUS();
+                    long amount = 1200000; // ví dụ
+                    string orderInfo = "Thanh toán đặt phòng #6002";
+
+                    string paymentUrl = paymentBUS.CreatePayment(amount, orderInfo);
+
+                    MessageBox.Show("Đang chuyển hướng đến VNPAY...", "Thanh toán", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = paymentUrl,
+                        UseShellExecute = true
+                    });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Lỗi khi tạo thanh toán: " + ex.Message);
+                }
+            };
+            filterRight.Controls.Add(btnVNPAY);
+
             var btnSearch = new PrimaryButton("🔍 Lọc") { Width = 120, Height = 36 };
             btnSearch.Click += (_, __) => { /* TODO: filter DB */ };
             filterRight.Controls.Add(btnSearch);
