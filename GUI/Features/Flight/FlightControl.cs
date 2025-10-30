@@ -1,144 +1,94 @@
-using GUI.Components.Buttons;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using GUI.Features.Flight.SubFeatures;
+
 
 namespace GUI.Features.Flight
 {
-    public class FlightControl : UserControl
+    public partial class FlightControl : UserControl
     {
-        private PrimaryButton btnList;
-        private SecondaryButton btnCreate;
-        private FlowLayoutPanel buttonPanel;
-
-        private FlightListControl listControl;
-        private FlightDetailControl detailControl;
-        private FlightCreateControl createControl;
-
-        private int currentTab = 0;
-
+        private FlightCreateControl flightCreateControl = new FlightCreateControl();
+        private FlightDetailControl flightDetailControl = new FlightDetailControl();
+        private FlightListControl flightListControl = new FlightListControl();
         public FlightControl()
         {
             InitializeComponent();
+
+
+            panel1.Dock = DockStyle.Top;
+            panel1.Height = 60;
+            panel1.BringToFront();
+
+            panelContent.Controls.Add(panelFlightCreate);
+            panelContent.Controls.Add(panelFlightDetail);
+            panelContent.Controls.Add(panelFlightList);
+
+            panelFlightCreate.Controls.Add(flightCreateControl);
+            panelFlightDetail.Controls.Add(flightDetailControl);
+            panelFlightList.Controls.Add(flightListControl);
+            panelFlightCreate.Dock = DockStyle.Fill;
+            panelFlightDetail.Dock = DockStyle.Fill;
+            panelFlightList.Dock = DockStyle.Fill;
+
+        }
+        private void FlightControl_Load(object sender, EventArgs e)
+        {
+            if (flightDetailControl != null) flightDetailControl.Dock = DockStyle.Fill;
+            if (flightListControl != null) flightListControl.Dock = DockStyle.Fill;
+
+            switchTab(0);
         }
 
-        private void InitializeComponent()
+        private void buttonDanhSachChuyenBay_Click(object sender, EventArgs e)
         {
-            this.Dock = DockStyle.Fill;
-            this.BackColor = Color.WhiteSmoke;
-
-            // ===== Button Panel =====
-            buttonPanel = new FlowLayoutPanel
+            switchTab(0);
+        }
+        private void buttonTaoMoiChuyenBay_Click(object sender, EventArgs e)
+        {
+            switchTab(1);
+        }   
+        void switchTab(int i)
+        {
+            if (flightListControl != null) flightListControl.Visible = false;
+            if (flightDetailControl != null) flightDetailControl.Visible = false;
+            if (flightCreateControl != null) flightCreateControl.Visible = false;
+            switch (i)
             {
-                Dock = DockStyle.Top,
-                Height = 56,
-                BackColor = Color.White,
-                Padding = new Padding(24, 12, 0, 0),
-                AutoSize = true,
-                WrapContents = false
-            };
-
-            btnList = new PrimaryButton("📋 Danh sách chuyến bay");
-            btnCreate = new SecondaryButton("➕ Tạo chuyến bay mới");
-
-            btnList.Click += (s, e) => SwitchTab(0);
-            btnCreate.Click += (s, e) => SwitchTab(2);
-
-            buttonPanel.Controls.Add(btnList);
-            buttonPanel.Controls.Add(btnCreate);
-
-            // ===== Sub Controls =====
-            listControl = new FlightListControl { Dock = DockStyle.Fill, Visible = false };
-            detailControl = new FlightDetailControl { Dock = DockStyle.Fill, Visible = false };
-            createControl = new FlightCreateControl { Dock = DockStyle.Fill, Visible = false };
-
-            listControl.OnViewDetail += (flightId) => ShowFlightDetail(flightId);
-            listControl.OnEditFlight += (flightId) => ShowFlightEdit(flightId);
-
-            detailControl.OnEditRequested += (flightId) => ShowFlightEdit(flightId);
-            detailControl.OnClosed += () => { SwitchTab(0); listControl.RefreshData(); };
-
-            createControl.OnFlightCreated += () => { SwitchTab(0); listControl.RefreshData(); };
-            // ===== Add to container =====
-            this.Controls.Add(listControl);
-            this.Controls.Add(detailControl);
-            this.Controls.Add(createControl);
-            this.Controls.Add(buttonPanel);
-
-            // Show list by default
-            SwitchTab(0);
-        }
-        private void ShowFlightEdit(int flightId)
-        {
-            // TODO: Implement edit mode
-            MessageBox.Show($"Edit flight {flightId} - Coming soon!");
-        }
-        private void SwitchTab(int tabIndex)
-        {
-            if (currentTab == tabIndex) return;
-            currentTab = tabIndex;
-
-            // Hide all
-            listControl.Visible = false;
-            detailControl.Visible = false;
-            createControl.Visible = false;
-
-            // Show selected
-            switch (tabIndex)
-            {
-                case 0: // List
-                    listControl.Visible = true;
-                    UpdateButtonStyles(isListActive: true);
+                case 0: // Tab Tạo mới (Create)
+                    if (flightCreateControl != null)
+                    {
+                        flightCreateControl.Visible = true;
+                        flightCreateControl.BringToFront();
+                    }
+                    break;
+                case 1: // Tab Danh sách (List)
+                    if (flightListControl != null)
+                    {
+                        flightListControl.Visible = true;
+                        flightListControl.BringToFront();
+                    }
                     break;
 
-                case 1: // Detail
-                    detailControl.Visible = true;
-                    UpdateButtonStyles(isListActive: false);
+                case 2: // Tab Chi tiết (Detail)
+                if (flightDetailControl != null)
+                {
+                    flightDetailControl.Visible = true;
+                    flightDetailControl.BringToFront();
+                }
                     break;
 
-                case 2: // Create
-                    createControl.Visible = true;
-                    UpdateButtonStyles(isListActive: false);
-                    break;
-            }
-        }
-
-        private void UpdateButtonStyles(bool isListActive)
-        {
-            if (isListActive)
-            {
-                // List active
-                btnList.NormalBackColor = Color.FromArgb(155, 209, 243);
-                btnList.NormalForeColor = Color.White;
-                btnList.Font = new Font("Segoe UI", 12f, FontStyle.Bold);
-
-                btnCreate.NormalBackColor = Color.White;
-                btnCreate.NormalForeColor = Color.FromArgb(155, 209, 243);
-                btnCreate.Font = new Font("Segoe UI", 12f, FontStyle.Regular);
-            }
-            else
-            {
-                // Create active
-                btnList.NormalBackColor = Color.White;
-                btnList.NormalForeColor = Color.FromArgb(155, 209, 243);
-                btnList.Font = new Font("Segoe UI", 12f, FontStyle.Regular);
-
-                btnCreate.NormalBackColor = Color.FromArgb(155, 209, 243);
-                btnCreate.NormalForeColor = Color.White;
-                btnCreate.Font = new Font("Segoe UI", 12f, FontStyle.Bold);
+            
             }
 
-            btnList.Invalidate();
-            btnCreate.Invalidate();
         }
 
-        private void ShowFlightDetail(int flightId)
-        {
-            detailControl.LoadFlight(flightId);
-            SwitchTab(1);
-        }
-
-        public void RefreshFlightList()
-        {
-            listControl.RefreshData();
-        }
+       
     }
 }

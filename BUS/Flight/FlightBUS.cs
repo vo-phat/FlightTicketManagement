@@ -498,17 +498,17 @@ namespace BUS.Flight
         /// <summary>
         /// Lấy danh sách chuyến bay với thông tin đầy đủ (dùng cho Grid/List)
         /// </summary>
-        public BusinessResult GetFlightViewModels()
-        {
-            try
-            {
-                var flights = FlightDAO.Instance.GetFlightViewModels();
-                return BusinessResult.SuccessResult("Lấy danh sách chuyến bay thành công", flights);
-            }
-            catch (Exception ex)
-            {
-                return BusinessResult.ExceptionResult(ex);
-            }
-        }
+        //public BusinessResult GetFlightViewModels()
+        //{
+        //    try
+        //    {
+        //        var flights = FlightDAO.Instance.GetFlightDetailsForDisplay();
+        //        return BusinessResult.SuccessResult("Lấy danh sách chuyến bay thành công", flights);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BusinessResult.ExceptionResult(ex);
+        //    }
+        //}
     }
 }

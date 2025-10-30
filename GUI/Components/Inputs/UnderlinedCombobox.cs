@@ -132,6 +132,29 @@ namespace GUI.Components.Inputs {
                 _combo.Text = value;
             }
         }
+        [Category("Data")]
+        [Description("Gets or sets the data source for this ComboBox.")]
+        public object DataSource
+        {
+            get => _combo.DataSource;
+            set => _combo.DataSource = value;
+        }
+
+        [Category("Data")]
+        [Description("Gets or sets the property to display for this ComboBox.")]
+        public string DisplayMember
+        {
+            get => _combo.DisplayMember;
+            set => _combo.DisplayMember = value;
+        }
+
+        [Category("Data")]
+        [Description("Gets or sets the property to use as the actual value for the items.")]
+        public string ValueMember
+        {
+            get => _combo.ValueMember;
+            set => _combo.ValueMember = value;
+        }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public ComboBox.ObjectCollection Items => _combo.Items;
