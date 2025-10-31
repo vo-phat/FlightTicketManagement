@@ -32,13 +32,13 @@
             DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
             label1 = new Label();
-            underlinedComboBox1 = new GUI.Components.Inputs.UnderlinedComboBox();
-            underlinedTextField3 = new GUI.Components.Inputs.UnderlinedTextField();
-            underlinedTextField4 = new GUI.Components.Inputs.UnderlinedTextField();
-            underlinedTextField5 = new GUI.Components.Inputs.UnderlinedTextField();
-            btnQuickCreateBookingTicket = new GUI.Components.Buttons.PrimaryButton();
-            dgvBookingsTicket = new GUI.Components.Tables.TableCustom();
-            ((System.ComponentModel.ISupportInitialize)dgvBookingsTicket).BeginInit();
+            cboStatusTicket = new GUI.Components.Inputs.UnderlinedComboBox();
+            txtBookingCodeTicket = new GUI.Components.Inputs.UnderlinedTextField();
+            txtPassengerNameTicket = new GUI.Components.Inputs.UnderlinedTextField();
+            txtFlightNumberTicket = new GUI.Components.Inputs.UnderlinedTextField();
+            btnSearchOpsTicket = new GUI.Components.Buttons.PrimaryButton();
+            dgvListOpsTicket = new GUI.Components.Tables.TableCustom();
+            ((System.ComponentModel.ISupportInitialize)dgvListOpsTicket).BeginInit();
             SuspendLayout();
             // 
             // label1
@@ -50,138 +50,138 @@
             label1.TabIndex = 18;
             label1.Text = "Quản lý vé(Check-in/ đổi trạng thái)";
             // 
-            // underlinedComboBox1
+            // cboStatusTicket
             // 
-            underlinedComboBox1.BackColor = Color.Transparent;
-            underlinedComboBox1.LabelText = "Trạng thái";
-            underlinedComboBox1.Location = new Point(677, 167);
-            underlinedComboBox1.MinimumSize = new Size(140, 56);
-            underlinedComboBox1.Name = "underlinedComboBox1";
-            underlinedComboBox1.SelectedIndex = -1;
-            underlinedComboBox1.SelectedItem = null;
-            underlinedComboBox1.SelectedText = "";
-            underlinedComboBox1.Size = new Size(188, 70);
-            underlinedComboBox1.TabIndex = 45;
+            cboStatusTicket.BackColor = Color.Transparent;
+            cboStatusTicket.LabelText = "Trạng thái";
+            cboStatusTicket.Location = new Point(675, 174);
+            cboStatusTicket.MinimumSize = new Size(140, 56);
+            cboStatusTicket.Name = "cboStatusTicket";
+            cboStatusTicket.SelectedIndex = -1;
+            cboStatusTicket.SelectedItem = null;
+            cboStatusTicket.SelectedText = "";
+            cboStatusTicket.Size = new Size(188, 70);
+            cboStatusTicket.TabIndex = 45;
             // 
-            // underlinedTextField3
+            // txtBookingCodeTicket
             // 
-            underlinedTextField3.BackColor = Color.Transparent;
-            underlinedTextField3.FocusedLineThickness = 3;
-            underlinedTextField3.InheritParentBackColor = true;
-            underlinedTextField3.LabelForeColor = Color.FromArgb(70, 70, 70);
-            underlinedTextField3.LabelText = "Mã đặt chỗ";
-            underlinedTextField3.LineColor = Color.FromArgb(40, 40, 40);
-            underlinedTextField3.LineColorFocused = Color.FromArgb(0, 92, 175);
-            underlinedTextField3.LineThickness = 2;
-            underlinedTextField3.Location = new Point(28, 174);
-            underlinedTextField3.Name = "underlinedTextField3";
-            underlinedTextField3.Padding = new Padding(0, 4, 0, 8);
-            underlinedTextField3.PasswordChar = '\0';
-            underlinedTextField3.PlaceholderText = "Placeholder";
-            underlinedTextField3.ReadOnly = false;
-            underlinedTextField3.ReadOnlyLineColor = Color.FromArgb(200, 200, 200);
-            underlinedTextField3.ReadOnlyTextColor = Color.FromArgb(90, 90, 90);
-            underlinedTextField3.Size = new Size(188, 63);
-            underlinedTextField3.TabIndex = 44;
-            underlinedTextField3.TextForeColor = Color.FromArgb(30, 30, 30);
-            underlinedTextField3.UnderlineSpacing = 2;
-            underlinedTextField3.UseSystemPasswordChar = false;
+            txtBookingCodeTicket.BackColor = Color.Transparent;
+            txtBookingCodeTicket.FocusedLineThickness = 3;
+            txtBookingCodeTicket.InheritParentBackColor = true;
+            txtBookingCodeTicket.LabelForeColor = Color.FromArgb(70, 70, 70);
+            txtBookingCodeTicket.LabelText = "Mã đặt chỗ";
+            txtBookingCodeTicket.LineColor = Color.FromArgb(40, 40, 40);
+            txtBookingCodeTicket.LineColorFocused = Color.FromArgb(0, 92, 175);
+            txtBookingCodeTicket.LineThickness = 2;
+            txtBookingCodeTicket.Location = new Point(28, 174);
+            txtBookingCodeTicket.Name = "txtBookingCodeTicket";
+            txtBookingCodeTicket.Padding = new Padding(0, 4, 0, 8);
+            txtBookingCodeTicket.PasswordChar = '\0';
+            txtBookingCodeTicket.PlaceholderText = "Placeholder";
+            txtBookingCodeTicket.ReadOnly = false;
+            txtBookingCodeTicket.ReadOnlyLineColor = Color.FromArgb(200, 200, 200);
+            txtBookingCodeTicket.ReadOnlyTextColor = Color.FromArgb(90, 90, 90);
+            txtBookingCodeTicket.Size = new Size(188, 63);
+            txtBookingCodeTicket.TabIndex = 44;
+            txtBookingCodeTicket.TextForeColor = Color.FromArgb(30, 30, 30);
+            txtBookingCodeTicket.UnderlineSpacing = 2;
+            txtBookingCodeTicket.UseSystemPasswordChar = false;
             // 
-            // underlinedTextField4
+            // txtPassengerNameTicket
             // 
-            underlinedTextField4.BackColor = Color.Transparent;
-            underlinedTextField4.FocusedLineThickness = 3;
-            underlinedTextField4.InheritParentBackColor = true;
-            underlinedTextField4.LabelForeColor = Color.FromArgb(70, 70, 70);
-            underlinedTextField4.LabelText = "Hành khách";
-            underlinedTextField4.LineColor = Color.FromArgb(40, 40, 40);
-            underlinedTextField4.LineColorFocused = Color.FromArgb(0, 92, 175);
-            underlinedTextField4.LineThickness = 2;
-            underlinedTextField4.Location = new Point(444, 174);
-            underlinedTextField4.Name = "underlinedTextField4";
-            underlinedTextField4.Padding = new Padding(0, 4, 0, 8);
-            underlinedTextField4.PasswordChar = '\0';
-            underlinedTextField4.PlaceholderText = "Placeholder";
-            underlinedTextField4.ReadOnly = false;
-            underlinedTextField4.ReadOnlyLineColor = Color.FromArgb(200, 200, 200);
-            underlinedTextField4.ReadOnlyTextColor = Color.FromArgb(90, 90, 90);
-            underlinedTextField4.Size = new Size(188, 63);
-            underlinedTextField4.TabIndex = 43;
-            underlinedTextField4.TextForeColor = Color.FromArgb(30, 30, 30);
-            underlinedTextField4.UnderlineSpacing = 2;
-            underlinedTextField4.UseSystemPasswordChar = false;
+            txtPassengerNameTicket.BackColor = Color.Transparent;
+            txtPassengerNameTicket.FocusedLineThickness = 3;
+            txtPassengerNameTicket.InheritParentBackColor = true;
+            txtPassengerNameTicket.LabelForeColor = Color.FromArgb(70, 70, 70);
+            txtPassengerNameTicket.LabelText = "Hành khách";
+            txtPassengerNameTicket.LineColor = Color.FromArgb(40, 40, 40);
+            txtPassengerNameTicket.LineColorFocused = Color.FromArgb(0, 92, 175);
+            txtPassengerNameTicket.LineThickness = 2;
+            txtPassengerNameTicket.Location = new Point(444, 174);
+            txtPassengerNameTicket.Name = "txtPassengerNameTicket";
+            txtPassengerNameTicket.Padding = new Padding(0, 4, 0, 8);
+            txtPassengerNameTicket.PasswordChar = '\0';
+            txtPassengerNameTicket.PlaceholderText = "Placeholder";
+            txtPassengerNameTicket.ReadOnly = false;
+            txtPassengerNameTicket.ReadOnlyLineColor = Color.FromArgb(200, 200, 200);
+            txtPassengerNameTicket.ReadOnlyTextColor = Color.FromArgb(90, 90, 90);
+            txtPassengerNameTicket.Size = new Size(188, 63);
+            txtPassengerNameTicket.TabIndex = 43;
+            txtPassengerNameTicket.TextForeColor = Color.FromArgb(30, 30, 30);
+            txtPassengerNameTicket.UnderlineSpacing = 2;
+            txtPassengerNameTicket.UseSystemPasswordChar = false;
             // 
-            // underlinedTextField5
+            // txtFlightNumberTicket
             // 
-            underlinedTextField5.BackColor = Color.Transparent;
-            underlinedTextField5.FocusedLineThickness = 3;
-            underlinedTextField5.InheritParentBackColor = true;
-            underlinedTextField5.LabelForeColor = Color.FromArgb(70, 70, 70);
-            underlinedTextField5.LabelText = "Mã chuyến bay";
-            underlinedTextField5.LineColor = Color.FromArgb(40, 40, 40);
-            underlinedTextField5.LineColorFocused = Color.FromArgb(0, 92, 175);
-            underlinedTextField5.LineThickness = 2;
-            underlinedTextField5.Location = new Point(245, 174);
-            underlinedTextField5.Name = "underlinedTextField5";
-            underlinedTextField5.Padding = new Padding(0, 4, 0, 8);
-            underlinedTextField5.PasswordChar = '\0';
-            underlinedTextField5.PlaceholderText = "Placeholder";
-            underlinedTextField5.ReadOnly = false;
-            underlinedTextField5.ReadOnlyLineColor = Color.FromArgb(200, 200, 200);
-            underlinedTextField5.ReadOnlyTextColor = Color.FromArgb(90, 90, 90);
-            underlinedTextField5.Size = new Size(188, 63);
-            underlinedTextField5.TabIndex = 42;
-            underlinedTextField5.TextForeColor = Color.FromArgb(30, 30, 30);
-            underlinedTextField5.UnderlineSpacing = 2;
-            underlinedTextField5.UseSystemPasswordChar = false;
+            txtFlightNumberTicket.BackColor = Color.Transparent;
+            txtFlightNumberTicket.FocusedLineThickness = 3;
+            txtFlightNumberTicket.InheritParentBackColor = true;
+            txtFlightNumberTicket.LabelForeColor = Color.FromArgb(70, 70, 70);
+            txtFlightNumberTicket.LabelText = "Mã chuyến bay";
+            txtFlightNumberTicket.LineColor = Color.FromArgb(40, 40, 40);
+            txtFlightNumberTicket.LineColorFocused = Color.FromArgb(0, 92, 175);
+            txtFlightNumberTicket.LineThickness = 2;
+            txtFlightNumberTicket.Location = new Point(245, 174);
+            txtFlightNumberTicket.Name = "txtFlightNumberTicket";
+            txtFlightNumberTicket.Padding = new Padding(0, 4, 0, 8);
+            txtFlightNumberTicket.PasswordChar = '\0';
+            txtFlightNumberTicket.PlaceholderText = "Placeholder";
+            txtFlightNumberTicket.ReadOnly = false;
+            txtFlightNumberTicket.ReadOnlyLineColor = Color.FromArgb(200, 200, 200);
+            txtFlightNumberTicket.ReadOnlyTextColor = Color.FromArgb(90, 90, 90);
+            txtFlightNumberTicket.Size = new Size(188, 63);
+            txtFlightNumberTicket.TabIndex = 42;
+            txtFlightNumberTicket.TextForeColor = Color.FromArgb(30, 30, 30);
+            txtFlightNumberTicket.UnderlineSpacing = 2;
+            txtFlightNumberTicket.UseSystemPasswordChar = false;
             // 
-            // btnQuickCreateBookingTicket
+            // btnSearchOpsTicket
             // 
-            btnQuickCreateBookingTicket.AutoSize = true;
-            btnQuickCreateBookingTicket.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            btnQuickCreateBookingTicket.BackColor = Color.FromArgb(155, 209, 243);
-            btnQuickCreateBookingTicket.BorderColor = Color.FromArgb(40, 40, 40);
-            btnQuickCreateBookingTicket.BorderThickness = 2;
-            btnQuickCreateBookingTicket.CornerRadius = 22;
-            btnQuickCreateBookingTicket.EnableHoverEffects = true;
-            btnQuickCreateBookingTicket.FlatAppearance.BorderSize = 0;
-            btnQuickCreateBookingTicket.FlatStyle = FlatStyle.Flat;
-            btnQuickCreateBookingTicket.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            btnQuickCreateBookingTicket.ForeColor = Color.White;
-            btnQuickCreateBookingTicket.HoverBackColor = Color.White;
-            btnQuickCreateBookingTicket.HoverBorderColor = Color.FromArgb(0, 92, 175);
-            btnQuickCreateBookingTicket.HoverForeColor = Color.FromArgb(0, 92, 175);
-            btnQuickCreateBookingTicket.Icon = null;
-            btnQuickCreateBookingTicket.IconSize = new Size(22, 22);
-            btnQuickCreateBookingTicket.IconSpacing = 10;
-            btnQuickCreateBookingTicket.Location = new Point(884, 185);
-            btnQuickCreateBookingTicket.Name = "btnQuickCreateBookingTicket";
-            btnQuickCreateBookingTicket.NormalBackColor = Color.FromArgb(155, 209, 243);
-            btnQuickCreateBookingTicket.NormalBorderColor = Color.FromArgb(40, 40, 40);
-            btnQuickCreateBookingTicket.NormalForeColor = Color.White;
-            btnQuickCreateBookingTicket.Padding = new Padding(24, 10, 24, 10);
-            btnQuickCreateBookingTicket.PreferredMaxWidth = 0;
-            btnQuickCreateBookingTicket.PressedBackColor = Color.FromArgb(225, 240, 255);
-            btnQuickCreateBookingTicket.PressedBorderColor = Color.FromArgb(0, 92, 175);
-            btnQuickCreateBookingTicket.PressedForeColor = Color.FromArgb(0, 92, 175);
-            btnQuickCreateBookingTicket.Size = new Size(112, 52);
-            btnQuickCreateBookingTicket.TabIndex = 36;
-            btnQuickCreateBookingTicket.Text = "Lọc";
-            btnQuickCreateBookingTicket.TextAlign = ContentAlignment.MiddleLeft;
-            btnQuickCreateBookingTicket.UseVisualStyleBackColor = false;
-            btnQuickCreateBookingTicket.WordWrap = false;
+            btnSearchOpsTicket.AutoSize = true;
+            btnSearchOpsTicket.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnSearchOpsTicket.BackColor = Color.FromArgb(155, 209, 243);
+            btnSearchOpsTicket.BorderColor = Color.FromArgb(40, 40, 40);
+            btnSearchOpsTicket.BorderThickness = 2;
+            btnSearchOpsTicket.CornerRadius = 22;
+            btnSearchOpsTicket.EnableHoverEffects = true;
+            btnSearchOpsTicket.FlatAppearance.BorderSize = 0;
+            btnSearchOpsTicket.FlatStyle = FlatStyle.Flat;
+            btnSearchOpsTicket.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            btnSearchOpsTicket.ForeColor = Color.White;
+            btnSearchOpsTicket.HoverBackColor = Color.White;
+            btnSearchOpsTicket.HoverBorderColor = Color.FromArgb(0, 92, 175);
+            btnSearchOpsTicket.HoverForeColor = Color.FromArgb(0, 92, 175);
+            btnSearchOpsTicket.Icon = null;
+            btnSearchOpsTicket.IconSize = new Size(22, 22);
+            btnSearchOpsTicket.IconSpacing = 10;
+            btnSearchOpsTicket.Location = new Point(889, 185);
+            btnSearchOpsTicket.Name = "btnSearchOpsTicket";
+            btnSearchOpsTicket.NormalBackColor = Color.FromArgb(155, 209, 243);
+            btnSearchOpsTicket.NormalBorderColor = Color.FromArgb(40, 40, 40);
+            btnSearchOpsTicket.NormalForeColor = Color.White;
+            btnSearchOpsTicket.Padding = new Padding(24, 10, 24, 10);
+            btnSearchOpsTicket.PreferredMaxWidth = 0;
+            btnSearchOpsTicket.PressedBackColor = Color.FromArgb(225, 240, 255);
+            btnSearchOpsTicket.PressedBorderColor = Color.FromArgb(0, 92, 175);
+            btnSearchOpsTicket.PressedForeColor = Color.FromArgb(0, 92, 175);
+            btnSearchOpsTicket.Size = new Size(112, 52);
+            btnSearchOpsTicket.TabIndex = 36;
+            btnSearchOpsTicket.Text = "Lọc";
+            btnSearchOpsTicket.TextAlign = ContentAlignment.MiddleLeft;
+            btnSearchOpsTicket.UseVisualStyleBackColor = false;
+            btnSearchOpsTicket.WordWrap = false;
             // 
-            // dgvBookingsTicket
+            // dgvListOpsTicket
             // 
-            dgvBookingsTicket.AllowUserToResizeRows = false;
+            dgvListOpsTicket.AllowUserToResizeRows = false;
             dataGridViewCellStyle4.BackColor = Color.FromArgb(248, 250, 252);
-            dgvBookingsTicket.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
-            dgvBookingsTicket.BackgroundColor = Color.White;
-            dgvBookingsTicket.BorderColor = Color.FromArgb(40, 40, 40);
-            dgvBookingsTicket.BorderStyle = BorderStyle.None;
-            dgvBookingsTicket.BorderThickness = 2;
-            dgvBookingsTicket.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            dgvBookingsTicket.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
+            dgvListOpsTicket.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
+            dgvListOpsTicket.BackgroundColor = Color.White;
+            dgvListOpsTicket.BorderColor = Color.FromArgb(40, 40, 40);
+            dgvListOpsTicket.BorderStyle = BorderStyle.None;
+            dgvListOpsTicket.BorderThickness = 2;
+            dgvListOpsTicket.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            dgvListOpsTicket.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
             dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle5.BackColor = Color.White;
             dataGridViewCellStyle5.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
@@ -190,9 +190,9 @@
             dataGridViewCellStyle5.SelectionBackColor = Color.White;
             dataGridViewCellStyle5.SelectionForeColor = Color.FromArgb(126, 185, 232);
             dataGridViewCellStyle5.WrapMode = DataGridViewTriState.False;
-            dgvBookingsTicket.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
-            dgvBookingsTicket.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvBookingsTicket.CornerRadius = 16;
+            dgvListOpsTicket.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
+            dgvListOpsTicket.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvListOpsTicket.CornerRadius = 16;
             dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle6.BackColor = Color.White;
             dataGridViewCellStyle6.Font = new Font("Segoe UI", 10F);
@@ -201,52 +201,52 @@
             dataGridViewCellStyle6.SelectionBackColor = Color.FromArgb(155, 209, 243);
             dataGridViewCellStyle6.SelectionForeColor = Color.White;
             dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
-            dgvBookingsTicket.DefaultCellStyle = dataGridViewCellStyle6;
-            dgvBookingsTicket.EnableHeadersVisualStyles = false;
-            dgvBookingsTicket.GridColor = Color.FromArgb(230, 235, 240);
-            dgvBookingsTicket.HeaderBackColor = Color.White;
-            dgvBookingsTicket.HeaderForeColor = Color.FromArgb(126, 185, 232);
-            dgvBookingsTicket.HoverBackColor = Color.FromArgb(232, 245, 255);
-            dgvBookingsTicket.Location = new Point(18, 348);
-            dgvBookingsTicket.MultiSelect = false;
-            dgvBookingsTicket.Name = "dgvBookingsTicket";
-            dgvBookingsTicket.RowAltBackColor = Color.FromArgb(248, 250, 252);
-            dgvBookingsTicket.RowBackColor = Color.White;
-            dgvBookingsTicket.RowForeColor = Color.FromArgb(33, 37, 41);
-            dgvBookingsTicket.RowHeadersVisible = false;
-            dgvBookingsTicket.RowHeadersWidth = 51;
-            dgvBookingsTicket.RowTemplate.Height = 40;
-            dgvBookingsTicket.SelectionBackColor = Color.FromArgb(155, 209, 243);
-            dgvBookingsTicket.SelectionForeColor = Color.White;
-            dgvBookingsTicket.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvBookingsTicket.Size = new Size(1174, 333);
-            dgvBookingsTicket.TabIndex = 35;
+            dgvListOpsTicket.DefaultCellStyle = dataGridViewCellStyle6;
+            dgvListOpsTicket.EnableHeadersVisualStyles = false;
+            dgvListOpsTicket.GridColor = Color.FromArgb(230, 235, 240);
+            dgvListOpsTicket.HeaderBackColor = Color.White;
+            dgvListOpsTicket.HeaderForeColor = Color.FromArgb(126, 185, 232);
+            dgvListOpsTicket.HoverBackColor = Color.FromArgb(232, 245, 255);
+            dgvListOpsTicket.Location = new Point(18, 348);
+            dgvListOpsTicket.MultiSelect = false;
+            dgvListOpsTicket.Name = "dgvListOpsTicket";
+            dgvListOpsTicket.RowAltBackColor = Color.FromArgb(248, 250, 252);
+            dgvListOpsTicket.RowBackColor = Color.White;
+            dgvListOpsTicket.RowForeColor = Color.FromArgb(33, 37, 41);
+            dgvListOpsTicket.RowHeadersVisible = false;
+            dgvListOpsTicket.RowHeadersWidth = 51;
+            dgvListOpsTicket.RowTemplate.Height = 40;
+            dgvListOpsTicket.SelectionBackColor = Color.FromArgb(155, 209, 243);
+            dgvListOpsTicket.SelectionForeColor = Color.White;
+            dgvListOpsTicket.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvListOpsTicket.Size = new Size(1174, 333);
+            dgvListOpsTicket.TabIndex = 35;
             // 
             // TicketOpsControl
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            Controls.Add(underlinedComboBox1);
-            Controls.Add(underlinedTextField3);
-            Controls.Add(underlinedTextField4);
-            Controls.Add(underlinedTextField5);
-            Controls.Add(btnQuickCreateBookingTicket);
-            Controls.Add(dgvBookingsTicket);
+            Controls.Add(cboStatusTicket);
+            Controls.Add(txtBookingCodeTicket);
+            Controls.Add(txtPassengerNameTicket);
+            Controls.Add(txtFlightNumberTicket);
+            Controls.Add(btnSearchOpsTicket);
+            Controls.Add(dgvListOpsTicket);
             Controls.Add(label1);
             Name = "TicketOpsControl";
             Size = new Size(1226, 774);
-            ((System.ComponentModel.ISupportInitialize)dgvBookingsTicket).EndInit();
+            ((System.ComponentModel.ISupportInitialize)dgvListOpsTicket).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
         private Label label1;
-        private Components.Inputs.UnderlinedComboBox underlinedComboBox1;
-        private Components.Inputs.UnderlinedTextField underlinedTextField3;
-        private Components.Inputs.UnderlinedTextField underlinedTextField4;
-        private Components.Inputs.UnderlinedTextField underlinedTextField5;
-        private Components.Buttons.PrimaryButton btnQuickCreateBookingTicket;
-        private Components.Tables.TableCustom dgvBookingsTicket;
+        private Components.Inputs.UnderlinedComboBox cboStatusTicket;
+        private Components.Inputs.UnderlinedTextField txtBookingCodeTicket;
+        private Components.Inputs.UnderlinedTextField txtPassengerNameTicket;
+        private Components.Inputs.UnderlinedTextField txtFlightNumberTicket;
+        private Components.Buttons.PrimaryButton btnSearchOpsTicket;
+        private Components.Tables.TableCustom dgvListOpsTicket;
     }
 }

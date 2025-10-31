@@ -28,11 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
-            button1 = new Button();
-            button2 = new Button();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             tableCustom1 = new GUI.Components.Tables.TableCustom();
             underlinedTextField1 = new GUI.Components.Inputs.UnderlinedTextField();
             underlinedTextField2 = new GUI.Components.Inputs.UnderlinedTextField();
@@ -40,56 +38,37 @@
             ((System.ComponentModel.ISupportInitialize)tableCustom1).BeginInit();
             SuspendLayout();
             // 
-            // button1
-            // 
-            button1.Location = new Point(23, 29);
-            button1.Name = "button1";
-            button1.Size = new Size(206, 29);
-            button1.TabIndex = 0;
-            button1.Text = "tìm vé admin";
-            button1.UseVisualStyleBackColor = true;
-            // 
-            // button2
-            // 
-            button2.Location = new Point(807, 132);
-            button2.Name = "button2";
-            button2.Size = new Size(206, 29);
-            button2.TabIndex = 1;
-            button2.Text = "tìm vé admin";
-            button2.UseVisualStyleBackColor = true;
-            button2.Click += button2_Click;
-            // 
             // tableCustom1
             // 
             tableCustom1.AllowUserToResizeRows = false;
-            dataGridViewCellStyle4.BackColor = Color.FromArgb(248, 250, 252);
-            tableCustom1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle1.BackColor = Color.FromArgb(248, 250, 252);
+            tableCustom1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             tableCustom1.BackgroundColor = Color.White;
             tableCustom1.BorderColor = Color.FromArgb(40, 40, 40);
             tableCustom1.BorderStyle = BorderStyle.None;
             tableCustom1.BorderThickness = 2;
             tableCustom1.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             tableCustom1.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
-            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle5.BackColor = Color.White;
-            dataGridViewCellStyle5.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            dataGridViewCellStyle5.ForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle5.Padding = new Padding(12, 10, 12, 10);
-            dataGridViewCellStyle5.SelectionBackColor = Color.White;
-            dataGridViewCellStyle5.SelectionForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.False;
-            tableCustom1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = Color.White;
+            dataGridViewCellStyle2.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            dataGridViewCellStyle2.ForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle2.Padding = new Padding(12, 10, 12, 10);
+            dataGridViewCellStyle2.SelectionBackColor = Color.White;
+            dataGridViewCellStyle2.SelectionForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
+            tableCustom1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             tableCustom1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             tableCustom1.CornerRadius = 16;
-            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = Color.White;
-            dataGridViewCellStyle6.Font = new Font("Segoe UI", 10F);
-            dataGridViewCellStyle6.ForeColor = Color.FromArgb(33, 37, 41);
-            dataGridViewCellStyle6.Padding = new Padding(12, 6, 12, 6);
-            dataGridViewCellStyle6.SelectionBackColor = Color.FromArgb(155, 209, 243);
-            dataGridViewCellStyle6.SelectionForeColor = Color.White;
-            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
-            tableCustom1.DefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = Color.White;
+            dataGridViewCellStyle3.Font = new Font("Segoe UI", 10F);
+            dataGridViewCellStyle3.ForeColor = Color.FromArgb(33, 37, 41);
+            dataGridViewCellStyle3.Padding = new Padding(12, 6, 12, 6);
+            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(155, 209, 243);
+            dataGridViewCellStyle3.SelectionForeColor = Color.White;
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
+            tableCustom1.DefaultCellStyle = dataGridViewCellStyle3;
             tableCustom1.EnableHeadersVisualStyles = false;
             tableCustom1.GridColor = Color.FromArgb(230, 235, 240);
             tableCustom1.HeaderBackColor = Color.White;
@@ -202,8 +181,6 @@
             Controls.Add(underlinedTextField2);
             Controls.Add(underlinedTextField1);
             Controls.Add(tableCustom1);
-            Controls.Add(button2);
-            Controls.Add(button1);
             Name = "HistoryTicketControl";
             Size = new Size(1219, 763);
             ((System.ComponentModel.ISupportInitialize)tableCustom1).EndInit();
@@ -212,9 +189,6 @@
         }
 
         #endregion
-
-        private Button button1;
-        private Button button2;
         private Components.Tables.TableCustom tableCustom1;
         private Components.Inputs.UnderlinedTextField underlinedTextField1;
         private Components.Inputs.UnderlinedTextField underlinedTextField2;

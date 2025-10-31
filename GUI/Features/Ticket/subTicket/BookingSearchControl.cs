@@ -302,5 +302,20 @@ namespace GUI.Features.Ticket.subTicket
         {
 
         }
+
+        private void BookingSearchControl_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void underlinedTextField1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void underlinedComboBox1_Load_1(object sender, EventArgs e)
+        {
+
+        }
     }
 }

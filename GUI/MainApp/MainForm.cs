@@ -346,14 +346,14 @@ namespace GUI.MainApp {
 
         private void OpenTicketOps() {
             var control = new TicketControl();
-            control.switchTab(1);
+            control.switchTab(2);
             LoadControl(control);
             //MessageBox.Show("Quản lý vé (Staff/Admin) – check-in/đổi trạng thái.", "Ticket Ops");
         }
 
         private void OpenTicketHistory() {
             var control = new TicketControl();
-            control.switchTab(2);
+            control.switchTab(1);
             LoadControl(control);
             //MessageBox.Show("Lịch sử vé (Admin).", "Ticket History");
         }

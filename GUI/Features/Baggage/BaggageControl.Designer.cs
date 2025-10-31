@@ -28,50 +28,24 @@
         /// </summary>
         private void InitializeComponent()
         {
-            btnListBaggage = new Button();
-            btnCheckinBaggage = new Button();
-            btnDetailBaggage = new Button();
             pnlList = new Panel();
             pnlDetail = new Panel();
             pnlCheckin = new Panel();
             pnlHeaderBaggage = new Panel();
-            btnLostBaggage = new Button();
+            btnLostBaggage = new GUI.Components.Buttons.PrimaryButton();
+            btnDetailBaggage = new GUI.Components.Buttons.PrimaryButton();
+            btnListBaggage = new GUI.Components.Buttons.PrimaryButton();
+            btnCheckinBaggage = new GUI.Components.Buttons.PrimaryButton();
             flowLayoutPanel1 = new FlowLayoutPanel();
             pnlContentBaggage = new Panel();
             pnlLost = new Panel();
+            backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
+            backgroundWorker3 = new System.ComponentModel.BackgroundWorker();
+            backgroundWorker4 = new System.ComponentModel.BackgroundWorker();
             pnlHeaderBaggage.SuspendLayout();
             pnlContentBaggage.SuspendLayout();
             SuspendLayout();
-            // 
-            // btnListBaggage
-            // 
-            btnListBaggage.Location = new Point(14, 34);
-            btnListBaggage.Name = "btnListBaggage";
-            btnListBaggage.Size = new Size(194, 29);
-            btnListBaggage.TabIndex = 0;
-            btnListBaggage.Text = "Danh sách hành lý";
-            btnListBaggage.UseVisualStyleBackColor = true;
-            btnListBaggage.Click += btnListBaggage_Click;
-            // 
-            // btnCheckinBaggage
-            // 
-            btnCheckinBaggage.Location = new Point(244, 34);
-            btnCheckinBaggage.Name = "btnCheckinBaggage";
-            btnCheckinBaggage.Size = new Size(169, 29);
-            btnCheckinBaggage.TabIndex = 1;
-            btnCheckinBaggage.Text = "Gắn tag/ Check_in";
-            btnCheckinBaggage.UseVisualStyleBackColor = true;
-            btnCheckinBaggage.Click += btnCheckinBaggage_Click;
-            // 
-            // btnDetailBaggage
-            // 
-            btnDetailBaggage.Location = new Point(437, 34);
-            btnDetailBaggage.Name = "btnDetailBaggage";
-            btnDetailBaggage.Size = new Size(192, 29);
-            btnDetailBaggage.TabIndex = 2;
-            btnDetailBaggage.Text = "Theo dõi/ Chi tiết";
-            btnDetailBaggage.UseVisualStyleBackColor = true;
-            btnDetailBaggage.Click += btnDetailBaggage_Click;
             // 
             // pnlList
             // 
@@ -86,6 +60,7 @@
             pnlDetail.Name = "pnlDetail";
             pnlDetail.Size = new Size(156, 91);
             pnlDetail.TabIndex = 4;
+            pnlDetail.Paint += pnlDetail_Paint;
             // 
             // pnlCheckin
             // 
@@ -97,10 +72,10 @@
             // pnlHeaderBaggage
             // 
             pnlHeaderBaggage.Controls.Add(btnLostBaggage);
-            pnlHeaderBaggage.Controls.Add(flowLayoutPanel1);
-            pnlHeaderBaggage.Controls.Add(btnListBaggage);
             pnlHeaderBaggage.Controls.Add(btnDetailBaggage);
+            pnlHeaderBaggage.Controls.Add(btnListBaggage);
             pnlHeaderBaggage.Controls.Add(btnCheckinBaggage);
+            pnlHeaderBaggage.Controls.Add(flowLayoutPanel1);
             pnlHeaderBaggage.Location = new Point(0, 0);
             pnlHeaderBaggage.Name = "pnlHeaderBaggage";
             pnlHeaderBaggage.Size = new Size(1163, 93);
@@ -108,13 +83,151 @@
             // 
             // btnLostBaggage
             // 
-            btnLostBaggage.Location = new Point(685, 34);
+            btnLostBaggage.AutoSize = true;
+            btnLostBaggage.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnLostBaggage.BackColor = Color.FromArgb(155, 209, 243);
+            btnLostBaggage.BorderColor = Color.FromArgb(40, 40, 40);
+            btnLostBaggage.BorderThickness = 2;
+            btnLostBaggage.CornerRadius = 22;
+            btnLostBaggage.EnableHoverEffects = true;
+            btnLostBaggage.FlatAppearance.BorderSize = 0;
+            btnLostBaggage.FlatStyle = FlatStyle.Flat;
+            btnLostBaggage.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            btnLostBaggage.ForeColor = Color.White;
+            btnLostBaggage.HoverBackColor = Color.White;
+            btnLostBaggage.HoverBorderColor = Color.FromArgb(0, 92, 175);
+            btnLostBaggage.HoverForeColor = Color.FromArgb(0, 92, 175);
+            btnLostBaggage.Icon = null;
+            btnLostBaggage.IconSize = new Size(22, 22);
+            btnLostBaggage.IconSpacing = 10;
+            btnLostBaggage.Location = new Point(789, 19);
             btnLostBaggage.Name = "btnLostBaggage";
-            btnLostBaggage.Size = new Size(207, 29);
-            btnLostBaggage.TabIndex = 3;
+            btnLostBaggage.NormalBackColor = Color.FromArgb(155, 209, 243);
+            btnLostBaggage.NormalBorderColor = Color.FromArgb(40, 40, 40);
+            btnLostBaggage.NormalForeColor = Color.White;
+            btnLostBaggage.Padding = new Padding(24, 10, 24, 10);
+            btnLostBaggage.PreferredMaxWidth = 0;
+            btnLostBaggage.PressedBackColor = Color.FromArgb(225, 240, 255);
+            btnLostBaggage.PressedBorderColor = Color.FromArgb(0, 92, 175);
+            btnLostBaggage.PressedForeColor = Color.FromArgb(0, 92, 175);
+            btnLostBaggage.Size = new Size(233, 52);
+            btnLostBaggage.TabIndex = 7;
             btnLostBaggage.Text = "Báo cáo thất lạc";
-            btnLostBaggage.UseVisualStyleBackColor = true;
+            btnLostBaggage.TextAlign = ContentAlignment.MiddleLeft;
+            btnLostBaggage.UseVisualStyleBackColor = false;
+            btnLostBaggage.WordWrap = false;
             btnLostBaggage.Click += btnLostBaggage_Click;
+            // 
+            // btnDetailBaggage
+            // 
+            btnDetailBaggage.AutoSize = true;
+            btnDetailBaggage.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnDetailBaggage.BackColor = Color.FromArgb(155, 209, 243);
+            btnDetailBaggage.BorderColor = Color.FromArgb(40, 40, 40);
+            btnDetailBaggage.BorderThickness = 2;
+            btnDetailBaggage.CornerRadius = 22;
+            btnDetailBaggage.EnableHoverEffects = true;
+            btnDetailBaggage.FlatAppearance.BorderSize = 0;
+            btnDetailBaggage.FlatStyle = FlatStyle.Flat;
+            btnDetailBaggage.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            btnDetailBaggage.ForeColor = Color.White;
+            btnDetailBaggage.HoverBackColor = Color.White;
+            btnDetailBaggage.HoverBorderColor = Color.FromArgb(0, 92, 175);
+            btnDetailBaggage.HoverForeColor = Color.FromArgb(0, 92, 175);
+            btnDetailBaggage.Icon = null;
+            btnDetailBaggage.IconSize = new Size(22, 22);
+            btnDetailBaggage.IconSpacing = 10;
+            btnDetailBaggage.Location = new Point(506, 19);
+            btnDetailBaggage.Name = "btnDetailBaggage";
+            btnDetailBaggage.NormalBackColor = Color.FromArgb(155, 209, 243);
+            btnDetailBaggage.NormalBorderColor = Color.FromArgb(40, 40, 40);
+            btnDetailBaggage.NormalForeColor = Color.White;
+            btnDetailBaggage.Padding = new Padding(24, 10, 24, 10);
+            btnDetailBaggage.PreferredMaxWidth = 0;
+            btnDetailBaggage.PressedBackColor = Color.FromArgb(225, 240, 255);
+            btnDetailBaggage.PressedBorderColor = Color.FromArgb(0, 92, 175);
+            btnDetailBaggage.PressedForeColor = Color.FromArgb(0, 92, 175);
+            btnDetailBaggage.Size = new Size(247, 52);
+            btnDetailBaggage.TabIndex = 6;
+            btnDetailBaggage.Text = "Theo dõi/ Chi tiết";
+            btnDetailBaggage.TextAlign = ContentAlignment.MiddleLeft;
+            btnDetailBaggage.UseVisualStyleBackColor = false;
+            btnDetailBaggage.WordWrap = false;
+            btnDetailBaggage.Click += btnDetailBaggage_Click;
+            // 
+            // btnListBaggage
+            // 
+            btnListBaggage.AutoSize = true;
+            btnListBaggage.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnListBaggage.BackColor = Color.FromArgb(155, 209, 243);
+            btnListBaggage.BorderColor = Color.FromArgb(40, 40, 40);
+            btnListBaggage.BorderThickness = 2;
+            btnListBaggage.CornerRadius = 22;
+            btnListBaggage.EnableHoverEffects = true;
+            btnListBaggage.FlatAppearance.BorderSize = 0;
+            btnListBaggage.FlatStyle = FlatStyle.Flat;
+            btnListBaggage.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            btnListBaggage.ForeColor = Color.White;
+            btnListBaggage.HoverBackColor = Color.White;
+            btnListBaggage.HoverBorderColor = Color.FromArgb(0, 92, 175);
+            btnListBaggage.HoverForeColor = Color.FromArgb(0, 92, 175);
+            btnListBaggage.Icon = null;
+            btnListBaggage.IconSize = new Size(22, 22);
+            btnListBaggage.IconSpacing = 10;
+            btnListBaggage.Location = new Point(3, 19);
+            btnListBaggage.Name = "btnListBaggage";
+            btnListBaggage.NormalBackColor = Color.FromArgb(155, 209, 243);
+            btnListBaggage.NormalBorderColor = Color.FromArgb(40, 40, 40);
+            btnListBaggage.NormalForeColor = Color.White;
+            btnListBaggage.Padding = new Padding(24, 10, 24, 10);
+            btnListBaggage.PreferredMaxWidth = 0;
+            btnListBaggage.PressedBackColor = Color.FromArgb(225, 240, 255);
+            btnListBaggage.PressedBorderColor = Color.FromArgb(0, 92, 175);
+            btnListBaggage.PressedForeColor = Color.FromArgb(0, 92, 175);
+            btnListBaggage.Size = new Size(254, 52);
+            btnListBaggage.TabIndex = 5;
+            btnListBaggage.Text = "Danh sách hành lý";
+            btnListBaggage.TextAlign = ContentAlignment.MiddleLeft;
+            btnListBaggage.UseVisualStyleBackColor = false;
+            btnListBaggage.WordWrap = false;
+            btnListBaggage.Click += btnListBaggage_Click;
+            // 
+            // btnCheckinBaggage
+            // 
+            btnCheckinBaggage.AutoSize = true;
+            btnCheckinBaggage.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnCheckinBaggage.BackColor = Color.FromArgb(155, 209, 243);
+            btnCheckinBaggage.BorderColor = Color.FromArgb(40, 40, 40);
+            btnCheckinBaggage.BorderThickness = 2;
+            btnCheckinBaggage.CornerRadius = 22;
+            btnCheckinBaggage.EnableHoverEffects = true;
+            btnCheckinBaggage.FlatAppearance.BorderSize = 0;
+            btnCheckinBaggage.FlatStyle = FlatStyle.Flat;
+            btnCheckinBaggage.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            btnCheckinBaggage.ForeColor = Color.White;
+            btnCheckinBaggage.HoverBackColor = Color.White;
+            btnCheckinBaggage.HoverBorderColor = Color.FromArgb(0, 92, 175);
+            btnCheckinBaggage.HoverForeColor = Color.FromArgb(0, 92, 175);
+            btnCheckinBaggage.Icon = null;
+            btnCheckinBaggage.IconSize = new Size(22, 22);
+            btnCheckinBaggage.IconSpacing = 10;
+            btnCheckinBaggage.Location = new Point(257, 19);
+            btnCheckinBaggage.Name = "btnCheckinBaggage";
+            btnCheckinBaggage.NormalBackColor = Color.FromArgb(155, 209, 243);
+            btnCheckinBaggage.NormalBorderColor = Color.FromArgb(40, 40, 40);
+            btnCheckinBaggage.NormalForeColor = Color.White;
+            btnCheckinBaggage.Padding = new Padding(24, 10, 24, 10);
+            btnCheckinBaggage.PreferredMaxWidth = 0;
+            btnCheckinBaggage.PressedBackColor = Color.FromArgb(225, 240, 255);
+            btnCheckinBaggage.PressedBorderColor = Color.FromArgb(0, 92, 175);
+            btnCheckinBaggage.PressedForeColor = Color.FromArgb(0, 92, 175);
+            btnCheckinBaggage.Size = new Size(243, 52);
+            btnCheckinBaggage.TabIndex = 4;
+            btnCheckinBaggage.Text = "Gắn tag/ Checkin";
+            btnCheckinBaggage.TextAlign = ContentAlignment.MiddleLeft;
+            btnCheckinBaggage.UseVisualStyleBackColor = false;
+            btnCheckinBaggage.WordWrap = false;
+            btnCheckinBaggage.Click += btnCheckinBaggage_Click;
             // 
             // flowLayoutPanel1
             // 
@@ -150,22 +263,26 @@
             Name = "BaggageControl";
             Size = new Size(1163, 587);
             pnlHeaderBaggage.ResumeLayout(false);
+            pnlHeaderBaggage.PerformLayout();
             pnlContentBaggage.ResumeLayout(false);
             ResumeLayout(false);
         }
 
         #endregion
-
-        private Button btnListBaggage;
-        private Button btnCheckinBaggage;
-        private Button btnDetailBaggage;
         private Panel pnlList;
         private Panel pnlCheckin;
         private Panel pnlDetail;
         private Panel pnlHeaderBaggage;
         private FlowLayoutPanel flowLayoutPanel1;
         private Panel pnlContentBaggage;
-        private Button btnLostBaggage;
         private Panel pnlLost;
+        private Components.Buttons.PrimaryButton btnCheckinBaggage;
+        private Components.Buttons.PrimaryButton btnListBaggage;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.ComponentModel.BackgroundWorker backgroundWorker2;
+        private System.ComponentModel.BackgroundWorker backgroundWorker3;
+        private System.ComponentModel.BackgroundWorker backgroundWorker4;
+        private Components.Buttons.PrimaryButton btnDetailBaggage;
+        private Components.Buttons.PrimaryButton btnLostBaggage;
     }
 }

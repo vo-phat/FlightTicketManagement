@@ -43,7 +43,7 @@ namespace GUI.Features.Baggage
 
 
             // Add button vào header
-            pnlHeaderBaggage.Controls.Add(btnCheckinBaggage);
+            //pnlHeaderBaggage.Controls.Add(btnCheckinBaggage);
             pnlHeaderBaggage.Controls.Add(btnDetailBaggage);
             pnlHeaderBaggage.Controls.Add(btnListBaggage);
             pnlHeaderBaggage.Controls.Add(btnLostBaggage);
@@ -63,10 +63,14 @@ namespace GUI.Features.Baggage
         }
 
         private void btnListBaggage_Click(object sender, EventArgs e) => SwitchTab(2);
-        private void btnCheckinBaggage_Click(object sender, EventArgs e) => SwitchTab(0);
+
+        private void btnCheckinBaggage_Click(object sender, EventArgs e)
+        {
+            SwitchTab(0);
+        }
         private void btnDetailBaggage_Click(object sender, EventArgs e) => SwitchTab(1);
         private void btnLostBaggage_Click(object sender, EventArgs e) => SwitchTab(3);
-      
+
 
         public void SwitchTab(int i)
         {
@@ -95,6 +99,9 @@ namespace GUI.Features.Baggage
             }
         }
 
-        
+        private void pnlDetail_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
     }
 }
