@@ -14,7 +14,7 @@ namespace BUS.Seat
             _seatDAO = new SeatDAO();
         }
 
-        #region Lấy danh sách tất cả ghế
+        #region Lấy danh sách tất cả ghế (Cơ bản)
         public List<SeatDTO> GetAllSeats()
         {
             try
@@ -23,7 +23,25 @@ namespace BUS.Seat
             }
             catch (Exception ex)
             {
-                throw new Exception("Lỗi khi lấy danh sách ghế: " + ex.Message, ex);
+                throw new Exception("Lỗi khi lấy danh sách ghế cơ bản: " + ex.Message, ex);
+            }
+        }
+        #endregion
+
+        #region Lấy danh sách tất cả ghế kèm chi tiết (Hạng ghế, Máy bay)
+        /// <summary>
+        /// Lấy danh sách tất cả ghế bao gồm thông tin chi tiết về hạng ghế và máy bay.
+        /// </summary>
+        public List<SeatDTO> GetAllSeatsWithDetails()
+        {
+            try
+            {
+                // Gọi phương thức JOIN mới từ DAO
+                return _seatDAO.GetAllSeatsWithDetails();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Lỗi khi lấy danh sách ghế kèm chi tiết: " + ex.Message, ex);
             }
         }
         #endregion

@@ -252,5 +252,61 @@ namespace DAO.Seat
             }
         }
         #endregion
+
+
+
+        #region Lấy danh sách tất cả ghế kèm chi tiết (hạng ghế, máy bay)
+        public List<SeatDTO> GetAllSeatsWithDetails()
+        {
+            var seats = new List<SeatDTO>();
+            string query = @"
+                SELECT
+                    s.seat_id,
+                    s.aircraft_id,
+                    s.seat_number,
+                    s.class_id,
+                    cc.class_name,
+                    a.model AS aircraft_model,
+                    a.manufacturer AS aircraft_manufacturer
+                FROM
+                    seats s
+                JOIN
+                    cabin_classes cc ON s.class_id = cc.class_id
+                JOIN
+                    aircrafts a ON s.aircraft_id = a.aircraft_id";
+
+            try
+            {
+                using (var conn = DatabaseConnection.GetConnection())
+                {
+                    conn.Open();
+                    using (var cmd = new MySqlCommand(query, conn))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            // Sử dụng constructor 7 tham số mới trong SeatDTO
+                            seats.Add(new SeatDTO(
+                                reader.GetInt32("seat_id"),
+                                reader.GetInt32("aircraft_id"),
+                                reader.GetString("seat_number"),
+                                reader.GetInt32("class_id"),
+                                reader.GetString("class_name"),
+                                reader.GetString("aircraft_model"),
+                                reader.GetString("aircraft_manufacturer")
+                            ));
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Bạn nên sử dụng một logger thay vì chỉ throw Exception.
+                throw new Exception("Lỗi khi lấy danh sách ghế kèm chi tiết: " + ex.Message, ex);
+            }
+
+            return seats;
+        }
+        #endregion
     }
 }

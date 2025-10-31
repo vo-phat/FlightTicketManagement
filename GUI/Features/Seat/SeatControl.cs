@@ -3,8 +3,10 @@ using System.Drawing;
 using System.Windows.Forms;
 using GUI.Components.Buttons;
 
-namespace GUI.Features.Seat {
-    public class SeatControl : UserControl {
+namespace GUI.Features.Seat
+{
+    public class SeatControl : UserControl
+    {
         private Panel header;
         private FlowLayoutPanel tabs;
 
@@ -18,19 +20,22 @@ namespace GUI.Features.Seat {
         private SubFeatures.FlightSeatControl flightSeats;
         private SubFeatures.SeatMapControl seatMap;
 
-        public SeatControl() {
+        public SeatControl()
+        {
             InitializeComponent();
             SwitchTab(0);
         }
 
-        private void InitializeComponent() {
+        private void InitializeComponent()
+        {
             SuspendLayout();
             // --- NỀN TRẮNG ---
             Dock = DockStyle.Fill;
             BackColor = Color.White;
 
             // Header trắng, autosize theo nội dung, không cố định chiều cao để tránh khuất
-            header = new Panel {
+            header = new Panel
+            {
                 Dock = DockStyle.Top,
                 BackColor = Color.White,
                 AutoSize = true,
@@ -38,7 +43,8 @@ namespace GUI.Features.Seat {
             };
 
             // Dải tab: Dock Top, AutoSize để không bị cắt nút
-            tabs = new FlowLayoutPanel {
+            tabs = new FlowLayoutPanel
+            {
                 Dock = DockStyle.Top,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
@@ -73,11 +79,13 @@ namespace GUI.Features.Seat {
         /// các tab khác là SecondaryButton. Cách này đảm bảo “giống hệt”
         /// giao diện mẫu của bạn (không chỉ đổi màu/viền).
         /// </summary>
-        private void RebuildTabs() {
+        private void RebuildTabs()
+        {
             tabs.SuspendLayout();
             tabs.Controls.Clear();
 
-            Control MakeTabButton(string text, int index) {
+            Control MakeTabButton(string text, int index)
+            {
                 Button b = (index == currentIndex)
                     ? new PrimaryButton(text)   // Tab đang chọn -> Primary
                     : new SecondaryButton(text); // Tab còn lại -> Secondary
@@ -88,7 +96,8 @@ namespace GUI.Features.Seat {
                 b.FlatAppearance.MouseOverBackColor = Color.White;
                 b.FlatAppearance.MouseDownBackColor = Color.White;
                 b.Click += (_, __) => {
-                    if (currentIndex != index) {
+                    if (currentIndex != index)
+                    {
                         SwitchTab(index);
                     }
                 };
@@ -103,7 +112,8 @@ namespace GUI.Features.Seat {
             tabs.ResumeLayout(true);
         }
 
-        private void SwitchTab(int idx) {
+        private void SwitchTab(int idx)
+        {
             currentIndex = idx;
 
             // 1) Cập nhật giao diện nút (primary/secondary)
@@ -112,7 +122,8 @@ namespace GUI.Features.Seat {
             // 2) Hiển thị nội dung tương ứng
             if (current != null) current.Visible = false;
 
-            current = idx switch {
+            current = idx switch
+            {
                 0 => seatList,
                 1 => seatCreate,
                 2 => flightSeats,

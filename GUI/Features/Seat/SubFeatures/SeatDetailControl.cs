@@ -5,8 +5,10 @@ using GUI.Components.Buttons;
 using GUI.Components.Inputs;
 using GUI.Components.Tables;
 
-namespace GUI.Features.Seat.SubFeatures {
-    public class SeatDetailControl : UserControl {
+namespace GUI.Features.Seat.SubFeatures
+{
+    public class SeatDetailControl : UserControl
+    {
         private Label lblTitle;
         private TableLayoutPanel root, leftForm;
         private Panel rightPanel;
@@ -20,11 +22,13 @@ namespace GUI.Features.Seat.SubFeatures {
 
         public SeatDetailControl() { InitializeComponent(); LoadDemo(); }
 
-        private void InitializeComponent() {
+        private void InitializeComponent()
+        {
             SuspendLayout();
             Dock = DockStyle.Fill; BackColor = Color.FromArgb(232, 240, 252);
 
-            lblTitle = new Label {
+            lblTitle = new Label
+            {
                 Text = "ℹ️ Chi tiết ghế",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
@@ -69,7 +73,8 @@ namespace GUI.Features.Seat.SubFeatures {
 
             // Right history
             rightPanel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(24, 16, 24, 24) };
-            tableHistory = new TableCustom {
+            tableHistory = new TableCustom
+            {
                 Dock = DockStyle.Fill,
                 ReadOnly = true,
                 RowHeadersVisible = false,
@@ -92,7 +97,8 @@ namespace GUI.Features.Seat.SubFeatures {
             ResumeLayout(false);
         }
 
-        private void SetEditing(bool on) {
+        private void SetEditing(bool on)
+        {
             editing = on;
             //txtClass.ReadOnly = !on;
             //txtAircraft.ReadOnly = !on;
@@ -101,7 +107,8 @@ namespace GUI.Features.Seat.SubFeatures {
             btnEdit.Enabled = !on;
         }
 
-        private void LoadDemo() {
+        private void LoadDemo()
+        {
             txtSeat.Text = "12A";
             txtClass.Text = "Economy";
             txtAircraft.Text = "A320";

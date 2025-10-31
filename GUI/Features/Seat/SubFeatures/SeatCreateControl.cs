@@ -5,8 +5,10 @@ using System.Windows.Forms;
 using GUI.Components.Buttons;
 using GUI.Components.Inputs;
 
-namespace GUI.Features.Seat.SubFeatures {
-    public class SeatCreateControl : UserControl {
+namespace GUI.Features.Seat.SubFeatures
+{
+    public class SeatCreateControl : UserControl
+    {
         private TableLayoutPanel root, form;
         private Label lblTitle;
 
@@ -17,11 +19,13 @@ namespace GUI.Features.Seat.SubFeatures {
 
         public SeatCreateControl() { InitializeComponent(); }
 
-        private void InitializeComponent() {
+        private void InitializeComponent()
+        {
             SuspendLayout();
             Dock = DockStyle.Fill; BackColor = Color.FromArgb(232, 240, 252);
 
-            lblTitle = new Label {
+            lblTitle = new Label
+            {
                 Text = "➕ Tạo ghế",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
@@ -29,7 +33,8 @@ namespace GUI.Features.Seat.SubFeatures {
                 Dock = DockStyle.Top
             };
 
-            form = new TableLayoutPanel {
+            form = new TableLayoutPanel
+            {
                 Dock = DockStyle.Top,
                 AutoSize = true,
                 Padding = new Padding(24),
@@ -68,7 +73,8 @@ namespace GUI.Features.Seat.SubFeatures {
             ResumeLayout(false);
         }
 
-        private void Save_Click(object? sender, EventArgs e) {
+        private void Save_Click(object? sender, EventArgs e)
+        {
             if (cbAircraft.SelectedIndex < 0) { MessageBox.Show("Vui lòng chọn máy bay"); return; }
             if (cbClass.SelectedIndex < 0) { MessageBox.Show("Vui lòng chọn hạng ghế"); return; }
             var seat = (txtSeat.Text ?? "").Trim().ToUpper();

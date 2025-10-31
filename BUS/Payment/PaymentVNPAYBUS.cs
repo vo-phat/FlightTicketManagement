@@ -15,7 +15,7 @@ namespace BUS.Payment
                 Vnp_TmnCode = "LRPN1ROC",
                 Vnp_HashSecret = "P5A5E57P1A1X8OX53ZU714A0LL1CFWWKT",
                 Vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
-                ReturnUrl = "https://f4d12858ad9f.ngrok-free.app/vnpay_return",
+                ReturnUrl = "/a4622a829755.ngrok-free.app/vnpay_return+",
                 TxnRef = DateTime.Now.Ticks.ToString(),
                 OrderInfo = orderInfo,
                 Amount = amount *100,

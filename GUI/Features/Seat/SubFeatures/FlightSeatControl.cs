@@ -7,8 +7,10 @@ using GUI.Components.Buttons;
 using GUI.Components.Inputs;
 using GUI.Components.Tables;
 
-namespace GUI.Features.Seat.SubFeatures {
-    public class FlightSeatControl : UserControl {
+namespace GUI.Features.Seat.SubFeatures
+{
+    public class FlightSeatControl : UserControl
+    {
         private const string ACTION_COL = "Action";
         private const string STATUS_COL = "status";
         private const string TXT_VIEW = "Xem";
@@ -22,7 +24,7 @@ namespace GUI.Features.Seat.SubFeatures {
 
         private UnderlinedComboBox cbFlight, cbClass;
         private UnderlinedTextField txtSeat;
-        private PrimaryButton btnSearch; 
+        private PrimaryButton btnSearch;
         private SecondaryButton btnClear;
 
         private TableCustom table;
@@ -31,11 +33,13 @@ namespace GUI.Features.Seat.SubFeatures {
 
         public FlightSeatControl() { InitializeComponent(); SeedDemo(); ApplyFilter(); }
 
-        private void InitializeComponent() {
+        private void InitializeComponent()
+        {
             SuspendLayout();
             Dock = DockStyle.Fill; BackColor = Color.FromArgb(232, 240, 252);
 
-            lblTitle = new Label {
+            lblTitle = new Label
+            {
                 Text = "✈️ Ghế theo chuyến bay",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
@@ -63,7 +67,8 @@ namespace GUI.Features.Seat.SubFeatures {
             filterWrap.Controls.Add(filterRight, 1, 0);
 
             // Table
-            table = new TableCustom {
+            table = new TableCustom
+            {
                 Dock = DockStyle.Fill,
                 Margin = new Padding(24, 12, 24, 24),
                 ReadOnly = true,
@@ -83,7 +88,8 @@ namespace GUI.Features.Seat.SubFeatures {
             table.CellFormatting += (s, e) => {
                 if (e.RowIndex < 0) return;
                 var name = table.Columns[e.ColumnIndex].Name;
-                if (name == "basePrice" && e.Value != null && int.TryParse(e.Value.ToString(), out var v)) {
+                if (name == "basePrice" && e.Value != null && int.TryParse(e.Value.ToString(), out var v))
+                {
                     e.Value = v.ToString("#,0"); e.FormattingApplied = true;
                 }
             };
@@ -108,11 +114,15 @@ namespace GUI.Features.Seat.SubFeatures {
             ResumeLayout(false);
         }
 
-        private void SeedDemo() {
-            foreach (var f in new[] { "VN001", "VN002" }) {
-                for (int i = 1; i <= 30; i++) foreach (char c in new[] { 'A', 'B', 'C', 'D', 'E', 'F' }) {
+        private void SeedDemo()
+        {
+            foreach (var f in new[] { "VN001", "VN002" })
+            {
+                for (int i = 1; i <= 30; i++) foreach (char c in new[] { 'A', 'B', 'C', 'D', 'E', 'F' })
+                    {
                         var status = (i % 13 == 0) ? "BLOCKED" : ((i + c) % 5 == 0 ? "BOOKED" : "AVAILABLE");
-                        datasource.Add(new Row {
+                        datasource.Add(new Row
+                        {
                             Flight = f,
                             SeatNumber = $"{i}{c}",
                             ClassName = i <= 6 ? "Business" : "Economy",
@@ -123,7 +133,8 @@ namespace GUI.Features.Seat.SubFeatures {
             }
         }
 
-        private void ApplyFilter() {
+        private void ApplyFilter()
+        {
             string fl = cbFlight.SelectedItem?.ToString() ?? "Tất cả";
             string cl = cbClass.SelectedItem?.ToString() ?? "Tất cả";
             string key = (txtSeat.Text ?? "").Trim().ToUpper();
@@ -138,7 +149,8 @@ namespace GUI.Features.Seat.SubFeatures {
         }
 
         // ===== Badges + action links =====
-        private (Rectangle rcView, Rectangle rcEdit, Rectangle rcBlock) GetRects(Rectangle bounds, Font font) {
+        private (Rectangle rcView, Rectangle rcEdit, Rectangle rcBlock) GetRects(Rectangle bounds, Font font)
+        {
             int pad = 6, x = bounds.Left + pad, y = bounds.Top + (bounds.Height - font.Height) / 2;
             var flags = TextFormatFlags.NoPadding;
             var szV = TextRenderer.MeasureText(TXT_VIEW, font, Size.Empty, flags);
@@ -151,15 +163,18 @@ namespace GUI.Features.Seat.SubFeatures {
             return (rcV, rcE, rcB);
         }
 
-        private void Table_CellPainting(object? s, DataGridViewCellPaintingEventArgs e) {
+        private void Table_CellPainting(object? s, DataGridViewCellPaintingEventArgs e)
+        {
             if (e.RowIndex < 0) return;
             var name = table.Columns[e.ColumnIndex].Name;
 
-            if (name == STATUS_COL) {
+            if (name == STATUS_COL)
+            {
                 e.Handled = true;
                 e.Paint(e.ClipBounds, DataGridViewPaintParts.Background | DataGridViewPaintParts.Border);
                 var status = table.Rows[e.RowIndex].Cells[e.ColumnIndex].Value?.ToString() ?? "";
-                var (bg, fg) = status switch {
+                var (bg, fg) = status switch
+                {
                     "AVAILABLE" => (Color.FromArgb(220, 248, 225), Color.FromArgb(26, 115, 52)),
                     "BOOKED" => (Color.FromArgb(227, 230, 233), Color.FromArgb(66, 66, 66)),
                     _ => (Color.FromArgb(255, 230, 230), Color.FromArgb(179, 38, 30))
@@ -172,7 +187,8 @@ namespace GUI.Features.Seat.SubFeatures {
                 return;
             }
 
-            if (name == ACTION_COL) {
+            if (name == ACTION_COL)
+            {
                 e.Handled = true;
                 e.Paint(e.ClipBounds, DataGridViewPaintParts.Background | DataGridViewPaintParts.Border);
                 var font = e.CellStyle.Font ?? table.Font;
@@ -188,7 +204,8 @@ namespace GUI.Features.Seat.SubFeatures {
             }
         }
 
-        private void Table_CellMouseMove(object? s, DataGridViewCellMouseEventArgs e) {
+        private void Table_CellMouseMove(object? s, DataGridViewCellMouseEventArgs e)
+        {
             if (e.RowIndex < 0 || e.ColumnIndex < 0) { table.Cursor = Cursors.Default; return; }
             if (table.Columns[e.ColumnIndex].Name != ACTION_COL) { table.Cursor = Cursors.Default; return; }
 
@@ -199,7 +216,8 @@ namespace GUI.Features.Seat.SubFeatures {
             table.Cursor = (r.rcView.Contains(p) || r.rcEdit.Contains(p) || r.rcBlock.Contains(p)) ? Cursors.Hand : Cursors.Default;
         }
 
-        private void Table_CellMouseClick(object? s, DataGridViewCellMouseEventArgs e) {
+        private void Table_CellMouseClick(object? s, DataGridViewCellMouseEventArgs e)
+        {
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
             if (table.Columns[e.ColumnIndex].Name != ACTION_COL) return;
 
@@ -212,16 +230,22 @@ namespace GUI.Features.Seat.SubFeatures {
             string seat = row.Cells["seatNumber"].Value?.ToString() ?? "(n/a)";
             string flight = row.Cells["flight"].Value?.ToString() ?? "(n/a)";
 
-            if (r.rcView.Contains(p)) {
+            if (r.rcView.Contains(p))
+            {
                 MessageBox.Show($"Xem ghế {seat} - {flight}", "Xem", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            } else if (r.rcEdit.Contains(p)) {
+            }
+            else if (r.rcEdit.Contains(p))
+            {
                 MessageBox.Show($"Sửa ghế {seat} - {flight}", "Sửa", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            } else if (r.rcBlock.Contains(p)) {
+            }
+            else if (r.rcBlock.Contains(p))
+            {
                 MessageBox.Show($"Chặn ghế {seat} - {flight}", "Chặn", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
-        private class Row {
+        private class Row
+        {
             public string Flight { get; set; } = "";
             public string SeatNumber { get; set; } = "";
             public string ClassName { get; set; } = "";

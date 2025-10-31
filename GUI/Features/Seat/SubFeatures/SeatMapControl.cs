@@ -6,8 +6,10 @@ using GUI.Components.Buttons;
 using GUI.Components.Inputs;
 using GUI.Components.Buttons;
 
-namespace GUI.Features.Seat.SubFeatures {
-    public class SeatMapControl : UserControl {
+namespace GUI.Features.Seat.SubFeatures
+{
+    public class SeatMapControl : UserControl
+    {
         // ====== TÙY CHỈNH NHANH ======
         // Bật true nếu SecondaryButton của bạn không tôn trọng BackColor (để dùng Button chuẩn đảm bảo lên màu)
         private const bool USE_PLAIN_BUTTON_FOR_COLOR = true;
@@ -32,12 +34,14 @@ namespace GUI.Features.Seat.SubFeatures {
 
         public SeatMapControl() { InitializeComponent(); BuildDemoMap(); }
 
-        private void InitializeComponent() {
+        private void InitializeComponent()
+        {
             SuspendLayout();
             Dock = DockStyle.Fill; BackColor = Color.FromArgb(232, 240, 252);
             tip = new ToolTip();
 
-            lblTitle = new Label {
+            lblTitle = new Label
+            {
                 Text = "🗺️ Sơ đồ ghế (Seat Map)",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
@@ -46,7 +50,8 @@ namespace GUI.Features.Seat.SubFeatures {
             };
 
             // Filters
-            filter = new FlowLayoutPanel {
+            filter = new FlowLayoutPanel
+            {
                 Dock = DockStyle.Top,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
@@ -61,7 +66,8 @@ namespace GUI.Features.Seat.SubFeatures {
             filter.Controls.AddRange(new Control[] { cbFlight, cbAircraft, cbClass, btnRefresh });
 
             // Legend
-            legend = new FlowLayoutPanel {
+            legend = new FlowLayoutPanel
+            {
                 Dock = DockStyle.Top,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
@@ -73,7 +79,8 @@ namespace GUI.Features.Seat.SubFeatures {
             legend.Controls.Add(Badge("BLOCKED", Color.FromArgb(255, 235, 238), Color.FromArgb(183, 28, 28)));
 
             // Map host – scroll + padding đáy lớn để không khuất nút
-            mapHost = new Panel {
+            mapHost = new Panel
+            {
                 Dock = DockStyle.Fill,
                 Padding = new Padding(32, 16, 32, 72),
                 AutoScroll = true,
@@ -82,7 +89,8 @@ namespace GUI.Features.Seat.SubFeatures {
             };
 
             // Layout canh giữa: Dock=Top + AutoSize để cao hơn mapHost -> có scroll
-            centerLayout = new TableLayoutPanel {
+            centerLayout = new TableLayoutPanel
+            {
                 Dock = DockStyle.Top,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
@@ -95,7 +103,8 @@ namespace GUI.Features.Seat.SubFeatures {
             centerLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
             // Stack cabin (TopDown) nằm ở cột giữa để canh giữa toàn bộ sơ đồ
-            stack = new FlowLayoutPanel {
+            stack = new FlowLayoutPanel
+            {
                 FlowDirection = FlowDirection.TopDown,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
@@ -120,14 +129,16 @@ namespace GUI.Features.Seat.SubFeatures {
             ResumeLayout(false);
         }
 
-        private Control Badge(string status, Color bg, Color fg) {
+        private Control Badge(string status, Color bg, Color fg)
+        {
             var p = new Panel { BackColor = bg, Height = 24, Padding = new Padding(10, 3, 10, 3), Margin = new Padding(0, 0, 8, 0), AutoSize = true };
             p.Controls.Add(new Label { Text = status, AutoSize = true, ForeColor = fg });
             return p;
         }
 
         // ===================== BUILD DEMO MAP =====================
-        private void BuildDemoMap() {
+        private void BuildDemoMap()
+        {
             string selectedClass = cbClass?.SelectedItem?.ToString() ?? "Tất cả";
 
             // Demo: 2 khoang
@@ -139,12 +150,14 @@ namespace GUI.Features.Seat.SubFeatures {
             stack.SuspendLayout();
             stack.Controls.Clear();
 
-            foreach (var cabin in cabins) {
+            foreach (var cabin in cabins)
+            {
                 if (selectedClass != "Tất cả" &&
                     !cabin.Name.Equals(selectedClass, StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                var card = new GroupBox {
+                var card = new GroupBox
+                {
                     Text = cabin.Name,
                     Font = new Font("Segoe UI", 10f, FontStyle.Bold),
                     Padding = new Padding(16),
@@ -154,7 +167,8 @@ namespace GUI.Features.Seat.SubFeatures {
                 };
 
                 // 8 cột: [RowLabel] [A] [B] [C] [Aisle] [D] [E] [F]
-                var grid = new TableLayoutPanel {
+                var grid = new TableLayoutPanel
+                {
                     ColumnCount = 8,
                     AutoSize = true,
                     AutoSizeMode = AutoSizeMode.GrowAndShrink,
@@ -171,12 +185,14 @@ namespace GUI.Features.Seat.SubFeatures {
                 int totalRows = cabin.End - cabin.Start + 1;
                 grid.RowCount = totalRows;
 
-                for (int r = 0; r < totalRows; r++) {
+                for (int r = 0; r < totalRows; r++)
+                {
                     grid.RowStyles.Add(new RowStyle(SizeType.Absolute, SeatHeight + SeatGap));
                     int rowNo = cabin.Start + r;
 
                     // Cột 0: số hàng
-                    var lb = new Label {
+                    var lb = new Label
+                    {
                         Text = rowNo.ToString(),
                         AutoSize = false,
                         Width = 50, // 👉 tăng chiều rộng
@@ -209,7 +225,8 @@ namespace GUI.Features.Seat.SubFeatures {
         }
 
         // ===================== HELPERS =====================
-        private Button MakeSeat(int row, char col, string cabinName) {
+        private Button MakeSeat(int row, char col, string cabinName)
+        {
             string code = $"{row}{col}";
             string status = (row % 13 == 0) ? "BLOCKED"
                           : ((row + col) % 5 == 0 ? "BOOKED" : "AVAILABLE");
@@ -240,20 +257,25 @@ namespace GUI.Features.Seat.SubFeatures {
             return btn;
         }
 
-        private void StyleSeat(Button btn, string status) {
+        private void StyleSeat(Button btn, string status)
+        {
             // Bắt buộc để màu nền tự đặt có hiệu lực và không bị đổi khi hover/nhấn
             btn.UseVisualStyleBackColor = false;
 
-            if (status == "AVAILABLE") {
+            if (status == "AVAILABLE")
+            {
                 btn.BackColor = Color.FromArgb(232, 245, 233);
                 btn.FlatAppearance.BorderColor = Color.FromArgb(76, 175, 80);
                 btn.ForeColor = Color.FromArgb(27, 94, 32);
-            } else if (status == "BOOKED") {
+            }
+            else if (status == "BOOKED")
+            {
                 btn.BackColor = Color.FromArgb(236, 239, 241);
                 btn.FlatAppearance.BorderColor = Color.FromArgb(176, 190, 197);
                 btn.ForeColor = Color.FromArgb(55, 71, 79);
-            } else // BLOCKED
-              {
+            }
+            else // BLOCKED
+            {
                 btn.BackColor = Color.FromArgb(255, 235, 238);
                 btn.FlatAppearance.BorderColor = Color.FromArgb(229, 115, 115);
                 btn.ForeColor = Color.FromArgb(183, 28, 28);

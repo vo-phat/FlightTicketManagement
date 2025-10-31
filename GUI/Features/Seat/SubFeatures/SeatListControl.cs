@@ -7,8 +7,10 @@ using GUI.Components.Buttons;
 using GUI.Components.Inputs;
 using GUI.Components.Tables;
 
-namespace GUI.Features.Seat.SubFeatures {
-    public class SeatListControl : UserControl {
+namespace GUI.Features.Seat.SubFeatures
+{
+    public class SeatListControl : UserControl
+    {
         private const string ACTION_COL = "Action";
         private const string TXT_VIEW = "Xem";
         private const string TXT_EDIT = "Sửa";
@@ -31,11 +33,13 @@ namespace GUI.Features.Seat.SubFeatures {
 
         public SeatListControl() { InitializeComponent(); SeedDemo(); ApplyFilter(); }
 
-        private void InitializeComponent() {
+        private void InitializeComponent()
+        {
             SuspendLayout();
             Dock = DockStyle.Fill; BackColor = Color.FromArgb(232, 240, 252);
 
-            lblTitle = new Label {
+            lblTitle = new Label
+            {
                 Text = "🪑 Danh sách ghế",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
@@ -63,7 +67,8 @@ namespace GUI.Features.Seat.SubFeatures {
             filterWrap.Controls.Add(filterRight, 1, 0);
 
             // Table
-            table = new TableCustom {
+            table = new TableCustom
+            {
                 Dock = DockStyle.Fill,
                 Margin = new Padding(24, 12, 24, 24),
                 ReadOnly = true,
@@ -105,12 +110,17 @@ namespace GUI.Features.Seat.SubFeatures {
             ResumeLayout(false);
         }
 
-        private void SeedDemo() {
+        private void SeedDemo()
+        {
             var rnd = new Random(1);
-            foreach (var craft in new[] { "A320", "B737" }) {
-                for (int i = 1; i <= 40; i++) {
-                    foreach (char c in new[] { 'A', 'B', 'C', 'D', 'E', 'F' }) {
-                        datasource.Add(new Row {
+            foreach (var craft in new[] { "A320", "B737" })
+            {
+                for (int i = 1; i <= 40; i++)
+                {
+                    foreach (char c in new[] { 'A', 'B', 'C', 'D', 'E', 'F' })
+                    {
+                        datasource.Add(new Row
+                        {
                             SeatId = i * 10 + (c - 'A'),
                             SeatNumber = $"{i}{c}",
                             ClassName = i <= 6 ? "Business" : "Economy",
@@ -122,7 +132,8 @@ namespace GUI.Features.Seat.SubFeatures {
             }
         }
 
-        private void ApplyFilter() {
+        private void ApplyFilter()
+        {
             string ac = cbAircraft.SelectedItem?.ToString() ?? "Tất cả";
             string cl = cbClass.SelectedItem?.ToString() ?? "Tất cả";
             string key = (txtSeat.Text ?? "").Trim().ToUpper();
@@ -133,13 +144,15 @@ namespace GUI.Features.Seat.SubFeatures {
             if (!string.IsNullOrEmpty(key)) q = q.Where(x => x.SeatNumber.Contains(key));
 
             table.Rows.Clear();
-            foreach (var x in q) {
+            foreach (var x in q)
+            {
                 table.Rows.Add(x.SeatNumber, x.ClassName, x.Aircraft, x.CreatedAt.ToString("yyyy-MM-dd"), null, x.SeatId);
             }
         }
 
         // ===== Action links drawing like CabinClassListControl =====
-        private (Rectangle rcView, Rectangle rcEdit, Rectangle rcDel) GetRects(Rectangle bounds, Font font) {
+        private (Rectangle rcView, Rectangle rcEdit, Rectangle rcDel) GetRects(Rectangle bounds, Font font)
+        {
             int pad = 6, x = bounds.Left + pad, y = bounds.Top + (bounds.Height - font.Height) / 2;
             var flags = TextFormatFlags.NoPadding;
             var szV = TextRenderer.MeasureText(TXT_VIEW, font, Size.Empty, flags);
@@ -152,7 +165,8 @@ namespace GUI.Features.Seat.SubFeatures {
             return (rcV, rcE, rcD);
         }
 
-        private void Table_CellPainting(object? s, DataGridViewCellPaintingEventArgs e) {
+        private void Table_CellPainting(object? s, DataGridViewCellPaintingEventArgs e)
+        {
             if (e.RowIndex < 0) return;
             if (table.Columns[e.ColumnIndex].Name != ACTION_COL) return;
             e.Handled = true;
@@ -168,7 +182,8 @@ namespace GUI.Features.Seat.SubFeatures {
             TextRenderer.DrawText(e.Graphics, TXT_DEL, font, r.rcDel.Location, del, TextFormatFlags.NoPadding);
         }
 
-        private void Table_CellMouseMove(object? s, DataGridViewCellMouseEventArgs e) {
+        private void Table_CellMouseMove(object? s, DataGridViewCellMouseEventArgs e)
+        {
             if (e.RowIndex < 0 || e.ColumnIndex < 0) { table.Cursor = Cursors.Default; return; }
             if (table.Columns[e.ColumnIndex].Name != ACTION_COL) { table.Cursor = Cursors.Default; return; }
 
@@ -179,7 +194,8 @@ namespace GUI.Features.Seat.SubFeatures {
             table.Cursor = (r.rcView.Contains(p) || r.rcEdit.Contains(p) || r.rcDel.Contains(p)) ? Cursors.Hand : Cursors.Default;
         }
 
-        private void Table_CellMouseClick(object? s, DataGridViewCellMouseEventArgs e) {
+        private void Table_CellMouseClick(object? s, DataGridViewCellMouseEventArgs e)
+        {
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
             if (table.Columns[e.ColumnIndex].Name != ACTION_COL) return;
 
@@ -191,17 +207,23 @@ namespace GUI.Features.Seat.SubFeatures {
             var row = table.Rows[e.RowIndex];
             var seatId = row.Cells["seatIdHidden"].Value?.ToString() ?? "";
 
-            if (r.rcView.Contains(p)) {
+            if (r.rcView.Contains(p))
+            {
                 MessageBox.Show($"Xem ghế #{seatId}", "Xem", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            } else if (r.rcEdit.Contains(p)) {
+            }
+            else if (r.rcEdit.Contains(p))
+            {
                 MessageBox.Show($"Sửa ghế #{seatId}", "Sửa", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            } else if (r.rcDel.Contains(p)) {
+            }
+            else if (r.rcDel.Contains(p))
+            {
                 if (MessageBox.Show("Xóa ghế này?", "Xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
                     MessageBox.Show("Đã xóa (demo).");
             }
         }
 
-        private class Row {
+        private class Row
+        {
             public int SeatId { get; set; }
             public string SeatNumber { get; set; } = "";
             public string ClassName { get; set; } = "";
