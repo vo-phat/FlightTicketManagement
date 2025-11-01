@@ -4,6 +4,7 @@ using MySqlConnector;
 using System;
 using System.Data;
 using System.Runtime.InteropServices;
+using System.Text;
 namespace DAO.Flight
 {
     public class FlightDAO: BaseDAO
@@ -513,6 +514,107 @@ namespace DAO.Flight
                 throw new Exception($"Lỗi khi lấy dữ liệu chuyến bay: {ex.Message}", ex);
             }
         }
+
+        public DataTable GetFlightDetailsForDisplay()
+        {
+            string query = @"
+                SELECT 
+                    f.flight_number AS 'FlightNumber',
+                    dep.airport_name AS 'DepartureAirportName',
+                    arr.airport_name AS 'ArrivalAirportName',
+                    f.departure_time AS 'DepartureTime',
+                    f.arrival_time AS 'ArrivalTime',
+                    f.status AS 'Status'
+                FROM 
+                    Flights f
+                LEFT JOIN 
+                    Routes r ON f.route_id = r.route_id
+                LEFT JOIN 
+                    Airports dep ON r.departure_place_id = dep.airport_id
+                LEFT JOIN 
+                    Airports arr ON r.arrival_place_id = arr.airport_id
+                ORDER BY 
+                    f.departure_time DESC";
+            try
+            {
+                return ExecuteQuery(query);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi lấy dữ liệu chuyến bay (JOINED): {ex.Message}", ex);
+            }
+        }
+        public DataTable SearchFlightsForDisplay(int? departureAirportId, int? arrivalAirportId, DateTime departureDate, int? cabinClassId)
+        {
+            var queryBuilder = new StringBuilder(@"
+                SELECT 
+                    f.flight_id,
+                    f.flight_number AS 'FlightNumber',
+                    dep.airport_name AS 'DepartureAirportName',
+                    arr.airport_name AS 'ArrivalAirportName',
+                    f.departure_time AS 'DepartureTime',
+                    f.arrival_time AS 'ArrivalTime',
+                    f.status AS 'Status'
+                FROM 
+                    Flights f
+                LEFT JOIN 
+                    Routes r ON f.route_id = r.route_id
+                LEFT JOIN 
+                    Airports dep ON r.departure_place_id = dep.airport_id
+                LEFT JOIN 
+                    Airports arr ON r.arrival_place_id = arr.airport_id
+                WHERE 
+                    DATE(f.departure_time) >= DATE(@departureDate) -- Request 1: Từ ngày đã chọn TRỞ ĐI
+                    AND f.status IN ('SCHEDULED', 'DELAYED')
+            ");
+
+            var parameters = new Dictionary<string, object>
+            {
+                { "@departureDate", departureDate }
+            };
+
+            // 1. Lọc theo Nơi cất cánh (NẾU CÓ)
+            if (departureAirportId.HasValue && departureAirportId.Value > 0)
+            {
+                queryBuilder.Append(" AND r.departure_place_id = @departureAirportId");
+                parameters.Add("@departureAirportId", departureAirportId.Value);
+            }
+
+            // 2. Lọc theo Nơi hạ cánh (NẾU CÓ)
+            if (arrivalAirportId.HasValue && arrivalAirportId.Value > 0)
+            {
+                queryBuilder.Append(" AND r.arrival_place_id = @arrivalAirportId");
+                parameters.Add("@arrivalAirportId", arrivalAirportId.Value);
+            }
+
+            // 3. Lọc theo Hạng vé (NẾU CÓ)
+            if (cabinClassId.HasValue && cabinClassId.Value > 0)
+            {
+                queryBuilder.Append(@"
+                    AND EXISTS (
+                        SELECT 1
+                        FROM Flight_Seats fs
+                        JOIN Seats s ON fs.seat_id = s.seat_id
+                        WHERE fs.flight_id = f.flight_id
+                          AND s.class_id = @cabinClassId
+                          AND fs.seat_status = 'AVAILABLE'
+                    )
+                ");
+                parameters.Add("@cabinClassId", cabinClassId.Value);
+            }
+
+            queryBuilder.Append(" ORDER BY f.departure_time ASC");
+
+            try
+            {
+                return ExecuteQuery(queryBuilder.ToString(), parameters);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi tìm kiếm chuyến bay: {ex.Message}", ex);
+            }
+        }
         #endregion
+
     }
 }

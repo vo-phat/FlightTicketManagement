@@ -1,74 +1,100 @@
-using GUI.Components.Buttons;
+﻿using GUI.Components.Buttons;
 using GUI.Features.Flight.SubFeatures;
+using GUI.MainApp;
+using System;
+using System.Drawing;
+using System.Windows.Forms;
 
-namespace GUI.Features.Flight {
-    public class FlightControl : UserControl {
-        private Button btnList;
-        private Button btnCreate;
-        private FlightListControl listControl;
-        private FlightDetailControl detailControl;
-        private FlightCreateControl createControl;
+namespace GUI.Features.Flight
+{
+    public partial class FlightControl : UserControl
+    {
+        private FlightCreateControl flightCreateControl;
+        private FlightDetailControl flightDetailControl;
+        private FlightListControl flightListControl;
 
-        public FlightControl() {
+        private int _currentIndex = 0;
+        private readonly AppRole _role;
+        public event Action<int> OnBookFlightRequested;
+        public FlightControl() : this(AppRole.Admin)
+        {
+        }
+        public FlightControl(AppRole role)
+        {
+            _role = role;
             InitializeComponent();
+                
+            flightCreateControl = new FlightCreateControl { Dock = DockStyle.Fill };
+            flightDetailControl = new FlightDetailControl { Dock = DockStyle.Fill };
+            flightListControl = new FlightListControl(_role) { Dock = DockStyle.Fill };
+
+            flightListControl.OnBookFlightRequested += (flightId) => {
+                OnBookFlightRequested?.Invoke(flightId);
+            };
+
+            panelContent.Controls.Add(panelFlightList);
+            panelContent.Controls.Add(panelFlightCreate);
+            panelContent.Controls.Add(panelFlightDetail);
+
+            panelFlightCreate.Controls.Add(flightCreateControl);
+            panelFlightDetail.Controls.Add(flightDetailControl);
+            panelFlightList.Controls.Add(flightListControl);
+
+            panelFlightCreate.Visible = false;
+            panelFlightDetail.Visible = false;
         }
 
-        private void InitializeComponent() {
+        private void FlightControl_Load(object sender, EventArgs e)
+        {
             this.Dock = DockStyle.Fill;
-            this.BackColor = Color.WhiteSmoke;
 
-            btnList = new PrimaryButton("Danh sách chuyến bay");
-            btnCreate = new SecondaryButton("Tạo chuyến bay mới");
-
-            btnList.Click += (s, e) => SwitchTab(0);
-            btnCreate.Click += (s, e) => SwitchTab(2);
-
-            var buttonPanel = new FlowLayoutPanel {
-                Dock = DockStyle.Top,
-                Height = 56,
-                BackColor = Color.White,
-                Padding = new Padding(24, 12, 0, 0),
-                AutoSize = true
-            };
-            buttonPanel.Controls.Add(btnList);
-            buttonPanel.Controls.Add(btnCreate);
-
-            listControl = new FlightListControl { Dock = DockStyle.Fill };
-            detailControl = new FlightDetailControl { Dock = DockStyle.Fill };
-            createControl = new FlightCreateControl { Dock = DockStyle.Fill };
-
-            this.Controls.Add(listControl);
-            this.Controls.Add(detailControl);
-            this.Controls.Add(createControl);
-            this.Controls.Add(buttonPanel);
+            taoMoiChuyenBay.Visible = (_role == AppRole.Admin);
 
             SwitchTab(0);
         }
 
-        private void SwitchTab(int idx) {
-            listControl.Visible = (idx == 0);
-            detailControl.Visible = (idx == 1);
-            createControl.Visible = (idx == 2);
+        private void buttonDanhSachChuyenBay_Click(object sender, EventArgs e)
+        {
+            SwitchTab(0);
+        }
 
-            // Xóa các button cũ khỏi panel
-            var buttonPanel = btnList.Parent as FlowLayoutPanel;
-            if (buttonPanel != null) {
-                buttonPanel.Controls.Clear();
-                if (idx == 0) {
-                    btnList = new PrimaryButton("Danh sách chuyến bay");
-                    btnCreate = new SecondaryButton("Tạo chuyến bay mới");
-                } else if (idx == 1) {
-                    btnList = new SecondaryButton("Danh sách chuyến bay");
-                    btnCreate = new SecondaryButton("Tạo chuyến bay mới");
-                } else {
-                    btnList = new SecondaryButton("Danh sách chuyến bay");
-                    btnCreate = new PrimaryButton("Tạo chuyến bay mới");
-                }
-                btnList.Click += (s, e) => SwitchTab(0);
-                btnCreate.Click += (s, e) => SwitchTab(2);
-                buttonPanel.Controls.Add(btnList);
-                buttonPanel.Controls.Add(btnCreate);
+        private void buttonTaoMoiChuyenBay_Click(object sender, EventArgs e)
+        {
+            SwitchTab(1);
+        }
+        void SwitchTab(int index)
+        {
+            if (_currentIndex == index && panelTabs.Controls.Count > 0)
+                return;
+
+            _currentIndex = index;
+
+            panelFlightCreate.Visible = false;
+            panelFlightList.Visible = false;
+            panelFlightDetail.Visible = false;
+            switch (index)
+            {
+                case 0:
+                    panelFlightList.Visible = true;
+                    break;
+                case 1:
+                    panelFlightCreate.Visible = true;
+                    break;
+                case 2:
+                    panelFlightDetail.Visible = true;
+                    break;
             }
+            panelTabs.BringToFront();
+        }
+
+        private void danhSachChuyenBay_Click(object sender, EventArgs e)
+        {
+            SwitchTab(0);
+        }
+
+        private void taoMoiChuyenBay_Click(object sender, EventArgs e)
+        {
+            SwitchTab(1);
         }
     }
 }

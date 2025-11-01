@@ -20,11 +20,11 @@ namespace DAO.Database
                 string query = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'flightticketmanagement'";
                 object result = ExecuteScalar(query);
 
-                return $"✅ Kết nối thành công!\nSố bảng trong database: {result}";
+                return $"Kết nối thành công!\nSố bảng trong database: {result}";
             }
             catch (Exception ex)
             {
-                return $"❌ Lỗi kết nối: {ex.Message}";
+                return $"Lỗi kết nối: {ex.Message}";
             }
         }
 
@@ -40,7 +40,7 @@ namespace DAO.Database
                 var dt = ExecuteQuery(query);
 
                 StringBuilder sb = new StringBuilder();
-                sb.AppendLine($"✅ Lấy được {dt.Rows.Count} airlines:");
+                sb.AppendLine($"Lấy được {dt.Rows.Count} airlines:");
                 sb.AppendLine();
 
                 // Hiển thị chi tiết
@@ -53,7 +53,7 @@ namespace DAO.Database
             }
             catch (Exception ex)
             {
-                return $"❌ Lỗi query: {ex.Message}";
+                return $"Lỗi query: {ex.Message}";
             }
         }
 
@@ -66,7 +66,7 @@ namespace DAO.Database
             {
                 string query = "SELECT * FROM Airports LIMIT 5";
                 var results = new StringBuilder();
-                results.AppendLine("✅ Test ExecuteReader - Airports:");
+                results.AppendLine("Test ExecuteReader - Airports:");
                 results.AppendLine();
 
                 int count = 0;
@@ -87,7 +87,7 @@ namespace DAO.Database
             }
             catch (Exception ex)
             {
-                return $"❌ Lỗi ExecuteReader: {ex.Message}";
+                return $"Lỗi ExecuteReader: {ex.Message}";
             }
         }
 

@@ -114,7 +114,18 @@ namespace GUI.MainApp {
                     IsVisible = r => true,
                     SubItems = {
                         ("Quản lý chuyến bay", r => true,
-                            () => LoadControl(new FlightControl())),
+                            () => {
+                                // 1. Tạo control (giữ nguyên)
+                                var flightControl = new FlightControl(_role);
+                                // 2. Đăng ký sự kiện điều hướng
+                                flightControl.OnBookFlightRequested += (flightId) => {
+                                    // 1. Chuyển tab "Đặt chỗ & Vé"
+                                    ActivateTab(NavKey.BookingsTickets);
+                                    // 2. Mở màn hình "Tạo/Tìm đặt chỗ"
+                                    OpenBookingSearch();
+                                };
+                                LoadControl(flightControl);
+                            }),
                         ("Quy tắc giá vé", r => r == AppRole.Admin,
                             () => OpenFareRules())
                     }
