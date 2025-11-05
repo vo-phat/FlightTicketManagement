@@ -110,6 +110,10 @@ namespace GUI.Components.Inputs {
         }
 
         [Browsable(false)]
+        public ComboBox InnerCombo => _combo;
+        // TRONG FILE UnderlinedComboBox.cs (BỔ SUNG VÀO PHẦN API public)
+        [Browsable(false)]
+        public ComboBox InnerComboBox => _combo; // Hoặc ComboBox => _combo;
         public object? SelectedItem {
             get => _combo.SelectedItem;
             set => _combo.SelectedItem = value;

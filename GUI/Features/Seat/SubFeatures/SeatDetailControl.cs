@@ -1,113 +1,162 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
-using GUI.Components.Buttons;
-using GUI.Components.Inputs;
-using GUI.Components.Tables;
+using BUS.Seat;
+using DTO.Seat;
 
-namespace GUI.Features.Seat.SubFeatures {
-    public class SeatDetailControl : UserControl {
-        private Label lblTitle;
-        private TableLayoutPanel root, leftForm;
-        private Panel rightPanel;
+namespace GUI.Features.Seat.SubFeatures
+{
+    public class SeatDetailControl : UserControl
+    {
+        // Các Controls để hiển thị giá trị tĩnh
+        private Label vSeatNumber, vAircraft, vClass;
 
-        private UnderlinedTextField txtSeat, txtClass, txtAircraft;
-        private SecondaryButton btnEdit, btnCancel;
-        private PrimaryButton btnSave;
+        // Logic
+        private SeatDTO _currentSeat;
+        private readonly SeatBUS _seatBUS;
 
-        private TableCustom tableHistory;
-        private bool editing = false;
+        // Sự kiện báo đóng (Tùy chọn, giữ lại nếu muốn có nút Đóng)
+        public event EventHandler CloseRequested;
 
-        public SeatDetailControl() { InitializeComponent(); LoadDemo(); }
+        public SeatDetailControl()
+        {
+            _seatBUS = new SeatBUS();
+            InitializeComponent();
+            BuildLayout();
+        }
 
-        private void InitializeComponent() {
+        private void InitializeComponent()
+        {
             SuspendLayout();
-            Dock = DockStyle.Fill; BackColor = Color.FromArgb(232, 240, 252);
-
-            lblTitle = new Label {
-                Text = "ℹ️ Chi tiết ghế",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 20, FontStyle.Bold),
-                Padding = new Padding(24, 20, 24, 0),
-                Dock = DockStyle.Top
-            };
-
-            root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, Padding = new Padding(0, 0, 0, 12) };
-            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40f));
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60f));
-
-            // Left form
-            leftForm = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(24), ColumnCount = 2 };
-            leftForm.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150));
-            leftForm.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-
-            txtSeat = new UnderlinedTextField("", "") { Width = 240 };
-            txtClass = new UnderlinedTextField("", "") { Width = 240 };
-            txtAircraft = new UnderlinedTextField("", "") { Width = 240 };
-
-            leftForm.Controls.Add(new Label { Text = "Số ghế", AutoSize = true, Margin = new Padding(0, 8, 8, 8) }, 0, 0);
-            leftForm.Controls.Add(txtSeat, 1, 0);
-            leftForm.Controls.Add(new Label { Text = "Hạng", AutoSize = true, Margin = new Padding(0, 8, 8, 8) }, 0, 1);
-            leftForm.Controls.Add(txtClass, 1, 1);
-            leftForm.Controls.Add(new Label { Text = "Máy bay", AutoSize = true, Margin = new Padding(0, 8, 8, 8) }, 0, 2);
-            leftForm.Controls.Add(txtAircraft, 1, 2);
-
-            var actions = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 48, Padding = new Padding(24, 6, 24, 6), WrapContents = false };
-            btnEdit = new SecondaryButton("✏️ Sửa") { Width = 90, Height = 36 };
-            btnSave = new PrimaryButton("💾 Lưu") { Width = 90, Height = 36, Enabled = false, Margin = new Padding(12, 0, 0, 0) };
-            btnCancel = new SecondaryButton("✖ Hủy") { Width = 90, Height = 36, Enabled = false, Margin = new Padding(12, 0, 0, 0) };
-            btnEdit.Click += (_, __) => SetEditing(true);
-            btnCancel.Click += (_, __) => { SetEditing(false); LoadDemo(); };
-            btnSave.Click += (_, __) => { SetEditing(false); MessageBox.Show("Đã lưu (demo)"); };
-            actions.Controls.AddRange(new Control[] { btnEdit, btnSave, btnCancel });
-
-            var leftPanel = new Panel { Dock = DockStyle.Fill };
-            leftPanel.Controls.Add(actions);
-            leftPanel.Controls.Add(leftForm);
-
-            // Right history
-            rightPanel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(24, 16, 24, 24) };
-            tableHistory = new TableCustom {
-                Dock = DockStyle.Fill,
-                ReadOnly = true,
-                RowHeadersVisible = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.None
-            };
-            tableHistory.Columns.Add("flight", "Chuyến bay");
-            tableHistory.Columns.Add("status", "Trạng thái");
-            tableHistory.Columns.Add("price", "Giá (₫)");
-            tableHistory.Columns.Add("date", "Ngày");
-            rightPanel.Controls.Add(tableHistory);
-
-            root.Controls.Add(lblTitle, 0, 0);
-            root.SetColumnSpan(lblTitle, 2);
-            root.Controls.Add(leftPanel, 0, 1);
-            root.Controls.Add(rightPanel, 1, 1);
-
-            Controls.Add(root);
+            // Khởi tạo cơ bản
+            BackColor = Color.FromArgb(232, 240, 252);
+            Name = "SeatDetailControl";
+            Size = new Size(1074, 527);
             ResumeLayout(false);
+
         }
 
-        private void SetEditing(bool on) {
-            editing = on;
-            //txtClass.ReadOnly = !on;
-            //txtAircraft.ReadOnly = !on;
-            btnSave.Enabled = on;
-            btnCancel.Enabled = on;
-            btnEdit.Enabled = !on;
+        // Helper cho Key (Giữ nguyên từ RouteDetailControl)
+        private static Label Key(string t) => new Label
+        {
+            Text = t,
+            AutoSize = true,
+            Font = new Font("Segoe UI", 10f, FontStyle.Bold),
+            Margin = new Padding(0, 6, 12, 6)
+        };
+
+        // Helper cho Value (Giữ nguyên từ RouteDetailControl)
+        private static Label Val(string n) => new Label
+        {
+            Name = n,
+            AutoSize = true,
+            Font = new Font("Segoe UI", 10f),
+            Margin = new Padding(0, 6, 0, 6)
+        };
+
+        private void BuildLayout()
+        {
+            // Tiêu đề
+            var title = new Label { Text = "ℹ️ Chi tiết ghế", AutoSize = true, Font = new Font("Segoe UI", 20, FontStyle.Bold), Padding = new Padding(24, 20, 24, 0), Dock = DockStyle.Top };
+
+            // Card chứa nội dung chi tiết
+            var card = new Panel { BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle, Padding = new Padding(16), Margin = new Padding(24, 8, 24, 24), Dock = DockStyle.Fill };
+
+            // Grid Layout cho Form (2 cột)
+            var grid = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, ColumnCount = 2, Padding = new Padding(8) };
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 220));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+
+            // Khởi tạo các Label Value
+            vSeatNumber = Val("vSeatNumber");
+            vAircraft = Val("vAircraft");
+            vClass = Val("vClass");
+
+            int r = 0;
+
+            // Dòng 1: Số ghế
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(Key("Số ghế:"), 0, r);
+            grid.Controls.Add(vSeatNumber, 1, r++);
+
+            // Dòng 2: Máy bay
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(Key("Máy bay (Model/Hãng):"), 0, r);
+            grid.Controls.Add(vAircraft, 1, r++);
+
+            // Dòng 3: Hạng ghế
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(Key("Hạng ghế:"), 0, r);
+            grid.Controls.Add(vClass, 1, r++);
+
+            card.Controls.Add(grid);
+
+            // Nút Đóng (Tùy chọn)
+            var bottom = new FlowLayoutPanel { Dock = DockStyle.Bottom, FlowDirection = FlowDirection.RightToLeft, AutoSize = true, Padding = new Padding(0, 12, 12, 12) };
+            var btnClose = new Button { Text = "Đóng", AutoSize = true };
+            btnClose.Click += (_, __) => CloseRequested?.Invoke(this, EventArgs.Empty);
+            bottom.Controls.Add(btnClose);
+            card.Controls.Add(bottom);
+            // Trong SeatDetailControl.cs
+            
+            btnClose.Click += (_, __) => CloseRequested?.Invoke(this, EventArgs.Empty);
+            // Main Layout
+            var main = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2 };
+            main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            main.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            main.Controls.Add(title, 0, 0);
+            main.Controls.Add(card, 0, 1);
+
+            Controls.Add(main);
         }
 
-        private void LoadDemo() {
-            txtSeat.Text = "12A";
-            txtClass.Text = "Economy";
-            txtAircraft.Text = "A320";
-            tableHistory.Rows.Clear();
-            tableHistory.Rows.Add("VN001", "BOOKED", 900000.ToString("#,0"), DateTime.Now.AddDays(-10).ToString("yyyy-MM-dd"));
-            tableHistory.Rows.Add("VN002", "AVAILABLE", 900000.ToString("#,0"), DateTime.Now.AddDays(-3).ToString("yyyy-MM-dd"));
+        /// <summary>
+        /// Nạp dữ liệu ghế vào form chi tiết.
+        /// </summary>
+        /// <param name="seatId">ID của ghế cần nạp.</param>
+        public void LoadSeat(int seatId)
+        {
+            _currentSeat = null;
+
+            try
+            {
+                // Lấy dữ liệu chi tiết của ghế
+                _currentSeat = _seatBUS.GetAllSeatsWithDetails().FirstOrDefault(s => s.SeatId == seatId);
+
+                if (_currentSeat == null)
+                {
+                    MessageBox.Show($"Không tìm thấy ghế có ID: {seatId}.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    DisplayEmptyData();
+                    return;
+                }
+
+                DisplayCurrentSeatData();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi nạp dữ liệu ghế: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                DisplayEmptyData();
+            }
         }
+
+        private void DisplayEmptyData()
+        {
+            vSeatNumber.Text = "N/A";
+            vAircraft.Text = "N/A";
+            vClass.Text = "N/A";
+        }
+
+        private void DisplayCurrentSeatData()
+        {
+            if (_currentSeat == null) return;
+
+            vSeatNumber.Text = _currentSeat.SeatNumber;
+            vAircraft.Text = $"{_currentSeat.AircraftManufacturer} {_currentSeat.AircraftModel}";
+            vClass.Text = _currentSeat.ClassName;
+        }
+
+  
     }
 }
