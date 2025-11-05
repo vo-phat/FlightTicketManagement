@@ -14,15 +14,15 @@ namespace GUI.Features.Route.SubFeatures
 {
     public class RouteCreateControl : UserControl
     {
-        // 🔹 Thay vì nhập ID → dùng ComboBox hiển thị ID + tên sân bay
-        private ComboBox _cbDepAirport, _cbArrAirport;
+        // ✅ Dùng UnderlinedComboBox thay vì ComboBox thuần
+        private UnderlinedComboBox _cbDepAirport, _cbArrAirport;
         private UnderlinedTextField _txtDistance, _txtDuration;
         private PrimaryButton _btnSave;
         private SecondaryButton _btnCancel;
         private TableCustom _table;
 
         private readonly RouteBUS _bus = new RouteBUS();
-        private readonly AirportBUS _airportBus = new AirportBUS(); // ✅ lấy danh sách sân bay
+        private readonly AirportBUS _airportBus = new AirportBUS();
         private int _editingId = 0;
 
         public event EventHandler? DataSaved;
@@ -31,7 +31,7 @@ namespace GUI.Features.Route.SubFeatures
         public RouteCreateControl()
         {
             InitializeComponent();
-            LoadAirports();     // ✅ nạp danh sách sân bay
+            LoadAirports();  // ✅ Nạp dữ liệu ComboBox
             LoadRouteList();
         }
 
@@ -61,38 +61,21 @@ namespace GUI.Features.Route.SubFeatures
             inputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
             inputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
 
-            // ✅ ComboBox chọn sân bay khởi hành
-            _cbDepAirport = new ComboBox
+            _cbDepAirport = new UnderlinedComboBox("Sân bay khởi hành", Array.Empty<string>())
             {
-                DropDownStyle = ComboBoxStyle.DropDownList,
-                Width = 250,
-                Font = new Font("Segoe UI", 10),
-                Margin = new Padding(6, 4, 6, 4)
+                Width = 350
             };
-
-            // ✅ ComboBox chọn sân bay đến
-            _cbArrAirport = new ComboBox
+            _cbArrAirport = new UnderlinedComboBox("Sân bay đến", Array.Empty<string>())
             {
-                DropDownStyle = ComboBoxStyle.DropDownList,
-                Width = 250,
-                Font = new Font("Segoe UI", 10),
-                Margin = new Padding(6, 4, 6, 4)
+                Width = 350
             };
-
-            // Các TextField còn lại
             _txtDistance = new UnderlinedTextField("Khoảng cách (km)", "");
             _txtDuration = new UnderlinedTextField("Thời gian bay (phút)", "");
 
-            // --- Thêm Label ---
-            var lblDep = new Label { Text = "Sân bay khởi hành", Font = new Font("Segoe UI", 10, FontStyle.Bold), AutoSize = true };
-            var lblArr = new Label { Text = "Sân bay đến", Font = new Font("Segoe UI", 10, FontStyle.Bold), AutoSize = true };
-
-            inputs.Controls.Add(lblDep, 0, 0);
-            inputs.Controls.Add(_cbDepAirport, 1, 0);
-            inputs.Controls.Add(lblArr, 0, 1);
-            inputs.Controls.Add(_cbArrAirport, 1, 1);
-            inputs.Controls.Add(_txtDistance, 0, 2);
-            inputs.Controls.Add(_txtDuration, 1, 2);
+            inputs.Controls.Add(_cbDepAirport, 0, 0);
+            inputs.Controls.Add(_cbArrAirport, 1, 0);
+            inputs.Controls.Add(_txtDistance, 0, 1);
+            inputs.Controls.Add(_txtDuration, 1, 1);
 
             // --- Buttons ---
             _btnSave = new PrimaryButton("💾 Lưu tuyến bay") { Width = 160, Height = 40, Margin = new Padding(4) };
@@ -124,7 +107,7 @@ namespace GUI.Features.Route.SubFeatures
             _table.Columns.Add("distance", "Khoảng cách (km)");
             _table.Columns.Add("duration", "Thời gian (phút)");
 
-            // --- Main layout ---
+            // --- Main Layout ---
             var main = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 4 };
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -139,32 +122,34 @@ namespace GUI.Features.Route.SubFeatures
             Controls.Add(main);
         }
 
-        // ✅ Load danh sách sân bay hiển thị “ID - Tên”
+        // ✅ Nạp danh sách sân bay hiển thị “ID - Tên”
         private void LoadAirports()
         {
             try
             {
                 var list = _airportBus.GetAllAirports(); // List<AirportDTO>
+
                 var displayList = list.Select(a => new
                 {
                     a.AirportId,
                     Display = $"{a.AirportId} - {a.AirportName}"
                 }).ToList();
 
-                _cbDepAirport.DataSource = displayList.ToList();
-                _cbDepAirport.DisplayMember = "Display";
-                _cbDepAirport.ValueMember = "AirportId";
+                _cbDepAirport.InnerComboBox.DataSource = displayList.ToList();
+                _cbDepAirport.InnerComboBox.DisplayMember = "Display";
+                _cbDepAirport.InnerComboBox.ValueMember = "AirportId";
 
-                _cbArrAirport.DataSource = displayList.ToList();
-                _cbArrAirport.DisplayMember = "Display";
-                _cbArrAirport.ValueMember = "AirportId";
+                _cbArrAirport.InnerComboBox.DataSource = displayList.ToList();
+                _cbArrAirport.InnerComboBox.DisplayMember = "Display";
+                _cbArrAirport.InnerComboBox.ValueMember = "AirportId";
 
-                _cbDepAirport.SelectedIndex = -1;
-                _cbArrAirport.SelectedIndex = -1;
+                _cbDepAirport.InnerComboBox.SelectedIndex = -1;
+                _cbArrAirport.InnerComboBox.SelectedIndex = -1;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi khi tải danh sách sân bay: " + ex.Message);
+                MessageBox.Show("Lỗi khi tải danh sách sân bay: " + ex.Message,
+                    "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -191,7 +176,8 @@ namespace GUI.Features.Route.SubFeatures
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi khi tải danh sách tuyến bay: " + ex.Message);
+                MessageBox.Show("Lỗi khi tải danh sách tuyến bay: " + ex.Message,
+                    "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -199,30 +185,30 @@ namespace GUI.Features.Route.SubFeatures
         {
             try
             {
-                // ✅ Lấy ID sân bay từ ComboBox
-                if (_cbDepAirport.SelectedValue == null || _cbArrAirport.SelectedValue == null)
+                if (_cbDepAirport.InnerComboBox.SelectedValue == null ||
+                    _cbArrAirport.InnerComboBox.SelectedValue == null)
                 {
-                    MessageBox.Show("Vui lòng chọn đầy đủ sân bay khởi hành và đến.", "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Vui lòng chọn đầy đủ sân bay khởi hành và đến.",
+                        "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
-                int depId = (int)_cbDepAirport.SelectedValue;
-                int arrId = (int)_cbArrAirport.SelectedValue;
+                int depId = (int)_cbDepAirport.InnerComboBox.SelectedValue;
+                int arrId = (int)_cbArrAirport.InnerComboBox.SelectedValue;
 
                 if (depId == arrId)
                 {
-                    MessageBox.Show("Sân bay khởi hành và đến không được trùng nhau.", "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Sân bay khởi hành và đến không được trùng nhau.",
+                        "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
                 int? distance = null;
-                if (!string.IsNullOrWhiteSpace(_txtDistance.Text) &&
-                    int.TryParse(_txtDistance.Text, out int distVal) && distVal >= 0)
+                if (int.TryParse(_txtDistance.Text, out int distVal) && distVal >= 0)
                     distance = distVal;
 
                 int? duration = null;
-                if (!string.IsNullOrWhiteSpace(_txtDuration.Text) &&
-                    int.TryParse(_txtDuration.Text, out int durVal) && durVal >= 0)
+                if (int.TryParse(_txtDuration.Text, out int durVal) && durVal >= 0)
                     duration = durVal;
 
                 RouteDTO dto;
@@ -260,15 +246,16 @@ namespace GUI.Features.Route.SubFeatures
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi khi lưu tuyến bay: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Lỗi khi lưu tuyến bay: " + ex.Message,
+                    "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void ClearAndReset()
         {
             _editingId = 0;
-            _cbDepAirport.SelectedIndex = -1;
-            _cbArrAirport.SelectedIndex = -1;
+            _cbDepAirport.InnerComboBox.SelectedIndex = -1;
+            _cbArrAirport.InnerComboBox.SelectedIndex = -1;
             _txtDistance.Text = _txtDuration.Text = "";
             _btnSave.Text = "💾 Lưu tuyến bay";
         }
@@ -282,8 +269,8 @@ namespace GUI.Features.Route.SubFeatures
             }
 
             _editingId = dto.RouteId;
-            _cbDepAirport.SelectedValue = dto.DeparturePlaceId;
-            _cbArrAirport.SelectedValue = dto.ArrivalPlaceId;
+            _cbDepAirport.InnerComboBox.SelectedValue = dto.DeparturePlaceId;
+            _cbArrAirport.InnerComboBox.SelectedValue = dto.ArrivalPlaceId;
             _txtDistance.Text = dto.DistanceKm?.ToString() ?? "";
             _txtDuration.Text = dto.DurationMinutes?.ToString() ?? "";
             _btnSave.Text = $"✍️ Cập nhật #{dto.RouteId}";
