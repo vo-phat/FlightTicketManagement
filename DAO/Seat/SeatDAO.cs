@@ -36,7 +36,7 @@ namespace DAO.Seat
             }
             catch (Exception ex)
             {
-                throw new Exception("Lỗi khi lấy danh sách ghế: " + ex.Message, ex);
+                throw new Exception($"Lỗi khi lấy danh sách ghế: {ex.Message}", ex);
             }
 
             return seats;
@@ -83,7 +83,7 @@ namespace DAO.Seat
             }
             catch (Exception ex)
             {
-                throw new Exception("Lỗi khi lọc danh sách ghế: " + ex.Message, ex);
+                throw new Exception($"Lỗi khi lọc danh sách ghế: {ex.Message}", ex);
             }
 
             return seats;
@@ -105,7 +105,7 @@ namespace DAO.Seat
                     conn.Open();
                     using (var cmd = new MySqlCommand(query, conn))
                     {
-                        cmd.Parameters.AddWithValue("@kw", "%" + keyword + "%");
+                        cmd.Parameters.AddWithValue("@kw", $"%{keyword}%");
 
                         using (var reader = cmd.ExecuteReader())
                         {
@@ -124,7 +124,7 @@ namespace DAO.Seat
             }
             catch (Exception ex)
             {
-                throw new Exception("Lỗi khi tìm kiếm ghế: " + ex.Message, ex);
+                throw new Exception($"Lỗi khi tìm kiếm ghế: {ex.Message}", ex);
             }
 
             return results;
@@ -162,7 +162,7 @@ namespace DAO.Seat
             }
             catch (Exception ex)
             {
-                throw new Exception("Lỗi khi lấy thông tin ghế: " + ex.Message, ex);
+                throw new Exception($"Lỗi khi lấy thông tin ghế: {ex.Message}", ex);
             }
 
             return null;
@@ -192,19 +192,23 @@ namespace DAO.Seat
             }
             catch (Exception ex)
             {
-                throw new Exception("Lỗi khi thêm ghế mới: " + ex.Message, ex);
+                // Ngoại lệ khóa ngoại/duy nhất sẽ thường xảy ra ở đây
+                throw new Exception($"Lỗi khi thêm ghế mới: {ex.Message}", ex);
             }
         }
         #endregion
 
-        #region Sửa thông tin ghế
+   
+
+        #region Sửa thông tin ghế (Đã sửa: Cho phép sửa SeatNumber, AircraftId, ClassId)
         public bool UpdateSeat(SeatDTO seat)
         {
+            // Cập nhật cả 3 trường theo yêu cầu của SeatDetailControl
             string query = @"UPDATE seats 
-                             SET aircraft_id = @aircraft,
-                                 seat_number = @number,
-                                 class_id = @class
-                             WHERE seat_id = @id";
+                     SET aircraft_id = @aircraft,
+                         seat_number = @number,
+                         class_id = @class
+                     WHERE seat_id = @id";
 
             try
             {
@@ -213,6 +217,7 @@ namespace DAO.Seat
                     conn.Open();
                     using (var cmd = new MySqlCommand(query, conn))
                     {
+                        // Truyền đủ 4 tham số
                         cmd.Parameters.AddWithValue("@aircraft", seat.AircraftId);
                         cmd.Parameters.AddWithValue("@number", seat.SeatNumber);
                         cmd.Parameters.AddWithValue("@class", seat.ClassId);
@@ -224,11 +229,13 @@ namespace DAO.Seat
             }
             catch (Exception ex)
             {
-                throw new Exception("Lỗi khi cập nhật ghế: " + ex.Message, ex);
+                // Ngoại lệ khóa ngoại sẽ xảy ra nếu ID mới không tồn tại
+                throw new Exception($"Lỗi khi cập nhật ghế: {ex.Message}", ex);
             }
         }
         #endregion
 
+        // ... (Các phương thức IsSeatCurrentlyInUse, DeleteSeat giữ nguyên) ...
         #region Xóa ghế
         public bool DeleteSeat(int seatId)
         {
@@ -248,7 +255,7 @@ namespace DAO.Seat
             }
             catch (Exception ex)
             {
-                throw new Exception("Lỗi khi xóa ghế: " + ex.Message, ex);
+                throw new Exception($"Lỗi khi xóa ghế: {ex.Message}", ex);
             }
         }
         #endregion
@@ -301,11 +308,49 @@ namespace DAO.Seat
             }
             catch (Exception ex)
             {
-                // Bạn nên sử dụng một logger thay vì chỉ throw Exception.
-                throw new Exception("Lỗi khi lấy danh sách ghế kèm chi tiết: " + ex.Message, ex);
+                throw new Exception($"Lỗi khi lấy danh sách ghế kèm chi tiết: {ex.Message}", ex);
             }
 
             return seats;
+        }
+        #endregion
+        // Trong DAO.Seat.SeatDAO
+        // ... (Các phương thức khác giữ nguyên)
+
+        #region Kiểm tra ghế đang được sử dụng
+        /// <summary>
+        /// Kiểm tra xem ghế có đang được đặt (BOOKED) hoặc bị chặn (BLOCKED) trên bất kỳ chuyến bay nào không.
+        /// </summary>
+        public bool IsSeatCurrentlyInUse(int seatId)
+        {
+            // Tìm bất kỳ bản ghi nào trong flight_seats có trạng thái là BOOKED hoặc BLOCKED.
+            string query = @"
+        SELECT EXISTS (
+            SELECT 1 
+            FROM flight_seats 
+            WHERE seat_id = @id 
+              AND (seat_status = 'BOOKED' OR seat_status = 'BLOCKED') 
+            LIMIT 1
+        )";
+
+            try
+            {
+                using (var conn = DatabaseConnection.GetConnection())
+                {
+                    conn.Open();
+                    using (var cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id", seatId);
+
+                        // ExecuteScalar trả về giá trị đầu tiên (0 hoặc 1)
+                        return Convert.ToInt64(cmd.ExecuteScalar()) > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi kiểm tra trạng thái sử dụng của ghế: {ex.Message}", ex);
+            }
         }
         #endregion
     }

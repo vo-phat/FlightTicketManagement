@@ -140,6 +140,12 @@
                     _country
                 );
             }
-            #endregion
+        #endregion
+        // ✅ Dùng để hiển thị trong ComboBox (ID - Tên hãng)
+        public string DisplayText
+        {
+            get { return $"{AirlineId} - {AirlineName}"; }
         }
+
     }
+}

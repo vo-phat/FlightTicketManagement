@@ -4,6 +4,19 @@ namespace DTO.Payment
 {
     public class PaymentDTO
     {
+        #region Constants
+        // Payment Methods
+        public const string METHOD_CREDIT_CARD = "CREDIT_CARD";
+        public const string METHOD_BANK_TRANSFER = "BANK_TRANSFER";
+        public const string METHOD_E_WALLET = "E_WALLET";
+        public const string METHOD_CASH = "CASH";
+
+        // Payment Status
+        public const string STATUS_PENDING = "PENDING";
+        public const string STATUS_SUCCESS = "SUCCESS";
+        public const string STATUS_FAILED = "FAILED";
+        #endregion
+
         #region Private Fields
         private int _paymentId;
         private int _bookingId;
@@ -55,10 +68,15 @@ namespace DTO.Payment
                 if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentException("Phương thức thanh toán không được để trống");
 
-                if (value.Length > 50)
-                    throw new ArgumentException("Phương thức thanh toán không được quá 50 ký tự");
+                string normalized = value.Trim().ToUpper();
 
-                _paymentMethod = value.Trim().ToUpper();
+                if (normalized != METHOD_CREDIT_CARD &&
+                    normalized != METHOD_BANK_TRANSFER &&
+                    normalized != METHOD_E_WALLET &&
+                    normalized != METHOD_CASH)
+                    throw new ArgumentException("Phương thức thanh toán không hợp lệ (chỉ chấp nhận: CREDIT_CARD, BANK_TRANSFER, E_WALLET, CASH)");
+
+                _paymentMethod = normalized;
             }
         }
 
@@ -77,7 +95,9 @@ namespace DTO.Payment
                     throw new ArgumentException("Trạng thái thanh toán không được để trống");
 
                 string normalized = value.Trim().ToUpper();
-                if (normalized != "PENDING" && normalized != "SUCCESS" && normalized != "FAILED")
+                if (normalized != STATUS_PENDING &&
+                    normalized != STATUS_SUCCESS &&
+                    normalized != STATUS_FAILED)
                     throw new ArgumentException("Trạng thái không hợp lệ (chỉ chấp nhận: PENDING, SUCCESS, FAILED)");
 
                 _status = normalized;
@@ -131,9 +151,12 @@ namespace DTO.Payment
                 return false;
             }
 
-            if (_paymentMethod.Length > 50)
+            if (_paymentMethod != METHOD_CREDIT_CARD &&
+                _paymentMethod != METHOD_BANK_TRANSFER &&
+                _paymentMethod != METHOD_E_WALLET &&
+                _paymentMethod != METHOD_CASH)
             {
-                errorMessage = "Phương thức thanh toán không được quá 50 ký tự";
+                errorMessage = "Phương thức thanh toán không hợp lệ";
                 return false;
             }
 
@@ -143,9 +166,11 @@ namespace DTO.Payment
                 return false;
             }
 
-            if (_status != "PENDING" && _status != "SUCCESS" && _status != "FAILED")
+            if (_status != STATUS_PENDING &&
+                _status != STATUS_SUCCESS &&
+                _status != STATUS_FAILED)
             {
-                errorMessage = "Trạng thái không hợp lệ (chỉ chấp nhận: PENDING, SUCCESS, FAILED)";
+                errorMessage = "Trạng thái không hợp lệ";
                 return false;
             }
 
@@ -157,7 +182,8 @@ namespace DTO.Payment
         public override string ToString()
         {
             return $"PaymentID: {_paymentId}, BookingID: {_bookingId}, " +
-                   $"Amount: {_amount:N0} VND, Method: {_paymentMethod}, Status: {_status}";
+                   $"Amount: {_amount:N0} VND, Method: {_paymentMethod}, " +
+                   $"Date: {_paymentDate:dd/MM/yyyy HH:mm}, Status: {_status}";
         }
 
         public override bool Equals(object obj)
@@ -175,7 +201,7 @@ namespace DTO.Payment
         #endregion
 
         #region Helper Methods
-        public PaymentDTO Clone()
+        public virtual PaymentDTO Clone()
         {
             return new PaymentDTO(
                 _paymentId,
@@ -185,6 +211,38 @@ namespace DTO.Payment
                 _paymentDate,
                 _status
             );
+        }
+
+        public string GetPaymentMethodDisplay()
+        {
+            switch (_paymentMethod)
+            {
+                case METHOD_CREDIT_CARD:
+                    return "Thẻ tín dụng";
+                case METHOD_BANK_TRANSFER:
+                    return "Chuyển khoản";
+                case METHOD_E_WALLET:
+                    return "Ví điện tử";
+                case METHOD_CASH:
+                    return "Tiền mặt";
+                default:
+                    return _paymentMethod;
+            }
+        }
+
+        public string GetStatusDisplay()
+        {
+            switch (_status)
+            {
+                case STATUS_PENDING:
+                    return "Đang chờ";
+                case STATUS_SUCCESS:
+                    return "Thành công";
+                case STATUS_FAILED:
+                    return "Thất bại";
+                default:
+                    return _status;
+            }
         }
         #endregion
     }

@@ -104,7 +104,7 @@ namespace DAO.Airline
         #region Xóa hãng hàng không theo ID
         public bool DeleteAirline(int airlineId)
         {
-            string query = " DELETE FROM airlines WHERE airline.id = @id";
+            string query = " DELETE FROM airlines WHERE airline_id = @id";
             try
             {
                 using ( var connection = DatabaseConnection.GetConnection())

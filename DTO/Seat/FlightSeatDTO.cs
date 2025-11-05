@@ -12,7 +12,17 @@ namespace DTO.FlightSeat
         private string _seatStatus;
         #endregion
 
-        #region Public Properties
+        #region Public Display Properties (Dùng cho JOIN)
+        public int AircraftId { get; set; }
+
+        public string AircraftName { get; set; } = "";    // Tên máy bay (Manufacturer Model)
+        public string SeatNumber { get; set; } = "";      // Số ghế
+        public string ClassName { get; set; } = "";       // Hạng ghế
+        #endregion
+
+        public int ClassId { get; set; }
+
+        #region Public Properties (Chính)
         public int FlightSeatId
         {
             get => _flightSeatId;
@@ -72,15 +82,9 @@ namespace DTO.FlightSeat
         #region Constructors
         public FlightSeatDTO() { }
 
-        public FlightSeatDTO(int flightId, int seatId, decimal basePrice, string seatStatus)
-        {
-            FlightId = flightId;
-            SeatId = seatId;
-            BasePrice = basePrice;
-            SeatStatus = seatStatus;
-        }
-
-        public FlightSeatDTO(int flightSeatId, int flightId, int seatId, decimal basePrice, string seatStatus)
+        // Constructor cơ bản
+        public FlightSeatDTO(int flightSeatId, int flightId, int seatId,
+            decimal basePrice, string seatStatus)
         {
             FlightSeatId = flightSeatId;
             FlightId = flightId;
@@ -88,6 +92,38 @@ namespace DTO.FlightSeat
             BasePrice = basePrice;
             SeatStatus = seatStatus;
         }
+
+        // Constructor đầy đủ (JOIN)
+        public FlightSeatDTO(int flightSeatId, int flightId, int seatId, int classId,
+    decimal basePrice, string seatStatus,
+    string aircraftName, string seatNumber, string className)
+        {
+            FlightSeatId = flightSeatId;
+            FlightId = flightId;
+            SeatId = seatId;
+            ClassId = classId;
+            BasePrice = basePrice;
+            SeatStatus = seatStatus;
+            AircraftName = aircraftName;
+            SeatNumber = seatNumber;
+            ClassName = className;
+        }
+        public FlightSeatDTO(int flightSeatId, int flightId, int aircraftId, int seatId, int classId,
+    decimal basePrice, string seatStatus,
+    string aircraftName, string seatNumber, string className)
+        {
+            FlightSeatId = flightSeatId;
+            FlightId = flightId;
+            AircraftId = aircraftId;
+            SeatId = seatId;
+            ClassId = classId;
+            BasePrice = basePrice;
+            SeatStatus = seatStatus;
+            AircraftName = aircraftName;
+            SeatNumber = seatNumber;
+            ClassName = className;
+        }
+
         #endregion
 
         #region Validation
@@ -124,7 +160,8 @@ namespace DTO.FlightSeat
         #endregion
 
         #region Overrides
-        public override string ToString() => $"FlightSeat #{_flightSeatId}: Seat {_seatId}, Price {_basePrice:C}, Status {_seatStatus}";
+        public override string ToString() =>
+            $"FlightSeat #{_flightSeatId}: {AircraftName} - {SeatNumber} ({ClassName}), Giá {_basePrice:#,0}₫, Trạng thái {_seatStatus}";
 
         public override bool Equals(object obj)
         {

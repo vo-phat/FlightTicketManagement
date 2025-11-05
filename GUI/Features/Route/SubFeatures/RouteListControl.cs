@@ -1,5 +1,7 @@
 ﻿using BUS.Route;
+using BUS.Airport;
 using DTO.Route;
+using DTO.Airport;
 using GUI.Components.Buttons;
 using GUI.Components.Inputs;
 using GUI.Components.Tables;
@@ -14,6 +16,7 @@ namespace GUI.Features.Route.SubFeatures
     public class RouteListControl : UserControl
     {
         private readonly RouteBUS _bus = new RouteBUS();
+        private readonly AirportBUS _airportBus = new AirportBUS(); // ✅ thêm BUS để lấy tên sân bay
         private DataGridView table;
 
         // Khai báo các control tìm kiếm
@@ -30,9 +33,13 @@ namespace GUI.Features.Route.SubFeatures
         public event Action<RouteDTO>? RequestEdit;
         public event Action? DataChanged;
 
+        // Lưu danh sách sân bay vào dictionary
+        private Dictionary<int, string> _airportNames = new();
+
         public RouteListControl()
         {
             InitializeComponent();
+            LoadAirportNames(); // ✅ nạp sân bay trước
             RefreshList();
         }
 
@@ -44,7 +51,15 @@ namespace GUI.Features.Route.SubFeatures
             AutoScroll = true;
 
             // === TIÊU ĐỀ ===
-            var lblTitle = new Label { Text = "🧭 Danh sách tuyến bay", Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point), ForeColor = Color.FromArgb(40, 55, 77), AutoSize = true, Dock = DockStyle.Top, Padding = new Padding(24, 20, 0, 12) };
+            var lblTitle = new Label
+            {
+                Text = "🧭 Danh sách tuyến bay",
+                Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point),
+                ForeColor = Color.FromArgb(40, 55, 77),
+                AutoSize = true,
+                Dock = DockStyle.Top,
+                Padding = new Padding(24, 20, 0, 12)
+            };
 
             // === PANEL BỘ LỌC ===
             var filterPanel = new FlowLayoutPanel
@@ -57,9 +72,8 @@ namespace GUI.Features.Route.SubFeatures
                 BackColor = Color.FromArgb(250, 253, 255)
             };
 
-            // --- INPUTS TÙY CHỈNH ---
-            txtDepId = new UnderlinedTextField("ID Khởi hành", "") { Width = 140, Margin = new Padding(6, 4, 6, 4), LineThickness = 1 };
-            txtArrId = new UnderlinedTextField("ID Đến", "") { Width = 140, Margin = new Padding(6, 4, 6, 4), LineThickness = 1 };
+            txtDepId = new UnderlinedTextField("Sân bay khởi hành", "") { Width = 180, Margin = new Padding(6, 4, 6, 4), LineThickness = 1 };
+            txtArrId = new UnderlinedTextField("Sân bay đến", "") { Width = 180, Margin = new Padding(6, 4, 6, 4), LineThickness = 1 };
             txtDistance = new UnderlinedTextField("Khoảng cách (km)", "") { Width = 180, Margin = new Padding(6, 4, 6, 4), LineThickness = 1 };
             txtDuration = new UnderlinedTextField("Thời gian (phút)", "") { Width = 180, Margin = new Padding(6, 4, 6, 4), LineThickness = 1 };
 
@@ -71,7 +85,7 @@ namespace GUI.Features.Route.SubFeatures
 
             filterPanel.Controls.AddRange(new Control[] { txtDepId, txtArrId, txtDistance, txtDuration, btnSearch, btnAdd });
 
-            // === BẢNG DANH SÁCH TÙY CHỈNH ===
+            // === BẢNG DANH SÁCH ===
             table = new TableCustom
             {
                 Dock = DockStyle.Fill,
@@ -84,9 +98,8 @@ namespace GUI.Features.Route.SubFeatures
                 BorderColor = Color.FromArgb(200, 200, 200),
             };
 
-            // 1. Cấu hình các Cột 
-            table.Columns.Add("depId", "ID Khởi hành");
-            table.Columns.Add("arrId", "ID Đến");
+            table.Columns.Add("depName", "Sân bay khởi hành");
+            table.Columns.Add("arrName", "Sân bay đến");
             table.Columns.Add("distance", "Khoảng cách (km)");
             table.Columns.Add("duration", "Thời gian (phút)");
             table.Columns.Add(ACTION_COL, "Thao tác");
@@ -99,13 +112,27 @@ namespace GUI.Features.Route.SubFeatures
             table.CellMouseMove += Table_CellMouseMove;
             table.CellMouseClick += Table_CellMouseClick;
 
-            // === GHÉP TOÀN BỘ GIAO DIỆN ===
             Controls.Clear();
             Controls.Add(table);
             Controls.Add(filterPanel);
             Controls.Add(lblTitle);
 
             ResumeLayout(false);
+        }
+
+        // ✅ Nạp tên sân bay vào dictionary
+        private void LoadAirportNames()
+        {
+            try
+            {
+                var airports = _airportBus.GetAllAirports(); // List<AirportDTO>
+                _airportNames = airports.ToDictionary(a => a.AirportId, a => a.AirportName);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Không thể tải danh sách sân bay: " + ex.Message,
+                    "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private bool _isRefreshing = false;
@@ -117,58 +144,64 @@ namespace GUI.Features.Route.SubFeatures
 
             try
             {
-                List<RouteDTO> filteredList = _bus.GetAllRoutes();
+                var filteredList = _bus.GetAllRoutes();
 
-                // 2. Lấy giá trị tìm kiếm
-                string searchDepId = txtDepId.Text?.Trim().ToLower() ?? "";
-                string searchArrId = txtArrId.Text?.Trim().ToLower() ?? "";
-                string searchDistance = txtDistance.Text?.Trim().ToLower() ?? "";
-                string searchDuration = txtDuration.Text?.Trim().ToLower() ?? "";
+                string searchDep = txtDepId.Text?.Trim().ToLower() ?? "";
+                string searchArr = txtArrId.Text?.Trim().ToLower() ?? "";
+                string searchDist = txtDistance.Text?.Trim() ?? "";
+                string searchDur = txtDuration.Text?.Trim() ?? "";
 
-                // 3. Thực hiện LỌC BẰNG LINQ
-
-                if (!string.IsNullOrWhiteSpace(searchDepId))
-                {
-                    filteredList = filteredList.Where(r => r.DeparturePlaceId.ToString().Contains(searchDepId)).ToList();
-                }
-
-                if (!string.IsNullOrWhiteSpace(searchArrId))
-                {
-                    filteredList = filteredList.Where(r => r.ArrivalPlaceId.ToString().Contains(searchArrId)).ToList();
-                }
-
-                if (!string.IsNullOrWhiteSpace(searchDistance))
-                {
+                // ✅ Lọc theo tên sân bay
+                if (!string.IsNullOrEmpty(searchDep))
                     filteredList = filteredList
-                        .Where(r => r.DistanceKm.HasValue && r.DistanceKm.Value.ToString().Contains(searchDistance))
+                        .Where(r => _airportNames.ContainsKey(r.DeparturePlaceId) &&
+                                    _airportNames[r.DeparturePlaceId].ToLower().Contains(searchDep))
                         .ToList();
-                }
 
-                if (!string.IsNullOrWhiteSpace(searchDuration))
-                {
+                if (!string.IsNullOrEmpty(searchArr))
                     filteredList = filteredList
-                        .Where(r => r.DurationMinutes.HasValue && r.DurationMinutes.Value.ToString().Contains(searchDuration))
+                        .Where(r => _airportNames.ContainsKey(r.ArrivalPlaceId) &&
+                                    _airportNames[r.ArrivalPlaceId].ToLower().Contains(searchArr))
                         .ToList();
-                }
 
-                // 4. Đổ dữ liệu đã lọc vào bảng
+                if (!string.IsNullOrEmpty(searchDist))
+                    filteredList = filteredList
+                        .Where(r => r.DistanceKm.HasValue &&
+                                    r.DistanceKm.Value.ToString().Contains(searchDist))
+                        .ToList();
+
+                if (!string.IsNullOrEmpty(searchDur))
+                    filteredList = filteredList
+                        .Where(r => r.DurationMinutes.HasValue &&
+                                    r.DurationMinutes.Value.ToString().Contains(searchDur))
+                        .ToList();
+
+                // ✅ Hiển thị tên thay vì ID
                 table.Rows.Clear();
                 foreach (var r in filteredList)
                 {
+                    string depName = _airportNames.ContainsKey(r.DeparturePlaceId)
+                        ? _airportNames[r.DeparturePlaceId]
+                        : $"#{r.DeparturePlaceId}";
+                    string arrName = _airportNames.ContainsKey(r.ArrivalPlaceId)
+                        ? _airportNames[r.ArrivalPlaceId]
+                        : $"#{r.ArrivalPlaceId}";
+
                     table.Rows.Add(
-                        r.DeparturePlaceId,
-                        r.ArrivalPlaceId,
-                        r.DistanceKm.HasValue ? r.DistanceKm.Value.ToString() : "N/A",
-                        r.DurationMinutes.HasValue ? r.DurationMinutes.Value.ToString() : "N/A",
+                        depName,
+                        arrName,
+                        r.DistanceKm?.ToString() ?? "N/A",
+                        r.DurationMinutes?.ToString() ?? "N/A",
                         null,
                         r.RouteId
                     );
                 }
+
                 table.InvalidateColumn(table.Columns[ACTION_COL].Index);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi khi tải dữ liệu: " + ex.Message);
+                MessageBox.Show("Lỗi khi tải danh sách tuyến bay: " + ex.Message);
             }
             finally
             {
@@ -176,8 +209,7 @@ namespace GUI.Features.Route.SubFeatures
             }
         }
 
-        // ... (Các phương thức vẽ và xử lý click giữ nguyên) ...
-
+        // ====== Giữ nguyên các hàm vẽ ======
         private (Rectangle rcView, Rectangle rcEdit, Rectangle rcDel) GetRects(Rectangle b, Font f)
         {
             int pad = 6, x = b.Left + pad, y = b.Top + (b.Height - f.Height) / 2;
@@ -230,15 +262,16 @@ namespace GUI.Features.Route.SubFeatures
 
             var row = table.Rows[e.RowIndex];
             int id = Convert.ToInt32(row.Cells["routeIdHidden"].Value);
-            int depId = Convert.ToInt32(row.Cells["depId"].Value);
-            int arrId = Convert.ToInt32(row.Cells["arrId"].Value);
+
+            // Lấy lại ID thật từ tên sân bay (dựa theo dictionary)
+            int depId = _airportNames.FirstOrDefault(x => row.Cells["depName"].Value?.ToString() == x.Value).Key;
+            int arrId = _airportNames.FirstOrDefault(x => row.Cells["arrName"].Value?.ToString() == x.Value).Key;
+
             string distStr = row.Cells["distance"].Value?.ToString();
             string durStr = row.Cells["duration"].Value?.ToString();
 
-            // Xử lý giá trị có thể là "N/A"
-            int? distance = distStr != "N/A" && int.TryParse(distStr.Replace(" km", ""), out int dist) ? dist : (int?)null;
-            int? duration = durStr != "N/A" && int.TryParse(durStr.Replace(" phút", ""), out int dur) ? dur : (int?)null;
-
+            int? distance = distStr != "N/A" && int.TryParse(distStr, out int dist) ? dist : (int?)null;
+            int? duration = durStr != "N/A" && int.TryParse(durStr, out int dur) ? dur : (int?)null;
 
             var dto = new RouteDTO(id, depId, arrId, distance, duration);
 
@@ -248,8 +281,8 @@ namespace GUI.Features.Route.SubFeatures
                 RequestEdit?.Invoke(dto);
             else if (r.rcDel.Contains(p))
             {
-                if (MessageBox.Show($"Bạn có chắc muốn xóa tuyến bay #{id} ({depId} → {arrId})?", "Xác nhận xóa",
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                if (MessageBox.Show($"Bạn có chắc muốn xóa tuyến bay #{id} ({_airportNames[depId]} → {_airportNames[arrId]})?",
+                    "Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     string message;
                     bool ok = _bus.DeleteRoute(id, out message);

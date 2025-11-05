@@ -130,7 +130,7 @@ namespace GUI.Features.Airport.SubFeatures
         private void LoadAirportList()
         {
             try
-            {
+            {   
                 var list = _bus.GetAllAirports();
                 _table.Rows.Clear();
                 foreach (var a in list)
