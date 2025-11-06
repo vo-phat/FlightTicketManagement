@@ -1,8 +1,10 @@
-﻿using System;
-using System.Drawing;
-using System.Windows.Forms;
+﻿using BUS.Profile;
 using GUI.Components.Buttons;
 using GUI.Components.Inputs;
+using GUI.Features.Auth;
+using System;
+using System.Drawing;
+using System.Windows.Forms;
 
 namespace GUI.Features.Profile.SubFeatures {
     public class ProfileInfoModel {
@@ -23,10 +25,8 @@ namespace GUI.Features.Profile.SubFeatures {
         private DateTimePickerCustom dtpDob;
         private Label lblRole;
 
-        private readonly int _accountId;
 
-        public ProfileInfoControl(int accountId) {
-            _accountId = accountId;
+        public ProfileInfoControl() {
             InitializeComponent();
             LoadData(); // nạp dữ liệu ban đầu
         }
@@ -81,18 +81,49 @@ namespace GUI.Features.Profile.SubFeatures {
             };
 
             var btnSave = new PrimaryButton("💾 Lưu thay đổi") { Width = 160, Height = 36, Margin = new Padding(0, 0, 0, 0) };
-            btnSave.Click += (s, e) => {
-                var model = new ProfileInfoModel {
-                    Email = txtEmail.Text,
-                    FullName = txtFullName.Text,
-                    DateOfBirth = dtpDob.Value,
-                    PhoneNumber = txtPhone.Text,
-                    PassportNumber = txtPassport.Text,
-                    Nationality = txtNationality.Text,
-                    RoleDisplay = lblRole.Text
-                };
-                OnSaveRequested?.Invoke(model);
+            btnSave.Click += (s, e) =>
+            {
+                try
+                {
+                    int accId = SessionManager.AccountId;
+                    var model = new ProfileInfoModel
+                    {
+                        Email = txtEmail.Text,
+                        FullName = txtFullName.Text,
+                        DateOfBirth = dtpDob.Value,
+                        PhoneNumber = txtPhone.Text,
+                        PassportNumber = txtPassport.Text,
+                        Nationality = txtNationality.Text,
+                        RoleDisplay = lblRole.Text
+                    };
+
+                    var dto = new DTO.Profile.ProfileDTO
+                    {
+                        AccountId = accId,
+                        FullName = model.FullName,
+                        DateOfBirth = model.DateOfBirth,
+                        PhoneNumber = model.PhoneNumber,
+                        PassportNumber = model.PassportNumber,
+                        Nationality = model.Nationality
+                    };
+
+                    var bus = new ProfileBUS();
+                    bool ok = bus.UpdateProfile(dto);
+
+                    if (ok)
+                        MessageBox.Show("✅ Đã cập nhật thông tin cá nhân thành công!",
+                                        "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    else
+                        MessageBox.Show("Không có thay đổi nào được lưu.",
+                                        "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Lỗi khi lưu thông tin: " + ex.Message,
+                                    "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             };
+
 
             var btnRow = new FlowLayoutPanel {
                 Dock = DockStyle.Top,
@@ -120,21 +151,32 @@ namespace GUI.Features.Profile.SubFeatures {
             Controls.Add(btnRow);
         }
 
-        private void LoadData() {
-            // TODO: Query DB theo _accountId để fill trường.
-            // Gợi ý: SELECT a.email, p.full_name, p.date_of_birth, p.phone_number, p.passport_number, p.nationality
-            //        FROM Accounts a LEFT JOIN Passenger_Profiles p ON p.account_id = a.account_id
-            //        WHERE a.account_id = @_accountId;
-            //        Và lấy Role qua User_Role -> Roles.role_name.
+        private void LoadData()
+        {
+            try
+            {
+                int accId = SessionManager.AccountId;
+                var bus = new ProfileBUS();
+                var profile = bus.GetProfileByAccountId(accId);
 
-            // Demo: set tạm
-            txtEmail.Text = "tranngochan@sv.sgu.edu.vn";
-            txtFullName.Text = "Trần Ngọc Hân";
-            dtpDob.Value = new DateTime(2000, 1, 1);
-            txtPhone.Text = "0901234567";
-            txtPassport.Text = "1234567890";
-            txtNationality.Text = "Việt Nam";
-            lblRole.Text = "Vai trò: Khách hàng";
+                if (profile != null)
+                {
+                    txtEmail.Text = profile.Email;
+                    txtFullName.Text = profile.FullName;
+                    dtpDob.Value = profile.DateOfBirth ?? DateTime.Today;
+                    txtPhone.Text = profile.PhoneNumber;
+                    txtPassport.Text = profile.PassportNumber;
+                    txtNationality.Text = profile.Nationality;
+                    lblRole.Text = $"Vai trò: {profile.RoleName ?? "Không xác định"}";
+                }
+            }
+
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi tải thông tin hồ sơ: " + ex.Message,
+                    "Lỗi hệ thống", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
+
     }
 }

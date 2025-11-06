@@ -46,7 +46,7 @@ namespace GUI.Features.Profile {
             buttonPanel.Controls.Add(btnLogout);
 
             // Ba control con (giống FlightControl có list/detail/create)
-            infoControl = new ProfileInfoControl(_accountId) { Dock = DockStyle.Fill };
+            infoControl = new ProfileInfoControl() { Dock = DockStyle.Fill };
             changePwdControl = new ChangePasswordControl(_accountId) { Dock = DockStyle.Fill };
 
             // Sự kiện hành động
@@ -93,18 +93,38 @@ namespace GUI.Features.Profile {
             }
         }
 
-        private async void HandleChangePasswordAsync(ChangePasswordModel model) {
-            try {
-                // Kiểm tra mật khẩu hiện tại + cập nhật Accounts.password (nhớ hash)
-                await System.Threading.Tasks.Task.Delay(200);
-                MessageBox.Show("Đã đổi mật khẩu.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            } catch (Exception ex) {
-                MessageBox.Show("Đổi mật khẩu thất bại: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        private async void HandleChangePasswordAsync(ChangePasswordModel model)
+        {
+            try
+            {
+                var bus = new BUS.Account.AccountBUS();
+
+                // 🔹 Gọi hàm đổi mật khẩu thật
+                bool success = bus.ChangePassword(SessionManager.AccountId, model.CurrentPassword, model.NewPassword);
+
+                if (success)
+                {
+                    await System.Threading.Tasks.Task.Delay(200);
+                    MessageBox.Show("Đổi mật khẩu thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Không thể đổi mật khẩu.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                MessageBox.Show("Mật khẩu hiện tại không đúng.", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi đổi mật khẩu: " + ex.Message, "Lỗi hệ thống", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void DoLogout() {
-            // Hiển thị hộp thoại xác nhận
+
+        private void DoLogout()
+        {
             var result = MessageBox.Show(
                 "Bạn có chắc chắn muốn đăng xuất khỏi hệ thống không?",
                 "Xác nhận đăng xuất",
@@ -112,15 +132,20 @@ namespace GUI.Features.Profile {
                 MessageBoxIcon.Question
             );
 
-            if (result == DialogResult.Yes) {
+            if (result == DialogResult.Yes)
+            {
+                SessionManager.Clear();
+
+                // 🔹 Tìm form cha (MainForm), đóng nó
                 var current = FindForm();
-                try {
-                    var login = new LoginForm();
-                    login.Show();
-                } catch {
-                }
-                current?.Hide();
+                current?.Close(); // sẽ quay lại LoginForm nếu LoginForm.Show() còn ẩn
+
+                // 🔹 Nếu muốn đảm bảo mở lại LoginForm:
+                var login = new LoginForm();
+                login.StartPosition = FormStartPosition.CenterScreen;
+                login.Show();
             }
         }
+
     }
 }

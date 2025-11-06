@@ -9,15 +9,10 @@ namespace GUI {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            //using (var login = new LoginForm())
-            //{
-            //    if (login.ShowDialog() == DialogResult.OK)
-            //    {
-            //        Application.Run(new MainForm());
-            //    }
-            //}
+            Application.Run(new LoginForm());
 
-            Application.Run(new MainForm());
+
+            //Application.Run(new MainForm());
             //Application.Run(new Form1());
         }
     }

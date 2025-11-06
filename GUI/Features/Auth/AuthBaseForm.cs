@@ -135,11 +135,22 @@ namespace GUI.Features.Auth {
         protected void CenterX(Control c) => c.Left = (content.Width - c.Width) / 2;
 
         /// Điều hướng: ẩn form hiện tại và mở form đích.
-        protected void Navigate(Form next) {
+        protected void Navigate(Form next, bool reopenCurrent = true)
+        {
+            Hide(); // Ẩn form hiện tại
             next.StartPosition = FormStartPosition.CenterScreen;
-            next.Show();
-            Hide();
-            next.FormClosed += (_, __) => Close(); // đóng chuỗi điều hướng
+
+            // 🔹 Mở form kế tiếp dạng hộp thoại (modal)
+            next.ShowDialog();
+
+            // 🔹 Chỉ hiện lại form hiện tại nếu được yêu cầu
+            if (reopenCurrent)
+                Show();
+            else
+                Close(); // Đăng nhập xong thì đóng luôn
         }
+
+
+
     }
 }
