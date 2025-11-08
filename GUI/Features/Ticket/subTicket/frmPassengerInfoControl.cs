@@ -12,7 +12,8 @@ namespace GUI.Features.Ticket.subTicket
         private readonly BindingList<ProfileDTO> _passengers = new(); // CÁCH 1
         private readonly BindingSource _bs = new();
         private int _editingIndex = -1; // -1 = thêm mới; >=0 = đang sửa dòng này
-
+        private int _passengerCount = 0;
+        private int _ticketCount = 2;
         public frmPassengerInfoControl()
         {
             InitializeComponent();
@@ -122,10 +123,22 @@ namespace GUI.Features.Ticket.subTicket
             }
 
             // THÊM MỚI (mỗi lần 1 người – bỏ for)
-            var profile = new ProfileDTO();
-            MapFormToDto(profile);
-            _passengers.Add(profile); // BindingList tự thông báo Add, không cần reset
-            ClearForm();
+            if (_passengerCount < _ticketCount)
+            {
+                _passengerCount++;
+
+                var profile = new ProfileDTO();
+                MapFormToDto(profile);
+                _passengers.Add(profile); // BindingList tự thông báo Add, không cần reset
+                ClearForm();
+                //return;
+            }
+            else
+            {
+
+                MessageBox.Show($"Đã đủ {_ticketCount} hành khách cho vé này.");
+            }
+           
         }
 
         // Bấm nút "Sửa" trong lưới → đổ ngược lên form

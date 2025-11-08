@@ -155,9 +155,9 @@
             btnCreateAndFindSeat.PressedBackColor = Color.FromArgb(225, 240, 255);
             btnCreateAndFindSeat.PressedBorderColor = Color.FromArgb(0, 92, 175);
             btnCreateAndFindSeat.PressedForeColor = Color.FromArgb(0, 92, 175);
-            btnCreateAndFindSeat.Size = new Size(234, 52);
+            btnCreateAndFindSeat.Size = new Size(105, 52);
             btnCreateAndFindSeat.TabIndex = 6;
-            btnCreateAndFindSeat.Text = "Tạo/tìm đặt chỗ";
+            btnCreateAndFindSeat.Text = "Bỏ";
             btnCreateAndFindSeat.TextAlign = ContentAlignment.MiddleRight;
             btnCreateAndFindSeat.UseVisualStyleBackColor = false;
             btnCreateAndFindSeat.WordWrap = false;
