@@ -15,6 +15,7 @@ namespace GUI.Features.Ticket.subTicket
     public partial class TicketOpsControl : UserControl
     {
         private TicketBUS _ticketBUS;
+        private TicketFilterBUS _ticketFilterBUS;
 
         // Hằng số hiển thị
         private const string ACTION_COL_NAME = "colAction";
@@ -26,52 +27,112 @@ namespace GUI.Features.Ticket.subTicket
         {
             InitializeComponent();
             _ticketBUS = new TicketBUS();
+            _ticketFilterBUS = new TicketFilterBUS();
             SetupAndLoadGrid();
         }
         private void SetupAndLoadGrid()
         {
-            // Cấu hình chung
-
+            // ⚙️ Cấu hình chung
             dgvListFilerTickets.AutoGenerateColumns = false;
             dgvListFilerTickets.AllowUserToAddRows = false;
             dgvListFilerTickets.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvListFilerTickets.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvListFilerTickets.Columns.Clear();
 
-            // Cột dữ liệu
-            dgvListFilerTickets.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                Name = "colTicketId",
-                HeaderText = "Mã vé",
-                DataPropertyName = "TicketId",
-                FillWeight = 15
-            });
+            // 🧾 Cột dữ liệu chính (hiển thị trên bảng)
             dgvListFilerTickets.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "colTicketNumber",
-                HeaderText = "Số hiệu vé",
-                DataPropertyName = "TicketNumber",
-                FillWeight = 20
+                HeaderText = "Số vé",
+                DataPropertyName = "TicketNumber",  // ✅ map với DTO
+                FillWeight = 12
             });
+
             dgvListFilerTickets.Columns.Add(new DataGridViewTextBoxColumn
             {
-                Name = "colIssueDate",
-                HeaderText = "Ngày xuất vé",
-                DataPropertyName = "IssueDate",
-                FillWeight = 25,
-                DefaultCellStyle = new DataGridViewCellStyle { Format = "dd/MM/yyyy HH:mm" }
+                Name = "colPassengerName",
+                HeaderText = "Hành khách",
+                DataPropertyName = "PassengerName",  // ✅ map với DTO
+                FillWeight = 18
             });
+
+            dgvListFilerTickets.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "colSeatNumber",
+                HeaderText = "Ghế",
+                DataPropertyName = "SeatNumber",  // ✅ map với DTO
+                FillWeight = 8
+            });
+
+            
+
+            dgvListFilerTickets.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "colDepartureTime",
+                HeaderText = "Giờ đi",
+                DataPropertyName = "DepartureTime",  // ✅ map với DTO
+                FillWeight = 10,
+                DefaultCellStyle = new DataGridViewCellStyle { Format = "HH:mm" }
+            });
+
+            dgvListFilerTickets.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "colArrivalTime",
+                HeaderText = "Giờ đến",
+                DataPropertyName = "ArrivalTime",  // ✅ map với DTO
+                FillWeight = 10,
+                DefaultCellStyle = new DataGridViewCellStyle { Format = "HH:mm" }
+            });
+
             dgvListFilerTickets.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "colStatus",
                 HeaderText = "Trạng thái",
-                DataPropertyName = "Status",
+                DataPropertyName = "Status",  // ✅ map với DTO
+                FillWeight = 10
+            });
+
+            dgvListFilerTickets.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "colBasePrice",
+                HeaderText = "Giá ghế",
+                DataPropertyName = "BasePrice",  // ✅ map với DTO
+                FillWeight = 12
+            });
+
+            dgvListFilerTickets.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "colAirlineName",
+                HeaderText = "Hãng bay",
+                DataPropertyName = "AirlineName",  // ✅ map với DTO
                 FillWeight = 15
             });
 
-            // Cột ẩn
-            dgvListFilerTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPassengerId", DataPropertyName = "PassengerId", Visible = false });
-            dgvListFilerTickets.Columns.Add(new DataGridViewTextBoxColumn { Name = "colFlightSeatId", DataPropertyName = "FlightSeatId", Visible = false });
+            dgvListFilerTickets.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "colAirportName",
+                HeaderText = "Sân bay đi",
+                DataPropertyName = "AirportName",  // ✅ map với DTO
+                FillWeight = 15
+            });
+
+            // ✈️ Cột ẩn (nếu cần giữ thông tin mà không hiển thị)
+            dgvListFilerTickets.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "colPassengerPhone",
+                DataPropertyName = "PassengerPhone",
+                Visible = false
+            });
+
+            dgvListFilerTickets.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "colPassportNumber",
+                DataPropertyName = "PassportNumber",
+                Visible = false
+            });
+
+
+
 
             // Cột Hành động (custom draw)
             dgvListFilerTickets.Columns.Add(new DataGridViewTextBoxColumn
@@ -97,7 +158,8 @@ namespace GUI.Features.Ticket.subTicket
             EnableDoubleBuffering(dgvListFilerTickets);
 
             // Nạp dữ liệu
-            List<TicketDTO> tickets = _ticketBUS.GetAllTickets();
+            List<TicketFilterDTO> tickets = _ticketFilterBUS.ReadListTicketsFilter();
+            MessageBox.Show("Đã tải " + tickets.Count + " vé đã lọc.", "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
             dgvListFilerTickets.DataSource = tickets;
         }
         private void DgvBookingsTicket_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
@@ -278,6 +340,8 @@ namespace GUI.Features.Ticket.subTicket
 
         private void btnSearchOpsTicket_Click(object sender, EventArgs e)
         {
+
+            
             loadForm();
         }
         private void loadForm()

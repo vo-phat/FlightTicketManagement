@@ -17,7 +17,6 @@ namespace DAO.TicketDAO
         public List<TicketDTO> GetAllTickets()
         {
             
-            Console.WriteLine($"qui cute   sfkjasjfklasfj Đang đọc vé có ID");
             var listTickets = new List<TicketDTO>();
             using (MySqlConnection conn = DbConnection.GetConnection())
             {
@@ -29,15 +28,9 @@ namespace DAO.TicketDAO
                     {
                         using (MySqlDataReader reader = cmd.ExecuteReader())
                         {
-                            // CHỈ SỬ DỤNG VÒNG LẶP WHILE
                             while (reader.Read())
                             {
-                                // Mọi logic xử lý cho một dòng phải nằm BÊN TRONG vòng lặp này
-
-                                // In ra Console để kiểm tra
-                                //Console.WriteLine($"Đang đọc vé có ID: {reader.GetString("status")}");
-
-                                // Tạo đối tượng TicketDTO
+                               
                                 var ticket = new TicketDTO
                                 {
                                     TicketId = reader.GetInt32("ticket_id"),
@@ -47,10 +40,8 @@ namespace DAO.TicketDAO
                                     IssueDate = reader.GetDateTime("issue_date"), // đọc đúng
                                     
                                     Status = Enum.Parse<TicketStatus>(reader.GetString("status"), true)
-                                    // Bỏ qua issue_date vì anh đã comment lại
                                 };
 
-                                // Thêm vào danh sách
                                 listTickets.Add(ticket);
                             }
                         }

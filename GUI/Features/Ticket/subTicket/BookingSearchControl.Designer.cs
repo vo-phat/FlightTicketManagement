@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            DataGridViewCellStyle dataGridViewCellStyle10 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle11 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle12 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             label1 = new Label();
             dgvBookingsTicket = new GUI.Components.Tables.TableCustom();
             btnQuickCreateBookingTicket = new GUI.Components.Buttons.PrimaryButton();
@@ -55,34 +55,34 @@
             // dgvBookingsTicket
             // 
             dgvBookingsTicket.AllowUserToResizeRows = false;
-            dataGridViewCellStyle10.BackColor = Color.FromArgb(248, 250, 252);
-            dgvBookingsTicket.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle10;
+            dataGridViewCellStyle1.BackColor = Color.FromArgb(248, 250, 252);
+            dgvBookingsTicket.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             dgvBookingsTicket.BackgroundColor = Color.White;
             dgvBookingsTicket.BorderColor = Color.FromArgb(40, 40, 40);
             dgvBookingsTicket.BorderStyle = BorderStyle.None;
             dgvBookingsTicket.BorderThickness = 2;
             dgvBookingsTicket.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             dgvBookingsTicket.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
-            dataGridViewCellStyle11.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle11.BackColor = Color.White;
-            dataGridViewCellStyle11.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            dataGridViewCellStyle11.ForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle11.Padding = new Padding(12, 10, 12, 10);
-            dataGridViewCellStyle11.SelectionBackColor = Color.White;
-            dataGridViewCellStyle11.SelectionForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle11.WrapMode = DataGridViewTriState.False;
-            dgvBookingsTicket.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle11;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = Color.White;
+            dataGridViewCellStyle2.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            dataGridViewCellStyle2.ForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle2.Padding = new Padding(12, 10, 12, 10);
+            dataGridViewCellStyle2.SelectionBackColor = Color.White;
+            dataGridViewCellStyle2.SelectionForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
+            dgvBookingsTicket.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             dgvBookingsTicket.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvBookingsTicket.CornerRadius = 16;
-            dataGridViewCellStyle12.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle12.BackColor = Color.White;
-            dataGridViewCellStyle12.Font = new Font("Segoe UI", 10F);
-            dataGridViewCellStyle12.ForeColor = Color.FromArgb(33, 37, 41);
-            dataGridViewCellStyle12.Padding = new Padding(12, 6, 12, 6);
-            dataGridViewCellStyle12.SelectionBackColor = Color.FromArgb(155, 209, 243);
-            dataGridViewCellStyle12.SelectionForeColor = Color.White;
-            dataGridViewCellStyle12.WrapMode = DataGridViewTriState.False;
-            dgvBookingsTicket.DefaultCellStyle = dataGridViewCellStyle12;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = Color.White;
+            dataGridViewCellStyle3.Font = new Font("Segoe UI", 10F);
+            dataGridViewCellStyle3.ForeColor = Color.FromArgb(33, 37, 41);
+            dataGridViewCellStyle3.Padding = new Padding(12, 6, 12, 6);
+            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(155, 209, 243);
+            dataGridViewCellStyle3.SelectionForeColor = Color.White;
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
+            dgvBookingsTicket.DefaultCellStyle = dataGridViewCellStyle3;
             dgvBookingsTicket.EnableHeadersVisualStyles = false;
             dgvBookingsTicket.GridColor = Color.FromArgb(230, 235, 240);
             dgvBookingsTicket.HeaderBackColor = Color.White;
@@ -139,6 +139,7 @@
             btnQuickCreateBookingTicket.TextAlign = ContentAlignment.MiddleLeft;
             btnQuickCreateBookingTicket.UseVisualStyleBackColor = false;
             btnQuickCreateBookingTicket.WordWrap = false;
+            btnQuickCreateBookingTicket.Click += btnQuickCreateBookingTicket_Click_1;
             // 
             // mySqlCommand1
             // 

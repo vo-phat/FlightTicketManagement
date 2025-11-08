@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             label1 = new Label();
             cbFilterTicketStatus = new GUI.Components.Inputs.UnderlinedComboBox();
             txtFilterBookingCode = new GUI.Components.Inputs.UnderlinedTextField();
@@ -153,40 +153,40 @@
             // dgvListFilerTickets
             // 
             dgvListFilerTickets.AllowUserToResizeRows = false;
-            dataGridViewCellStyle4.BackColor = Color.FromArgb(248, 250, 252);
-            dgvListFilerTickets.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle1.BackColor = Color.FromArgb(248, 250, 252);
+            dgvListFilerTickets.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             dgvListFilerTickets.BackgroundColor = Color.White;
             dgvListFilerTickets.BorderColor = Color.FromArgb(40, 40, 40);
             dgvListFilerTickets.BorderStyle = BorderStyle.None;
             dgvListFilerTickets.BorderThickness = 2;
             dgvListFilerTickets.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             dgvListFilerTickets.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
-            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle5.BackColor = Color.White;
-            dataGridViewCellStyle5.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            dataGridViewCellStyle5.ForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle5.Padding = new Padding(12, 10, 12, 10);
-            dataGridViewCellStyle5.SelectionBackColor = Color.White;
-            dataGridViewCellStyle5.SelectionForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.False;
-            dgvListFilerTickets.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = Color.White;
+            dataGridViewCellStyle2.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            dataGridViewCellStyle2.ForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle2.Padding = new Padding(12, 10, 12, 10);
+            dataGridViewCellStyle2.SelectionBackColor = Color.White;
+            dataGridViewCellStyle2.SelectionForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
+            dgvListFilerTickets.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             dgvListFilerTickets.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvListFilerTickets.CornerRadius = 16;
-            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = Color.White;
-            dataGridViewCellStyle6.Font = new Font("Segoe UI", 10F);
-            dataGridViewCellStyle6.ForeColor = Color.FromArgb(33, 37, 41);
-            dataGridViewCellStyle6.Padding = new Padding(12, 6, 12, 6);
-            dataGridViewCellStyle6.SelectionBackColor = Color.FromArgb(155, 209, 243);
-            dataGridViewCellStyle6.SelectionForeColor = Color.White;
-            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
-            dgvListFilerTickets.DefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = Color.White;
+            dataGridViewCellStyle3.Font = new Font("Segoe UI", 10F);
+            dataGridViewCellStyle3.ForeColor = Color.FromArgb(33, 37, 41);
+            dataGridViewCellStyle3.Padding = new Padding(12, 6, 12, 6);
+            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(155, 209, 243);
+            dataGridViewCellStyle3.SelectionForeColor = Color.White;
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
+            dgvListFilerTickets.DefaultCellStyle = dataGridViewCellStyle3;
             dgvListFilerTickets.EnableHeadersVisualStyles = false;
             dgvListFilerTickets.GridColor = Color.FromArgb(230, 235, 240);
             dgvListFilerTickets.HeaderBackColor = Color.White;
             dgvListFilerTickets.HeaderForeColor = Color.FromArgb(126, 185, 232);
             dgvListFilerTickets.HoverBackColor = Color.FromArgb(232, 245, 255);
-            dgvListFilerTickets.Location = new Point(28, 349);
+            dgvListFilerTickets.Location = new Point(28, 355);
             dgvListFilerTickets.MultiSelect = false;
             dgvListFilerTickets.Name = "dgvListFilerTickets";
             dgvListFilerTickets.RowAltBackColor = Color.FromArgb(248, 250, 252);
@@ -198,7 +198,7 @@
             dgvListFilerTickets.SelectionBackColor = Color.FromArgb(155, 209, 243);
             dgvListFilerTickets.SelectionForeColor = Color.White;
             dgvListFilerTickets.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvListFilerTickets.Size = new Size(1174, 333);
+            dgvListFilerTickets.Size = new Size(1542, 563);
             dgvListFilerTickets.TabIndex = 35;
             // 
             // mySqlCommand1
@@ -261,7 +261,7 @@
             Controls.Add(dgvListFilerTickets);
             Controls.Add(label1);
             Name = "TicketOpsControl";
-            Size = new Size(1226, 774);
+            Size = new Size(1628, 955);
             ((System.ComponentModel.ISupportInitialize)dgvListFilerTickets).EndInit();
             ResumeLayout(false);
             PerformLayout();
