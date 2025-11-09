@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
             label1 = new Label();
             cbFilterTicketStatus = new GUI.Components.Inputs.UnderlinedComboBox();
             txtFilterBookingCode = new GUI.Components.Inputs.UnderlinedTextField();
@@ -39,7 +39,7 @@
             dgvListFilerTickets = new GUI.Components.Tables.TableCustom();
             mySqlCommand1 = new MySqlConnector.MySqlCommand();
             dtpFilterFlightDate = new GUI.Components.Inputs.DateTimePickerCustom();
-            txtFilterPassengerInfo = new GUI.Components.Inputs.UnderlinedTextField();
+            txtFilterPhoneNumber = new GUI.Components.Inputs.UnderlinedTextField();
             ((System.ComponentModel.ISupportInitialize)dgvListFilerTickets).BeginInit();
             SuspendLayout();
             // 
@@ -153,34 +153,34 @@
             // dgvListFilerTickets
             // 
             dgvListFilerTickets.AllowUserToResizeRows = false;
-            dataGridViewCellStyle1.BackColor = Color.FromArgb(248, 250, 252);
-            dgvListFilerTickets.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle4.BackColor = Color.FromArgb(248, 250, 252);
+            dgvListFilerTickets.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
             dgvListFilerTickets.BackgroundColor = Color.White;
             dgvListFilerTickets.BorderColor = Color.FromArgb(40, 40, 40);
             dgvListFilerTickets.BorderStyle = BorderStyle.None;
             dgvListFilerTickets.BorderThickness = 2;
             dgvListFilerTickets.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             dgvListFilerTickets.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = Color.White;
-            dataGridViewCellStyle2.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            dataGridViewCellStyle2.ForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle2.Padding = new Padding(12, 10, 12, 10);
-            dataGridViewCellStyle2.SelectionBackColor = Color.White;
-            dataGridViewCellStyle2.SelectionForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
-            dgvListFilerTickets.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = Color.White;
+            dataGridViewCellStyle5.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            dataGridViewCellStyle5.ForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle5.Padding = new Padding(12, 10, 12, 10);
+            dataGridViewCellStyle5.SelectionBackColor = Color.White;
+            dataGridViewCellStyle5.SelectionForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.False;
+            dgvListFilerTickets.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
             dgvListFilerTickets.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvListFilerTickets.CornerRadius = 16;
-            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = Color.White;
-            dataGridViewCellStyle3.Font = new Font("Segoe UI", 10F);
-            dataGridViewCellStyle3.ForeColor = Color.FromArgb(33, 37, 41);
-            dataGridViewCellStyle3.Padding = new Padding(12, 6, 12, 6);
-            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(155, 209, 243);
-            dataGridViewCellStyle3.SelectionForeColor = Color.White;
-            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
-            dgvListFilerTickets.DefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = Color.White;
+            dataGridViewCellStyle6.Font = new Font("Segoe UI", 10F);
+            dataGridViewCellStyle6.ForeColor = Color.FromArgb(33, 37, 41);
+            dataGridViewCellStyle6.Padding = new Padding(12, 6, 12, 6);
+            dataGridViewCellStyle6.SelectionBackColor = Color.FromArgb(155, 209, 243);
+            dataGridViewCellStyle6.SelectionForeColor = Color.White;
+            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
+            dgvListFilerTickets.DefaultCellStyle = dataGridViewCellStyle6;
             dgvListFilerTickets.EnableHeadersVisualStyles = false;
             dgvListFilerTickets.GridColor = Color.FromArgb(230, 235, 240);
             dgvListFilerTickets.HeaderBackColor = Color.White;
@@ -198,7 +198,7 @@
             dgvListFilerTickets.SelectionBackColor = Color.FromArgb(155, 209, 243);
             dgvListFilerTickets.SelectionForeColor = Color.White;
             dgvListFilerTickets.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvListFilerTickets.Size = new Size(1542, 563);
+            dgvListFilerTickets.Size = new Size(1550, 312);
             dgvListFilerTickets.TabIndex = 35;
             // 
             // mySqlCommand1
@@ -223,36 +223,36 @@
             dtpFilterFlightDate.TabIndex = 47;
             dtpFilterFlightDate.Value = new DateTime(2025, 10, 30, 10, 46, 34, 110);
             // 
-            // txtFilterPassengerInfo
+            // txtFilterPhoneNumber
             // 
-            txtFilterPassengerInfo.BackColor = Color.Transparent;
-            txtFilterPassengerInfo.FocusedLineThickness = 3;
-            txtFilterPassengerInfo.InheritParentBackColor = true;
-            txtFilterPassengerInfo.LabelForeColor = Color.FromArgb(70, 70, 70);
-            txtFilterPassengerInfo.LabelText = "SDT/Gmail";
-            txtFilterPassengerInfo.LineColor = Color.FromArgb(40, 40, 40);
-            txtFilterPassengerInfo.LineColorFocused = Color.FromArgb(0, 92, 175);
-            txtFilterPassengerInfo.LineThickness = 2;
-            txtFilterPassengerInfo.Location = new Point(299, 261);
-            txtFilterPassengerInfo.Name = "txtFilterPassengerInfo";
-            txtFilterPassengerInfo.Padding = new Padding(0, 4, 0, 8);
-            txtFilterPassengerInfo.PasswordChar = '\0';
-            txtFilterPassengerInfo.PlaceholderText = "Placeholder";
-            txtFilterPassengerInfo.ReadOnly = false;
-            txtFilterPassengerInfo.ReadOnlyLineColor = Color.FromArgb(200, 200, 200);
-            txtFilterPassengerInfo.ReadOnlyTextColor = Color.FromArgb(90, 90, 90);
-            txtFilterPassengerInfo.Size = new Size(188, 63);
-            txtFilterPassengerInfo.TabIndex = 49;
-            txtFilterPassengerInfo.TextForeColor = Color.FromArgb(30, 30, 30);
-            txtFilterPassengerInfo.UnderlineSpacing = 2;
-            txtFilterPassengerInfo.UseSystemPasswordChar = false;
-            txtFilterPassengerInfo.Load += underlinedTextField1_Load;
+            txtFilterPhoneNumber.BackColor = Color.Transparent;
+            txtFilterPhoneNumber.FocusedLineThickness = 3;
+            txtFilterPhoneNumber.InheritParentBackColor = true;
+            txtFilterPhoneNumber.LabelForeColor = Color.FromArgb(70, 70, 70);
+            txtFilterPhoneNumber.LabelText = "Số điện thoại";
+            txtFilterPhoneNumber.LineColor = Color.FromArgb(40, 40, 40);
+            txtFilterPhoneNumber.LineColorFocused = Color.FromArgb(0, 92, 175);
+            txtFilterPhoneNumber.LineThickness = 2;
+            txtFilterPhoneNumber.Location = new Point(299, 261);
+            txtFilterPhoneNumber.Name = "txtFilterPhoneNumber";
+            txtFilterPhoneNumber.Padding = new Padding(0, 4, 0, 8);
+            txtFilterPhoneNumber.PasswordChar = '\0';
+            txtFilterPhoneNumber.PlaceholderText = "Placeholder";
+            txtFilterPhoneNumber.ReadOnly = false;
+            txtFilterPhoneNumber.ReadOnlyLineColor = Color.FromArgb(200, 200, 200);
+            txtFilterPhoneNumber.ReadOnlyTextColor = Color.FromArgb(90, 90, 90);
+            txtFilterPhoneNumber.Size = new Size(188, 63);
+            txtFilterPhoneNumber.TabIndex = 49;
+            txtFilterPhoneNumber.TextForeColor = Color.FromArgb(30, 30, 30);
+            txtFilterPhoneNumber.UnderlineSpacing = 2;
+            txtFilterPhoneNumber.UseSystemPasswordChar = false;
+            txtFilterPhoneNumber.Load += underlinedTextField1_Load;
             // 
             // TicketOpsControl
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            Controls.Add(txtFilterPassengerInfo);
+            Controls.Add(txtFilterPhoneNumber);
             Controls.Add(dtpFilterFlightDate);
             Controls.Add(cbFilterTicketStatus);
             Controls.Add(txtFilterBookingCode);
@@ -276,6 +276,6 @@
         private Components.Tables.TableCustom dgvListFilerTickets;
         private MySqlConnector.MySqlCommand mySqlCommand1;
         private Components.Inputs.DateTimePickerCustom dtpFilterFlightDate;
-        private Components.Inputs.UnderlinedTextField txtFilterPassengerInfo;
+        private Components.Inputs.UnderlinedTextField txtFilterPhoneNumber;
     }
 }

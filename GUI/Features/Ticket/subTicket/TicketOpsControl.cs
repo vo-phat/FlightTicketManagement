@@ -27,10 +27,14 @@ namespace GUI.Features.Ticket.subTicket
         {
             InitializeComponent();
             _ticketBUS = new TicketBUS();
+            // Vừa khởi tạo chỉ load khoảng 10 vé mới nhất
             _ticketFilterBUS = new TicketFilterBUS();
-            SetupAndLoadGrid();
+            List<TicketFilterDTO>  tickets = _ticketFilterBUS.ListTenTicketsNews();
+            SetupAndLoadGrid(tickets);
+            // Xóa form lọc
+            loadForm();
         }
-        private void SetupAndLoadGrid()
+        private void SetupAndLoadGrid(List<TicketFilterDTO> tickets)
         {
             // ⚙️ Cấu hình chung
             dgvListFilerTickets.AutoGenerateColumns = false;
@@ -89,7 +93,8 @@ namespace GUI.Features.Ticket.subTicket
                 Name = "colStatus",
                 HeaderText = "Trạng thái",
                 DataPropertyName = "Status",  // ✅ map với DTO
-                FillWeight = 10
+                FillWeight = 10,
+                Visible = false
             });
 
             dgvListFilerTickets.Columns.Add(new DataGridViewTextBoxColumn
@@ -97,7 +102,8 @@ namespace GUI.Features.Ticket.subTicket
                 Name = "colBasePrice",
                 HeaderText = "Giá ghế",
                 DataPropertyName = "BasePrice",  // ✅ map với DTO
-                FillWeight = 12
+                FillWeight = 12,
+                Visible = false
             });
 
             dgvListFilerTickets.Columns.Add(new DataGridViewTextBoxColumn
@@ -105,7 +111,8 @@ namespace GUI.Features.Ticket.subTicket
                 Name = "colAirlineName",
                 HeaderText = "Hãng bay",
                 DataPropertyName = "AirlineName",  // ✅ map với DTO
-                FillWeight = 15
+                FillWeight = 15,
+                Visible = false
             });
 
             dgvListFilerTickets.Columns.Add(new DataGridViewTextBoxColumn
@@ -113,7 +120,8 @@ namespace GUI.Features.Ticket.subTicket
                 Name = "colAirportName",
                 HeaderText = "Sân bay đi",
                 DataPropertyName = "AirportName",  // ✅ map với DTO
-                FillWeight = 15
+                FillWeight = 15,
+                Visible = false
             });
 
             // ✈️ Cột ẩn (nếu cần giữ thông tin mà không hiển thị)
@@ -157,8 +165,6 @@ namespace GUI.Features.Ticket.subTicket
             // Bật double-buffer giảm flicker
             EnableDoubleBuffering(dgvListFilerTickets);
 
-            // Nạp dữ liệu
-            List<TicketFilterDTO> tickets = _ticketFilterBUS.ReadListTicketsFilter();
             MessageBox.Show("Đã tải " + tickets.Count + " vé đã lọc.", "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
             dgvListFilerTickets.DataSource = tickets;
         }
@@ -340,8 +346,17 @@ namespace GUI.Features.Ticket.subTicket
 
         private void btnSearchOpsTicket_Click(object sender, EventArgs e)
         {
+            string BookingCode  = txtFilterBookingCode.Text.Trim();
+            string FlightCode   = txtFilterFlightCode.Text.Trim();
+            string TicketStatus = cbFilterTicketStatus.Text.Trim();
+            //MessageBox.Show(TicketStatus);
+            DateTime FlightDate = dtpFilterFlightDate.Value;
+            MessageBox.Show(FlightDate.ToString());
+            string PhoneNumber  = txtFilterPhoneNumber.Text.Trim();
 
-            
+            List<TicketFilterDTO> tickets = _ticketFilterBUS.ListFilterTickets(BookingCode, FlightCode,  FlightDate, TicketStatus, PhoneNumber);
+            SetupAndLoadGrid(tickets);
+            // Xóa form lọc
             loadForm();
         }
         private void loadForm()
@@ -350,7 +365,7 @@ namespace GUI.Features.Ticket.subTicket
             txtFilterFlightCode.Text = " ";
             cbFilterTicketStatus.SelectedIndex = -1;
             dtpFilterFlightDate.Value = DateTime.Now;
-            txtFilterPassengerInfo.Text = " ";
+            txtFilterPhoneNumber.Text = " ";
         }
         private void underlinedTextField1_Load(object sender, EventArgs e)
         {
