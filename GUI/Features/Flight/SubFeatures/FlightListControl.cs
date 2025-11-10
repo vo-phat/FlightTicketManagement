@@ -15,6 +15,8 @@ namespace GUI.Features.Flight.SubFeatures
         private bool _isUpdatingComboBoxes = false;
         private readonly AppRole _role;
         public event Action<int> OnBookFlightRequested;
+        public event Action<int> OnViewFlightDetailRequested;
+        public event Action<int> OnEditFlightRequested;
 
         public FlightListControl() : this(AppRole.Admin)
         {
@@ -25,16 +27,29 @@ namespace GUI.Features.Flight.SubFeatures
             InitializeComponent();
         }
         #region Data Loading
-        private void LoadFlightData()
+        public void LoadFlightData()
         {
             try
             {
+                DateTime? startDate = (_role == AppRole.Admin || _role == AppRole.Staff) ? (DateTime?)null : DateTime.Today;
+
                 var result = FlightBUS.Instance.SearchFlightsForDisplay(
-                    null, null, dateTimeNgayDi.Value, null);
+                    null,       // flightNumber
+                    null,       // departureAirportId
+                    null,       // arrivalAirportId
+                    startDate,  // departureDate
+                    null        // cabinClassId
+                );
 
                 if (result.Success)
                 {
-                    danhSachChuyenBay.DataSource = result.GetData<DataTable>();
+                    danhSachChuyenBay.DataSource = null; // 1. Hủy binding cũ
+                    danhSachChuyenBay.DataSource = result.GetData<DataTable>(); // 2. Gán binding mới
+                    danhSachChuyenBay.Refresh(); // 3. Yêu cầu vẽ lại ngay lập tức
+                }
+                else
+                {
+                    throw new Exception(result.GetFullErrorMessage());
                 }
             }
             catch (Exception ex)
@@ -42,12 +57,12 @@ namespace GUI.Features.Flight.SubFeatures
                 MessageBox.Show($"Lỗi khi tải danh sách chuyến bay: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        private void FlightCreateControl_Load(object sender, EventArgs e)
+        private void FlightListControl_Load(object sender, EventArgs e)
         {
             this.Dock = DockStyle.Fill;
 
             danhSachChuyenBay.AutoGenerateColumns = false;
-            //Role Admin và Staff mới được xem cột Trạng thái
+
             if (danhSachChuyenBay.Columns.Contains("Column6"))
             {
                 bool canViewStatus = (_role == AppRole.Admin || _role == AppRole.Staff);
@@ -62,77 +77,93 @@ namespace GUI.Features.Flight.SubFeatures
                     Visible = false
                 });
             }
+
             danhSachChuyenBay.CellMouseClick -= Table_CellMouseClick;
             danhSachChuyenBay.CellMouseClick += Table_CellMouseClick;
-
             danhSachChuyenBay.CellPainting -= Table_CellPainting;
             danhSachChuyenBay.CellPainting += Table_CellPainting;
             danhSachChuyenBay.CellMouseMove -= Table_CellMouseMove;
             danhSachChuyenBay.CellMouseMove += Table_CellMouseMove;
 
-            LoadInitialData();
+            if (_role == AppRole.User)
+            {
+                textFieldMaChuyenBay.Visible = false;
+                checkBoxTimKiemMaChuyenBay.Visible = false;
+            }
+
             LoadFlightData();
+
+            LoadInitialData();
+
+            HookEnterKeyEvents();
         }
         private void timChuyenBay_Click(object sender, EventArgs e)
         {
             try
             {
-                // 1. Thu thập dữ liệu
-                // Nếu không chọn, giá trị sẽ là DBNull.Value, và Convert sẽ trả về null
-                int? departureAirportId = (noiCatCanh.SelectedValue != null && noiCatCanh.SelectedValue != DBNull.Value)
-                    ? Convert.ToInt32(noiCatCanh.SelectedValue) : (int?)null;
+                // 1. Lấy mã chuyến bay (nếu có)
+                string? flightNumber = string.IsNullOrWhiteSpace(textFieldMaChuyenBay.Text)
+                    ? null
+                    : textFieldMaChuyenBay.Text.Trim();
 
-                int? arrivalAirportId = (noiHaCanh.SelectedValue != null && noiHaCanh.SelectedValue != DBNull.Value)
-                    ? Convert.ToInt32(noiHaCanh.SelectedValue) : (int?)null;
+                // 2. Lấy sân bay đi (nếu có)
+                int? depId = (noiCatCanh.SelectedValue != null && noiCatCanh.SelectedValue != DBNull.Value)
+                    ? Convert.ToInt32(noiCatCanh.SelectedValue)
+                    : (int?)null;
 
+                // 3. Lấy sân bay đến (nếu có)
+                int? arrId = (noiHaCanh.SelectedValue != null && noiHaCanh.SelectedValue != DBNull.Value)
+                    ? Convert.ToInt32(noiHaCanh.SelectedValue)
+                    : (int?)null;
+
+                // 4. Lấy hạng vé (nếu có)
                 int? cabinClassId = (cbHangVe.SelectedValue != null && cbHangVe.SelectedValue != DBNull.Value)
-                    ? Convert.ToInt32(cbHangVe.SelectedValue) : (int?)null;
+                    ? Convert.ToInt32(cbHangVe.SelectedValue)
+                    : (int?)null;
 
-                DateTime departureDate = dateTimeNgayDi.Value;
-                bool isRoundTrip = (khuHoi_MotChieu.SelectedItem?.ToString() == "Khứ hồi");
+                // 5. Lấy ngày đi
+                bool allTime = checkBoxTimKiemMaChuyenBay.Checked;
+                // Nếu "Mọi thời điểm" được check -> ngày là null (áp dụng cho Admin/Staff tra cứu)
+                // Ngược lại, lấy ngày đã chọn
+                DateTime? depDate = allTime ? (DateTime?)null : dateTimeNgayDi.Value;
 
-                // 2. Gọi FlightBUS
+                // 6. Gọi BUS (với các tham số đã cập nhật)
                 var result = FlightBUS.Instance.SearchFlightsForDisplay(
-                    departureAirportId,
-                    arrivalAirportId,
-                    departureDate,
+                    flightNumber,
+                    depId,
+                    arrId,
+                    depDate,
                     cabinClassId
                 );
 
-                // 3. Hiển thị kết quả
                 if (result.Success)
                 {
-                    DataTable dtFlights = result.GetData<DataTable>();
-                    danhSachChuyenBay.DataSource = dtFlights;
+                    // 7. Gán kết quả (là DataTable) cho bảng
+                    danhSachChuyenBay.DataSource = result.GetData<DataTable>();
 
-                    if (dtFlights.Rows.Count == 0)
+                    if (result.Data is DataTable dt && dt.Rows.Count == 0)
                     {
                         MessageBox.Show("Không tìm thấy chuyến bay nào phù hợp với tiêu chí của bạn.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-
-                    if (isRoundTrip)
-                    {
-                        // TODO: Xử lý tìm chuyến về
                     }
                 }
                 else
                 {
-                    MessageBox.Show(result.GetFullErrorMessage(), "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    danhSachChuyenBay.DataSource = null;
+                    // 8. Hiển thị lỗi nếu BUS trả về thất bại
+                    MessageBox.Show(result.GetFullErrorMessage(), "Lỗi tìm kiếm", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi không mong muốn: {ex.Message}", "Lỗi hệ thống", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Lỗi khi tìm kiếm: {ex.Message}", "Lỗi hệ thống", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         private void LoadInitialData()
         {
             try
             {
-                _isUpdatingComboBoxes = true; 
+                _isUpdatingComboBoxes = true;
 
-                // 1. Tải Hạng vé (Giữ nguyên từ bước trước)
+                // 1. Tải Hạng vé
                 DataTable dtCabinClasses = CabinClassDAO.Instance.GetAllCabinClasses();
                 DataRow allCabinRow = dtCabinClasses.NewRow();
                 allCabinRow["class_id"] = DBNull.Value;
@@ -378,12 +409,10 @@ namespace GUI.Features.Flight.SubFeatures
 
             var flightId = Convert.ToInt32(danhSachChuyenBay.Rows[e.RowIndex].Cells["flight_id_hidden"].Value);
             if (flightId == 0) return;
+
             string flightNumber = danhSachChuyenBay.Rows[e.RowIndex].Cells["Column1"].Value.ToString();
-
             string departure = danhSachChuyenBay.Rows[e.RowIndex].Cells["Column2"].Value.ToString();
-
             string arrival = danhSachChuyenBay.Rows[e.RowIndex].Cells["Column3"].Value.ToString();
-
 
             if (_role == AppRole.Admin || _role == AppRole.Staff)
             {
@@ -391,15 +420,42 @@ namespace GUI.Features.Flight.SubFeatures
 
                 if (rcView.Contains(clickLocation))
                 {
-                    MessageBox.Show($"(Demo) Admin: Xem chi tiết chuyến bay ID: {flightId} ({flightNumber})", "Xem");
+                    OnViewFlightDetailRequested?.Invoke(flightId);
                 }
                 else if (rcEdit.Contains(clickLocation))
                 {
-                    MessageBox.Show($"(Demo) Admin: Sửa chuyến bay ID: {flightId}", "Sửa");
+                    OnEditFlightRequested?.Invoke(flightId);
                 }
                 else if (rcDel.Contains(clickLocation))
                 {
-                    MessageBox.Show($"(Demo) Admin: Xóa chuyến bay ID: {flightId}", "Xóa");
+                    // 1. Hiển thị hộp thoại xác nhận
+                    string confirmMessage = $"Bạn có chắc chắn muốn xóa chuyến bay này?\n\n" +
+                                            $"Mã chuyến bay: {flightNumber}\n" +
+                                            $"Từ: {departure} Đến: {arrival}\n\n" +
+                                            "Lưu ý: Hành động này không thể hoàn tác.";
+
+                    var confirmResult = MessageBox.Show(confirmMessage,
+                                                        "Xác nhận xóa chuyến bay",
+                                                        MessageBoxButtons.YesNo,
+                                                        MessageBoxIcon.Warning);
+
+                    if (confirmResult == DialogResult.Yes)
+                    {
+                        // 2. Gọi BUS để xóa
+                        var deleteResult = FlightBUS.Instance.DeleteFlight(flightId);
+
+                        // 3. Xử lý kết quả
+                        if (deleteResult.Success)
+                        {
+                            MessageBox.Show(deleteResult.Message, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            // 4. Tải lại danh sách
+                            LoadFlightData();
+                        }
+                        else
+                        {
+                            MessageBox.Show(deleteResult.GetFullErrorMessage(), "Xóa thất bại", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
                 }
             }
             else if (_role == AppRole.User)
@@ -452,6 +508,40 @@ namespace GUI.Features.Flight.SubFeatures
             {
                 dateTimeNgayVe.Value = selectedDepartureDate;
             }
+        }
+        private void HookEnterKeyEvents()
+        {
+            KeyEventHandler enterHandler = (sender, e) =>
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    timChuyenBay_Click(sender, e);
+
+                    e.SuppressKeyPress = true;
+                    e.Handled = true;
+                }
+            };
+            // 1. Mã chuyến bay (dùng thuộc tính InnerTextBox)
+            textFieldMaChuyenBay.InnerTextBox.KeyDown += enterHandler;
+            // 2. Nơi cất cánh (dùng thuộc tính ComboBox ta vừa tạo)
+            noiCatCanh.ComboBox.KeyDown += enterHandler;
+            // 3. Nơi hạ cánh
+            noiHaCanh.ComboBox.KeyDown += enterHandler;
+            // 4. Hạng vé
+            cbHangVe.ComboBox.KeyDown += enterHandler;
+            // 5. Ngày đi (dùng thuộc tính DateTimePicker)
+            dateTimeNgayDi.DateTimePicker.KeyDown += enterHandler;
+            // 6. Ngày về
+            dateTimeNgayVe.DateTimePicker.KeyDown += enterHandler;
+        }
+        private void textFieldMaChuyenBay_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void checkBoxTimKiemMaChuyenBay_CheckedChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

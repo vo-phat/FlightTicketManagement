@@ -31,6 +31,12 @@ namespace GUI.Features.Flight
             flightListControl.OnBookFlightRequested += (flightId) => {
                 OnBookFlightRequested?.Invoke(flightId);
             };
+            flightListControl.OnViewFlightDetailRequested += HandleViewFlightDetail;
+            flightDetailControl.OnBackToListRequested += () => SwitchTab(0);
+
+            flightListControl.OnEditFlightRequested += HandleEditFlight;
+
+            flightCreateControl.OnSaveSuccess += HandleSaveSuccess;
 
             panelContent.Controls.Add(panelFlightList);
             panelContent.Controls.Add(panelFlightCreate);
@@ -43,7 +49,22 @@ namespace GUI.Features.Flight
             panelFlightCreate.Visible = false;
             panelFlightDetail.Visible = false;
         }
-
+        private void HandleEditFlight(int flightId)
+        {
+            if (flightCreateControl != null)
+            {
+                flightCreateControl.LoadFlightForEdit(flightId);
+                SwitchTab(1);
+            }
+        }
+        private void HandleViewFlightDetail(int flightId)
+        {
+            if (flightDetailControl != null)
+            {
+                flightDetailControl.LoadFlightDetails(flightId);
+                SwitchTab(2);
+            }
+        }
         private void FlightControl_Load(object sender, EventArgs e)
         {
             this.Dock = DockStyle.Fill;
@@ -89,12 +110,30 @@ namespace GUI.Features.Flight
 
         private void danhSachChuyenBay_Click(object sender, EventArgs e)
         {
+            if (flightListControl != null)
+            {
+                flightListControl.LoadFlightData();
+            }
+
             SwitchTab(0);
         }
-
         private void taoMoiChuyenBay_Click(object sender, EventArgs e)
         {
+            if (flightCreateControl != null)
+            {
+                flightCreateControl.ClearForm();
+            }
+
             SwitchTab(1);
+        }
+        private void HandleSaveSuccess()
+        {
+            if (flightListControl != null)
+            {
+                flightListControl.LoadFlightData();
+            }
+
+            SwitchTab(0);
         }
     }
 }

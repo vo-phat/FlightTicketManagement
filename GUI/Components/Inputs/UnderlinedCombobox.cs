@@ -16,6 +16,9 @@ namespace GUI.Components.Inputs {
         private const int CONTROL_HEIGHT = 56;
         private const int LINE_THICK = 2;
 
+        [Browsable(false)]
+        public ComboBox ComboBox => _combo;
+
         public UnderlinedComboBox() : this("Label", Array.Empty<string>()) { }
 
         private static Color GetEffectiveOpaqueBackColor(Control? c) {

@@ -30,15 +30,17 @@ namespace DAO.Aircraft
         #endregion
         public DataTable GetAllAircraftForComboBox()
         {
-            // Chúng ta tạo một cột 'DisplayName' để hiển thị (Model + Manufacturer)
             string query = @"
                 SELECT 
-                    aircraft_id, 
-                    CONCAT(model, ' (', manufacturer, ')') AS DisplayName
+                    a.aircraft_id, 
+                    CONCAT(a.model, ' (', a.manufacturer, ')') AS DisplayName,
+                    al.airline_code
                 FROM 
-                    Aircrafts 
+                    Aircrafts a
+                INNER JOIN
+                    Airlines al ON a.airline_id = al.airline_id
                 ORDER BY 
-                    model";
+                    al.airline_code, a.model";
             try
             {
                 return ExecuteQuery(query);

@@ -15,9 +15,9 @@
         #region Component Designer generated code
         private void InitializeComponent()
         {
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
             timChuyenBay = new GUI.Components.Buttons.PrimaryButton();
             danhSachChuyenBay = new GUI.Components.Tables.TableCustom();
             Column1 = new DataGridViewTextBoxColumn();
@@ -34,6 +34,8 @@
             khuHoi_MotChieu = new GUI.Components.Inputs.UnderlinedComboBox();
             passengerSelectorControl1 = new GUI.Components.Inputs.PassengerSelectorControl();
             cbHangVe = new GUI.Components.Inputs.UnderlinedComboBox();
+            textFieldMaChuyenBay = new GUI.Components.Inputs.UnderlinedTextField();
+            checkBoxTimKiemMaChuyenBay = new CheckBox();
             ((System.ComponentModel.ISupportInitialize)danhSachChuyenBay).BeginInit();
             SuspendLayout();
             // 
@@ -80,35 +82,35 @@
             danhSachChuyenBay.AllowUserToDeleteRows = false;
             danhSachChuyenBay.AllowUserToOrderColumns = true;
             danhSachChuyenBay.AllowUserToResizeRows = false;
-            dataGridViewCellStyle1.BackColor = Color.FromArgb(248, 250, 252);
-            danhSachChuyenBay.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle4.BackColor = Color.FromArgb(248, 250, 252);
+            danhSachChuyenBay.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
             danhSachChuyenBay.BackgroundColor = Color.White;
             danhSachChuyenBay.BorderColor = Color.FromArgb(40, 40, 40);
             danhSachChuyenBay.BorderStyle = BorderStyle.None;
             danhSachChuyenBay.BorderThickness = 2;
             danhSachChuyenBay.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             danhSachChuyenBay.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = Color.White;
-            dataGridViewCellStyle2.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            dataGridViewCellStyle2.ForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle2.Padding = new Padding(12, 10, 12, 10);
-            dataGridViewCellStyle2.SelectionBackColor = Color.White;
-            dataGridViewCellStyle2.SelectionForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
-            danhSachChuyenBay.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = Color.White;
+            dataGridViewCellStyle5.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            dataGridViewCellStyle5.ForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle5.Padding = new Padding(12, 10, 12, 10);
+            dataGridViewCellStyle5.SelectionBackColor = Color.White;
+            dataGridViewCellStyle5.SelectionForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.False;
+            danhSachChuyenBay.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
             danhSachChuyenBay.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             danhSachChuyenBay.Columns.AddRange(new DataGridViewColumn[] { Column1, Column2, Column3, Column4, Column5, Column6, Column8 });
             danhSachChuyenBay.CornerRadius = 16;
-            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = Color.White;
-            dataGridViewCellStyle3.Font = new Font("Segoe UI", 10F);
-            dataGridViewCellStyle3.ForeColor = Color.FromArgb(33, 37, 41);
-            dataGridViewCellStyle3.Padding = new Padding(12, 6, 12, 6);
-            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(155, 209, 243);
-            dataGridViewCellStyle3.SelectionForeColor = Color.White;
-            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
-            danhSachChuyenBay.DefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = Color.White;
+            dataGridViewCellStyle6.Font = new Font("Segoe UI", 10F);
+            dataGridViewCellStyle6.ForeColor = Color.FromArgb(33, 37, 41);
+            dataGridViewCellStyle6.Padding = new Padding(12, 6, 12, 6);
+            dataGridViewCellStyle6.SelectionBackColor = Color.FromArgb(155, 209, 243);
+            dataGridViewCellStyle6.SelectionForeColor = Color.White;
+            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
+            danhSachChuyenBay.DefaultCellStyle = dataGridViewCellStyle6;
             danhSachChuyenBay.EnableHeadersVisualStyles = false;
             danhSachChuyenBay.GridColor = Color.FromArgb(230, 235, 240);
             danhSachChuyenBay.HeaderBackColor = Color.White;
@@ -296,12 +298,51 @@
             cbHangVe.TabIndex = 9;
             cbHangVe.ValueMember = "";
             // 
+            // textFieldMaChuyenBay
+            // 
+            textFieldMaChuyenBay.BackColor = Color.Transparent;
+            textFieldMaChuyenBay.FocusedLineThickness = 3;
+            textFieldMaChuyenBay.InheritParentBackColor = true;
+            textFieldMaChuyenBay.LabelForeColor = Color.FromArgb(70, 70, 70);
+            textFieldMaChuyenBay.LabelText = "Tìm kiếm theo mã";
+            textFieldMaChuyenBay.LineColor = Color.FromArgb(40, 40, 40);
+            textFieldMaChuyenBay.LineColorFocused = Color.FromArgb(0, 92, 175);
+            textFieldMaChuyenBay.LineThickness = 2;
+            textFieldMaChuyenBay.Location = new Point(396, 164);
+            textFieldMaChuyenBay.Name = "textFieldMaChuyenBay";
+            textFieldMaChuyenBay.Padding = new Padding(0, 4, 0, 8);
+            textFieldMaChuyenBay.PasswordChar = '\0';
+            textFieldMaChuyenBay.PlaceholderText = "Nhập mã chuyến bay . . .";
+            textFieldMaChuyenBay.ReadOnly = false;
+            textFieldMaChuyenBay.ReadOnlyLineColor = Color.FromArgb(200, 200, 200);
+            textFieldMaChuyenBay.ReadOnlyTextColor = Color.FromArgb(90, 90, 90);
+            textFieldMaChuyenBay.Size = new Size(330, 57);
+            textFieldMaChuyenBay.TabIndex = 10;
+            textFieldMaChuyenBay.TextForeColor = Color.FromArgb(30, 30, 30);
+            textFieldMaChuyenBay.UnderlineSpacing = 2;
+            textFieldMaChuyenBay.UseSystemPasswordChar = false;
+            textFieldMaChuyenBay.Load += textFieldMaChuyenBay_Load;
+            // 
+            // checkBoxTimKiemMaChuyenBay
+            // 
+            checkBoxTimKiemMaChuyenBay.AutoSize = true;
+            checkBoxTimKiemMaChuyenBay.Font = new Font("Segoe UI", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            checkBoxTimKiemMaChuyenBay.Location = new Point(746, 185);
+            checkBoxTimKiemMaChuyenBay.Name = "checkBoxTimKiemMaChuyenBay";
+            checkBoxTimKiemMaChuyenBay.Size = new Size(163, 34);
+            checkBoxTimKiemMaChuyenBay.TabIndex = 11;
+            checkBoxTimKiemMaChuyenBay.Text = "Mọi thời điểm";
+            checkBoxTimKiemMaChuyenBay.UseVisualStyleBackColor = true;
+            checkBoxTimKiemMaChuyenBay.CheckedChanged += checkBoxTimKiemMaChuyenBay_CheckedChanged;
+            // 
             // FlightListControl
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             AutoSize = true;
             BackColor = Color.FromArgb(232, 240, 252);
+            Controls.Add(checkBoxTimKiemMaChuyenBay);
+            Controls.Add(textFieldMaChuyenBay);
             Controls.Add(cbHangVe);
             Controls.Add(khuHoi_MotChieu);
             Controls.Add(noiHaCanh);
@@ -313,7 +354,7 @@
             Controls.Add(passengerSelectorControl1);
             Name = "FlightListControl";
             Size = new Size(1967, 948);
-            Load += FlightCreateControl_Load;
+            Load += FlightListControl_Load;
             ((System.ComponentModel.ISupportInitialize)danhSachChuyenBay).EndInit();
             ResumeLayout(false);
             PerformLayout();
@@ -337,5 +378,7 @@
         private DataGridViewTextBoxColumn Column6;
         private DataGridViewTextBoxColumn Column8;
         private Components.Inputs.UnderlinedComboBox cbHangVe;
+        private Components.Inputs.UnderlinedTextField textFieldMaChuyenBay;
+        private CheckBox checkBoxTimKiemMaChuyenBay;
     }
 }

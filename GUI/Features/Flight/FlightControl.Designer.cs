@@ -158,13 +158,13 @@ namespace GUI.Features.Flight
             panelContent.Size = new Size(2013, 836);
             panelContent.TabIndex = 4;
             // 
-            // FlightControlold
+            // FlightControl
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             Controls.Add(panelContent);
             Controls.Add(panelTabs);
-            Name = "FlightControlold";
+            Name = "FlightControl";
             Size = new Size(2039, 942);
             Load += FlightControl_Load;
             panelTabs.ResumeLayout(false);

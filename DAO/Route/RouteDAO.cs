@@ -34,20 +34,22 @@ namespace DAO.Route
         /// </summary>
         public DataTable GetAllRoutesForComboBox()
         {
-            // JOIN với bảng Airports để lấy mã Sân bay đi và đến
             string query = @"
-                SELECT 
-                    r.route_id, 
-                    CONCAT(dep.airport_code, ' → ', arr.airport_code, 
-                           ' (', r.distance_km, 'km)') AS DisplayName
-                FROM 
-                    Routes r
-                INNER JOIN 
-                    Airports dep ON r.departure_place_id = dep.airport_id
-                INNER JOIN 
-                    Airports arr ON r.arrival_place_id = arr.airport_id
-                ORDER BY 
-                    dep.airport_code, arr.airport_code";
+                    SELECT 
+                        r.route_id, 
+                        CONCAT(dep.airport_name, ' (', dep.airport_code, ')',
+                               ' → ', 
+                               arr.airport_name, ' (', arr.airport_code, ')',
+                               ' (', r.distance_km, 'km)') AS DisplayName,
+                        r.duration_minutes
+                    FROM 
+                        Routes r
+                    INNER JOIN 
+                        Airports dep ON r.departure_place_id = dep.airport_id
+                    INNER JOIN 
+                        Airports arr ON r.arrival_place_id = arr.airport_id
+                    ORDER BY 
+                        dep.airport_code, arr.airport_code";
             try
             {
                 return ExecuteQuery(query);

@@ -32,209 +32,316 @@ namespace GUI.Features.Flight.SubFeatures
         /// </summary>
         private void InitializeComponent()
         {
-            this.lblTitle = new System.Windows.Forms.Label();
-            this.mainLayout = new System.Windows.Forms.TableLayoutPanel();
-            this.inputLayout = new System.Windows.Forms.TableLayoutPanel();
-            this.txtFlightNumber = new GUI.Components.Inputs.UnderlinedTextField();
-            this.cbAircraft = new GUI.Components.Inputs.UnderlinedComboBox();
-            this.cbRoute = new GUI.Components.Inputs.UnderlinedComboBox();
-            this.dtpDepartureTime = new GUI.Components.Inputs.DateTimePickerCustom();
-            this.dtpArrivalTime = new GUI.Components.Inputs.DateTimePickerCustom();
-            this.buttonPanel = new System.Windows.Forms.FlowLayoutPanel();
-            this.btnSave = new GUI.Components.Buttons.PrimaryButton();
-            this.previewTable = new GUI.Components.Tables.TableCustom();
-            this.mainLayout.SuspendLayout();
-            this.inputLayout.SuspendLayout();
-            this.buttonPanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.previewTable)).BeginInit();
-            this.SuspendLayout();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            lblTitle = new Label();
+            mainLayout = new TableLayoutPanel();
+            inputLayout = new TableLayoutPanel();
+            txtFlightNumber = new UnderlinedTextField();
+            cbAircraft = new UnderlinedComboBox();
+            cbRoute = new UnderlinedComboBox();
+            dtpDepartureTime = new DateTimePickerCustom();
+            dtpArrivalTime = new DateTimePickerCustom();
+            cbStatus = new UnderlinedComboBox();
+            buttonPanel = new FlowLayoutPanel();
+            btnSave = new PrimaryButton();
+            previewTable = new TableCustom();
+            mainLayout.SuspendLayout();
+            inputLayout.SuspendLayout();
+            buttonPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)previewTable).BeginInit();
+            SuspendLayout();
             // 
             // lblTitle
             // 
-            this.lblTitle.AutoSize = true;
-            this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 20F, System.Drawing.FontStyle.Bold);
-            this.lblTitle.Location = new System.Drawing.Point(24, 20);
-            this.lblTitle.Margin = new System.Windows.Forms.Padding(24, 20, 24, 0);
-            this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(273, 37);
-            this.lblTitle.TabIndex = 0;
-            this.lblTitle.Text = "➕ Tạo chuyến bay";
+            lblTitle.AutoSize = true;
+            lblTitle.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
+            lblTitle.Location = new Point(24, 20);
+            lblTitle.Margin = new Padding(24, 20, 24, 0);
+            lblTitle.Name = "lblTitle";
+            lblTitle.Size = new Size(262, 37);
+            lblTitle.TabIndex = 0;
+            lblTitle.Text = "➕ Tạo chuyến bay";
             // 
             // mainLayout
             // 
-            this.mainLayout.ColumnCount = 1;
-            this.mainLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.mainLayout.Controls.Add(this.lblTitle, 0, 0);
-            this.mainLayout.Controls.Add(this.inputLayout, 0, 1);
-            this.mainLayout.Controls.Add(this.buttonPanel, 0, 2);
-            this.mainLayout.Controls.Add(this.previewTable, 0, 3);
-            this.mainLayout.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.mainLayout.Location = new System.Drawing.Point(0, 0);
-            this.mainLayout.Name = "mainLayout";
-            this.mainLayout.RowCount = 4;
-            this.mainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
-            this.mainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
-            this.mainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
-            this.mainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.mainLayout.Size = new System.Drawing.Size(800, 600);
-            this.mainLayout.TabIndex = 0;
+            mainLayout.ColumnCount = 1;
+            mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            mainLayout.Controls.Add(lblTitle, 0, 0);
+            mainLayout.Controls.Add(inputLayout, 0, 1);
+            mainLayout.Controls.Add(buttonPanel, 0, 2);
+            mainLayout.Controls.Add(previewTable, 0, 3);
+            mainLayout.Dock = DockStyle.Fill;
+            mainLayout.Location = new Point(0, 0);
+            mainLayout.Name = "mainLayout";
+            mainLayout.RowCount = 4;
+            mainLayout.RowStyles.Add(new RowStyle());
+            mainLayout.RowStyles.Add(new RowStyle());
+            mainLayout.RowStyles.Add(new RowStyle());
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            mainLayout.Size = new Size(800, 600);
+            mainLayout.TabIndex = 0;
             // 
             // inputLayout
             // 
-            this.inputLayout.AutoSize = true;
-            this.inputLayout.ColumnCount = 2;
-            this.inputLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.inputLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.inputLayout.Controls.Add(this.txtFlightNumber, 0, 0);
-            this.inputLayout.Controls.Add(this.cbAircraft, 0, 1);
-            this.inputLayout.Controls.Add(this.cbRoute, 1, 1);
-            this.inputLayout.Controls.Add(this.dtpDepartureTime, 0, 2);
-            this.inputLayout.Controls.Add(this.dtpArrivalTime, 1, 2);
-            this.inputLayout.Dock = System.Windows.Forms.DockStyle.Top;
-            this.inputLayout.Padding = new System.Windows.Forms.Padding(24, 12, 24, 12);
-            this.inputLayout.Location = new System.Drawing.Point(3, 60);
-            this.inputLayout.Name = "inputLayout";
-            this.inputLayout.RowCount = 3;
-            this.inputLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 72F));
-            this.inputLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 72F));
-            this.inputLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 72F));
-            this.inputLayout.Size = new System.Drawing.Size(794, 240);
-            this.inputLayout.TabIndex = 1;
+            inputLayout.AutoSize = true;
+            inputLayout.ColumnCount = 2;
+            inputLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            inputLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            inputLayout.Controls.Add(txtFlightNumber, 0, 0);
+            inputLayout.Controls.Add(cbAircraft, 0, 1);
+            inputLayout.Controls.Add(cbRoute, 1, 1);
+            inputLayout.Controls.Add(dtpDepartureTime, 0, 2);
+            inputLayout.Controls.Add(dtpArrivalTime, 1, 2);
+            inputLayout.Controls.Add(cbStatus, 1, 0);
+            inputLayout.Dock = DockStyle.Top;
+            inputLayout.Location = new Point(3, 60);
+            inputLayout.Name = "inputLayout";
+            inputLayout.Padding = new Padding(24, 12, 24, 12);
+            inputLayout.RowCount = 3;
+            inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 72F));
+            inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 72F));
+            inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 72F));
+            inputLayout.Size = new Size(794, 240);
+            inputLayout.TabIndex = 1;
             // 
             // txtFlightNumber
             // 
-            this.txtFlightNumber.BackColor = System.Drawing.Color.Transparent;
-            this.inputLayout.SetColumnSpan(this.txtFlightNumber, 2);
-            this.txtFlightNumber.LabelText = "Số hiệu chuyến bay (VD: VN123)";
-            this.txtFlightNumber.Location = new System.Drawing.Point(27, 15);
-            this.txtFlightNumber.Margin = new System.Windows.Forms.Padding(3, 3, 24, 3);
-            this.txtFlightNumber.MinimumSize = new System.Drawing.Size(0, 56);
-            this.txtFlightNumber.Name = "txtFlightNumber";
-            this.txtFlightNumber.PlaceholderText = "";
-            this.txtFlightNumber.Size = new System.Drawing.Size(400, 56);
-            this.txtFlightNumber.TabIndex = 0;
+            txtFlightNumber.BackColor = Color.Transparent;
+            txtFlightNumber.Dock = DockStyle.Fill;
+            txtFlightNumber.FocusedLineThickness = 3;
+            txtFlightNumber.InheritParentBackColor = true;
+            txtFlightNumber.LabelForeColor = Color.FromArgb(70, 70, 70);
+            txtFlightNumber.LabelText = "Số hiệu chuyến bay";
+            txtFlightNumber.LineColor = Color.FromArgb(40, 40, 40);
+            txtFlightNumber.LineColorFocused = Color.FromArgb(0, 92, 175);
+            txtFlightNumber.LineThickness = 2;
+            txtFlightNumber.Location = new Point(27, 15);
+            txtFlightNumber.Margin = new Padding(3, 3, 24, 3);
+            txtFlightNumber.MinimumSize = new Size(0, 56);
+            txtFlightNumber.Name = "txtFlightNumber";
+            txtFlightNumber.Padding = new Padding(0, 4, 0, 8);
+            txtFlightNumber.PasswordChar = '\0';
+            txtFlightNumber.PlaceholderText = "\"VD: VN123\"";
+            txtFlightNumber.ReadOnly = false;
+            txtFlightNumber.ReadOnlyLineColor = Color.FromArgb(200, 200, 200);
+            txtFlightNumber.ReadOnlyTextColor = Color.FromArgb(90, 90, 90);
+            txtFlightNumber.Size = new Size(346, 66);
+            txtFlightNumber.TabIndex = 0;
+            txtFlightNumber.TextForeColor = Color.FromArgb(30, 30, 30);
+            txtFlightNumber.UnderlineSpacing = 2;
+            txtFlightNumber.UseSystemPasswordChar = false;
             // 
             // cbAircraft
             // 
-            this.cbAircraft.BackColor = System.Drawing.Color.Transparent;
-            this.cbAircraft.DataSource = null;
-            this.cbAircraft.DisplayMember = "";
-            this.cbAircraft.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cbAircraft.LabelText = "Chọn máy bay";
-            this.cbAircraft.Location = new System.Drawing.Point(27, 87);
-            this.cbAircraft.Margin = new System.Windows.Forms.Padding(3, 3, 24, 3);
-            this.cbAircraft.MinimumSize = new System.Drawing.Size(140, 56);
-            this.cbAircraft.Name = "cbAircraft";
-            this.cbAircraft.SelectedIndex = -1;
-            this.cbAircraft.SelectedItem = null;
-            this.cbAircraft.SelectedText = "";
-            this.cbAircraft.SelectedValue = null;
-            this.cbAircraft.Size = new System.Drawing.Size(346, 56);
-            this.cbAircraft.TabIndex = 1;
-            this.cbAircraft.ValueMember = "";
+            cbAircraft.BackColor = Color.Transparent;
+            cbAircraft.DataSource = null;
+            cbAircraft.DisplayMember = "";
+            cbAircraft.Dock = DockStyle.Fill;
+            cbAircraft.LabelText = "Chọn máy bay";
+            cbAircraft.Location = new Point(27, 87);
+            cbAircraft.Margin = new Padding(3, 3, 24, 3);
+            cbAircraft.MinimumSize = new Size(140, 56);
+            cbAircraft.Name = "cbAircraft";
+            cbAircraft.SelectedIndex = -1;
+            cbAircraft.SelectedItem = null;
+            cbAircraft.SelectedText = "";
+            cbAircraft.SelectedValue = null;
+            cbAircraft.Size = new Size(346, 66);
+            cbAircraft.TabIndex = 1;
+            cbAircraft.ValueMember = "";
             // 
             // cbRoute
             // 
-            this.cbRoute.BackColor = System.Drawing.Color.Transparent;
-            this.cbRoute.DataSource = null;
-            this.cbRoute.DisplayMember = "";
-            this.cbRoute.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cbRoute.LabelText = "Chọn tuyến bay";
-            this.cbRoute.Location = new System.Drawing.Point(400, 87);
-            this.cbRoute.Margin = new System.Windows.Forms.Padding(3, 3, 24, 3);
-            this.cbRoute.MinimumSize = new System.Drawing.Size(140, 56);
-            this.cbRoute.Name = "cbRoute";
-            this.cbRoute.SelectedIndex = -1;
-            this.cbRoute.SelectedItem = null;
-            this.cbRoute.SelectedText = "";
-            this.cbRoute.SelectedValue = null;
-            this.cbRoute.Size = new System.Drawing.Size(370, 56);
-            this.cbRoute.TabIndex = 2;
-            this.cbRoute.ValueMember = "";
+            cbRoute.BackColor = Color.Transparent;
+            cbRoute.DataSource = null;
+            cbRoute.DisplayMember = "";
+            cbRoute.Dock = DockStyle.Fill;
+            cbRoute.LabelText = "Chọn tuyến bay";
+            cbRoute.Location = new Point(400, 87);
+            cbRoute.Margin = new Padding(3, 3, 24, 3);
+            cbRoute.MinimumSize = new Size(140, 56);
+            cbRoute.Name = "cbRoute";
+            cbRoute.SelectedIndex = -1;
+            cbRoute.SelectedItem = null;
+            cbRoute.SelectedText = "";
+            cbRoute.SelectedValue = null;
+            cbRoute.Size = new Size(346, 66);
+            cbRoute.TabIndex = 2;
+            cbRoute.ValueMember = "";
             // 
             // dtpDepartureTime
             // 
-            this.dtpDepartureTime.BackColor = System.Drawing.Color.Transparent;
-            this.dtpDepartureTime.CustomFormat = "dd/MM/yyyy HH:mm";
-            this.dtpDepartureTime.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dtpDepartureTime.LabelText = "Thời gian cất cánh";
-            this.dtpDepartureTime.Location = new System.Drawing.Point(27, 159);
-            this.dtpDepartureTime.Margin = new System.Windows.Forms.Padding(3, 3, 24, 3);
-            this.dtpDepartureTime.MaxDate = new System.DateTime(9998, 12, 31, 0, 0, 0, 0);
-            this.dtpDepartureTime.MinDate = new System.DateTime(1753, 1, 1, 0, 0, 0, 0);
-            this.dtpDepartureTime.Name = "dtpDepartureTime";
-            this.dtpDepartureTime.Padding = new System.Windows.Forms.Padding(0, 4, 0, 8);
-            this.dtpDepartureTime.PlaceholderText = "";
-            this.dtpDepartureTime.Size = new System.Drawing.Size(346, 66);
-            this.dtpDepartureTime.TabIndex = 3;
-            this.dtpDepartureTime.Value = new System.DateTime(2025, 10, 31, 16, 26, 48, 810);
+            dtpDepartureTime.BackColor = Color.Transparent;
+            dtpDepartureTime.CustomFormat = "dd/MM/yyyy HH:mm";
+            dtpDepartureTime.Dock = DockStyle.Fill;
+            dtpDepartureTime.LabelText = "Thời gian cất cánh";
+            dtpDepartureTime.Location = new Point(27, 159);
+            dtpDepartureTime.Margin = new Padding(3, 3, 24, 3);
+            dtpDepartureTime.MaxDate = new DateTime(9998, 12, 31, 0, 0, 0, 0);
+            dtpDepartureTime.MinDate = new DateTime(1753, 1, 1, 0, 0, 0, 0);
+            dtpDepartureTime.Name = "dtpDepartureTime";
+            dtpDepartureTime.Padding = new Padding(0, 4, 0, 8);
+            dtpDepartureTime.PlaceholderText = "";
+            dtpDepartureTime.Size = new Size(346, 66);
+            dtpDepartureTime.TabIndex = 3;
+            dtpDepartureTime.Value = new DateTime(2025, 10, 31, 16, 26, 48, 810);
             // 
             // dtpArrivalTime
             // 
-            this.dtpArrivalTime.BackColor = System.Drawing.Color.Transparent;
-            this.dtpArrivalTime.CustomFormat = "dd/MM/yyyy HH:mm";
-            this.dtpArrivalTime.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dtpArrivalTime.LabelText = "Thời gian hạ cánh";
-            this.dtpArrivalTime.Location = new System.Drawing.Point(400, 159);
-            this.dtpArrivalTime.Margin = new System.Windows.Forms.Padding(3, 3, 24, 3);
-            this.dtpArrivalTime.MaxDate = new System.DateTime(9998, 12, 31, 0, 0, 0, 0);
-            this.dtpArrivalTime.MinDate = new System.DateTime(1753, 1, 1, 0, 0, 0, 0);
-            this.dtpArrivalTime.Name = "dtpArrivalTime";
-            this.dtpArrivalTime.Padding = new System.Windows.Forms.Padding(0, 4, 0, 8);
-            this.dtpArrivalTime.PlaceholderText = "";
-            this.dtpArrivalTime.Size = new System.Drawing.Size(370, 66);
-            this.dtpArrivalTime.TabIndex = 4;
-            this.dtpArrivalTime.Value = new System.DateTime(2025, 10, 31, 16, 26, 48, 811);
+            dtpArrivalTime.BackColor = Color.Transparent;
+            dtpArrivalTime.CustomFormat = "dd/MM/yyyy HH:mm";
+            dtpArrivalTime.Dock = DockStyle.Fill;
+            dtpArrivalTime.LabelText = "Thời gian hạ cánh";
+            dtpArrivalTime.Location = new Point(400, 159);
+            dtpArrivalTime.Margin = new Padding(3, 3, 24, 3);
+            dtpArrivalTime.MaxDate = new DateTime(9998, 12, 31, 0, 0, 0, 0);
+            dtpArrivalTime.MinDate = new DateTime(1753, 1, 1, 0, 0, 0, 0);
+            dtpArrivalTime.Name = "dtpArrivalTime";
+            dtpArrivalTime.Padding = new Padding(0, 4, 0, 8);
+            dtpArrivalTime.PlaceholderText = "";
+            dtpArrivalTime.Size = new Size(346, 66);
+            dtpArrivalTime.TabIndex = 4;
+            dtpArrivalTime.Value = new DateTime(2025, 10, 31, 16, 26, 48, 811);
+            //
+            // cbStatus 
+            //
+            cbStatus.BackColor = Color.Transparent;
+            cbStatus.DataSource = null;
+            cbStatus.DisplayMember = "";
+            cbStatus.Dock = DockStyle.Fill;
+            cbStatus.LabelText = "Trạng thái";
+            cbStatus.Location = new Point(400, 87);
+            cbStatus.Margin = new Padding(3, 3, 24, 3);
+            cbStatus.MinimumSize = new Size(140, 56);
+            cbStatus.Name = "cbStatus";
+            cbStatus.SelectedIndex = -1;
+            cbStatus.SelectedItem = null;
+            cbStatus.SelectedText = "";
+            cbStatus.SelectedValue = null;
+            cbStatus.Size = new Size(346, 66);
+            cbStatus.TabIndex = 5;
+            cbStatus.ValueMember = "";
             // 
             // buttonPanel
             // 
-            this.buttonPanel.AutoSize = true;
-            this.buttonPanel.Controls.Add(this.btnSave);
-            this.buttonPanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.buttonPanel.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.buttonPanel.Location = new System.Drawing.Point(3, 303);
-            this.buttonPanel.Name = "buttonPanel";
-            this.buttonPanel.Padding = new System.Windows.Forms.Padding(24, 0, 24, 12);
-            this.buttonPanel.Size = new System.Drawing.Size(794, 60);
-            this.buttonPanel.TabIndex = 2;
+            buttonPanel.AutoSize = true;
+            buttonPanel.Controls.Add(btnSave);
+            buttonPanel.Dock = DockStyle.Top;
+            buttonPanel.FlowDirection = FlowDirection.RightToLeft;
+            buttonPanel.Location = new Point(3, 306);
+            buttonPanel.Name = "buttonPanel";
+            buttonPanel.Padding = new Padding(24, 0, 24, 12);
+            buttonPanel.Size = new Size(794, 64);
+            buttonPanel.TabIndex = 2;
             // 
             // btnSave
             // 
-            this.btnSave.AutoSize = true;
-            this.btnSave.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.btnSave.Location = new System.Drawing.Point(607, 3);
-            this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(160, 45);
-            this.btnSave.TabIndex = 0;
-            this.btnSave.Text = "💾 Lưu chuyến bay";
-            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
+            btnSave.AutoSize = true;
+            btnSave.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnSave.BackColor = Color.FromArgb(155, 209, 243);
+            btnSave.BorderColor = Color.FromArgb(40, 40, 40);
+            btnSave.BorderThickness = 2;
+            btnSave.CornerRadius = 22;
+            btnSave.EnableHoverEffects = true;
+            btnSave.FlatStyle = FlatStyle.Flat;
+            btnSave.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            btnSave.ForeColor = Color.White;
+            btnSave.HoverBackColor = Color.White;
+            btnSave.HoverBorderColor = Color.FromArgb(0, 92, 175);
+            btnSave.HoverForeColor = Color.FromArgb(0, 92, 175);
+            btnSave.Icon = null;
+            btnSave.IconSize = new Size(22, 22);
+            btnSave.IconSpacing = 10;
+            btnSave.Location = new Point(521, 3);
+            btnSave.Name = "btnSave";
+            btnSave.NormalBackColor = Color.FromArgb(155, 209, 243);
+            btnSave.NormalBorderColor = Color.FromArgb(40, 40, 40);
+            btnSave.NormalForeColor = Color.White;
+            btnSave.Padding = new Padding(24, 10, 24, 10);
+            btnSave.PreferredMaxWidth = 0;
+            btnSave.PressedBackColor = Color.FromArgb(225, 240, 255);
+            btnSave.PressedBorderColor = Color.FromArgb(0, 92, 175);
+            btnSave.PressedForeColor = Color.FromArgb(0, 92, 175);
+            btnSave.Size = new Size(222, 46);
+            btnSave.TabIndex = 0;
+            btnSave.Text = "💾 Lưu chuyến bay";
+            btnSave.TextAlign = ContentAlignment.MiddleLeft;
+            btnSave.UseVisualStyleBackColor = false;
+            btnSave.WordWrap = false;
+            btnSave.Click += btnSave_Click;
             // 
-            // previewTable (Bảng xem trước, tạm thời vô hiệu hóa)
+            // previewTable
             // 
-            this.previewTable.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.previewTable.Location = new System.Drawing.Point(24, 380);
-            this.previewTable.Margin = new System.Windows.Forms.Padding(24, 12, 24, 24);
-            this.previewTable.Name = "previewTable";
-            this.previewTable.Size = new System.Drawing.Size(752, 196);
-            this.previewTable.TabIndex = 3;
-            this.previewTable.Visible = false; // Tạm ẩn đi
+            previewTable.AllowUserToResizeRows = false;
+            dataGridViewCellStyle1.BackColor = Color.FromArgb(248, 250, 252);
+            previewTable.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            previewTable.BackgroundColor = Color.White;
+            previewTable.BorderColor = Color.FromArgb(40, 40, 40);
+            previewTable.BorderStyle = BorderStyle.None;
+            previewTable.BorderThickness = 2;
+            previewTable.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            previewTable.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = Color.White;
+            dataGridViewCellStyle2.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            dataGridViewCellStyle2.ForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle2.Padding = new Padding(12, 10, 12, 10);
+            dataGridViewCellStyle2.SelectionBackColor = Color.White;
+            dataGridViewCellStyle2.SelectionForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
+            previewTable.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            previewTable.ColumnHeadersHeight = 44;
+            previewTable.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            previewTable.CornerRadius = 16;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = Color.White;
+            dataGridViewCellStyle3.Font = new Font("Segoe UI", 10F);
+            dataGridViewCellStyle3.ForeColor = Color.FromArgb(33, 37, 41);
+            dataGridViewCellStyle3.Padding = new Padding(12, 6, 12, 6);
+            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(155, 209, 243);
+            dataGridViewCellStyle3.SelectionForeColor = Color.White;
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
+            previewTable.DefaultCellStyle = dataGridViewCellStyle3;
+            previewTable.Dock = DockStyle.Fill;
+            previewTable.EnableHeadersVisualStyles = false;
+            previewTable.GridColor = Color.FromArgb(230, 235, 240);
+            previewTable.HeaderBackColor = Color.White;
+            previewTable.HeaderForeColor = Color.FromArgb(126, 185, 232);
+            previewTable.HoverBackColor = Color.FromArgb(232, 245, 255);
+            previewTable.Location = new Point(24, 385);
+            previewTable.Margin = new Padding(24, 12, 24, 24);
+            previewTable.MultiSelect = false;
+            previewTable.Name = "previewTable";
+            previewTable.RowAltBackColor = Color.FromArgb(248, 250, 252);
+            previewTable.RowBackColor = Color.White;
+            previewTable.RowForeColor = Color.FromArgb(33, 37, 41);
+            previewTable.RowHeadersVisible = false;
+            previewTable.SelectionBackColor = Color.FromArgb(155, 209, 243);
+            previewTable.SelectionForeColor = Color.White;
+            previewTable.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            previewTable.Size = new Size(752, 191);
+            previewTable.TabIndex = 3;
+            previewTable.Visible = false;
             // 
             // FlightCreateControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(232)))), ((int)(((byte)(240)))), ((int)(((byte)(252)))));
-            this.Controls.Add(this.mainLayout);
-            this.Name = "FlightCreateControl";
-            this.Size = new System.Drawing.Size(800, 600);
-            this.Load += new System.EventHandler(this.FlightCreateControl_Load);
-            this.mainLayout.ResumeLayout(false);
-            this.mainLayout.PerformLayout();
-            this.inputLayout.ResumeLayout(false);
-            this.buttonPanel.ResumeLayout(false);
-            this.buttonPanel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.previewTable)).EndInit();
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            BackColor = Color.FromArgb(232, 240, 252);
+            Controls.Add(mainLayout);
+            Name = "FlightCreateControl";
+            Size = new Size(800, 600);
+            Load += FlightCreateControl_Load;
+            mainLayout.ResumeLayout(false);
+            mainLayout.PerformLayout();
+            inputLayout.ResumeLayout(false);
+            buttonPanel.ResumeLayout(false);
+            buttonPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)previewTable).EndInit();
+            ResumeLayout(false);
+            
         }
 
         #endregion
@@ -250,5 +357,6 @@ namespace GUI.Features.Flight.SubFeatures
         private GUI.Components.Inputs.DateTimePickerCustom dtpDepartureTime;
         private GUI.Components.Inputs.DateTimePickerCustom dtpArrivalTime;
         private GUI.Components.Tables.TableCustom previewTable;
+        private UnderlinedComboBox cbStatus;
     }
 }

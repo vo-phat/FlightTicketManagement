@@ -169,7 +169,18 @@ namespace BUS.Flight
                         "CANNOT_MODIFY");
                 }
 
-                // 5. Kiểm tra trùng số hiệu (loại trừ chính nó)
+                // 5.Kiểm tra chuyển đổi trạng thái (nếu status CŨ và MỚI khác nhau)
+                if (existingFlight.Status != flight.Status)
+                {
+                    if (!existingFlight.Status.CanTransitionTo(flight.Status))
+                    {
+                        return BusinessResult.FailureResult(
+                            $"Không thể chuyển trạng thái từ '{existingFlight.Status.GetDescription()}' sang '{flight.Status.GetDescription()}'",
+                            "INVALID_STATUS_TRANSITION");
+                    }
+                }
+
+                // 6. Kiểm tra trùng số hiệu (loại trừ chính nó)
                 if (FlightDAO.Instance.IsFlightNumberExists(
                     flight.FlightNumber,
                     flight.DepartureTime.Value,
@@ -180,13 +191,13 @@ namespace BUS.Flight
                         "DUPLICATE_FLIGHT_NUMBER");
                 }
 
-                // 6. Thực hiện update
+                // 7. Thực hiện update
                 bool success = FlightDAO.Instance.Update(flight);
 
                 if (success)
                     return BusinessResult.SuccessResult($"Cập nhật chuyến bay '{flight.FlightNumber}' thành công!", flight);
                 else
-                    return BusinessResult.FailureResult("Cập nhật thất bại");
+                    return BusinessResult.FailureResult("Cập nhật thất bại (không có hàng nào được thay đổi trong DB)");
             }
             catch (Exception ex)
             {
@@ -240,10 +251,32 @@ namespace BUS.Flight
         #endregion
 
         #region Search & Filter
+        public BusinessResult SuggestNextFlightNumber(string prefix)
+        {
+            if (string.IsNullOrWhiteSpace(prefix))
+            {
+                return BusinessResult.FailureResult("Cần có tiền tố (prefix) để gợi ý.");
+            }
 
-        /// <summary>
-        /// Tìm kiếm chuyến bay theo số hiệu
-        /// </summary>
+            try
+            {
+                int lastNumber = FlightDAO.Instance.GetLastFlightNumberNumeric(prefix);
+
+                int nextNumber = lastNumber + 1;
+
+                // Nếu bạn muốn padding (VD: VN001, VN124), dùng:
+                 string nextFlightNumber = $"{prefix.ToUpper()}{nextNumber:D3}"; 
+
+                // Format không padding (VD: VN1, VN124)
+                //string nextFlightNumber = $"{prefix.ToUpper()}{nextNumber}";
+
+                return BusinessResult.SuccessResult("Gợi ý số hiệu chuyến bay tiếp theo", nextFlightNumber);
+            }
+            catch (Exception ex)
+            {
+                return BusinessResult.ExceptionResult(ex);
+            }
+        }
         public BusinessResult SearchFlightsByNumber(string flightNumber)
         {
             try
@@ -290,24 +323,33 @@ namespace BUS.Flight
                 return BusinessResult.ExceptionResult(ex);
             }
         }
-        public BusinessResult SearchFlightsForDisplay(int? departureAirportId, int? arrivalAirportId, DateTime departureDate, int? cabinClassId)
+        public BusinessResult SearchFlightsForDisplay(
+            string? flightNumber,
+            int? departureAirportId,
+            int? arrivalAirportId,
+            DateTime? departureDate,
+            int? cabinClassId)
         {
             try
             {
-                // 1. Validate inputs 
-                if (departureDate == null)
-                    return BusinessResult.FailureResult("Vui lòng chọn ngày đi");
+                // 1. Validate inputs
 
-                // Chỉ kiểm tra trùng khi cả hai đều được chọn
+                // Bỏ kiểm tra (departureDate == null) vì giờ đây nó được phép null
+
                 if (departureAirportId.HasValue && arrivalAirportId.HasValue && departureAirportId == arrivalAirportId)
                     return BusinessResult.FailureResult("Nơi cất cánh và hạ cánh không được trùng nhau");
 
-                // Logic nghiệp vụ: Nếu chọn điểm đến thì phải chọn điểm đi
                 if (arrivalAirportId.HasValue && !departureAirportId.HasValue)
                     return BusinessResult.FailureResult("Vui lòng chọn nơi cất cánh trước khi chọn nơi hạ cánh");
 
-                // 2. Call DAO
-                var flights = FlightDAO.Instance.SearchFlightsForDisplay(departureAirportId, arrivalAirportId, departureDate, cabinClassId);
+                // 2. Call DAO (truyền thêm flightNumber và departureDate nullable)
+                var flights = FlightDAO.Instance.SearchFlightsForDisplay(
+                    flightNumber,
+                    departureAirportId,
+                    arrivalAirportId,
+                    departureDate,
+                    cabinClassId
+                );
 
                 return BusinessResult.SuccessResult($"Tìm thấy {flights.Rows.Count} chuyến bay", flights);
             }
