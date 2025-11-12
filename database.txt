@@ -1319,3 +1319,30 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 -- Thông báo hoàn thành
 SELECT 'Đã tạo thành công 400 ghế cho 20 chuyến bay (ID 56-75).' AS Status;
+
+-- Giả định các account_id này là của khách hàng (role_id = 2) [cite: 49]
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) 
+VALUES
+(3, '2024-10-15 09:00:00', 'CONFIRMED', 150.75), -- Booking 16
+(6, '2024-10-20 11:30:00', 'CONFIRMED', 320.00), -- Booking 17
+(11, '2024-11-05 14:00:00', 'CONFIRMED', 280.40), -- Booking 18
+(17, '2024-11-12 08:20:00', 'PENDING', 190.00),   -- Booking 19
+(4, '2024-12-05 10:10:00', 'CONFIRMED', 450.00), -- Booking 20
+(9, '2024-12-15 12:00:00', 'CONFIRMED', 220.50), -- Booking 21
+(18, '2025-01-10 16:30:00', 'CANCELLED', 300.00), -- Booking 22
+(3, '2025-01-14 18:00:00', 'CONFIRMED', 180.25), -- Booking 23
+(6, '2025-02-01 10:15:00', 'CONFIRMED', 510.60), -- Booking 24
+(11, '2025-02-05 11:05:00', 'CONFIRMED', 275.00); -- Booking 25
+-- Chèn thanh toán cho các booking_id từ 16 đến 25
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) 
+VALUES
+(16, 150.75, 'CREDIT_CARD', '2024-10-15 09:05:00', 'SUCCESS'),
+(17, 320.00, 'E_WALLET', '2024-10-20 11:31:00', 'SUCCESS'),
+(18, 280.40, 'BANK_TRANSFER', '2024-11-05 14:02:00', 'SUCCESS'),
+(19, 190.00, 'E_WALLET', '2024-11-12 08:21:00', 'PENDING'),  -- Sẽ không được tính vào doanh thu
+(20, 450.00, 'CREDIT_CARD', '2024-12-05 10:11:00', 'SUCCESS'),
+(21, 220.50, 'E_WALLET', '2024-12-15 12:05:00', 'SUCCESS'),
+(22, 300.00, 'BANK_TRANSFER', '2025-01-10 16:31:00', 'FAILED'),   -- Sẽ không được tính vào doanh thu
+(23, 180.25, 'CREDIT_CARD', '2025-01-14 18:01:00', 'SUCCESS'),
+(24, 510.60, 'CASH', '2025-02-01 10:15:00', 'SUCCESS'),
+(25, 275.00, 'BANK_TRANSFER', '2025-02-05 11:06:00', 'SUCCESS');
