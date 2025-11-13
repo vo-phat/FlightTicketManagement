@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using MySqlConnector;
-using DTO.Seat;
+using DTO.Seat; // Giả sử DTO.Seat.SeatDTO tồn tại
 using DAO.Database;
 
 namespace DAO.Seat
@@ -95,8 +95,8 @@ namespace DAO.Seat
         {
             var results = new List<SeatDTO>();
             string query = @"SELECT seat_id, aircraft_id, seat_number, class_id 
-                             FROM seats 
-                             WHERE seat_number LIKE @kw";
+                                 FROM seats 
+                                 WHERE seat_number LIKE @kw";
 
             try
             {
@@ -173,7 +173,7 @@ namespace DAO.Seat
         public bool InsertSeat(SeatDTO seat)
         {
             string query = @"INSERT INTO seats (aircraft_id, seat_number, class_id)
-                             VALUES (@aircraft, @number, @class)";
+                                 VALUES (@aircraft, @number, @class)";
 
             try
             {
@@ -198,17 +198,15 @@ namespace DAO.Seat
         }
         #endregion
 
-   
-
         #region Sửa thông tin ghế (Đã sửa: Cho phép sửa SeatNumber, AircraftId, ClassId)
         public bool UpdateSeat(SeatDTO seat)
         {
             // Cập nhật cả 3 trường theo yêu cầu của SeatDetailControl
             string query = @"UPDATE seats 
-                     SET aircraft_id = @aircraft,
-                         seat_number = @number,
-                         class_id = @class
-                     WHERE seat_id = @id";
+                               SET aircraft_id = @aircraft,
+                                   seat_number = @number,
+                                   class_id = @class
+                               WHERE seat_id = @id";
 
             try
             {
@@ -235,7 +233,6 @@ namespace DAO.Seat
         }
         #endregion
 
-        // ... (Các phương thức IsSeatCurrentlyInUse, DeleteSeat giữ nguyên) ...
         #region Xóa ghế
         public bool DeleteSeat(int seatId)
         {
@@ -260,27 +257,25 @@ namespace DAO.Seat
         }
         #endregion
 
-
-
         #region Lấy danh sách tất cả ghế kèm chi tiết (hạng ghế, máy bay)
         public List<SeatDTO> GetAllSeatsWithDetails()
         {
             var seats = new List<SeatDTO>();
             string query = @"
-                SELECT
-                    s.seat_id,
-                    s.aircraft_id,
-                    s.seat_number,
-                    s.class_id,
-                    cc.class_name,
-                    a.model AS aircraft_model,
-                    a.manufacturer AS aircraft_manufacturer
-                FROM
-                    seats s
-                JOIN
-                    cabin_classes cc ON s.class_id = cc.class_id
-                JOIN
-                    aircrafts a ON s.aircraft_id = a.aircraft_id";
+                 SELECT
+                     s.seat_id,
+                     s.aircraft_id,
+                     s.seat_number,
+                     s.class_id,
+                     cc.class_name,
+                     a.model AS aircraft_model,
+                     a.manufacturer AS aircraft_manufacturer
+                 FROM
+                     seats s
+                 JOIN
+                     cabin_classes cc ON s.class_id = cc.class_id
+                 JOIN
+                     aircrafts a ON s.aircraft_id = a.aircraft_id";
 
             try
             {
@@ -314,8 +309,43 @@ namespace DAO.Seat
             return seats;
         }
         #endregion
-        // Trong DAO.Seat.SeatDAO
-        // ... (Các phương thức khác giữ nguyên)
+
+        // =============== HÀM MỚI ĐƯỢC THÊM ===============
+        #region Kiểm tra ghế đã có trên chuyến bay
+        /// <summary>
+        /// Kiểm tra xem một seat_id cụ thể đã được gán cho một flight_id cụ thể hay chưa.
+        /// (Tức là đã tồn tại trong bảng flight_seats).
+        /// </summary>
+        public bool IsSeatAssignedToFlight(int flightId, int seatId)
+        {
+            // Đếm số lượng bản ghi khớp
+            string query = @"
+                SELECT COUNT(1) 
+                FROM flight_seats 
+                WHERE flight_id = @flightId AND seat_id = @seatId";
+
+            try
+            {
+                using (var conn = DatabaseConnection.GetConnection())
+                {
+                    conn.Open();
+                    using (var cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@flightId", flightId);
+                        cmd.Parameters.AddWithValue("@seatId", seatId);
+
+                        // ExecuteScalar trả về số lượng (0 hoặc 1)
+                        return Convert.ToInt64(cmd.ExecuteScalar()) > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi kiểm tra ghế trên chuyến bay: {ex.Message}", ex);
+            }
+        }
+        #endregion
+        // ===================================================
 
         #region Kiểm tra ghế đang được sử dụng
         /// <summary>
@@ -325,13 +355,13 @@ namespace DAO.Seat
         {
             // Tìm bất kỳ bản ghi nào trong flight_seats có trạng thái là BOOKED hoặc BLOCKED.
             string query = @"
-        SELECT EXISTS (
-            SELECT 1 
-            FROM flight_seats 
-            WHERE seat_id = @id 
-              AND (seat_status = 'BOOKED' OR seat_status = 'BLOCKED') 
-            LIMIT 1
-        )";
+                SELECT EXISTS (
+                    SELECT 1 
+                    FROM flight_seats 
+                    WHERE seat_id = @id 
+                      AND (seat_status = 'BOOKED' OR seat_status = 'BLOCKED') 
+                    LIMIT 1
+                )";
 
             try
             {

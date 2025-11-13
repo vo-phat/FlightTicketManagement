@@ -17,7 +17,9 @@ namespace DTO.FlightSeat
 
         public string AircraftName { get; set; } = "";    // Tên máy bay (Manufacturer Model)
         public string SeatNumber { get; set; } = "";      // Số ghế
-        public string ClassName { get; set; } = "";       // Hạng ghế
+        public string ClassName { get; set; } = "";
+        public string FlightName { get; set; } = "";      // Tên chuyến bay (ví dụ: VN123)
+                                                          // Hạng ghế
         #endregion
 
         public int ClassId { get; set; }
@@ -108,6 +110,23 @@ namespace DTO.FlightSeat
             SeatNumber = seatNumber;
             ClassName = className;
         }
+        public FlightSeatDTO(int flightSeatId, int flightId, int aircraftId, int seatId, int classId,
+    decimal basePrice, string seatStatus,
+    string flightName, string aircraftName, string seatNumber, string className)
+        {
+            FlightSeatId = flightSeatId;
+            FlightId = flightId;
+            AircraftId = aircraftId;
+            SeatId = seatId;
+            ClassId = classId;
+            BasePrice = basePrice;
+            SeatStatus = seatStatus;
+            FlightName = flightName;
+            AircraftName = aircraftName;
+            SeatNumber = seatNumber;
+            ClassName = className;
+        }
+
         public FlightSeatDTO(int flightSeatId, int flightId, int aircraftId, int seatId, int classId,
     decimal basePrice, string seatStatus,
     string aircraftName, string seatNumber, string className)

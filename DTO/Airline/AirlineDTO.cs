@@ -9,10 +9,10 @@
             private string _airlineCode;
             private string _airlineName;
             private string _country;
-            #endregion
-
-            #region Public Properties
-            public int AirlineId
+        #endregion
+        public string DisplayText => $"{AirlineId} - {AirlineName}";
+        #region Public Properties
+        public int AirlineId
             {
                 get => _airlineId;
                 set
@@ -142,10 +142,7 @@
             }
         #endregion
         // ✅ Dùng để hiển thị trong ComboBox (ID - Tên hãng)
-        public string DisplayText
-        {
-            get { return $"{AirlineId} - {AirlineName}"; }
-        }
+        
 
     }
 }

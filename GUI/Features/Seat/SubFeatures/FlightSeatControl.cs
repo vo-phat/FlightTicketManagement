@@ -6,7 +6,6 @@ using GUI.Components.Tables;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -27,8 +26,7 @@ namespace GUI.Features.Seat.SubFeatures
         private TableLayoutPanel root, filterWrap;
         private FlowLayoutPanel filterLeft, filterRight;
         private Label lblTitle;
-        private UnderlinedComboBox cbAircraft, cbClass , cbStatus;
-        private UnderlinedTextField txtSeat;
+        private UnderlinedTextField txtFlightId;
         private PrimaryButton btnSearch;
         private SecondaryButton btnClear;
         private TableCustom table;
@@ -48,38 +46,21 @@ namespace GUI.Features.Seat.SubFeatures
 
             lblTitle = new Label
             {
-                Text = "🛫 Danh sách ghế theo máy bay",
+                Text = "🛫 Danh sách ghế theo chuyến bay",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
                 Padding = new Padding(24, 20, 24, 0),
                 Dock = DockStyle.Top
             };
 
-            // ===== Bộ lọc =====
+            // Bộ lọc chỉ theo ID chuyến bay
             filterLeft = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, WrapContents = false };
-
-            cbAircraft = new UnderlinedComboBox("Máy bay", new object[] { "Tất cả" }) { Width = 160, Margin = new Padding(0, 0, 24, 0) };
-            cbClass = new UnderlinedComboBox("Hạng", new object[] { "Tất cả", "Economy", "Business" }) { Width = 140, Margin = new Padding(0, 0, 24, 0) };
-
-            // Khởi tạo cbStatus với tất cả các trạng thái
-            cbStatus = new UnderlinedComboBox("Trạng thái", new object[]
-            {
-        "Tất cả", "AVAILABLE", "BOOKED", "BLOCKED"
-            })
-            {
-                Width = 140,
-                Margin = new Padding(0, 0, 24, 0)
-            };
-
-            txtSeat = new UnderlinedTextField("Số ghế", "") { Width = 120, Margin = new Padding(0, 0, 24, 0) };
-
-            // SỬA LỖI: Thêm cbStatus vào filterLeft
-            filterLeft.Controls.AddRange(new Control[] { cbAircraft, cbClass, txtSeat, cbStatus });
-
+            txtFlightId = new UnderlinedTextField("Mã chuyến bay (ID)", "") { Width = 160, Margin = new Padding(0, 0, 24, 0) };
+            filterLeft.Controls.Add(txtFlightId);
 
             filterRight = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, FlowDirection = FlowDirection.RightToLeft, WrapContents = false };
             btnSearch = new PrimaryButton("🔍 Tìm kiếm") { Width = 110, Height = 36 };
-            btnClear = new SecondaryButton("⟲ Xóa lọc") { Width = 100, Height = 36, Margin = new Padding(12, 0, 0, 0) };
+            btnClear = new SecondaryButton("⟲ Làm mới") { Width = 100, Height = 36, Margin = new Padding(12, 0, 0, 0) };
             filterRight.Controls.Add(btnSearch);
             filterRight.Controls.Add(btnClear);
 
@@ -89,7 +70,7 @@ namespace GUI.Features.Seat.SubFeatures
             filterWrap.Controls.Add(filterLeft, 0, 0);
             filterWrap.Controls.Add(filterRight, 1, 0);
 
-            // ===== Bảng =====
+            // Bảng
             table = new TableCustom
             {
                 Dock = DockStyle.Fill,
@@ -105,10 +86,11 @@ namespace GUI.Features.Seat.SubFeatures
 
             table.Columns.Clear();
             table.Columns.Add(new DataGridViewTextBoxColumn { Name = "flightSeatIdHidden", Visible = false });
-            table.Columns.Add("aircraftName", "Máy bay");
+            table.Columns.Add("seatId", "Tên máy bay");
             table.Columns.Add("seatNumber", "Số ghế");
-            table.Columns.Add("className", "Hạng");
-            table.Columns.Add("basePrice", "Giá cơ bản (₫)");
+            table.Columns.Add("className", "Hạng ghế");
+            table.Columns.Add("basePrice", "Giá cơ bản (₫)");// ✨ THÊM CỘT NÀY
+            
             table.Columns.Add(STATUS_COL, "Trạng thái");
 
             var colAction = new DataGridViewTextBoxColumn
@@ -119,32 +101,15 @@ namespace GUI.Features.Seat.SubFeatures
             };
             table.Columns.Add(colAction);
 
-            // Sự kiện vẽ & click
-            table.CellFormatting += (s, e) =>
-            {
-                if (e.RowIndex < 0) return;
-                if (table.Columns[e.ColumnIndex].Name == "basePrice" && e.Value != null && decimal.TryParse(e.Value.ToString(), out var v))
-                {
-                    e.Value = v.ToString("#,0");
-                    e.FormattingApplied = true;
-                }
-            };
+            // Sự kiện
+            btnSearch.Click += (_, __) => ApplyFilter();
+            btnClear.Click += (_, __) => { txtFlightId.Text = ""; LoadData(); };
+            table.CellFormatting += Table_CellFormatting;
             table.CellPainting += Table_CellPainting;
             table.CellMouseMove += Table_CellMouseMove;
             table.CellMouseClick += Table_CellMouseClick;
 
-            // Sự kiện bộ lọc
-            btnSearch.Click += (_, __) => ApplyFilter();
-            btnClear.Click += (_, __) =>
-            {
-                cbAircraft.SelectedIndex = 0;
-                cbClass.SelectedIndex = 0;
-                cbStatus.SelectedIndex = 0; // Đã thêm
-                txtSeat.Text = "";
-                ApplyFilter();
-            };
-
-            // ===== Root =====
+            // Root
             root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3 };
             root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -157,50 +122,40 @@ namespace GUI.Features.Seat.SubFeatures
             ResumeLayout(false);
         }
 
-        // --------------------------- LOAD DỮ LIỆU ---------------------------
+        // --------------------------- LOAD ---------------------------
         private void LoadData()
         {
             try
             {
                 datasource = _bus.GetAllWithDetails();
-                ApplyFilter();
-                LoadAircraftsToFilter();
+                FillTable(datasource);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi tải danh sách ghế máy bay:\n" + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Lỗi tải dữ liệu ghế chuyến bay:\n" + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
-
-        private void LoadAircraftsToFilter()
-        {
-            var aircrafts = datasource.Select(x => x.AircraftName).Distinct().OrderBy(n => n).ToList();
-            cbAircraft.Items.Clear();
-            cbAircraft.Items.Add("Tất cả");
-            foreach (var a in aircrafts) cbAircraft.Items.Add(a);
-            cbAircraft.SelectedIndex = 0;
         }
 
         private void ApplyFilter()
         {
-            string aircraft = cbAircraft.SelectedItem?.ToString() ?? "Tất cả";
-            string cl = cbClass.SelectedItem?.ToString() ?? "Tất cả";
-            string status = cbStatus.SelectedItem?.ToString() ?? "Tất cả";
-            string key = (txtSeat.Text ?? "").Trim().ToUpper();
+            if (!int.TryParse(txtFlightId.Text.Trim(), out int flightId))
+            {
+                MessageBox.Show("Vui lòng nhập ID chuyến bay hợp lệ!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
-            var q = datasource.AsEnumerable();
-            if (aircraft != "Tất cả") q = q.Where(x => x.AircraftName == aircraft);
-            if (cl != "Tất cả") q = q.Where(x => x.ClassName == cl);
-            if (status != "Tất cả")
-               q = q.Where(x => x.SeatStatus.Equals(status, StringComparison.OrdinalIgnoreCase));
-            if (!string.IsNullOrEmpty(key)) q = q.Where(x => x.SeatNumber.Contains(key, StringComparison.OrdinalIgnoreCase));
+            var list = _bus.GetSeatsByFlight(flightId);
+            FillTable(list);
+        }
 
+        private void FillTable(IEnumerable<FlightSeatDTO> data)
+        {
             table.Rows.Clear();
-            foreach (var x in q)
+            foreach (var x in data)
                 table.Rows.Add(
                     x.FlightSeatId,
                     x.AircraftName,
-                    x.SeatNumber,
+                    x.SeatNumber, // ✨ THÊM DỮ LIỆU NÀY
                     x.ClassName,
                     x.BasePrice,
                     x.SeatStatus,
@@ -208,7 +163,17 @@ namespace GUI.Features.Seat.SubFeatures
                 );
         }
 
-        // --------------------------- VẼ ACTION ---------------------------
+        // --------------------------- FORMAT ---------------------------
+        private void Table_CellFormatting(object? s, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+            if (table.Columns[e.ColumnIndex].Name == "basePrice" && e.Value != null && decimal.TryParse(e.Value.ToString(), out var v))
+            {
+                e.Value = v.ToString("#,0");
+                e.FormattingApplied = true;
+            }
+        }
+
         private (Rectangle rcView, Rectangle rcEdit, Rectangle rcBlock) GetRects(Rectangle bounds, Font font)
         {
             int pad = 6, x = bounds.Left + pad, y = bounds.Top + (bounds.Height - font.Height) / 2;
@@ -277,7 +242,6 @@ namespace GUI.Features.Seat.SubFeatures
             table.Cursor = (r.rcView.Contains(p) || r.rcEdit.Contains(p) || r.rcBlock.Contains(p)) ? Cursors.Hand : Cursors.Default;
         }
 
-        // --------------------------- CLICK ACTION ---------------------------
         private void Table_CellMouseClick(object? s, DataGridViewCellMouseEventArgs e)
         {
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
@@ -298,47 +262,15 @@ namespace GUI.Features.Seat.SubFeatures
             var selected = datasource.FirstOrDefault(x => x.FlightSeatId == flightSeatId);
             if (selected == null)
             {
-                MessageBox.Show("Không thể xác định dữ liệu ghế để sửa.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Không thể xác định dữ liệu ghế.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             if (r.rcView.Contains(p))
             {
                 MessageBox.Show(
-                    $"Máy bay: {selected.AircraftName}\nGhế: {selected.SeatNumber}\nHạng: {selected.ClassName}\nGiá: {selected.BasePrice:#,0}₫\nTrạng thái: {selected.SeatStatus}",
+                    $"FlightSeatID: {selected.FlightSeatId}\nSeatID: {selected.SeatId}\nGiá: {selected.BasePrice:#,0}₫\nTrạng thái: {selected.SeatStatus}",
                     "Chi tiết ghế", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            else if (r.rcEdit.Contains(p))
-            {
-                using var formEdit = new EditFlightSeatForm(
-                    selected.FlightSeatId,
-                    selected.AircraftId,
-                    selected.SeatId,
-                    selected.ClassId,
-                    selected.BasePrice
-                );
-
-                if (formEdit.ShowDialog() == DialogResult.OK)
-                {
-                    var dto = new FlightSeatDTO(
-                        flightSeatId: formEdit.FlightSeatId,
-                        flightId: selected.FlightId,
-                        seatId: formEdit.SelectedSeatId,
-                        basePrice: formEdit.NewPrice,
-                        seatStatus: selected.SeatStatus
-                    );
-
-                    bool ok = _bus.UpdateFlightSeat(dto, out string msg);
-                    if (ok)
-                    {
-                        MessageBox.Show("Cập nhật thông tin ghế thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        LoadData();
-                    }
-                    else
-                    {
-                        MessageBox.Show(msg, "Lỗi cập nhật", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
             }
         }
     }

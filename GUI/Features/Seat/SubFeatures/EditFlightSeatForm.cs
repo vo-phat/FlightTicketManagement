@@ -46,7 +46,7 @@ public class EditFlightSeatForm : Form
         _currentPrice = price;
 
         Text = $"✏️ Sửa thông tin ghế #{seatId}";
-        Size = new Size(380, 460); // Đã giữ nguyên kích thước Form
+        Size = new Size(450 , 550); // Đã giữ nguyên kích thước Form
         BackColor = Color.FromArgb(250, 253, 255);
         StartPosition = FormStartPosition.CenterParent;
         FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -63,7 +63,7 @@ public class EditFlightSeatForm : Form
     {
         // 🎨 Cấu hình Form tổng thể
         BackColor = Color.FromArgb(235, 243, 254);
-        Size = new Size(600, 580); // 👉 Tăng kích thước form
+        Size = new Size(520, 560); // ⚙️ Giảm chiều rộng, tăng chiều cao để đủ hiển thị nút
         StartPosition = FormStartPosition.CenterParent;
         Text = "✏️ Sửa thông tin ghế";
         FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -74,78 +74,75 @@ public class EditFlightSeatForm : Form
         var mainLayout = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            Padding = new Padding(60, 50, 60, 40), // 👉 thêm padding dưới để nút cách đáy form
+            Padding = new Padding(50, 40, 50, 30),
             ColumnCount = 1,
-            RowCount = 6
+            RowCount = 7
         };
 
-        // Row styles
         mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Máy bay
         mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Hạng
         mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Ghế
         mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Giá
         mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f)); // Đệm trống
-        mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 100f)); // ✅ Nút bấm nằm thấp hơn
+        mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 80f)); // Hàng chứa nút
 
         // ======= Inputs =======
         cbAircraft = new UnderlinedComboBox("Máy bay", Array.Empty<object>())
         {
             Dock = DockStyle.Top,
-            Width = 380,
-            Margin = new Padding(0, 0, 0, 25)
+            Width = 360,
+            Margin = new Padding(0, 0, 0, 20)
         };
         cbAircraft.InnerCombo.DropDownStyle = ComboBoxStyle.DropDownList;
 
         cbClass = new UnderlinedComboBox("Hạng ghế", Array.Empty<object>())
         {
             Dock = DockStyle.Top,
-            Width = 380,
-            Margin = new Padding(0, 0, 0, 25)
+            Width = 360,
+            Margin = new Padding(0, 0, 0, 20)
         };
         cbClass.InnerCombo.DropDownStyle = ComboBoxStyle.DropDownList;
 
         cbSeat = new UnderlinedComboBox("Số ghế (VD: 12A)", Array.Empty<object>())
         {
             Dock = DockStyle.Top,
-            Width = 380,
-            Margin = new Padding(0, 0, 0, 25)
+            Width = 360,
+            Margin = new Padding(0, 0, 0, 20)
         };
         cbSeat.InnerCombo.DropDownStyle = ComboBoxStyle.DropDownList;
 
         txtPrice = new UnderlinedTextField("💰 Giá cơ bản (₫)", "Ví dụ: 1.000.000")
         {
             Dock = DockStyle.Top,
-            Width = 380,
-            Margin = new Padding(0, 0, 0, 15)
+            Width = 360,
+            Margin = new Padding(0, 0, 0, 10)
         };
         txtPrice.InnerTextBox.TextAlign = HorizontalAlignment.Right;
         txtPrice.InnerTextBox.Text = _currentPrice.ToString("N0", new CultureInfo("vi-VN"));
 
-        // ====== Panel chứa nút (căn giữa & xuống dưới) ======
+        // ====== Panel chứa nút ======
         var buttonPanel = new FlowLayoutPanel
         {
             Dock = DockStyle.Fill,
             FlowDirection = FlowDirection.LeftToRight,
-            AutoSize = false,
-            Height = 80,
-            Padding = new Padding(0, 20, 0, 0), // 👉 tăng top padding để nút xuống thấp
-            Margin = new Padding(0, 20, 0, 0),  // 👉 tạo khoảng cách phía trên nút
-            WrapContents = false,
+            AutoSize = true,
+            Padding = new Padding(0),
+            Margin = new Padding(0),
             Anchor = AnchorStyles.None,
         };
 
         btnSave = new PrimaryButton("💾 Lưu")
         {
-            Width = 140,
-            Height = 45,
-            Margin = new Padding(30, 0, 20, 0)
+            Width = 130,
+            Height = 40,
+            Margin = new Padding(20, 10, 20, 0)
         };
 
         btnCancel = new SecondaryButton("✖ Hủy")
         {
-            Width = 140,
-            Height = 45,
-            Margin = new Padding(0)
+            Width = 130,
+            Height = 40,
+            Margin = new Padding(20, 10, 20, 0)
         };
 
         buttonPanel.Controls.Add(btnSave);
@@ -156,13 +153,8 @@ public class EditFlightSeatForm : Form
         mainLayout.Controls.Add(cbClass, 0, 1);
         mainLayout.Controls.Add(cbSeat, 0, 2);
         mainLayout.Controls.Add(txtPrice, 0, 3);
-        mainLayout.Controls.Add(new Panel(), 0, 4); // khoảng trống
+        mainLayout.Controls.Add(new Panel(), 0, 4);
         mainLayout.Controls.Add(buttonPanel, 0, 5);
-
-        mainLayout.SetCellPosition(buttonPanel, new TableLayoutPanelCellPosition(0, 5));
-        mainLayout.SetColumnSpan(buttonPanel, 1);
-        mainLayout.SetRow(buttonPanel, 5);
-        buttonPanel.Anchor = AnchorStyles.None; // ✅ Căn giữa hoàn toàn
 
         Controls.Add(mainLayout);
 
@@ -171,6 +163,7 @@ public class EditFlightSeatForm : Form
         btnCancel.Click += (_, __) => Close();
         cbAircraft.InnerCombo.SelectedIndexChanged += (_, __) => FilterSeatsByAircraft();
     }
+
 
     private void LoadComboboxData()
     {
