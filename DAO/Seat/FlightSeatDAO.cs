@@ -162,6 +162,7 @@ namespace DAO.FlightSeat
             f.aircraft_id,                                /* ✅ thêm dòng này */
             fs.seat_id,
             s.class_id,
+        f.flight_number AS FlightName,
             CONCAT(a.manufacturer, ' ', a.model) AS AircraftName,
             s.seat_number AS SeatNumber,
             c.class_name AS ClassName,
@@ -192,6 +193,7 @@ namespace DAO.FlightSeat
      reader.GetInt32("class_id"),
      reader.GetDecimal("BasePrice"),
      reader.GetString("SeatStatus"),
+     reader.GetString("FlightName"),
      reader.GetString("AircraftName"),
      reader.GetString("SeatNumber"),
      reader.GetString("ClassName")
@@ -206,6 +208,9 @@ namespace DAO.FlightSeat
 
             return list;
         }
+
+       
+
 
         #region Xem sơ đồ ghế (lọc theo chuyến, máy bay, hạng)
         public List<FlightSeatDTO> GetSeatMap(int? flightId, int? aircraftId, int? classId)

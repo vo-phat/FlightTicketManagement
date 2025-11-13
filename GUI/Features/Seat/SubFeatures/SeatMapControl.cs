@@ -145,25 +145,43 @@ namespace GUI.Features.Seat.SubFeatures
         }
 
         // --------------------------- LOAD DATA ---------------------------
+        
+
+        // --------------------------- BUILD MAP ---------------------------
+        // --------------------------- LOAD DATA ---------------------------
         private void LoadData()
         {
             try
             {
                 seats = _bus.GetAllWithDetails();
 
-                // Đổ combobox Aircraft
+                // === Chuyến bay ===
+                var flights = seats.Select(s => s.FlightName).Distinct().ToList();
+                cbFlight.Items.Clear();
+                cbFlight.Items.Add("Tất cả");
+                cbFlight.Items.AddRange(flights.Cast<object>().ToArray());
+                cbFlight.SelectedIndex = 0;
+
+                // === Máy bay ===
                 var aircrafts = seats.Select(s => s.AircraftName).Distinct().ToList();
                 cbAircraft.Items.Clear();
+                cbAircraft.Items.Add("Tất cả");
                 cbAircraft.Items.AddRange(aircrafts.Cast<object>().ToArray());
-                if (cbAircraft.Items.Count > 0) cbAircraft.SelectedIndex = 0;
+                cbAircraft.SelectedIndex = 0;
 
-                // Đổ combobox Class
+                // === Hạng ===
                 var classes = seats.Select(s => s.ClassName).Distinct().ToList();
-                foreach (var c in classes)
-                    if (!cbClass.Items.Contains(c))
-                        cbClass.Items.Add(c);
+                cbClass.Items.Clear();
+                cbClass.Items.Add("Tất cả");
+                cbClass.Items.AddRange(classes.Cast<object>().ToArray());
                 cbClass.SelectedIndex = 0;
 
+                // === Sự kiện thay đổi combobox ===
+                cbFlight.SelectedIndexChanged += (_, __) => RefreshSeatMap();
+                cbAircraft.SelectedIndexChanged += (_, __) => RefreshSeatMap();
+                cbClass.SelectedIndexChanged += (_, __) => RefreshSeatMap();
+
+                // Hiển thị ban đầu
                 RefreshSeatMap();
             }
             catch (Exception ex)
@@ -177,21 +195,29 @@ namespace GUI.Features.Seat.SubFeatures
         {
             stack.Controls.Clear();
 
-            string selectedAircraft = cbAircraft.SelectedItem?.ToString() ?? "";
+            string selectedFlight = cbFlight.SelectedItem?.ToString() ?? "Tất cả";
+            string selectedAircraft = cbAircraft.SelectedItem?.ToString() ?? "Tất cả";
             string selectedClass = cbClass.SelectedItem?.ToString() ?? "Tất cả";
 
-            var filtered = seats
-                .Where(s => s.AircraftName == selectedAircraft)
-                .ToList();
+            // Bắt đầu từ tất cả
+            var filtered = seats.AsEnumerable();
+
+            if (selectedFlight != "Tất cả")
+                filtered = filtered.Where(s => s.FlightName == selectedFlight);
+
+            if (selectedAircraft != "Tất cả")
+                filtered = filtered.Where(s => s.AircraftName == selectedAircraft);
 
             if (selectedClass != "Tất cả")
-                filtered = filtered.Where(s => s.ClassName == selectedClass).ToList();
+                filtered = filtered.Where(s => s.ClassName == selectedClass);
 
-            if (filtered.Count == 0)
+            var list = filtered.ToList();
+
+            if (list.Count == 0)
             {
                 stack.Controls.Add(new Label
                 {
-                    Text = "Không có dữ liệu ghế để hiển thị.",
+                    Text = "Không có dữ liệu ghế phù hợp với điều kiện tìm kiếm.",
                     Font = new Font("Segoe UI", 12, FontStyle.Italic),
                     AutoSize = true,
                     Padding = new Padding(8)
@@ -199,10 +225,10 @@ namespace GUI.Features.Seat.SubFeatures
                 return;
             }
 
-            // Nhóm theo hạng
-            var groups = filtered.GroupBy(s => s.ClassName)
-                                 .OrderBy(g => g.Key)
-                                 .ToList();
+            // --- Nhóm theo hạng ---
+            var groups = list.GroupBy(s => s.ClassName)
+                             .OrderBy(g => g.Key)
+                             .ToList();
 
             foreach (var group in groups)
             {
@@ -228,7 +254,7 @@ namespace GUI.Features.Seat.SubFeatures
                 grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, AisleWidth));
                 for (int i = 0; i < 3; i++) grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, SeatWidth));
 
-                // Gom nhóm theo hàng (VD: 1A,1B,1C,...)
+                // Gom nhóm theo hàng
                 var rowGroups = group.GroupBy(s =>
                 {
                     string num = new string(s.SeatNumber.TakeWhile(char.IsDigit).ToArray());
@@ -260,12 +286,10 @@ namespace GUI.Features.Seat.SubFeatures
                         int colIndex = "ABCDEF".IndexOf(col);
                         if (colIndex == -1) continue;
 
-                        int gridCol = (colIndex < 3) ? colIndex + 1 : colIndex + 2; // bỏ cột lối đi
-
+                        int gridCol = (colIndex < 3) ? colIndex + 1 : colIndex + 2;
                         grid.Controls.Add(MakeSeat(seat), gridCol, rowIdx);
                     }
 
-                    // cột lối đi
                     grid.Controls.Add(new Panel { Width = AisleWidth, Height = 1 }, 4, rowIdx);
                     rowIdx++;
                 }
@@ -274,6 +298,7 @@ namespace GUI.Features.Seat.SubFeatures
                 stack.Controls.Add(card);
             }
         }
+
 
         // --------------------------- SEAT BUTTON ---------------------------
         private Button MakeSeat(FlightSeatDTO seat)
