@@ -7,7 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
+using BUS.Ticket;
+using DTO.Ticket;
 namespace GUI.Features.Ticket.subTicket
 {
     public partial class HistoryTicketControl : UserControl
@@ -20,6 +21,14 @@ namespace GUI.Features.Ticket.subTicket
         private void button2_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void primaryButton1_Click(object sender, EventArgs e)
+        {
+            TicketsHistoryBUS ticketsHistoryBUS = new TicketsHistoryBUS();
+            List<TicketHistory> listhistory = ticketsHistoryBUS.GetAllTicketHistories();
+
+            MessageBox.Show($"List có {listhistory.Count} phần tử");
         }
     }
 }

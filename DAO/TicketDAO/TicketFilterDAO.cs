@@ -71,7 +71,7 @@ namespace DAO.TicketDAO
                         cmd.Parameters.AddWithValue("@FlightCodeID", string.IsNullOrEmpty(FlightCodeID) ? DBNull.Value : FlightCodeID);
                         cmd.Parameters.AddWithValue("@NgayBay", NgayBay.Value.ToString("yyyy-dd-MM"));
 
-
+                        
                         cmd.Parameters.AddWithValue("@Status", string.IsNullOrEmpty(Status) ? DBNull.Value : Status);
                         cmd.Parameters.AddWithValue("@PhoneNumber", string.IsNullOrEmpty(PhoneNumber) ? DBNull.Value : PhoneNumber);
 
@@ -79,6 +79,7 @@ namespace DAO.TicketDAO
                         {
                             while (reader.Read())
                             {
+                                
                                 var ticket = new TicketFilterDTO
                                 {
                                     TicketNumber = reader["TicketNumber"] as string,

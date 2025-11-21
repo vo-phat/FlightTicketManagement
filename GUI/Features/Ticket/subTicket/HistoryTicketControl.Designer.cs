@@ -28,47 +28,47 @@
         /// </summary>
         private void InitializeComponent()
         {
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
             tableCustom1 = new GUI.Components.Tables.TableCustom();
             underlinedTextField1 = new GUI.Components.Inputs.UnderlinedTextField();
             underlinedTextField2 = new GUI.Components.Inputs.UnderlinedTextField();
-            primaryButton1 = new GUI.Components.Buttons.PrimaryButton();
+            SearchTicketHistory = new GUI.Components.Buttons.PrimaryButton();
             ((System.ComponentModel.ISupportInitialize)tableCustom1).BeginInit();
             SuspendLayout();
             // 
             // tableCustom1
             // 
             tableCustom1.AllowUserToResizeRows = false;
-            dataGridViewCellStyle1.BackColor = Color.FromArgb(248, 250, 252);
-            tableCustom1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle4.BackColor = Color.FromArgb(248, 250, 252);
+            tableCustom1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
             tableCustom1.BackgroundColor = Color.White;
             tableCustom1.BorderColor = Color.FromArgb(40, 40, 40);
             tableCustom1.BorderStyle = BorderStyle.None;
             tableCustom1.BorderThickness = 2;
             tableCustom1.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             tableCustom1.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = Color.White;
-            dataGridViewCellStyle2.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            dataGridViewCellStyle2.ForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle2.Padding = new Padding(12, 10, 12, 10);
-            dataGridViewCellStyle2.SelectionBackColor = Color.White;
-            dataGridViewCellStyle2.SelectionForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
-            tableCustom1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = Color.White;
+            dataGridViewCellStyle5.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            dataGridViewCellStyle5.ForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle5.Padding = new Padding(12, 10, 12, 10);
+            dataGridViewCellStyle5.SelectionBackColor = Color.White;
+            dataGridViewCellStyle5.SelectionForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.False;
+            tableCustom1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
             tableCustom1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             tableCustom1.CornerRadius = 16;
-            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = Color.White;
-            dataGridViewCellStyle3.Font = new Font("Segoe UI", 10F);
-            dataGridViewCellStyle3.ForeColor = Color.FromArgb(33, 37, 41);
-            dataGridViewCellStyle3.Padding = new Padding(12, 6, 12, 6);
-            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(155, 209, 243);
-            dataGridViewCellStyle3.SelectionForeColor = Color.White;
-            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
-            tableCustom1.DefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = Color.White;
+            dataGridViewCellStyle6.Font = new Font("Segoe UI", 10F);
+            dataGridViewCellStyle6.ForeColor = Color.FromArgb(33, 37, 41);
+            dataGridViewCellStyle6.Padding = new Padding(12, 6, 12, 6);
+            dataGridViewCellStyle6.SelectionBackColor = Color.FromArgb(155, 209, 243);
+            dataGridViewCellStyle6.SelectionForeColor = Color.White;
+            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
+            tableCustom1.DefaultCellStyle = dataGridViewCellStyle6;
             tableCustom1.EnableHeadersVisualStyles = false;
             tableCustom1.GridColor = Color.FromArgb(230, 235, 240);
             tableCustom1.HeaderBackColor = Color.White;
@@ -137,47 +137,48 @@
             underlinedTextField2.UnderlineSpacing = 2;
             underlinedTextField2.UseSystemPasswordChar = false;
             // 
-            // primaryButton1
+            // SearchTicketHistory
             // 
-            primaryButton1.AutoSize = true;
-            primaryButton1.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            primaryButton1.BackColor = Color.FromArgb(155, 209, 243);
-            primaryButton1.BorderColor = Color.FromArgb(40, 40, 40);
-            primaryButton1.BorderThickness = 2;
-            primaryButton1.CornerRadius = 22;
-            primaryButton1.EnableHoverEffects = true;
-            primaryButton1.FlatAppearance.BorderSize = 0;
-            primaryButton1.FlatStyle = FlatStyle.Flat;
-            primaryButton1.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            primaryButton1.ForeColor = Color.White;
-            primaryButton1.HoverBackColor = Color.White;
-            primaryButton1.HoverBorderColor = Color.FromArgb(0, 92, 175);
-            primaryButton1.HoverForeColor = Color.FromArgb(0, 92, 175);
-            primaryButton1.Icon = null;
-            primaryButton1.IconSize = new Size(22, 22);
-            primaryButton1.IconSpacing = 10;
-            primaryButton1.Location = new Point(669, 229);
-            primaryButton1.Name = "primaryButton1";
-            primaryButton1.NormalBackColor = Color.FromArgb(155, 209, 243);
-            primaryButton1.NormalBorderColor = Color.FromArgb(40, 40, 40);
-            primaryButton1.NormalForeColor = Color.White;
-            primaryButton1.Padding = new Padding(24, 10, 24, 10);
-            primaryButton1.PreferredMaxWidth = 0;
-            primaryButton1.PressedBackColor = Color.FromArgb(225, 240, 255);
-            primaryButton1.PressedBorderColor = Color.FromArgb(0, 92, 175);
-            primaryButton1.PressedForeColor = Color.FromArgb(0, 92, 175);
-            primaryButton1.Size = new Size(232, 52);
-            primaryButton1.TabIndex = 5;
-            primaryButton1.Text = "primaryButton1";
-            primaryButton1.TextAlign = ContentAlignment.MiddleLeft;
-            primaryButton1.UseVisualStyleBackColor = false;
-            primaryButton1.WordWrap = false;
+            SearchTicketHistory.AutoSize = true;
+            SearchTicketHistory.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            SearchTicketHistory.BackColor = Color.FromArgb(155, 209, 243);
+            SearchTicketHistory.BorderColor = Color.FromArgb(40, 40, 40);
+            SearchTicketHistory.BorderThickness = 2;
+            SearchTicketHistory.CornerRadius = 22;
+            SearchTicketHistory.EnableHoverEffects = true;
+            SearchTicketHistory.FlatAppearance.BorderSize = 0;
+            SearchTicketHistory.FlatStyle = FlatStyle.Flat;
+            SearchTicketHistory.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            SearchTicketHistory.ForeColor = Color.White;
+            SearchTicketHistory.HoverBackColor = Color.White;
+            SearchTicketHistory.HoverBorderColor = Color.FromArgb(0, 92, 175);
+            SearchTicketHistory.HoverForeColor = Color.FromArgb(0, 92, 175);
+            SearchTicketHistory.Icon = null;
+            SearchTicketHistory.IconSize = new Size(22, 22);
+            SearchTicketHistory.IconSpacing = 10;
+            SearchTicketHistory.Location = new Point(669, 229);
+            SearchTicketHistory.Name = "SearchTicketHistory";
+            SearchTicketHistory.NormalBackColor = Color.FromArgb(155, 209, 243);
+            SearchTicketHistory.NormalBorderColor = Color.FromArgb(40, 40, 40);
+            SearchTicketHistory.NormalForeColor = Color.White;
+            SearchTicketHistory.Padding = new Padding(24, 10, 24, 10);
+            SearchTicketHistory.PreferredMaxWidth = 0;
+            SearchTicketHistory.PressedBackColor = Color.FromArgb(225, 240, 255);
+            SearchTicketHistory.PressedBorderColor = Color.FromArgb(0, 92, 175);
+            SearchTicketHistory.PressedForeColor = Color.FromArgb(0, 92, 175);
+            SearchTicketHistory.Size = new Size(143, 52);
+            SearchTicketHistory.TabIndex = 5;
+            SearchTicketHistory.Text = "Search";
+            SearchTicketHistory.TextAlign = ContentAlignment.MiddleLeft;
+            SearchTicketHistory.UseVisualStyleBackColor = false;
+            SearchTicketHistory.WordWrap = false;
+            SearchTicketHistory.Click += primaryButton1_Click;
             // 
             // HistoryTicketControl
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            Controls.Add(primaryButton1);
+            Controls.Add(SearchTicketHistory);
             Controls.Add(underlinedTextField2);
             Controls.Add(underlinedTextField1);
             Controls.Add(tableCustom1);
@@ -192,6 +193,6 @@
         private Components.Tables.TableCustom tableCustom1;
         private Components.Inputs.UnderlinedTextField underlinedTextField1;
         private Components.Inputs.UnderlinedTextField underlinedTextField2;
-        private Components.Buttons.PrimaryButton primaryButton1;
+        private Components.Buttons.PrimaryButton SearchTicketHistory;
     }
 }

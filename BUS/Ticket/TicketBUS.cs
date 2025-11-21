@@ -19,7 +19,7 @@ namespace BUS.Ticket
         public List<TicketDTO> GetAllTickets()
         {
             //_ticketDAO = new TicketDAO();
-            Console.WriteLine("BUS: Đang gọi DAO để lấy tất cả vé...");
+            //Console.WriteLine("BUS: Đang gọi DAO để lấy tất cả vé...");
             return _ticketDAO.GetAllTickets();
         }     
     }

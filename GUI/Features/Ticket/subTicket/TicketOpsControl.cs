@@ -165,7 +165,7 @@ namespace GUI.Features.Ticket.subTicket
             // Bật double-buffer giảm flicker
             EnableDoubleBuffering(dgvListFilerTickets);
 
-            MessageBox.Show("Đã tải " + tickets.Count + " vé đã lọc.", "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            //MessageBox.Show("Đã tải " + tickets.Count + " vé đã lọc.", "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
             dgvListFilerTickets.DataSource = tickets;
         }
         private void DgvBookingsTicket_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
@@ -351,7 +351,7 @@ namespace GUI.Features.Ticket.subTicket
             string TicketStatus = cbFilterTicketStatus.Text.Trim();
             //MessageBox.Show(TicketStatus);
             DateTime FlightDate = dtpFilterFlightDate.Value;
-            MessageBox.Show(FlightDate.ToString());
+            //MessageBox.Show(FlightDate.ToString());
             string PhoneNumber  = txtFilterPhoneNumber.Text.Trim();
 
             List<TicketFilterDTO> tickets = _ticketFilterBUS.ListFilterTickets(BookingCode, FlightCode,  FlightDate, TicketStatus, PhoneNumber);
@@ -364,7 +364,7 @@ namespace GUI.Features.Ticket.subTicket
             txtFilterBookingCode.Text = " ";
             txtFilterFlightCode.Text = " ";
             cbFilterTicketStatus.SelectedIndex = -1;
-            dtpFilterFlightDate.Value = DateTime.Now;
+            //dtpFilterFlightDate.Value = DateTime.Now;
             txtFilterPhoneNumber.Text = " ";
         }
         private void underlinedTextField1_Load(object sender, EventArgs e)

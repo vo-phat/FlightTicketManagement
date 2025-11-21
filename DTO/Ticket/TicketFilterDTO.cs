@@ -35,9 +35,5 @@ namespace DTO.Ticket
         // airline name
         public string? AirlineName { get; set; }
         // chuwa cho fare_rule
-
-
-
-
     }
 }

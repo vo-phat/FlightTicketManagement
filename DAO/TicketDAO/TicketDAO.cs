@@ -53,7 +53,7 @@ namespace DAO.TicketDAO
                 }
             }
 
-            Console.WriteLine($"Tổng số vé đọc được: {listTickets.Count}");
+            //Console.WriteLine($"Tổng số vé đọc được: {listTickets.Count}");
             return listTickets;
         }
 
