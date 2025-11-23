@@ -136,12 +136,12 @@ namespace GUI.Features.FareRules.SubFeatures {
                 Margin = new Padding(0, 6, 24, 6) 
             };
 
-            cbRoute = new UnderlinedComboBox("Tuyến bay", new object[] { "Tất cả", "SGN → HAN", "HAN → DAD", "SGN → PQC" }) { 
+            cbRoute = new UnderlinedComboBox("Tuyến bay", new object[] { "SGN → HAN", "HAN → DAD", "SGN → PQC" }) { 
                 MinimumSize = new Size(0, 64),
                 Width = 300,
                 Margin = new Padding(12, 6, 0, 6) 
             };
-            cbSeason = new UnderlinedComboBox("Mùa", new object[] { "Tất cả", "CAO ĐIỂM", "TRUNG ĐIỂM", "THẤP ĐIỂM" }) { 
+            cbSeason = new UnderlinedComboBox("Mùa", new object[] { "CAO ĐIỂM", "TRUNG ĐIỂM", "THẤP ĐIỂM" }) { 
                 MinimumSize = new Size(0, 64),
                 Width = 300,
                 Margin = new Padding(12, 6, 0, 6) 
@@ -188,7 +188,7 @@ namespace GUI.Features.FareRules.SubFeatures {
             // ===== Table =====
             table = new TableCustom {
                 Dock = DockStyle.Fill,
-                Margin = new Padding(24, 8, 24, 24), // sát filter, không tạo khoảng trống
+                Margin = new Padding(24, 8, 24, 24),
                 AllowUserToAddRows = false,
                 AllowUserToDeleteRows = false,
                 ReadOnly = true,
@@ -323,7 +323,7 @@ namespace GUI.Features.FareRules.SubFeatures {
 
             if (r.rcView.Contains(p)) {
                 if (r.rcView.Contains(p)) {
-                    if (table.Rows[e.RowIndex].DataBoundItem is FareRuleRow data) { // 👈 đổi row → data
+                    if (table.Rows[e.RowIndex].DataBoundItem is FareRuleRow data) {
                         var detail = new FareRuleDetailControl();
                         detail.LoadRule(
                             ruleId: data.RuleId,

@@ -3,9 +3,12 @@ using System.Windows.Forms;
 
 namespace GUI.Features.Airport.SubFeatures {
     public class AirportDetailControl : UserControl {
-        private Label vCode, vName, vCity, vCountry, vTz;
+        private Label vCode, vName, vCity, vCountry;
 
-        public AirportDetailControl() { InitializeComponent(); BuildLayout(); }
+        public AirportDetailControl() { 
+            InitializeComponent(); 
+            BuildLayout(); 
+        }
 
         private void InitializeComponent() { Dock = DockStyle.Fill; BackColor = Color.FromArgb(232, 240, 252); }
 
@@ -25,7 +28,6 @@ namespace GUI.Features.Airport.SubFeatures {
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Tên sân bay:"), 0, r); vName = Val("vName"); grid.Controls.Add(vName, 1, r++);
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Thành phố:"), 0, r); vCity = Val("vCity"); grid.Controls.Add(vCity, 1, r++);
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Quốc gia:"), 0, r); vCountry = Val("vCountry"); grid.Controls.Add(vCountry, 1, r++);
-            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Múi giờ:"), 0, r); vTz = Val("vTz"); grid.Controls.Add(vTz, 1, r++);
 
             card.Controls.Add(grid);
             var bottom = new FlowLayoutPanel { Dock = DockStyle.Bottom, FlowDirection = FlowDirection.RightToLeft, AutoSize = true, Padding = new Padding(0, 12, 12, 12) };
@@ -41,8 +43,11 @@ namespace GUI.Features.Airport.SubFeatures {
             Controls.Add(main);
         }
 
-        public void LoadAirport(string code, string name, string city, string country, string tz) {
-            vCode.Text = code; vName.Text = name; vCity.Text = city; vCountry.Text = country; vTz.Text = tz;
+        public void LoadAirport(string code, string name, string city, string country) {
+            vCode.Text = code; 
+            vName.Text = name; 
+            vCity.Text = city; 
+            vCountry.Text = country;
         }
     }
 }

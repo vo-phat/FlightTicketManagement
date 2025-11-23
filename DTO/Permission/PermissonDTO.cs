@@ -4,7 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BUS.Account {
-    internal class AccountBUS {
+namespace DTO.Permission {
+    public class PermissonDTO {
+
     }
 }

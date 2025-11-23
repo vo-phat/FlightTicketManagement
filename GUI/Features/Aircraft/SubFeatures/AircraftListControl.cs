@@ -18,7 +18,8 @@ namespace GUI.Features.Aircraft.SubFeatures {
         private TableLayoutPanel root, filterWrap;
         private FlowLayoutPanel filterLeft, filterRight;
         private Label lblTitle;
-        private UnderlinedTextField txtAirlineCode, txtModel, txtManufacturer, txtMinCap, txtMaxCap;
+        private UnderlinedTextField txtModel, txtManufacturer, txtCapacity, txtMaxCap;
+        private UnderlinedComboBox cbAirlineCode;
 
         public AircraftListControl() { InitializeComponent(); }
 
@@ -47,13 +48,25 @@ namespace GUI.Features.Aircraft.SubFeatures {
                 FlowDirection = FlowDirection.LeftToRight
             };
 
-            txtAirlineCode = new UnderlinedTextField("Mã hãng (Airline)", "") { Width = 180, Margin = new Padding(0, 0, 24, 0) };
-            txtModel = new UnderlinedTextField("Model", "") { Width = 180, Margin = new Padding(0, 0, 24, 0) };
-            txtManufacturer = new UnderlinedTextField("Hãng sản xuất", "") { Width = 200, Margin = new Padding(0, 0, 24, 0) };
-            txtMinCap = new UnderlinedTextField("Sức chứa từ", "") { Width = 140, Margin = new Padding(0, 0, 24, 0) };
-            txtMaxCap = new UnderlinedTextField("Sức chứa đến", "") { Width = 140, Margin = new Padding(0, 0, 24, 0) };
+            cbAirlineCode = new UnderlinedComboBox("Mã hãng", new object[] { "AL001", "AL002", "AL003" }) { 
+                MinimumSize = new Size(0, 64),
+                Width = 250, 
+                Margin = new Padding(0, 0, 24, 0) 
+            };
+            txtModel = new UnderlinedTextField("Model", "") { 
+                Width = 250, 
+                Margin = new Padding(0, 0, 24, 0) 
+            };
+            txtManufacturer = new UnderlinedTextField("Hãng sản xuất", "") { 
+                Width = 250, 
+                Margin = new Padding(0, 0, 24, 0) 
+            };
+            txtCapacity = new UnderlinedTextField("Sức chứa", "") { 
+                Width = 250, 
+                Margin = new Padding(0, 0, 24, 0) 
+            };
 
-            filterLeft.Controls.AddRange(new Control[] { txtAirlineCode, txtModel, txtManufacturer, txtMinCap, txtMaxCap });
+            filterLeft.Controls.AddRange(new Control[] { cbAirlineCode, txtModel, txtManufacturer, txtCapacity });
 
             filterRight = new FlowLayoutPanel {
                 Dock = DockStyle.Fill,

@@ -18,8 +18,8 @@ using GUI.Features.Setting;
 using GUI.Properties;
 
 namespace GUI.MainApp {
-    public enum AppRole { 
-        User, Staff, Admin 
+    public enum AppRole {
+        User, Staff, Admin
     }
 
     public enum NavKey {
@@ -241,8 +241,7 @@ namespace GUI.MainApp {
                 } else if (item.OnClick != null) {
                     link.Click += (_, __) => { ActivateTab(item.Key); item.OnClick(); };
                 }
-                if (item.OnClick != null)
-                {
+                if (item.OnClick != null) {
                     link.Click += (_, __) => { ActivateTab(item.Key); item.OnClick(); };
                 }
 
@@ -259,8 +258,8 @@ namespace GUI.MainApp {
                 }
             }
 
-        navFlow.ResumeLayout();
-    }
+            navFlow.ResumeLayout();
+        }
 
         private void ActivateTab(NavKey key) {
             _active = key;

@@ -7,7 +7,7 @@ using GUI.Components.Inputs;
 namespace GUI.Features.Airport.SubFeatures {
     public class AirportCreateControl : UserControl {
         private UnderlinedTextField _txtCode, _txtName, _txtCity;
-        private UnderlinedComboBox _cbCountry, _cbTimezone;
+        private UnderlinedComboBox _cbCountry;
 
         public AirportCreateControl() { InitializeComponent(); }
 
@@ -33,17 +33,37 @@ namespace GUI.Features.Airport.SubFeatures {
             inputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
             for (int i = 0; i < 3; i++) inputs.RowStyles.Add(new RowStyle(SizeType.Absolute, 60));
 
-            _txtCode = new UnderlinedTextField("Mã IATA", "") { MinimumSize = new Size(0, 56), Width = 200, Margin = new Padding(0, 6, 24, 6) };
-            _txtName = new UnderlinedTextField("Tên sân bay", "") { MinimumSize = new Size(0, 56), Width = 320, Margin = new Padding(0, 6, 24, 6) };
-            _txtCity = new UnderlinedTextField("Thành phố", "") { MinimumSize = new Size(0, 56), Width = 240, Margin = new Padding(0, 6, 24, 6) };
-            _cbCountry = new UnderlinedComboBox("Quốc gia", new object[] { "Việt Nam", "Nhật Bản", "Hàn Quốc", "Singapore", "Thái Lan", "Hoa Kỳ", "Anh", "Pháp", "Úc", "Canada" }) { MinimumSize = new Size(0, 56), Width = 240, Margin = new Padding(0, 6, 24, 6) };
-            _cbTimezone = new UnderlinedComboBox("Múi giờ", new object[] { "UTC−5", "UTC−4", "UTC", "UTC+1", "UTC+7", "UTC+8", "UTC+9" }) { MinimumSize = new Size(0, 56), Width = 200, Margin = new Padding(0, 6, 24, 6) };
+            _txtCode = new UnderlinedTextField("Mã IATA", "") { 
+                MinimumSize = new Size(0, 72), 
+                Width = 300, 
+                Margin = new Padding(0, 6, 24, 6) 
+            };
+            _txtName = new UnderlinedTextField("Tên sân bay", "") { 
+                MinimumSize = new Size(0, 72), 
+                Width = 300, 
+                Margin = new Padding(0, 6, 24, 6) 
+            };
+            _txtCity = new UnderlinedTextField("Thành phố", "") { 
+                MinimumSize = new Size(0, 72), 
+                Width = 300, 
+                Margin = new Padding(0, 6, 24, 6) 
+            };
+            _cbCountry = new UnderlinedComboBox("Quốc gia", new object[] { "Việt Nam", "Nhật Bản", "Hàn Quốc", "Singapore", "Thái Lan", "Hoa Kỳ", "Anh", "Pháp", "Úc", "Canada" }) { 
+                MinimumSize = new Size(0, 72), 
+                Width = 300, 
+                Margin = new Padding(0, 6, 24, 6) 
+            };
+            //_cbTimezone = new UnderlinedComboBox("Múi giờ", new object[] { "UTC−5", "UTC−4", "UTC", "UTC+1", "UTC+7", "UTC+8", "UTC+9" }) { 
+            //    MinimumSize = new Size(0, 72), 
+            //    Width = 300, 
+            //    Margin = new Padding(0, 6, 24, 6) 
+            //};
 
             inputs.Controls.Add(_txtCode, 0, 0);
             inputs.Controls.Add(_txtName, 1, 0);
             inputs.Controls.Add(_txtCity, 0, 1);
             inputs.Controls.Add(_cbCountry, 1, 1);
-            inputs.Controls.Add(_cbTimezone, 0, 2);
+            //inputs.Controls.Add(_cbTimezone, 0, 2);
 
             // ✅ fix chiều cao hàng (không cắt underline)
             for (int r = 0; r < inputs.RowCount; r++) {
@@ -61,26 +81,26 @@ namespace GUI.Features.Airport.SubFeatures {
             buttonRow.Controls.Add(btnSave);
 
             // Preview table (optional)
-            var table = new TableCustom {
-                Dock = DockStyle.Fill,
-                Margin = new Padding(24, 12, 24, 4),
-                AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false,
-                ReadOnly = true,
-                RowHeadersVisible = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
-            };
-            table.Columns.Add("airportCode", "IATA");
-            table.Columns.Add("airportName", "Tên sân bay");
-            table.Columns.Add("city", "Thành phố");
-            table.Columns.Add("country", "Quốc gia");
-            table.Columns.Add("timezone", "Múi giờ");
-            for (int i = 0; i < 3; i++) table.Rows.Add("", "", "", "", "");
+            //var table = new TableCustom {
+            //    Dock = DockStyle.Fill,
+            //    Margin = new Padding(24, 12, 24, 4),
+            //    AllowUserToAddRows = false,
+            //    AllowUserToDeleteRows = false,
+            //    ReadOnly = true,
+            //    RowHeadersVisible = false,
+            //    AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            //    BackgroundColor = Color.White,
+            //    BorderStyle = BorderStyle.FixedSingle
+            //};
+            //table.Columns.Add("airportCode", "IATA");
+            //table.Columns.Add("airportName", "Tên sân bay");
+            //table.Columns.Add("city", "Thành phố");
+            //table.Columns.Add("country", "Quốc gia");
+            //table.Columns.Add("timezone", "Múi giờ");
+            //for (int i = 0; i < 3; i++) table.Rows.Add("", "", "", "", "");
 
             // Layout tổng
-            var main = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4, BackColor = Color.Transparent };
+            var main = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, BackColor = Color.Transparent };
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -88,7 +108,7 @@ namespace GUI.Features.Airport.SubFeatures {
             main.Controls.Add(titlePanel, 0, 0);
             main.Controls.Add(inputs, 0, 1);
             main.Controls.Add(buttonRow, 0, 2);
-            main.Controls.Add(table, 0, 3);
+            //main.Controls.Add(table, 0, 3);
 
             Controls.Add(main);
 

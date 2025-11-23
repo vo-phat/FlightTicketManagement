@@ -31,13 +31,27 @@ namespace GUI.Features.Route.SubFeatures {
             inputPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
             for (int i = 0; i < 3; i++) inputPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 60));
 
-            var txtFrom = new UnderlinedTextField("Sân bay đi (mã)", "") { MinimumSize = new Size(0, 56), Width = 250 };
-            var txtTo = new UnderlinedTextField("Sân bay đến (mã)", "") { MinimumSize = new Size(0, 56), Width = 250 };
-            var txtDist = new UnderlinedTextField("Khoảng cách (km)", "") { MinimumSize = new Size(0, 56), Width = 250 };
-            var txtDur = new UnderlinedTextField("Thời lượng (phút)", "") { MinimumSize = new Size(0, 56), Width = 250 };
+            var cbFrom = new UnderlinedComboBox("Mã sân bay đi", new object[] { "AL001", "AL002", "Al003" }) { 
+                Height = 64,
+                MinimumSize = new Size(0, 64), 
+                Width = 300 
+            };
+            var cbTo = new UnderlinedComboBox("Mã sân bay đi", new object[] { "AL001", "AL002", "Al003" }) {
+                Height = 64,
+                MinimumSize = new Size(0, 64), 
+                Width = 300 
+            };
+            var txtDist = new UnderlinedTextField("Khoảng cách", "") { 
+                MinimumSize = new Size(0, 64), 
+                Width = 300 
+            };
+            var txtDur = new UnderlinedTextField("Thời lượng bay", "") { 
+                MinimumSize = new Size(0, 64),
+                Width = 300 
+            };
 
-            inputPanel.Controls.Add(txtFrom, 0, 0);
-            inputPanel.Controls.Add(txtTo, 1, 0);
+            inputPanel.Controls.Add(cbFrom, 0, 0);
+            inputPanel.Controls.Add(cbTo, 1, 0);
             inputPanel.Controls.Add(txtDist, 0, 1);
             inputPanel.Controls.Add(txtDur, 1, 1);
 
@@ -60,25 +74,25 @@ namespace GUI.Features.Route.SubFeatures {
             buttonRow.Controls.Add(btnCreate);
 
             // Table preview
-            var table = new TableCustom {
-                Dock = DockStyle.Fill,
-                Margin = new Padding(24, 12, 24, 4),
-                AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false,
-                ReadOnly = true,
-                RowHeadersVisible = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
-            };
-            table.Columns.Add("fromAirport", "Sân bay đi");
-            table.Columns.Add("toAirport", "Sân bay đến");
-            table.Columns.Add("distance", "Khoảng cách (km)");
-            table.Columns.Add("duration", "Thời lượng (phút)");
-            for (int i = 0; i < 4; i++) table.Rows.Add("", "", "", "");
+            //var table = new TableCustom {
+            //    Dock = DockStyle.Fill,
+            //    Margin = new Padding(24, 12, 24, 4),
+            //    AllowUserToAddRows = false,
+            //    AllowUserToDeleteRows = false,
+            //    ReadOnly = true,
+            //    RowHeadersVisible = false,
+            //    AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            //    BackgroundColor = Color.White,
+            //    BorderStyle = BorderStyle.FixedSingle
+            //};
+            //table.Columns.Add("fromAirport", "Sân bay đi");
+            //table.Columns.Add("toAirport", "Sân bay đến");
+            //table.Columns.Add("distance", "Khoảng cách (km)");
+            //table.Columns.Add("duration", "Thời lượng (phút)");
+            //for (int i = 0; i < 4; i++) table.Rows.Add("", "", "", "");
 
             // Layout tổng
-            var main = new TableLayoutPanel { Dock = DockStyle.Fill, BackColor = Color.Transparent, ColumnCount = 1, RowCount = 4 };
+            var main = new TableLayoutPanel { Dock = DockStyle.Fill, BackColor = Color.Transparent, ColumnCount = 1, RowCount = 3 };
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -86,7 +100,7 @@ namespace GUI.Features.Route.SubFeatures {
             main.Controls.Add(titlePanel, 0, 0);
             main.Controls.Add(inputPanel, 0, 1);
             main.Controls.Add(buttonRow, 0, 2);
-            main.Controls.Add(table, 0, 3);
+            //main.Controls.Add(table, 0, 3);
 
             Controls.Clear();
             Controls.Add(main);

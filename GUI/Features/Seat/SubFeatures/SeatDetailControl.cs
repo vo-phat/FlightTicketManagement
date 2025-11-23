@@ -2,112 +2,79 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using GUI.Components.Buttons;
-using GUI.Components.Inputs;
 using GUI.Components.Tables;
 
 namespace GUI.Features.Seat.SubFeatures {
+    /// <summary>
+    /// Chi tiết ghế (tĩnh - per Aircraft).
+    /// Không hiển thị trạng thái AVAILABLE/BOOKED/BLOCKED hay base_price (đó là dữ liệu Flight_Seats).
+    /// </summary>
     public class SeatDetailControl : UserControl {
-        private Label lblTitle;
-        private TableLayoutPanel root, leftForm;
-        private Panel rightPanel;
+        private Label lblSeat, lblCabin, lblAircraft, lblRef;
+        private TableLayoutPanel root;
+        private PrimaryButton btnEdit, btnDelete;
 
-        private UnderlinedTextField txtSeat, txtClass, txtAircraft;
-        private SecondaryButton btnEdit, btnCancel;
-        private PrimaryButton btnSave;
+        public SeatDetailControl() {
+            InitializeComponent();
+        }
 
-        private TableCustom tableHistory;
-        private bool editing = false;
-
-        public SeatDetailControl() { InitializeComponent(); LoadDemo(); }
+        public void LoadSeat(SeatStaticVM vm) {
+            lblSeat.Text = $"Số ghế: {vm.SeatNumber}";
+            lblCabin.Text = $"Hạng ghế: {vm.CabinName}";
+            lblAircraft.Text = $"Máy bay: {vm.AircraftInfo}";
+            lblRef.Text = $"Được tham chiếu ở {vm.FlightsReferenced} chuyến; gần nhất: {vm.LastSeenAt:yyyy-MM-dd}";
+        }
 
         private void InitializeComponent() {
-            SuspendLayout();
-            Dock = DockStyle.Fill; BackColor = Color.FromArgb(232, 240, 252);
+            Dock = DockStyle.Fill; BackColor = Color.White;
 
-            lblTitle = new Label {
-                Text = "ℹ️ Chi tiết ghế",
+            var title = new Label {
+                Text = "🔎 Chi tiết ghế (per Aircraft)",
                 AutoSize = true,
-                Font = new Font("Segoe UI", 20, FontStyle.Bold),
-                Padding = new Padding(24, 20, 24, 0),
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                Padding = new Padding(24, 20, 24, 8),
                 Dock = DockStyle.Top
             };
 
-            root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, Padding = new Padding(0, 0, 0, 12) };
+            lblSeat = new Label { Text = "Số ghế: -", AutoSize = true, Font = new Font("Segoe UI", 12), Padding = new Padding(24, 6, 24, 6) };
+            lblCabin = new Label { Text = "Hạng ghế: -", AutoSize = true, Font = new Font("Segoe UI", 12), Padding = new Padding(24, 6, 24, 6) };
+            lblAircraft = new Label { Text = "Máy bay: -", AutoSize = true, Font = new Font("Segoe UI", 12), Padding = new Padding(24, 6, 24, 6) };
+            lblRef = new Label { Text = "Tham chiếu: -", AutoSize = true, Font = new Font("Segoe UI", 11), ForeColor = Color.DimGray, Padding = new Padding(24, 12, 24, 6) };
+
+            btnEdit = new PrimaryButton("✎ Sửa") { Width = 100, Height = 36, Margin = new Padding(0, 0, 12, 0) };
+            btnDelete = new PrimaryButton("🗑 Xóa") { Width = 100, Height = 36 };
+            var actionRow = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(24, 8, 24, 8) };
+            actionRow.Controls.Add(btnEdit);
+            actionRow.Controls.Add(btnDelete);
+
+            root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 6, BackColor = Color.White };
             root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40f));
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60f));
-
-            // Left form
-            leftForm = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(24), ColumnCount = 2 };
-            leftForm.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150));
-            leftForm.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-
-            txtSeat = new UnderlinedTextField("", "") { Width = 240 };
-            txtClass = new UnderlinedTextField("", "") { Width = 240 };
-            txtAircraft = new UnderlinedTextField("", "") { Width = 240 };
-
-            leftForm.Controls.Add(new Label { Text = "Số ghế", AutoSize = true, Margin = new Padding(0, 8, 8, 8) }, 0, 0);
-            leftForm.Controls.Add(txtSeat, 1, 0);
-            leftForm.Controls.Add(new Label { Text = "Hạng", AutoSize = true, Margin = new Padding(0, 8, 8, 8) }, 0, 1);
-            leftForm.Controls.Add(txtClass, 1, 1);
-            leftForm.Controls.Add(new Label { Text = "Máy bay", AutoSize = true, Margin = new Padding(0, 8, 8, 8) }, 0, 2);
-            leftForm.Controls.Add(txtAircraft, 1, 2);
-
-            var actions = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 48, Padding = new Padding(24, 6, 24, 6), WrapContents = false };
-            btnEdit = new SecondaryButton("✏️ Sửa") { Width = 90, Height = 36 };
-            btnSave = new PrimaryButton("💾 Lưu") { Width = 90, Height = 36, Enabled = false, Margin = new Padding(12, 0, 0, 0) };
-            btnCancel = new SecondaryButton("✖ Hủy") { Width = 90, Height = 36, Enabled = false, Margin = new Padding(12, 0, 0, 0) };
-            btnEdit.Click += (_, __) => SetEditing(true);
-            btnCancel.Click += (_, __) => { SetEditing(false); LoadDemo(); };
-            btnSave.Click += (_, __) => { SetEditing(false); MessageBox.Show("Đã lưu (demo)"); };
-            actions.Controls.AddRange(new Control[] { btnEdit, btnSave, btnCancel });
-
-            var leftPanel = new Panel { Dock = DockStyle.Fill };
-            leftPanel.Controls.Add(actions);
-            leftPanel.Controls.Add(leftForm);
-
-            // Right history
-            rightPanel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(24, 16, 24, 24) };
-            tableHistory = new TableCustom {
-                Dock = DockStyle.Fill,
-                ReadOnly = true,
-                RowHeadersVisible = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.None
-            };
-            tableHistory.Columns.Add("flight", "Chuyến bay");
-            tableHistory.Columns.Add("status", "Trạng thái");
-            tableHistory.Columns.Add("price", "Giá (₫)");
-            tableHistory.Columns.Add("date", "Ngày");
-            rightPanel.Controls.Add(tableHistory);
-
-            root.Controls.Add(lblTitle, 0, 0);
-            root.SetColumnSpan(lblTitle, 2);
-            root.Controls.Add(leftPanel, 0, 1);
-            root.Controls.Add(rightPanel, 1, 1);
+            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            root.Controls.Add(title, 0, 0);
+            root.Controls.Add(lblSeat, 0, 1);
+            root.Controls.Add(lblCabin, 0, 2);
+            root.Controls.Add(lblAircraft, 0, 3);
+            root.Controls.Add(lblRef, 0, 4);
+            root.Controls.Add(actionRow, 0, 5);
 
             Controls.Add(root);
-            ResumeLayout(false);
+
+            // Demo behaviors
+            btnEdit.Click += (_, __) => MessageBox.Show("[DEMO] Sửa ghế (đổi seat_number/cabin).");
+            btnDelete.Click += (_, __) => MessageBox.Show("[DEMO] Xóa ghế (sẽ bị chặn nếu tham chiếu trong Flight_Seats).");
         }
 
-        private void SetEditing(bool on) {
-            editing = on;
-            //txtClass.ReadOnly = !on;
-            //txtAircraft.ReadOnly = !on;
-            btnSave.Enabled = on;
-            btnCancel.Enabled = on;
-            btnEdit.Enabled = !on;
-        }
-
-        private void LoadDemo() {
-            txtSeat.Text = "12A";
-            txtClass.Text = "Economy";
-            txtAircraft.Text = "A320";
-            tableHistory.Rows.Clear();
-            tableHistory.Rows.Add("VN001", "BOOKED", 900000.ToString("#,0"), DateTime.Now.AddDays(-10).ToString("yyyy-MM-dd"));
-            tableHistory.Rows.Add("VN002", "AVAILABLE", 900000.ToString("#,0"), DateTime.Now.AddDays(-3).ToString("yyyy-MM-dd"));
+        public class SeatStaticVM {
+            public string SeatId { get; set; } = "";
+            public string SeatNumber { get; set; } = "";
+            public string CabinName { get; set; } = "";
+            public string AircraftInfo { get; set; } = "";
+            public int FlightsReferenced { get; set; }
+            public DateTime LastSeenAt { get; set; }
         }
     }
 }

@@ -19,7 +19,7 @@ namespace GUI.Features.Setting {
             BackColor = Color.WhiteSmoke;
 
             btnByRoleTab = new PrimaryButton("Phân quyền theo Vai trò");
-            btnByAccountTab = new SecondaryButton("Quản lý quyền cho Tài khoản");
+            btnByAccountTab = new SecondaryButton("Quản lý tài khoản");
 
             btnByRoleTab.Click += (_, __) => SwitchTab(0);
             btnByAccountTab.Click += (_, __) => SwitchTab(1);
@@ -56,10 +56,10 @@ namespace GUI.Features.Setting {
 
             if (idx == 0) {
                 btnByRoleTab = new PrimaryButton("Phân quyền theo Vai trò");
-                btnByAccountTab = new SecondaryButton("Quản lý quyền cho Tài khoản");
+                btnByAccountTab = new SecondaryButton("Quản lý tài khoản");
             } else {
                 btnByRoleTab = new SecondaryButton("Phân quyền theo Vai trò");
-                btnByAccountTab = new PrimaryButton("Quản lý quyền cho Tài khoản");
+                btnByAccountTab = new PrimaryButton("Quản lý tài khoản");
             }
 
             btnByRoleTab.Click += (_, __) => SwitchTab(0);

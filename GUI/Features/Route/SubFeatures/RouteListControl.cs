@@ -18,7 +18,8 @@ namespace GUI.Features.Route.SubFeatures {
         private TableLayoutPanel root, filterWrap;
         private FlowLayoutPanel filterLeft, filterRight;
         private Label lblTitle;
-        private UnderlinedTextField txtFrom, txtTo, txtMinDist, txtMaxDist;
+        private UnderlinedComboBox cbFrom, cbTo; 
+        private UnderlinedTextField txtDur, txtDist;
 
         public RouteListControl() { InitializeComponent(); }
 
@@ -38,11 +39,25 @@ namespace GUI.Features.Route.SubFeatures {
 
             // Filters
             filterLeft = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, WrapContents = false };
-            txtFrom = new UnderlinedTextField("Mã sân bay đi", "") { Width = 180, Margin = new Padding(0, 0, 24, 0) };
-            txtTo = new UnderlinedTextField("Mã bay đến", "") { Width = 180, Margin = new Padding(0, 0, 24, 0) };
-            txtMinDist = new UnderlinedTextField("Khoảng cách từ", "") { Width = 180, Margin = new Padding(0, 0, 24, 0) };
-            txtMaxDist = new UnderlinedTextField("Khoảng cách đến", "") { Width = 180, Margin = new Padding(0, 0, 24, 0) };
-            filterLeft.Controls.AddRange(new Control[] { txtFrom, txtTo, txtMinDist, txtMaxDist });
+            cbFrom = new UnderlinedComboBox("Mã sân bay đi", new object[] { "AL001", "AL002", "Al003" }) {
+                Height = 64,
+                MinimumSize = new Size(0, 64),
+                Width = 300
+            };
+            cbTo = new UnderlinedComboBox("Mã sân bay đi", new object[] { "AL001", "AL002", "Al003" }) {
+                Height = 64,
+                MinimumSize = new Size(0, 64),
+                Width = 300
+            };
+            txtDist = new UnderlinedTextField("Khoảng cách", "") {
+                MinimumSize = new Size(0, 64),
+                Width = 300
+            };
+            txtDur = new UnderlinedTextField("Thời lượng bay", "") {
+                MinimumSize = new Size(0, 64),
+                Width = 300
+            };
+            filterLeft.Controls.AddRange(new Control[] { cbFrom, cbTo, txtDur, txtDist });
 
             filterRight = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, FlowDirection = FlowDirection.RightToLeft, WrapContents = false };
             var btnSearch = new PrimaryButton("🔍 Tìm tuyến bay") { Width = 140, Height = 36 };

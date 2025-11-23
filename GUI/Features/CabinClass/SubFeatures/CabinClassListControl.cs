@@ -18,8 +18,8 @@ namespace GUI.Features.CabinClass.SubFeatures {
         private TableLayoutPanel root, filterWrap;
         private FlowLayoutPanel filterLeft, filterRight;
         private Label lblTitle;
-        private UnderlinedTextField txtCode, txtName;
-        private UnderlinedComboBox cbTier;
+        private UnderlinedTextField txtCode;
+        private UnderlinedComboBox cbName;
 
         public CabinClassListControl() { InitializeComponent(); }
 
@@ -28,7 +28,7 @@ namespace GUI.Features.CabinClass.SubFeatures {
             Dock = DockStyle.Fill; BackColor = Color.FromArgb(232, 240, 252);
 
             lblTitle = new Label {
-                Text = "🛋 Danh sách Cabin Classes",
+                Text = "🛋 Danh sách Hạng ghế",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
                 Padding = new Padding(24, 20, 24, 0),
@@ -37,13 +37,27 @@ namespace GUI.Features.CabinClass.SubFeatures {
 
             // Filters
             filterLeft = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, WrapContents = false };
-            txtCode = new UnderlinedTextField("Mã cabin", "") { Width = 160, Margin = new Padding(0, 0, 24, 0) };
-            txtName = new UnderlinedTextField("Tên cabin", "") { Width = 240, Margin = new Padding(0, 0, 24, 0) };
-            cbTier = new UnderlinedComboBox("Thứ hạng", new object[] { "Tất cả", "Economy", "Premium Economy", "Business", "First" }) { Width = 220, Margin = new Padding(0, 0, 24, 0) };
-            filterLeft.Controls.AddRange(new Control[] { txtCode, txtName, cbTier });
+            txtCode = new UnderlinedTextField("Mã hạng ghế", "") { 
+                Width = 300, 
+                Margin = new Padding(0, 0, 24, 0) 
+            };
+            cbName = new UnderlinedComboBox("Tên hạng ghế", new object[] { "Hạng Phổ thông", "Hạng Thương gia", "Hạng nhất" }) { 
+                Height = 64,
+                Width = 300, 
+                Margin = new Padding(0, 0, 24, 0) 
+            };
+            filterLeft.Controls.AddRange(new Control[] { txtCode, cbName });
 
             filterRight = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, FlowDirection = FlowDirection.RightToLeft, WrapContents = false };
-            var btnSearch = new PrimaryButton("🔍 Tìm kiếm") { Width = 90, Height = 36 };
+            var btnSearch = new PrimaryButton("🔍 Tìm kiếm") { 
+                Width = 90, 
+                Height = 36 
+            };
+            var btnCreate = new PrimaryButton("➕ Thêm hạng ghế mới") {
+                Width = 90,
+                Height = 36
+            };
+            filterRight.Controls.Add(btnCreate);
             filterRight.Controls.Add(btnSearch);
 
             filterWrap = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(24, 16, 24, 0), ColumnCount = 2 };
@@ -62,30 +76,23 @@ namespace GUI.Features.CabinClass.SubFeatures {
                 BackgroundColor = Color.White,
                 BorderStyle = BorderStyle.None
             };
-            table.Columns.Add("cabinCode", "Mã");
-            table.Columns.Add("cabinName", "Tên cabin");
-            table.Columns.Add("tier", "Thứ hạng");                // Economy/Business/...
-            table.Columns.Add("priority", "Độ ưu tiên");          // số nhỏ hơn = ưu tiên cao
-            table.Columns.Add("defaultBaggage", "Hành lý (kg)");  // mặc định
-            table.Columns.Add("seatPitch", "Pitch (in)");         // tùy chọn
+            table.Columns.Add("cabinCode", "Mã hạng ghế");
+            table.Columns.Add("cabinName", "Tên hạng ghế");
             var colAction = new DataGridViewTextBoxColumn { Name = ACTION_COL, HeaderText = "Thao tác", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells };
             table.Columns.Add(colAction);
             var colHiddenId = new DataGridViewTextBoxColumn { Name = "cabinIdHidden", Visible = false };
             table.Columns.Add(colHiddenId);
 
             // demo
-            table.Rows.Add("Y", "Economy", "Economy", 3, 20, 31, null, 1);
-            table.Rows.Add("W", "Premium Economy", "Premium Economy", 2, 25, 35, null, 2);
-            table.Rows.Add("C", "Business", "Business", 1, 32, 40, null, 3);
-            table.Rows.Add("F", "First", "First", 0, 40, 45, null, 4);
+            table.Rows.Add("Y", "Hạng Phổ thông");
+            table.Rows.Add("C", "Hạng Thương gia");
+            table.Rows.Add("C", "Hạng Thương gia");
+            table.Rows.Add("F", "Hạng nhất");
 
             // định dạng số
             table.CellFormatting += (s, e) => {
                 if (e.RowIndex < 0) return;
                 var name = table.Columns[e.ColumnIndex].Name;
-                if ((name == "defaultBaggage" || name == "seatPitch" || name == "priority") && e.Value != null) {
-                    if (decimal.TryParse(e.Value.ToString(), out var v)) { e.Value = v.ToString("#,0"); e.FormattingApplied = true; }
-                }
             };
 
             table.CellPainting += Table_CellPainting;
@@ -153,13 +160,9 @@ namespace GUI.Features.CabinClass.SubFeatures {
             string id = row.Cells["cabinIdHidden"].Value?.ToString() ?? "";
             string code = row.Cells["cabinCode"].Value?.ToString() ?? "(n/a)";
             string name = row.Cells["cabinName"].Value?.ToString() ?? "(n/a)";
-            string tier = row.Cells["tier"].Value?.ToString() ?? "(n/a)";
 
             if (r.rcView.Contains(p)) {
-                using var frm = new CabinClassDetailForm(code, name, tier,
-                    row.Cells["priority"].Value?.ToString() ?? "0",
-                    row.Cells["defaultBaggage"].Value?.ToString() ?? "0",
-                    row.Cells["seatPitch"].Value?.ToString() ?? "0");
+                using var frm = new CabinClassDetailForm(code, name);
                 frm.StartPosition = FormStartPosition.CenterParent;
                 frm.ShowDialog(FindForm());
             } else if (r.rcEdit.Contains(p)) {
@@ -171,11 +174,11 @@ namespace GUI.Features.CabinClass.SubFeatures {
     }
 
     internal class CabinClassDetailForm : Form {
-        public CabinClassDetailForm(string code, string name, string tier, string priority, string baggage, string pitch) {
+        public CabinClassDetailForm(string code, string name) {
             Text = $"Chi tiết Cabin {code}";
             Size = new Size(820, 520); BackColor = Color.White;
             var detail = new CabinClassDetailControl { Dock = DockStyle.Fill };
-            detail.LoadCabin(code, name, tier, priority, baggage, pitch);
+            detail.LoadCabin(code, name);
             Controls.Add(detail);
         }
     }

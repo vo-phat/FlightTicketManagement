@@ -32,10 +32,25 @@ namespace GUI.Features.Aircraft.SubFeatures {
             for (int i = 0; i < 2; i++) inputPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 60));
 
             // Theo script.sql: airline_id, model, manufacturer, capacity
-            var txtAirline = new UnderlinedTextField("Mã hãng (Airline code)", "") { MinimumSize = new Size(0, 56), Width = 240, Margin = new Padding(0, 6, 24, 6) };
-            var txtModel = new UnderlinedTextField("Model", "") { MinimumSize = new Size(0, 56), Width = 280, Margin = new Padding(0, 6, 24, 6) };
-            var txtManu = new UnderlinedTextField("Hãng sản xuất", "") { MinimumSize = new Size(0, 56), Width = 280, Margin = new Padding(0, 6, 24, 6) };
-            var txtCap = new UnderlinedTextField("Sức chứa (ghế)", "") { MinimumSize = new Size(0, 56), Width = 180, Margin = new Padding(0, 6, 24, 6) };
+            var txtAirline = new UnderlinedComboBox("Mã hãng", new object[] { "AL001", "AL002", "AL003" }) { 
+                MinimumSize = new Size(0, 64), 
+                Width = 280, 
+                Margin = new Padding(0, 6, 24, 6) 
+            };
+            var txtModel = new UnderlinedTextField("Model", "") { 
+                MinimumSize = new Size(0, 64), 
+                Width = 280, 
+                Margin = new Padding(0, 6, 24, 6) 
+            };
+            var txtManu = new UnderlinedTextField("Hãng sản xuất", "") { 
+                MinimumSize = new Size(0, 64), 
+                Width = 280, Margin = new Padding(0, 6, 24, 6) 
+            };
+            var txtCap = new UnderlinedTextField("Sức chứa", "") { 
+                MinimumSize = new Size(0, 64), 
+                Width = 280, 
+                Margin = new Padding(0, 6, 24, 6) 
+            };
 
             inputPanel.Controls.Add(txtAirline, 0, 0);
             inputPanel.Controls.Add(txtModel, 1, 0);
@@ -58,25 +73,25 @@ namespace GUI.Features.Aircraft.SubFeatures {
             buttonRow.Controls.Add(btnCreate);
 
             // Table preview
-            var table = new TableCustom {
-                Dock = DockStyle.Fill,
-                Margin = new Padding(24, 12, 24, 4),
-                AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false,
-                ReadOnly = true,
-                RowHeadersVisible = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
-            };
-            table.Columns.Add("airline", "Hãng");
-            table.Columns.Add("model", "Model");
-            table.Columns.Add("manufacturer", "Hãng sản xuất");
-            table.Columns.Add("capacity", "Sức chứa");
-            for (int i = 0; i < 4; i++) table.Rows.Add("", "", "", "");
+            //var table = new TableCustom {
+            //    Dock = DockStyle.Fill,
+            //    Margin = new Padding(24, 12, 24, 4),
+            //    AllowUserToAddRows = false,
+            //    AllowUserToDeleteRows = false,
+            //    ReadOnly = true,
+            //    RowHeadersVisible = false,
+            //    AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            //    BackgroundColor = Color.White,
+            //    BorderStyle = BorderStyle.FixedSingle
+            //};
+            //table.Columns.Add("airline", "Hãng");
+            //table.Columns.Add("model", "Model");
+            //table.Columns.Add("manufacturer", "Hãng sản xuất");
+            //table.Columns.Add("capacity", "Sức chứa");
+            //for (int i = 0; i < 4; i++) table.Rows.Add("", "", "", "");
 
             // Layout tổng
-            var main = new TableLayoutPanel { Dock = DockStyle.Fill, BackColor = Color.Transparent, ColumnCount = 1, RowCount = 4 };
+            var main = new TableLayoutPanel { Dock = DockStyle.Fill, BackColor = Color.Transparent, ColumnCount = 1, RowCount = 3 };
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -84,7 +99,7 @@ namespace GUI.Features.Aircraft.SubFeatures {
             main.Controls.Add(titlePanel, 0, 0);
             main.Controls.Add(inputPanel, 0, 1);
             main.Controls.Add(buttonRow, 0, 2);
-            main.Controls.Add(table, 0, 3);
+            //main.Controls.Add(table, 0, 3);
 
             Controls.Clear();
             Controls.Add(main);

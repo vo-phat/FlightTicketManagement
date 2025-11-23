@@ -2,34 +2,38 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using GUI.Components.Buttons;
+using GUI.Features.Seat.SubFeatures; // SeatListControl, SeatCreateControl, FlightSeatControl, SeatMapControl, SeatMapMode
 
 namespace GUI.Features.Seat {
     public class SeatControl : UserControl {
+        // Header + dải nút tab
         private Panel header;
-        private FlowLayoutPanel tabs;
+        private FlowLayoutPanel tabBar;
 
-        // Chúng ta giữ chỉ số tab hiện tại để render lại dải nút theo Primary/Secondary
+        // Chỉ số tab hiện tại để render Primary/Secondary
         private int currentIndex = 0;
 
-        // Nội dung từng tab
+        // Nội dung từng tab (5 tab như file gốc dùng TabControl)
         private Control current;
-        private SubFeatures.SeatListControl seatList;
-        private SubFeatures.SeatCreateControl seatCreate;
-        private SubFeatures.FlightSeatControl flightSeats;
-        private SubFeatures.SeatMapControl seatMap;
+        private SeatListControl seatList;
+        private SeatCreateControl seatCreate;
+        private SeatMapControl tabMapAircraft;   // Sơ đồ (theo máy bay)
+        private FlightSeatControl flightSeats;   // Ghế theo chuyến
+        private SeatMapControl tabMapFlight;     // Sơ đồ (theo chuyến)
 
         public SeatControl() {
             InitializeComponent();
-            SwitchTab(0);
+            SwitchTab(0); // Mặc định vào "Danh sách ghế"
         }
 
         private void InitializeComponent() {
             SuspendLayout();
-            // --- NỀN TRẮNG ---
-            Dock = DockStyle.Fill;
-            BackColor = Color.White;
 
-            // Header trắng, autosize theo nội dung, không cố định chiều cao để tránh khuất
+            // Nền giống file gốc
+            Dock = DockStyle.Fill;
+            BackColor = Color.FromArgb(232, 240, 252);
+
+            // Header trắng chứa dải nút
             header = new Panel {
                 Dock = DockStyle.Top,
                 BackColor = Color.White,
@@ -37,8 +41,7 @@ namespace GUI.Features.Seat {
                 AutoSizeMode = AutoSizeMode.GrowAndShrink
             };
 
-            // Dải tab: Dock Top, AutoSize để không bị cắt nút
-            tabs = new FlowLayoutPanel {
+            tabBar = new FlowLayoutPanel {
                 Dock = DockStyle.Top,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
@@ -47,76 +50,85 @@ namespace GUI.Features.Seat {
                 BackColor = Color.White
             };
 
-            header.Controls.Add(tabs);
+            header.Controls.Add(tabBar);
             Controls.Add(header);
 
-            // Khởi tạo các sub control (nội dung)
-            seatList = new SubFeatures.SeatListControl { Dock = DockStyle.Fill };
-            seatCreate = new SubFeatures.SeatCreateControl { Dock = DockStyle.Fill };
-            flightSeats = new SubFeatures.FlightSeatControl { Dock = DockStyle.Fill };
-            seatMap = new SubFeatures.SeatMapControl { Dock = DockStyle.Fill };
+            // Khởi tạo các sub-controls tương ứng 5 tab như bản TabControl
+            seatList = new SeatListControl { Dock = DockStyle.Fill, Visible = false };
+            seatCreate = new SeatCreateControl { Dock = DockStyle.Fill, Visible = false };
+            tabMapAircraft = new SeatMapControl(SeatMapMode.PerAircraft) { Dock = DockStyle.Fill, Visible = false };
+            flightSeats = new FlightSeatControl { Dock = DockStyle.Fill, Visible = false };
+            tabMapFlight = new SeatMapControl(SeatMapMode.PerFlight) { Dock = DockStyle.Fill, Visible = false };
 
+            // Thêm vào form (thứ tự không quan trọng vì sẽ BringToFront khi switch)
             Controls.Add(seatList);
             Controls.Add(seatCreate);
+            Controls.Add(tabMapAircraft);
             Controls.Add(flightSeats);
-            Controls.Add(seatMap);
+            Controls.Add(tabMapFlight);
 
             ResumeLayout(false);
             PerformLayout();
 
-            // Render lần đầu dải tab (tương ứng currentIndex = 0)
-            RebuildTabs();
+            // Vẽ dải nút lần đầu
+            RebuildTabBar();
         }
 
         /// <summary>
-        /// Rebuild lại thanh tab sao cho tab đang chọn là PrimaryButton,
-        /// các tab khác là SecondaryButton. Cách này đảm bảo “giống hệt”
-        /// giao diện mẫu của bạn (không chỉ đổi màu/viền).
+        /// Dựng lại dải nút: tab đang chọn -> PrimaryButton, tab khác -> SecondaryButton.
         /// </summary>
-        private void RebuildTabs() {
-            tabs.SuspendLayout();
-            tabs.Controls.Clear();
+        private void RebuildTabBar() {
+            tabBar.SuspendLayout();
+            tabBar.Controls.Clear();
 
             Control MakeTabButton(string text, int index) {
-                Button b = (index == currentIndex)
-                    ? new PrimaryButton(text)   // Tab đang chọn -> Primary
-                    : new SecondaryButton(text); // Tab còn lại -> Secondary
+                var btn = (index == currentIndex)
+                    ? (Button)new PrimaryButton(text)
+                    : new SecondaryButton(text);
 
-                b.Height = 36;
-                b.Margin = new Padding(0, 0, 12, 0);
-                b.BackColor = Color.White;            // bảo đảm nền nút là trắng
-                b.FlatAppearance.MouseOverBackColor = Color.White;
-                b.FlatAppearance.MouseDownBackColor = Color.White;
-                b.Click += (_, __) => {
-                    if (currentIndex != index) {
-                        SwitchTab(index);
-                    }
+                btn.Height = 36;
+                btn.Margin = new Padding(0, 0, 12, 0);
+
+                // Nền trắng để đồng bộ header
+                btn.BackColor = Color.White;
+                if (btn.FlatAppearance != null) {
+                    btn.FlatAppearance.MouseOverBackColor = Color.White;
+                    btn.FlatAppearance.MouseDownBackColor = Color.White;
+                }
+
+                btn.Click += (_, __) => {
+                    if (currentIndex != index) SwitchTab(index);
                 };
-                return b;
+                return btn;
             }
 
-            tabs.Controls.Add(MakeTabButton("Danh sách ghế", 0));
-            tabs.Controls.Add(MakeTabButton("Tạo ghế", 1));
-            tabs.Controls.Add(MakeTabButton("Ghế theo chuyến", 2));
-            tabs.Controls.Add(MakeTabButton("Sơ đồ ghế", 3));
+            // 5 tab đúng nhãn như file TabControl
+            tabBar.Controls.Add(MakeTabButton("Danh sách ghế", 0));
+            tabBar.Controls.Add(MakeTabButton("Tạo ghế", 1));
+            tabBar.Controls.Add(MakeTabButton("Sơ đồ (theo máy bay)", 2));
+            tabBar.Controls.Add(MakeTabButton("Ghế theo chuyến", 3));
+            tabBar.Controls.Add(MakeTabButton("Sơ đồ (theo chuyến)", 4));
 
-            tabs.ResumeLayout(true);
+            tabBar.ResumeLayout(true);
         }
 
         private void SwitchTab(int idx) {
             currentIndex = idx;
 
-            // 1) Cập nhật giao diện nút (primary/secondary)
-            RebuildTabs();
+            // 1) Cập nhật hiển thị nút (Primary/Secondary)
+            RebuildTabBar();
 
-            // 2) Hiển thị nội dung tương ứng
+            // 2) Ẩn tab cũ nếu có
             if (current != null) current.Visible = false;
 
+            // 3) Chọn control tương ứng 5 tab
             current = idx switch {
-                0 => seatList,
-                1 => seatCreate,
-                2 => flightSeats,
-                _ => seatMap
+                0 => seatList,       // Danh sách ghế
+                1 => seatCreate,     // Tạo ghế
+                2 => tabMapAircraft, // Sơ đồ (theo máy bay)
+                3 => flightSeats,    // Ghế theo chuyến
+                4 => tabMapFlight,   // Sơ đồ (theo chuyến)
+                _ => seatList
             };
 
             current.Visible = true;

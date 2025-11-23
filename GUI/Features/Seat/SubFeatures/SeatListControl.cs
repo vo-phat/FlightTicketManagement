@@ -21,22 +21,27 @@ namespace GUI.Features.Seat.SubFeatures {
 
         private UnderlinedComboBox cbAircraft, cbClass;
         private UnderlinedTextField txtSeat;
-        private PrimaryButton btnSearch;
+        private PrimaryButton btnSearch, btnGenerate;
         private SecondaryButton btnClear;
 
         private TableCustom table;
         private System.Windows.Forms.Timer debounce;
 
-        private List<Row> datasource = new();
+        private readonly List<Row> datasource = new();
 
-        public SeatListControl() { InitializeComponent(); SeedDemo(); ApplyFilter(); }
+        public SeatListControl() {
+            InitializeComponent();
+            SeedDemo();
+            ApplyFilter();
+        }
 
         private void InitializeComponent() {
             SuspendLayout();
-            Dock = DockStyle.Fill; BackColor = Color.FromArgb(232, 240, 252);
+            Dock = DockStyle.Fill;
+            BackColor = Color.FromArgb(232, 240, 252);
 
             lblTitle = new Label {
-                Text = "🪑 Danh sách ghế",
+                Text = "💺 Danh sách ghế theo máy bay",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
                 Padding = new Padding(24, 20, 24, 0),
@@ -45,16 +50,18 @@ namespace GUI.Features.Seat.SubFeatures {
 
             // Filters
             filterLeft = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, WrapContents = false };
-            cbAircraft = new UnderlinedComboBox("Máy bay", new object[] { "Tất cả", "A320", "B737" }) { Width = 180, Margin = new Padding(0, 0, 24, 0) };
-            cbClass = new UnderlinedComboBox("Hạng", new object[] { "Tất cả", "Economy", "Business" }) { Width = 180, Margin = new Padding(0, 0, 24, 0) };
+            cbAircraft = new UnderlinedComboBox("Máy bay", new object[] { "Tất cả", "A320", "B737" }) { Width = 220, Margin = new Padding(0, 0, 24, 0) };
+            cbClass = new UnderlinedComboBox("Hạng ghế", new object[] { "Tất cả", "Economy", "Business", "First" }) { Width = 220, Margin = new Padding(0, 0, 24, 0) };
             txtSeat = new UnderlinedTextField("Số ghế (VD: 12A)", "") { Width = 160, Margin = new Padding(0, 0, 24, 0) };
             filterLeft.Controls.AddRange(new Control[] { cbAircraft, cbClass, txtSeat });
 
             filterRight = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, FlowDirection = FlowDirection.RightToLeft, WrapContents = false };
             btnSearch = new PrimaryButton("🔍 Tìm kiếm") { Width = 110, Height = 36 };
             btnClear = new SecondaryButton("⟲ Xóa lọc") { Width = 100, Height = 36, Margin = new Padding(12, 0, 0, 0) };
+            btnGenerate = new PrimaryButton("⚙️ Sinh ghế tự động") { Width = 170, Height = 36, Margin = new Padding(12, 0, 0, 0) };
             filterRight.Controls.Add(btnSearch);
             filterRight.Controls.Add(btnClear);
+            filterRight.Controls.Add(btnGenerate);
 
             filterWrap = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(24, 16, 24, 0), ColumnCount = 2 };
             filterWrap.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
@@ -72,13 +79,13 @@ namespace GUI.Features.Seat.SubFeatures {
                 BackgroundColor = Color.White,
                 BorderStyle = BorderStyle.None
             };
-            table.Columns.Add("seatNumber", "Số ghế");
-            table.Columns.Add("className", "Hạng");
-            table.Columns.Add("aircraft", "Máy bay");
-            table.Columns.Add("createdAt", "Ngày tạo");
+            table.Columns.Add("seatNumber", "Số ghế");     // Seats.seat_number
+            table.Columns.Add("className", "Hạng ghế");   // Cabin_Classes.class_name
+            table.Columns.Add("aircraft", "Máy bay");    // Aircrafts.model
             var colAction = new DataGridViewTextBoxColumn { Name = ACTION_COL, HeaderText = "Thao tác", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells };
+            var colHidden = new DataGridViewTextBoxColumn { Name = "seatIdHidden", Visible = false };
             table.Columns.Add(colAction);
-            table.Columns.Add(new DataGridViewTextBoxColumn { Name = "seatIdHidden", Visible = false });
+            table.Columns.Add(colHidden);
 
             table.CellPainting += Table_CellPainting;
             table.CellMouseMove += Table_CellMouseMove;
@@ -87,13 +94,14 @@ namespace GUI.Features.Seat.SubFeatures {
             // Events
             btnSearch.Click += (_, __) => ApplyFilter();
             btnClear.Click += (_, __) => { cbAircraft.SelectedIndex = 0; cbClass.SelectedIndex = 0; txtSeat.Text = ""; ApplyFilter(); };
+            btnGenerate.Click += (_, __) => MessageBox.Show("Mở wizard sinh ghế (demo).", "Sinh ghế");
             txtSeat.TextChanged += (_, __) => { debounce.Stop(); debounce.Start(); };
 
             debounce = new System.Windows.Forms.Timer { Interval = 280 };
             debounce.Tick += (_, __) => { debounce.Stop(); ApplyFilter(); };
 
             // Root
-            root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3 };
+            root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, BackColor = Color.Transparent };
             root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             root.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
@@ -106,16 +114,14 @@ namespace GUI.Features.Seat.SubFeatures {
         }
 
         private void SeedDemo() {
-            var rnd = new Random(1);
             foreach (var craft in new[] { "A320", "B737" }) {
-                for (int i = 1; i <= 40; i++) {
-                    foreach (char c in new[] { 'A', 'B', 'C', 'D', 'E', 'F' }) {
+                for (int row = 1; row <= 28; row++) {
+                    foreach (char col in new[] { 'A', 'B', 'C', 'D', 'E', 'F' }) {
                         datasource.Add(new Row {
-                            SeatId = i * 10 + (c - 'A'),
-                            SeatNumber = $"{i}{c}",
-                            ClassName = i <= 6 ? "Business" : "Economy",
-                            Aircraft = craft,
-                            CreatedAt = DateTime.Now.AddDays(-rnd.Next(180))
+                            SeatId = row * 10 + (col - 'A'),
+                            SeatNumber = $"{row}{col}",
+                            ClassName = row <= 4 ? "Business" : "Economy",
+                            Aircraft = craft
                         });
                     }
                 }
@@ -125,20 +131,20 @@ namespace GUI.Features.Seat.SubFeatures {
         private void ApplyFilter() {
             string ac = cbAircraft.SelectedItem?.ToString() ?? "Tất cả";
             string cl = cbClass.SelectedItem?.ToString() ?? "Tất cả";
-            string key = (txtSeat.Text ?? "").Trim().ToUpper();
+            string key = (txtSeat.Text ?? "").Trim().ToUpperInvariant();
 
-            var q = datasource.AsEnumerable();
+            IEnumerable<Row> q = datasource;
             if (ac != "Tất cả") q = q.Where(x => x.Aircraft == ac);
             if (cl != "Tất cả") q = q.Where(x => x.ClassName == cl);
-            if (!string.IsNullOrEmpty(key)) q = q.Where(x => x.SeatNumber.Contains(key));
+            if (!string.IsNullOrEmpty(key)) q = q.Where(x => x.SeatNumber.ToUpperInvariant().Contains(key));
 
             table.Rows.Clear();
             foreach (var x in q) {
-                table.Rows.Add(x.SeatNumber, x.ClassName, x.Aircraft, x.CreatedAt.ToString("yyyy-MM-dd"), null, x.SeatId);
+                table.Rows.Add(x.SeatNumber, x.ClassName, x.Aircraft, null, x.SeatId);
             }
         }
 
-        // ===== Action links drawing like CabinClassListControl =====
+        // ===== Action links =====
         private (Rectangle rcView, Rectangle rcEdit, Rectangle rcDel) GetRects(Rectangle bounds, Font font) {
             int pad = 6, x = bounds.Left + pad, y = bounds.Top + (bounds.Height - font.Height) / 2;
             var flags = TextFormatFlags.NoPadding;
@@ -155,12 +161,14 @@ namespace GUI.Features.Seat.SubFeatures {
         private void Table_CellPainting(object? s, DataGridViewCellPaintingEventArgs e) {
             if (e.RowIndex < 0) return;
             if (table.Columns[e.ColumnIndex].Name != ACTION_COL) return;
+
             e.Handled = true;
             e.Paint(e.ClipBounds, DataGridViewPaintParts.Background | DataGridViewPaintParts.Border);
 
             var font = e.CellStyle.Font ?? table.Font;
             var r = GetRects(e.CellBounds, font);
             Color link = Color.FromArgb(0, 92, 175), sep = Color.FromArgb(120, 120, 120), del = Color.FromArgb(220, 53, 69);
+
             TextRenderer.DrawText(e.Graphics, TXT_VIEW, font, r.rcView.Location, link, TextFormatFlags.NoPadding);
             TextRenderer.DrawText(e.Graphics, SEP, font, new Point(r.rcView.Right, r.rcView.Top), sep, TextFormatFlags.NoPadding);
             TextRenderer.DrawText(e.Graphics, TXT_EDIT, font, r.rcEdit.Location, link, TextFormatFlags.NoPadding);
@@ -190,23 +198,47 @@ namespace GUI.Features.Seat.SubFeatures {
 
             var row = table.Rows[e.RowIndex];
             var seatId = row.Cells["seatIdHidden"].Value?.ToString() ?? "";
+            var seatNo = row.Cells["seatNumber"].Value?.ToString() ?? "";
+            var cabin = row.Cells["className"].Value?.ToString() ?? "";
+            var ac = row.Cells["aircraft"].Value?.ToString() ?? "";
 
             if (r.rcView.Contains(p)) {
-                MessageBox.Show($"Xem ghế #{seatId}", "Xem", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                using var frm = new SeatDetailForm(seatId, seatNo, cabin, ac);
+                frm.StartPosition = FormStartPosition.CenterParent;
+                frm.ShowDialog(FindForm());
             } else if (r.rcEdit.Contains(p)) {
-                MessageBox.Show($"Sửa ghế #{seatId}", "Sửa", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show($"Sửa ghế #{seatId} - {seatNo}", "Sửa", MessageBoxButtons.OK, MessageBoxIcon.Information);
             } else if (r.rcDel.Contains(p)) {
-                if (MessageBox.Show("Xóa ghế này?", "Xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                if (MessageBox.Show("Xóa ghế này? (demo)", "Xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes) {
                     MessageBox.Show("Đã xóa (demo).");
+                }
             }
         }
 
-        private class Row {
+        private sealed class Row {
             public int SeatId { get; set; }
             public string SeatNumber { get; set; } = "";
             public string ClassName { get; set; } = "";
             public string Aircraft { get; set; } = "";
-            public DateTime CreatedAt { get; set; }
+        }
+    }
+
+    internal class SeatDetailForm : Form {
+        public SeatDetailForm(string seatId, string seatNo, string cabin, string aircraft) {
+            Text = $"Chi tiết ghế {seatNo}";
+            Size = new Size(720, 480); BackColor = Color.White;
+
+            var detail = new SeatDetailControl { Dock = DockStyle.Fill };
+            detail.LoadSeat(new SeatDetailControl.SeatStaticVM {
+                SeatId = seatId,
+                SeatNumber = seatNo,
+                CabinName = cabin,
+                AircraftInfo = aircraft,
+                FlightsReferenced = 12, // demo
+                LastSeenAt = DateTime.Now.AddDays(-5)
+            });
+
+            Controls.Add(detail);
         }
     }
 }

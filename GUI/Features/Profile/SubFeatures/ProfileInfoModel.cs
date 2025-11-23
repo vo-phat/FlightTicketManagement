@@ -12,7 +12,6 @@ namespace GUI.Features.Profile.SubFeatures {
         public string PhoneNumber { get; set; } = "";
         public string PassportNumber { get; set; } = "";
         public string Nationality { get; set; } = "";
-        public string RoleDisplay { get; set; } = ""; // tùy chọn, đọc từ User_Role
     }
 
     public class ProfileInfoControl : UserControl {
@@ -21,7 +20,6 @@ namespace GUI.Features.Profile.SubFeatures {
         private Label lblTitle;
         private UnderlinedTextField txtEmail, txtFullName, txtPhone, txtPassport, txtNationality;
         private DateTimePickerCustom dtpDob;
-        private Label lblRole;
 
         private readonly int _accountId;
 
@@ -55,12 +53,31 @@ namespace GUI.Features.Profile.SubFeatures {
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
 
-            txtEmail = new UnderlinedTextField("Email", "") { MinimumSize = new Size(0, 56), Width = 320 };
-            txtFullName = new UnderlinedTextField("Họ và tên", "") { MinimumSize = new Size(0, 56), Width = 320 };
-            dtpDob = new DateTimePickerCustom("Ngày sinh", "") { Width = 320, Height = 72 };
-            txtPhone = new UnderlinedTextField("Số điện thoại", "") { MinimumSize = new Size(0, 56), Width = 320 };
-            txtPassport = new UnderlinedTextField("Hộ chiếu", "") { MinimumSize = new Size(0, 56), Width = 320 };
-            txtNationality = new UnderlinedTextField("Quốc tịch", "") { MinimumSize = new Size(0, 56), Width = 320 };
+            txtEmail = new UnderlinedTextField("Email", "") { 
+                MinimumSize = new Size(0, 56), 
+                Width = 320,
+                ReadOnly = true
+            };
+            txtFullName = new UnderlinedTextField("Họ và tên", "") { 
+                MinimumSize = new Size(0, 56), 
+                Width = 320 
+            };
+            dtpDob = new DateTimePickerCustom("Ngày sinh", "") { 
+                Width = 320, 
+                Height = 72 
+            };
+            txtPhone = new UnderlinedTextField("Số điện thoại", "") { 
+                MinimumSize = new Size(0, 56), 
+                Width = 320 
+            };
+            txtPassport = new UnderlinedTextField("Hộ chiếu", "") { 
+                MinimumSize = new Size(0, 56), 
+                Width = 320 
+            };
+            txtNationality = new UnderlinedTextField("Quốc tịch", "") { 
+                MinimumSize = new Size(0, 56), 
+                Width = 320 
+            };
 
             // Hàng 1
             grid.Controls.Add(txtEmail, 0, 0);
@@ -72,14 +89,6 @@ namespace GUI.Features.Profile.SubFeatures {
             grid.Controls.Add(txtPassport, 0, 2);
             grid.Controls.Add(txtNationality, 1, 2);
 
-            // Vai trò hiển thị
-            lblRole = new Label {
-                Text = "Vai trò: ",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 10f, FontStyle.Bold),
-                Margin = new Padding(24, 8, 24, 0)
-            };
-
             var btnSave = new PrimaryButton("💾 Lưu thay đổi") { Width = 160, Height = 36, Margin = new Padding(0, 0, 0, 0) };
             btnSave.Click += (s, e) => {
                 var model = new ProfileInfoModel {
@@ -88,8 +97,7 @@ namespace GUI.Features.Profile.SubFeatures {
                     DateOfBirth = dtpDob.Value,
                     PhoneNumber = txtPhone.Text,
                     PassportNumber = txtPassport.Text,
-                    Nationality = txtNationality.Text,
-                    RoleDisplay = lblRole.Text
+                    Nationality = txtNationality.Text
                 };
                 OnSaveRequested?.Invoke(model);
             };
@@ -114,7 +122,6 @@ namespace GUI.Features.Profile.SubFeatures {
 
             main.Controls.Add(lblTitle, 0, 0);
             main.Controls.Add(grid, 0, 1);
-            main.Controls.Add(lblRole, 0, 2);
             main.Controls.Add(new Panel { Dock = DockStyle.Top, Height = 8 }, 0, 3);
             Controls.Add(main);
             Controls.Add(btnRow);
@@ -134,7 +141,6 @@ namespace GUI.Features.Profile.SubFeatures {
             txtPhone.Text = "0901234567";
             txtPassport.Text = "1234567890";
             txtNationality.Text = "Việt Nam";
-            lblRole.Text = "Vai trò: Khách hàng";
         }
     }
 }

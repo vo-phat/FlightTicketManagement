@@ -38,13 +38,13 @@ namespace GUI.Features.FareRules.SubFeatures {
                 Width = 300,
                 Margin = new Padding(0, 6, 24, 6)
             };
-            var cbCabin = new UnderlinedComboBox("Hạng vé (Cabin Class)", new object[] {"THƯƠNG GIA", "PHỔ THÔNG" }) { 
+            var cbCabin = new UnderlinedComboBox("Hạng vé", new object[] {"THƯƠNG GIA", "PHỔ THÔNG" }) { 
                 MinimumSize = new Size(0, 64), 
                 Width = 300, Margin = new Padding(0, 6, 24, 6) 
             };
 
             // Hàng 2
-            var cbFareType = new UnderlinedComboBox("Loại vé (fare_type)", new object[] { "TIÊU CHUẨN", "TIẾT KIỆM", "KHUYẾN MÃI" }) { 
+            var cbFareType = new UnderlinedComboBox("Loại vé", new object[] { "TIÊU CHUẨN", "TIẾT KIỆM", "KHUYẾN MÃI" }) { 
                 MinimumSize = new Size(0, 64), 
                 Width = 300, 
                 Margin = new Padding(0, 6, 24, 6) 
@@ -56,33 +56,17 @@ namespace GUI.Features.FareRules.SubFeatures {
             };
 
             // Hàng 3 (ngày hiệu lực / hết hạn)
-            var dtEffective = new DateTimePicker {
-                Format = DateTimePickerFormat.Custom,
-                CustomFormat = "dd/MM/yyyy",
-                MinDate = new DateTime(2000, 1, 1),
-                Height = 36,
-                Width = 300
-            };
-            var wrapEffective = new UnderlinedTextField("Hiệu lực đến", "") {
-                MinimumSize = new Size(0, 64),
+            var dtpEffective = new DateTimePickerCustom("Hiệu lực đến", "") {
+                MinimumSize = new Size(0, 72),
                 Width = 300,
                 Margin = new Padding(0, 6, 24, 6)
             };
-            wrapEffective.Controls.Add(dtEffective); dtEffective.Location = new Point(0, wrapEffective.Height / 2);
 
-            var dtExpiry = new DateTimePicker {
-                Format = DateTimePickerFormat.Custom,
-                CustomFormat = "dd/MM/yyyy",
-                MinDate = new DateTime(2000, 1, 1),
-                Height = 36,
-                Width = 300
-            };
-            var wrapExpiry = new UnderlinedTextField("Ngày hết hạn", "") {
-                MinimumSize = new Size(0, 64),
+            var dtpExpiry = new DateTimePickerCustom("Ngày hết hạn", "") {
+                MinimumSize = new Size(0, 72),
                 Width = 300,
                 Margin = new Padding(0, 6, 24, 6)
             };
-            wrapExpiry.Controls.Add(dtExpiry); dtExpiry.Location = new Point(0, wrapExpiry.Height / 2);
 
             // Hàng 4 (giá / mô tả)
             var txtPrice = new UnderlinedTextField("Giá", "") {
@@ -105,8 +89,8 @@ namespace GUI.Features.FareRules.SubFeatures {
             inputs.Controls.Add(cbCabin, 1, 0);
             inputs.Controls.Add(cbFareType, 0, 1);
             inputs.Controls.Add(cbSeason, 1, 1);
-            inputs.Controls.Add(wrapEffective, 0, 2);
-            inputs.Controls.Add(wrapExpiry, 1, 2);
+            inputs.Controls.Add(dtpEffective, 0, 2);
+            inputs.Controls.Add(dtpExpiry, 1, 2);
             inputs.Controls.Add(txtPrice, 0, 3);
             inputs.Controls.Add(txtDescription, 1, 3);
 
@@ -132,28 +116,28 @@ namespace GUI.Features.FareRules.SubFeatures {
             buttonRow.Controls.Add(btnSave);
 
             // Preview table (đã đổi cột đúng DB)
-            var table = new TableCustom {
-                Dock = DockStyle.Fill,
-                Margin = new Padding(24, 12, 24, 4),
-                AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false,
-                ReadOnly = true,
-                RowHeadersVisible = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
-            };
-            table.Columns.Add("route", "Tuyến");
-            table.Columns.Add("cabin", "Hạng vé");
-            table.Columns.Add("fareType", "Loại vé");
-            table.Columns.Add("season", "Mùa");
-            table.Columns.Add("effective", "Hiệu lực");
-            table.Columns.Add("expiry", "Hết hạn");
-            table.Columns.Add("price", "Giá");
-            for (int i = 0; i < 3; i++) table.Rows.Add("", "", "", "", "", "", "");
+            //var table = new TableCustom {
+            //    Dock = DockStyle.Fill,
+            //    Margin = new Padding(24, 12, 24, 4),
+            //    AllowUserToAddRows = false,
+            //    AllowUserToDeleteRows = false,
+            //    ReadOnly = true,
+            //    RowHeadersVisible = false,
+            //    AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            //    BackgroundColor = Color.White,
+            //    BorderStyle = BorderStyle.FixedSingle
+            //};
+            //table.Columns.Add("route", "Tuyến");
+            //table.Columns.Add("cabin", "Hạng vé");
+            //table.Columns.Add("fareType", "Loại vé");
+            //table.Columns.Add("season", "Mùa");
+            //table.Columns.Add("effective", "Hiệu lực");
+            //table.Columns.Add("expiry", "Hết hạn");
+            //table.Columns.Add("price", "Giá");
+            //for (int i = 0; i < 3; i++) table.Rows.Add("", "", "", "", "", "", "");
 
             // Layout tổng (GIỮ NGUYÊN)
-            var main = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4, BackColor = Color.Transparent };
+            var main = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, BackColor = Color.Transparent };
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -161,7 +145,7 @@ namespace GUI.Features.FareRules.SubFeatures {
             main.Controls.Add(titlePanel, 0, 0);
             main.Controls.Add(inputs, 0, 1);
             main.Controls.Add(buttonRow, 0, 2);
-            main.Controls.Add(table, 0, 3);
+            //main.Controls.Add(table, 0, 3);
 
             Controls.Add(main);
 
@@ -174,8 +158,8 @@ namespace GUI.Features.FareRules.SubFeatures {
                     $"- Hạng vé: {cbCabin.SelectedText}\n" +
                     $"- Loại vé: {cbFareType.SelectedText}\n" +
                     $"- Mùa: {cbSeason.SelectedText}\n" +
-                    $"- Hiệu lực: {dtEffective.Value:dd/MM/yyyy}\n" +
-                    $"- Hết hạn: {dtExpiry.Value:dd/MM/yyyy}\n" +
+                    $"- Hiệu lực: {dtpEffective.Value:dd/MM/yyyy}\n" +
+                    $"- Hết hạn: {dtpExpiry.Value:dd/MM/yyyy}\n" +
                     $"- Giá: {txtPrice.Text}\n" +
                     $"- Mô tả: {txtDescription.Text}\n\n" +
                     "(Khi bạn cấp dữ liệu thật cho Airports/Routes/Cabin_Classes, mình sẽ bind combobox theo ID).",

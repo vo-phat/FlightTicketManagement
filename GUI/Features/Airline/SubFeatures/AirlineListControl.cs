@@ -19,9 +19,12 @@ namespace GUI.Features.Airline.SubFeatures {
         private TableLayoutPanel root, filterWrap;
         private FlowLayoutPanel filterLeft, filterRight;
         private Label lblTitle;
-        private UnderlinedTextField txtCode, txtName, txtCountry;
+        private UnderlinedTextField txtCode, txtName;
+        private UnderlinedComboBox cbCountry;
 
-        public AirlineListControl() { InitializeComponent(); }
+        public AirlineListControl() { 
+            InitializeComponent(); 
+        }
 
         private void InitializeComponent() {
             SuspendLayout();
@@ -38,11 +41,27 @@ namespace GUI.Features.Airline.SubFeatures {
             };
 
             // Filters
-            filterLeft = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, WrapContents = false };
-            txtCode = new UnderlinedTextField("Mã hãng (code)", "") { Width = 160, Margin = new Padding(0, 0, 24, 0) };
-            txtName = new UnderlinedTextField("Tên hãng", "") { Width = 260, Margin = new Padding(0, 0, 24, 0) };
-            txtCountry = new UnderlinedTextField("Quốc gia", "") { Width = 180, Margin = new Padding(0, 0, 24, 0) };
-            filterLeft.Controls.AddRange(new Control[] { txtCode, txtName, txtCountry });
+            filterLeft = new FlowLayoutPanel { 
+                Dock = DockStyle.Fill, 
+                AutoSize = true, 
+                WrapContents = false 
+            };
+            txtCode = new UnderlinedTextField("Mã hãng", "") { 
+                Width = 300, 
+                Margin = new Padding(0, 0, 24, 0) 
+            };
+            txtName = new UnderlinedTextField("Tên hãng", "") { 
+                Width = 300, 
+                Margin = new Padding(0, 0, 24, 0) 
+            };
+
+            cbCountry = new UnderlinedComboBox("Quốc gia", new object[] { "Việt Nam", "Nhật Bản", "Hàn Quốc", "Singapore", "Thái Lan", "Hoa Kỳ", "Anh", "Pháp", "Úc", "Canada" }) {
+                MinimumSize = new Size(0, 72),
+                Width = 240,
+                Margin = new Padding(0, 6, 24, 6)
+            };
+
+            filterLeft.Controls.AddRange(new Control[] { txtCode, txtName, cbCountry });
 
             filterRight = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, FlowDirection = FlowDirection.RightToLeft, WrapContents = false };
             var btnSearch = new PrimaryButton("🔍 Tìm hãng") { Width = 120, Height = 36 };
@@ -69,7 +88,7 @@ namespace GUI.Features.Airline.SubFeatures {
             table.Columns.Add("airlineCode", "Mã");
             table.Columns.Add("airlineName", "Tên hãng");
             table.Columns.Add("country", "Quốc gia");
-            table.Columns.Add("aircraftCount", "Số máy bay"); // gợi ý: COUNT(Aircrafts) by airline_id
+            table.Columns.Add("aircraftCount", "Số máy bay");
 
             var colAction = new DataGridViewTextBoxColumn { Name = ACTION_COL, HeaderText = "Thao tác", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells };
             table.Columns.Add(colAction);

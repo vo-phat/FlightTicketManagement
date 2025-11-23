@@ -1,81 +1,89 @@
 using System;
 using System.Drawing;
-using System.Text.RegularExpressions;
+using System.Linq;
 using System.Windows.Forms;
 using GUI.Components.Buttons;
+using GUI.Components.Tables;
 using GUI.Components.Inputs;
 
 namespace GUI.Features.Seat.SubFeatures {
     public class SeatCreateControl : UserControl {
-        private TableLayoutPanel root, form;
-        private Label lblTitle;
-
-        private UnderlinedComboBox cbAircraft, cbClass;
         private UnderlinedTextField txtSeat;
+        private UnderlinedComboBox cbAircraft, cbClass;
         private PrimaryButton btnSave;
-        private SecondaryButton btnReset;
 
         public SeatCreateControl() { InitializeComponent(); }
 
         private void InitializeComponent() {
-            SuspendLayout();
-            Dock = DockStyle.Fill; BackColor = Color.FromArgb(232, 240, 252);
+            Dock = DockStyle.Fill;
+            BackColor = Color.FromArgb(232, 240, 252);
 
-            lblTitle = new Label {
-                Text = "➕ Tạo ghế",
+            // Title
+            var title = new Label {
+                Text = "➕ Tạo ghế (per Aircraft)",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
                 Padding = new Padding(24, 20, 24, 0),
                 Dock = DockStyle.Top
             };
 
-            form = new TableLayoutPanel {
+            // Inputs
+            var inputs = new TableLayoutPanel {
                 Dock = DockStyle.Top,
                 AutoSize = true,
-                Padding = new Padding(24),
-                ColumnCount = 2
+                Padding = new Padding(24, 12, 24, 0),
+                ColumnCount = 3,
+                RowCount = 1
             };
-            form.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180));
-            form.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            inputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33));
+            inputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33));
+            inputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 34));
 
-            cbAircraft = new UnderlinedComboBox("Máy bay", new object[] { "A320", "B737" }) { Width = 260 };
-            cbClass = new UnderlinedComboBox("Hạng ghế", new object[] { "Economy", "Business" }) { Width = 260 };
-            txtSeat = new UnderlinedTextField("Số ghế (VD: 12A)", "") { Width = 260 };
+            cbAircraft = new UnderlinedComboBox("Máy bay", new object[] { "A320", "B737" }) { Width = 260, MinimumSize = new Size(0, 56), Margin = new Padding(0, 0, 24, 0) };
+            cbClass = new UnderlinedComboBox("Hạng ghế", new object[] { "Economy", "Business", "First" }) { Width = 220, MinimumSize = new Size(0, 56), Margin = new Padding(0, 0, 24, 0) };
+            txtSeat = new UnderlinedTextField("Số ghế (VD: 12A)", "") { Width = 160, MinimumSize = new Size(0, 56) };
 
-            form.Controls.Add(new Label { Text = "Máy bay", AutoSize = true, Margin = new Padding(0, 8, 8, 8) }, 0, 0);
-            form.Controls.Add(cbAircraft, 1, 0);
-            form.Controls.Add(new Label { Text = "Hạng ghế", AutoSize = true, Margin = new Padding(0, 8, 8, 8) }, 0, 1);
-            form.Controls.Add(cbClass, 1, 1);
-            form.Controls.Add(new Label { Text = "Số ghế", AutoSize = true, Margin = new Padding(0, 8, 8, 8) }, 0, 2);
-            form.Controls.Add(txtSeat, 1, 2);
+            inputs.Controls.Add(cbAircraft, 0, 0);
+            inputs.Controls.Add(cbClass, 1, 0);
+            inputs.Controls.Add(txtSeat, 2, 0);
 
-            var actions = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 48, Padding = new Padding(24, 6, 24, 6), WrapContents = false };
-            btnSave = new PrimaryButton("💾 Lưu") { Width = 100, Height = 36 };
-            btnReset = new SecondaryButton("⟲ Làm lại") { Width = 110, Height = 36, Margin = new Padding(12, 0, 0, 0) };
-            btnSave.Click += Save_Click;
-            btnReset.Click += (_, __) => { txtSeat.Text = ""; cbAircraft.SelectedIndex = -1; cbClass.SelectedIndex = -1; };
-            actions.Controls.AddRange(new Control[] { btnSave, btnReset });
+            // Actions
+            btnSave = new PrimaryButton("💾 Lưu") { Width = 120, Height = 40, Margin = new Padding(0, 12, 0, 12) };
+            var actions = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, FlowDirection = FlowDirection.RightToLeft, Padding = new Padding(24, 0, 24, 0) };
+            actions.Controls.Add(btnSave);
 
-            root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3 };
-            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
-            root.Controls.Add(lblTitle, 0, 0);
-            root.Controls.Add(form, 0, 1);
-            root.Controls.Add(new Panel(), 0, 2);
+            var main = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, BackColor = Color.Transparent };
+            main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            main.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            main.Controls.Add(title, 0, 0);
+            main.Controls.Add(inputs, 0, 1);
+            main.Controls.Add(actions, 0, 2);
 
-            Controls.Add(root);
-            ResumeLayout(false);
-        }
+            Controls.Add(main);
 
-        private void Save_Click(object? sender, EventArgs e) {
-            if (cbAircraft.SelectedIndex < 0) { MessageBox.Show("Vui lòng chọn máy bay"); return; }
-            if (cbClass.SelectedIndex < 0) { MessageBox.Show("Vui lòng chọn hạng ghế"); return; }
-            var seat = (txtSeat.Text ?? "").Trim().ToUpper();
-            if (!Regex.IsMatch(seat, "^[1-9][0-9]*[A-F]$")) { MessageBox.Show("Số ghế không hợp lệ (VD: 12A)"); return; }
+            // Behavior (demo)
+            txtSeat.TextChanged += (_, __) => {
+                var t = txtSeat.Text ?? string.Empty;
+                var num = new string(t.TakeWhile(char.IsDigit).ToArray());
+                var alpha = new string(t.SkipWhile(char.IsDigit).Where(char.IsLetter).ToArray()).ToUpperInvariant();
+                if (alpha.Length > 2) alpha = alpha.Substring(0, 2);
+                var norm = num + alpha;
+                if (norm != t) txtSeat.Text = norm;
+            };
 
-            // TODO: Gọi service lưu vào DB (Seats)
-            MessageBox.Show("Đã tạo ghế (demo)");
+            btnSave.Click += (_, __) => {
+                var ac = cbAircraft.SelectedItem?.ToString() ?? "";
+                var cl = cbClass.SelectedItem?.ToString() ?? "";
+                var seat = (txtSeat.Text ?? "").Trim().ToUpperInvariant();
+                if (string.IsNullOrEmpty(ac) || string.IsNullOrEmpty(cl) || string.IsNullOrEmpty(seat)) {
+                    MessageBox.Show("Vui lòng nhập đủ Máy bay / Hạng ghế / Số ghế.", "Thiếu dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                // DEMO only: In real app, call INSERT INTO Seats(...)
+                MessageBox.Show($"[DEMO]\nĐã lưu ghế {seat}\nAircraft: {ac}\nCabin: {cl}", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                txtSeat.Text = "";
+            };
         }
     }
 }

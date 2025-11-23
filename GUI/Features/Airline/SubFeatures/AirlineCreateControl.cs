@@ -32,13 +32,21 @@ namespace GUI.Features.Airline.SubFeatures {
             for (int i = 0; i < 2; i++) inputPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 60));
 
             // Theo script.sql: airline_code (unique), airline_name, country
-            var txtCode = new UnderlinedTextField("Mã hãng (duy nhất)", "") { MinimumSize = new Size(0, 56), Width = 220, Margin = new Padding(0, 6, 24, 6) };
-            var txtName = new UnderlinedTextField("Tên hãng", "") { MinimumSize = new Size(0, 56), Width = 320, Margin = new Padding(0, 6, 24, 6) };
+            var txtCode = new UnderlinedTextField("Mã hãng (duy nhất)", "") { 
+                MinimumSize = new Size(0, 72), 
+                Width = 300, 
+                Margin = new Padding(0, 6, 24, 6) 
+            };
+            var txtName = new UnderlinedTextField("Tên hãng", "") { 
+                MinimumSize = new Size(0, 72), 
+                Width = 300, 
+                Margin = new Padding(0, 6, 24, 6) 
+            };
 
-            var cbCountry = new UnderlinedComboBox(
-    "Quốc gia",
-    new object[] { "Việt Nam", "Nhật Bản", "Hàn Quốc", "Singapore", "Thái Lan", "Hoa Kỳ", "Anh", "Pháp", "Úc", "Canada" }
-) { MinimumSize = new Size(0, 56), Width = 240, Margin = new Padding(0, 6, 24, 6) };
+            var cbCountry = new UnderlinedComboBox( "Quốc gia", new object[] { "Việt Nam", "Nhật Bản", "Hàn Quốc", "Singapore", "Thái Lan", "Hoa Kỳ", "Anh", "Pháp", "Úc", "Canada" }) { 
+                MinimumSize = new Size(0, 72), 
+                Width = 300, Margin = new Padding(0, 6, 24, 6) 
+            };
 
             cbCountry.BackColor = this.BackColor;
             // lấy giá trị khi lưu:
@@ -64,24 +72,24 @@ namespace GUI.Features.Airline.SubFeatures {
             buttonRow.Controls.Add(btnCreate);
 
             // Preview table
-            var table = new TableCustom {
-                Dock = DockStyle.Fill,
-                Margin = new Padding(24, 12, 24, 4),
-                AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false,
-                ReadOnly = true,
-                RowHeadersVisible = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
-            };
-            table.Columns.Add("airlineCode", "Mã");
-            table.Columns.Add("airlineName", "Tên hãng");
-            table.Columns.Add("country", "Quốc gia");
-            for (int i = 0; i < 4; i++) table.Rows.Add("", "", "");
+            //var table = new TableCustom {
+            //    Dock = DockStyle.Fill,
+            //    Margin = new Padding(24, 12, 24, 4),
+            //    AllowUserToAddRows = false,
+            //    AllowUserToDeleteRows = false,
+            //    ReadOnly = true,
+            //    RowHeadersVisible = false,
+            //    AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            //    BackgroundColor = Color.White,
+            //    BorderStyle = BorderStyle.FixedSingle
+            //};
+            //table.Columns.Add("airlineCode", "Mã");
+            //table.Columns.Add("airlineName", "Tên hãng");
+            //table.Columns.Add("country", "Quốc gia");
+            //for (int i = 0; i < 4; i++) table.Rows.Add("", "", "");
 
             // Layout tổng
-            var main = new TableLayoutPanel { Dock = DockStyle.Fill, BackColor = Color.Transparent, ColumnCount = 1, RowCount = 4 };
+            var main = new TableLayoutPanel { Dock = DockStyle.Fill, BackColor = Color.Transparent, ColumnCount = 1, RowCount = 3 };
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -89,7 +97,7 @@ namespace GUI.Features.Airline.SubFeatures {
             main.Controls.Add(titlePanel, 0, 0);
             main.Controls.Add(inputPanel, 0, 1);
             main.Controls.Add(buttonRow, 0, 2);
-            main.Controls.Add(table, 0, 3);
+            //main.Controls.Add(table, 0, 3);
 
             Controls.Clear();
             Controls.Add(main);
