@@ -2,10 +2,13 @@ using GUI.Features.Auth;
 using GUI.Features.Test;
 using GUI.MainApp;
 
-namespace GUI {
-    internal static class Program {
+namespace GUI
+{
+    internal static class Program
+    {
         [STAThread]
-        static void Main() {
+        static void Main()
+        {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 

@@ -1,18 +1,53 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
+using DTO.Airport;
 
-namespace GUI.Features.Airport.SubFeatures {
-    public class AirportDetailControl : UserControl {
+namespace GUI.Features.Airport.SubFeatures
+{
+    public class AirportDetailControl : UserControl
+    {
         private Label vCode, vName, vCity, vCountry, vTz;
 
-        public AirportDetailControl() { InitializeComponent(); BuildLayout(); }
+        // 🔹 Sự kiện để báo cho control cha biết khi bấm nút Đóng
+       
+        public event EventHandler CloseRequested;
+        public AirportDetailControl()
+        {
+            InitializeComponent();
+            BuildLayout();
+        }
 
-        private void InitializeComponent() { Dock = DockStyle.Fill; BackColor = Color.FromArgb(232, 240, 252); }
+        private void InitializeComponent()
+        {
+            SuspendLayout();
+            BackColor = Color.FromArgb(232, 240, 252);
+            Name = "AirportDetailControl";
+            Size = new Size(1074, 527);
+            Load += AirportDetailControl_Load;
+            ResumeLayout(false);
+        }
 
-        private static Label Key(string t) => new Label { Text = t, AutoSize = true, Font = new Font("Segoe UI", 10f, FontStyle.Bold), Margin = new Padding(0, 6, 12, 6) };
-        private static Label Val(string n) => new Label { Name = n, AutoSize = true, Font = new Font("Segoe UI", 10f), Margin = new Padding(0, 6, 0, 6) };
 
-        private void BuildLayout() {
+        private static Label Key(string t) => new Label
+        {
+            Text = t,
+            AutoSize = true,
+            Font = new Font("Segoe UI", 10f, FontStyle.Bold),
+            Margin = new Padding(0, 6, 12, 6)
+        };
+
+        private static Label Val(string n) => new Label
+        {
+            Name = n,
+            AutoSize = true,
+            Font = new Font("Segoe UI", 10f),
+            Margin = new Padding(0, 6, 0, 6)
+        };
+
+
+        private void BuildLayout()
+        {
             var title = new Label { Text = "🛫 Chi tiết sân bay", AutoSize = true, Font = new Font("Segoe UI", 20, FontStyle.Bold), Padding = new Padding(24, 20, 24, 0), Dock = DockStyle.Top };
             var card = new Panel { BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle, Padding = new Padding(16), Margin = new Padding(24, 8, 24, 24), Dock = DockStyle.Fill };
 
@@ -28,9 +63,12 @@ namespace GUI.Features.Airport.SubFeatures {
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Múi giờ:"), 0, r); vTz = Val("vTz"); grid.Controls.Add(vTz, 1, r++);
 
             card.Controls.Add(grid);
+
             var bottom = new FlowLayoutPanel { Dock = DockStyle.Bottom, FlowDirection = FlowDirection.RightToLeft, AutoSize = true, Padding = new Padding(0, 12, 12, 12) };
-            var btnClose = new Button { Text = "Đóng", AutoSize = true }; btnClose.Click += (_, __) => FindForm()?.Close();
-            bottom.Controls.Add(btnClose); card.Controls.Add(bottom);
+            var btnClose = new Button { Text = "Đóng", AutoSize = true };
+            btnClose.Click += (_, __) => CloseRequested?.Invoke(this, EventArgs.Empty); // 🔥 Gọi sự kiện chứ không đóng form
+            bottom.Controls.Add(btnClose);
+            card.Controls.Add(bottom);
 
             var main = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2 };
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -41,8 +79,29 @@ namespace GUI.Features.Airport.SubFeatures {
             Controls.Add(main);
         }
 
-        public void LoadAirport(string code, string name, string city, string country, string tz) {
-            vCode.Text = code; vName.Text = name; vCity.Text = city; vCountry.Text = country; vTz.Text = tz;
+        // 🔹 Nạp dữ liệu chi tiết
+        public void LoadAirport(AirportDTO airport)
+        {
+            if (airport == null) return;
+            vCode.Text = airport.AirportCode ?? "";
+            vName.Text = airport.AirportName ?? "";
+            vCity.Text = airport.City ?? "";
+            vCountry.Text = airport.Country ?? "";
+            vTz.Text = ""; // nếu DTO có TimeZone thì set thêm
+        }
+
+        // Giữ phiên bản cũ nếu chỗ khác còn dùng
+        public void LoadAirport(string code, string name, string city, string country, string tz)
+        {
+            vCode.Text = code;
+            vName.Text = name;
+            vCity.Text = city;
+            vCountry.Text = country;
+            vTz.Text = tz;
+        }
+
+        private void AirportDetailControl_Load(object sender, EventArgs e)
+        {
         }
     }
 }
