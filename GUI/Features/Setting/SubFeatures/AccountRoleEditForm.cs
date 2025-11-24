@@ -4,6 +4,8 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using GUI.Components.Buttons;
+using BUS.Auth;              // <-- thêm
+using DTO.Permissions;       // <-- thêm
 
 namespace GUI.Features.Setting.SubFeatures {
     internal class AccountRoleEditForm : Form {
@@ -11,6 +13,7 @@ namespace GUI.Features.Setting.SubFeatures {
         private CheckedListBox lstRoles;
         private Button btnOk, btnCancel;
 
+        private readonly RolePermissionService _service = new RolePermissionService(); // <-- thêm
         private List<RoleItem> _allRoles = new();
 
         public AccountRoleEditForm(int accountId) {
@@ -24,7 +27,8 @@ namespace GUI.Features.Setting.SubFeatures {
             StartPosition = FormStartPosition.CenterParent;
             BackColor = Color.White;
 
-            _allRoles = PermissionRepository.GetAllRoles();
+            // Lấy danh sách role từ BUS (EF + LINQ)
+            _allRoles = _service.GetAllRoles();
 
             var grid = new TableLayoutPanel {
                 Dock = DockStyle.Fill,
@@ -49,7 +53,9 @@ namespace GUI.Features.Setting.SubFeatures {
                 BorderStyle = BorderStyle.None
             };
 
-            foreach (var r in _allRoles) lstRoles.Items.Add(r, false);
+            foreach (var r in _allRoles)
+                lstRoles.Items.Add(r, false);
+
             lstRoles.DisplayMember = nameof(RoleItem.Name);
             grid.Controls.Add(lstRoles, 0, 1);
 
@@ -73,7 +79,9 @@ namespace GUI.Features.Setting.SubFeatures {
         }
 
         private void LoadCurrentRoles() {
-            var roleIds = PermissionRepository.GetRoleIdsOfAccount(_accountId);
+            // lấy role hiện tại của account từ BUS
+            var roleIds = _service.GetRoleIdsOfAccount(_accountId);
+
             for (int i = 0; i < lstRoles.Items.Count; i++) {
                 if (lstRoles.Items[i] is RoleItem r)
                     lstRoles.SetItemChecked(i, roleIds.Contains(r.RoleId));
@@ -82,14 +90,19 @@ namespace GUI.Features.Setting.SubFeatures {
 
         private void SaveRoles() {
             var roleIds = new List<int>();
+
             for (int i = 0; i < lstRoles.Items.Count; i++) {
                 if (!lstRoles.GetItemChecked(i)) continue;
-                if (lstRoles.Items[i] is RoleItem r) roleIds.Add(r.RoleId);
+                if (lstRoles.Items[i] is RoleItem r)
+                    roleIds.Add(r.RoleId);
             }
 
-            PermissionRepository.SaveRolesForAccount(_accountId, roleIds);
+            // lưu qua BUS, BUS gọi xuống DAO/EF
+            _service.SaveRolesForAccount(_accountId, roleIds);
+
             MessageBox.Show("Đã lưu vai trò cho tài khoản.", "Phân quyền",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
+
             DialogResult = DialogResult.OK;
         }
     }

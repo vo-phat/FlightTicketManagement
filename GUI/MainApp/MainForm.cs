@@ -16,12 +16,9 @@ using GUI.Features.Ticket;
 using GUI.Features.Payments;
 using GUI.Features.Setting;
 using GUI.Properties;
+using DTO.Auth;
 
 namespace GUI.MainApp {
-    public enum AppRole {
-        User, Staff, Admin
-    }
-
     public enum NavKey {
         Home, Flights, BookingsTickets, Baggage, Catalogs,
         Payments, Customers, Notifications, Reports, System, MyProfile
@@ -47,8 +44,8 @@ namespace GUI.MainApp {
         private AppRole _role;
         private NavKey _active = NavKey.Home;
 
-        public MainForm() : this(AppRole.Admin) { } // mặc định user
-        public MainForm(AppRole role) {
+        public MainForm() : this(AppRole.Admin) { } // mặc định admin
+        public MainForm (AppRole role) {
             _role = role;
             InitializeComponent();
             BuildNavbarShell();

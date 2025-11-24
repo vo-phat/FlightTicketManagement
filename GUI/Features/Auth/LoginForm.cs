@@ -55,8 +55,9 @@ namespace GUI.Features.Auth {
 
                     var account = _authService.Login(email, password);
 
-                    // Đăng nhập thành công -> mở MainForm
-                    var mainForm = new MainForm(); // bạn đã có MainForm
+                    UserSession.SetAccount(account);
+
+                    var mainForm = new MainForm(UserSession.CurrentAppRole);
                     mainForm.StartPosition = FormStartPosition.CenterScreen;
                     mainForm.Show();
 

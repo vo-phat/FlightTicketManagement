@@ -13,8 +13,6 @@ CREATE TABLE accounts (
     is_active               BOOLEAN NOT NULL DEFAULT TRUE,
     created_at              DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-INSERT INTO accounts (email, password, failed_attempts, is_active, created_at)
-VALUES ('admin','8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918',5,1,NOW());
 
 -- 2. Vai trò
 CREATE TABLE roles (

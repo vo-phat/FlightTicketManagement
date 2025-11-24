@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using MySqlConnector;
-using DTO.Auth;
+using DTO.Account;
 using DAO.Database;
 
-namespace DAO.Account {
+namespace DAO.Repositories {
     public class AccountDao : BaseDAO {
         private const string TABLE = "accounts";
 

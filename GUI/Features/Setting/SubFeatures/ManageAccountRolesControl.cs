@@ -6,9 +6,12 @@ using System.Windows.Forms;
 using GUI.Components.Buttons;
 using GUI.Components.Inputs;
 using GUI.Components.Tables;
+using BUS.Auth;
+using DTO.Permissions;
 
 namespace GUI.Features.Setting.SubFeatures {
     internal class ManageAccountRolesControl : UserControl {
+        private readonly RolePermissionService _service = new RolePermissionService();
         private TableCustom table;
 
         private const string ACTION_COL = "Action";
@@ -20,7 +23,7 @@ namespace GUI.Features.Setting.SubFeatures {
         private TableLayoutPanel root, filterWrap;
         private FlowLayoutPanel filterLeft, filterRight;
         private Label lblTitle;
-        private UnderlinedTextField txtEmail, txtFullName;
+        private UnderlinedTextField txtEmail;
         private UnderlinedComboBox cbRole;
 
         private List<UserItem> _allUsers = new();
@@ -56,10 +59,6 @@ namespace GUI.Features.Setting.SubFeatures {
                 Width = 260,
                 Margin = new Padding(0, 0, 24, 0)
             };
-            txtFullName = new UnderlinedTextField("Họ tên", "") {
-                Width = 260,
-                Margin = new Padding(0, 0, 24, 0)
-            };
 
             cbRole = new UnderlinedComboBox("Vai trò", new object[] { "(Tất cả)" }) {
                 MinimumSize = new Size(0, 72),
@@ -67,7 +66,7 @@ namespace GUI.Features.Setting.SubFeatures {
                 Margin = new Padding(0, 6, 24, 6)
             };
 
-            filterLeft.Controls.AddRange(new Control[] { txtEmail, txtFullName, cbRole });
+            filterLeft.Controls.AddRange(new Control[] { txtEmail, cbRole });
 
             filterRight = new FlowLayoutPanel {
                 Dock = DockStyle.Fill,
@@ -113,7 +112,6 @@ namespace GUI.Features.Setting.SubFeatures {
             };
 
             table.Columns.Add("email", "Email");
-            table.Columns.Add("fullName", "Họ tên");
             table.Columns.Add("roles", "Vai trò");
 
             var colAction = new DataGridViewTextBoxColumn {
@@ -128,6 +126,23 @@ namespace GUI.Features.Setting.SubFeatures {
                 Visible = false
             };
             table.Columns.Add(colHiddenId);
+            var colIsActive = new DataGridViewTextBoxColumn {
+                Name = "isActiveHidden",
+                Visible = false
+            };
+            table.Columns.Add(colIsActive);
+
+            var colFailedAttempts = new DataGridViewTextBoxColumn {
+                Name = "failedAttemptsHidden",
+                Visible = false
+            };
+            table.Columns.Add(colFailedAttempts);
+
+            var colCreatedAt = new DataGridViewTextBoxColumn {
+                Name = "createdAtHidden",
+                Visible = false
+            };
+            table.Columns.Add(colCreatedAt);
 
             table.CellPainting += Table_CellPainting;
             table.CellMouseMove += Table_CellMouseMove;
@@ -161,8 +176,8 @@ namespace GUI.Features.Setting.SubFeatures {
         // Data
         // =======================================================================
         private void ReloadAll() {
-            _allUsers = PermissionRepository.GetAllUsers();
-            _allRoles = PermissionRepository.GetAllRoles();
+            _allUsers = _service.GetAllUsers();
+            _allRoles = _service.GetAllRoles();
 
             cbRole.Items.Clear();
             cbRole.Items.Add("(Tất cả)");
@@ -177,11 +192,10 @@ namespace GUI.Features.Setting.SubFeatures {
             table.Rows.Clear();
 
             var emailFilter = txtEmail.Text?.Trim().ToLower();
-            var nameFilter = txtFullName.Text?.Trim().ToLower();
             RoleItem? selectedRole = cbRole.SelectedItem as RoleItem;
 
             foreach (var u in _allUsers) {
-                var rolesOfAccount = PermissionRepository.GetRoleIdsOfAccount(u.AccountId);
+                var rolesOfAccount = _service.GetRoleIdsOfAccount(u.AccountId);
                 var roleNames = _allRoles
                     .Where(r => rolesOfAccount.Contains(r.RoleId))
                     .Select(r => r.Name)
@@ -192,14 +206,11 @@ namespace GUI.Features.Setting.SubFeatures {
                 if (!string.IsNullOrWhiteSpace(emailFilter) &&
                     !u.Email.ToLower().Contains(emailFilter)) continue;
 
-                if (!string.IsNullOrWhiteSpace(nameFilter) &&
-                    !u.FullName.ToLower().Contains(nameFilter)) continue;
-
                 if (selectedRole != null && !(selectedRole is string)) {
                     if (!rolesOfAccount.Contains(selectedRole.RoleId)) continue;
                 }
 
-                table.Rows.Add(u.Email, u.FullName, roleText, null, u.AccountId);
+                table.Rows.Add(u.Email, roleText, null, u.AccountId, u.IsActive, u.FailedAttempts, u.CreatedAt);
             }
         }
 
@@ -212,7 +223,7 @@ namespace GUI.Features.Setting.SubFeatures {
 
             // TODO: Gắn với DB/service thật
             // Hiện tại chỉ demo: bạn tự cài đặt lưu DB trong PermissionRepository
-            MessageBox.Show($"(Demo) Đã nhập tài khoản:\n{f.Email} - {f.FullName}",
+            MessageBox.Show($"(Demo) Đã nhập tài khoản:\n{f.Email}",
                 "Thêm tài khoản", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             ReloadAll();
@@ -285,11 +296,14 @@ namespace GUI.Features.Setting.SubFeatures {
             var row = table.Rows[e.RowIndex];
             int accountId = Convert.ToInt32(row.Cells["accountIdHidden"].Value);
             string email = row.Cells["email"].Value?.ToString() ?? "(n/a)";
-            string fullName = row.Cells["fullName"].Value?.ToString() ?? "(n/a)";
             string roles = row.Cells["roles"].Value?.ToString() ?? "(n/a)";
 
             if (r.rcView.Contains(p)) {
-                using var frm = new AccountDetailForm(email, fullName, roles);
+                bool isActive = Convert.ToBoolean(row.Cells["isActiveHidden"].Value);
+                int failedAttempts = Convert.ToInt32(row.Cells["failedAttemptsHidden"].Value);
+                DateTime createdAt = Convert.ToDateTime(row.Cells["createdAtHidden"].Value);
+
+                using var frm = new AccountDetailForm(email, roles, isActive, failedAttempts, createdAt);
                 frm.StartPosition = FormStartPosition.CenterParent;
                 frm.ShowDialog(FindForm());
             } else if (r.rcEdit.Contains(p)) {

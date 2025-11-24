@@ -1,4 +1,5 @@
-﻿using GUI.Components.Buttons;
+﻿using BUS.Auth;
+using GUI.Components.Buttons;
 using GUI.Features.Auth;
 using GUI.Features.Profile.SubFeatures;
 using System;
@@ -14,7 +15,7 @@ namespace GUI.Features.Profile {
         private ProfileInfoControl infoControl;
         private ChangePasswordControl changePwdControl;
 
-        private readonly int _accountId;
+        private readonly int _accountId = UserSession.CurrentAccountId;
 
         public MyProfileControl(int accountId) {
             _accountId = accountId;
@@ -116,8 +117,10 @@ namespace GUI.Features.Profile {
                 var current = FindForm();
                 try {
                     var login = new LoginForm();
+                    UserSession.Logout();
                     login.Show();
                 } catch {
+
                 }
                 current?.Hide();
             }

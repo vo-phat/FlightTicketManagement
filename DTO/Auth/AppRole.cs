@@ -4,8 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DTO.Permission {
-    public class PermissonDTO {
-
+namespace DTO.Auth {
+    public enum AppRole {
+        User,
+        Staff,
+        Admin
     }
 }

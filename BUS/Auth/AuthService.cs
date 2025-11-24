@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using DTO.Auth;
-using DAO.Account;
+using DTO.Account;
+using DAO.Repositories;
 using BUS.Security;
 using BUS.Services;
+using BUS.Validation;
 
 namespace BUS.Auth {
     public class AuthService {
@@ -15,59 +16,55 @@ namespace BUS.Auth {
 
         // Đăng nhập, trả về AccountDto nếu thành công, ngược lại ném Exception
         public AccountDto Login(string email, string password) {
-            if (string.IsNullOrWhiteSpace(email))
-                throw new ArgumentException("Tài khoản không được để trống.");
+            AccountValidator.ValidateEmail(email);
 
-            if (string.IsNullOrWhiteSpace(password))
-                throw new ArgumentException("Mật khẩu không được để trống.");
+            bool isRawAdmin = string.Equals(email.Trim(), "admin", StringComparison.OrdinalIgnoreCase);
+            if (!isRawAdmin) {
+                AccountValidator.ValidatePassword(password);
+            } else {
+                if (string.IsNullOrWhiteSpace(password))
+                    throw new ArgumentException("Mật khẩu không được để trống.");
+            }
 
             var account = _accountDao.GetByEmail(email);
+
             if (account == null)
                 throw new Exception("Tài khoản không tồn tại.");
 
             bool isAdminAccount = string.Equals(account.Email, "admin", StringComparison.OrdinalIgnoreCase);
 
-            // Nếu không phải admin thì kiểm tra khóa
-            if (!isAdminAccount && !account.IsActive) {
+            if (!isAdminAccount && !account.IsActive)
                 throw new Exception("Tài khoản bạn đã bị khóa. Vui lòng liên hệ quản trị viên!!!");
-            }
 
-            // Nếu mật khẩu sai
             if (!PasswordHasher.Verify(password, account.Password)) {
-
-                // Admin: chỉ báo sai mật khẩu, không trừ lượt / không khóa
                 if (isAdminAccount) {
                     throw new Exception("Mật khẩu không chính xác.");
                 }
 
-                // Tài khoản thường: trừ lượt
                 int remaining = account.FailedAttempts;
 
                 if (remaining <= 1) {
-                    // Lần này sai nữa là hết lượt -> khóa
-                    _accountDao.DecreaseFailedAttempts(account.AccountId); // về 0
+                    _accountDao.DecreaseFailedAttempts(account.AccountId);
                     _accountDao.LockAccount(account.AccountId);
-
                     throw new Exception("Tài khoản bạn đã bị khóa. Vui lòng liên hệ quản trị viên!!!");
                 } else {
-                    // Trừ 1 và báo còn bao nhiêu
                     _accountDao.DecreaseFailedAttempts(account.AccountId);
-                    remaining = remaining - 1;
-
+                    remaining--;
                     throw new Exception($"Mật khẩu không chính xác. Bạn còn {remaining} lần thử trước khi tài khoản bị khóa.");
                 }
             }
 
-            // Đúng mật khẩu
-            if (!isAdminAccount) {
+            if (!isAdminAccount)
                 _accountDao.ResetFailedAttemptsToDefault(account.AccountId);
-            }
 
             return account;
         }
 
         // Đăng ký
         public AccountDto Register(string email, string password) {
+            AccountValidator.ValidateEmail(email);
+            AccountValidator.ValidatePassword(password);
+
             if (_accountDao.ExistsByEmail(email))
                 throw new Exception("Tài khoản đã tồn tại.");
 
@@ -87,6 +84,8 @@ namespace BUS.Auth {
 
         // Gửi mã OTP reset password
         public void SendResetPasswordCode(string email) {
+            AccountValidator.ValidateEmail(email);
+
             var account = _accountDao.GetByEmail(email);
             if (account == null)
                 throw new Exception("Tài khoản không tồn tại.");
@@ -105,6 +104,9 @@ namespace BUS.Auth {
 
         // Xác nhận OTP và đổi mật khẩu
         public void ResetPassword(string email, string otpCode, string newPassword, string confirmPassword) {
+            AccountValidator.ValidateEmail(email);
+            AccountValidator.ValidatePassword(newPassword);
+
             if (!_otpStore.TryGetValue(email, out var otpInfo))
                 throw new Exception("Bạn chưa yêu cầu mã xác thực hoặc mã đã hết hạn.");
 
