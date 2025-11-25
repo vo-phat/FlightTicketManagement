@@ -86,11 +86,14 @@ namespace GUI.Features.Seat.SubFeatures
 
             table.Columns.Clear();
             table.Columns.Add(new DataGridViewTextBoxColumn { Name = "flightSeatIdHidden", Visible = false });
-            table.Columns.Add("seatId", "Tên máy bay");
+            table.Columns.Add(new DataGridViewTextBoxColumn { Name = "flightIdHidden", Visible = false });
+            table.Columns.Add(new DataGridViewTextBoxColumn { Name = "aircraftIdHidden", Visible = false });
+            table.Columns.Add(new DataGridViewTextBoxColumn { Name = "seatIdHidden", Visible = false });
+            table.Columns.Add(new DataGridViewTextBoxColumn { Name = "classIdHidden", Visible = false });
+            table.Columns.Add("aircraftName", "Tên máy bay");
             table.Columns.Add("seatNumber", "Số ghế");
             table.Columns.Add("className", "Hạng ghế");
-            table.Columns.Add("basePrice", "Giá cơ bản (₫)");// ✨ THÊM CỘT NÀY
-            
+            table.Columns.Add("basePrice", "Giá cơ bản (₫)");
             table.Columns.Add(STATUS_COL, "Trạng thái");
 
             var colAction = new DataGridViewTextBoxColumn
@@ -138,14 +141,27 @@ namespace GUI.Features.Seat.SubFeatures
 
         private void ApplyFilter()
         {
+            if (string.IsNullOrWhiteSpace(txtFlightId.Text))
+            {
+                LoadData();
+                return;
+            }
+
             if (!int.TryParse(txtFlightId.Text.Trim(), out int flightId))
             {
                 MessageBox.Show("Vui lòng nhập ID chuyến bay hợp lệ!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            var list = _bus.GetSeatsByFlight(flightId);
-            FillTable(list);
+            try
+            {
+                var filtered = datasource.Where(x => x.FlightId == flightId).ToList();
+                FillTable(filtered);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi lọc dữ liệu:\n" + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void FillTable(IEnumerable<FlightSeatDTO> data)
@@ -154,8 +170,12 @@ namespace GUI.Features.Seat.SubFeatures
             foreach (var x in data)
                 table.Rows.Add(
                     x.FlightSeatId,
+                    x.FlightId,
+                    x.AircraftId,
+                    x.SeatId,
+                    x.ClassId,
                     x.AircraftName,
-                    x.SeatNumber, // ✨ THÊM DỮ LIỆU NÀY
+                    x.SeatNumber,
                     x.ClassName,
                     x.BasePrice,
                     x.SeatStatus,
@@ -202,6 +222,7 @@ namespace GUI.Features.Seat.SubFeatures
                 {
                     "AVAILABLE" => (Color.FromArgb(220, 248, 225), Color.FromArgb(26, 115, 52)),
                     "BOOKED" => (Color.FromArgb(227, 230, 233), Color.FromArgb(66, 66, 66)),
+                    "BLOCKED" => (Color.FromArgb(255, 230, 230), Color.FromArgb(179, 38, 30)),
                     _ => (Color.FromArgb(255, 230, 230), Color.FromArgb(179, 38, 30))
                 };
                 var r = new Rectangle(e.CellBounds.Left + 8, e.CellBounds.Top + 6, e.CellBounds.Width - 16, e.CellBounds.Height - 12);
@@ -268,9 +289,163 @@ namespace GUI.Features.Seat.SubFeatures
 
             if (r.rcView.Contains(p))
             {
-                MessageBox.Show(
-                    $"FlightSeatID: {selected.FlightSeatId}\nSeatID: {selected.SeatId}\nGiá: {selected.BasePrice:#,0}₫\nTrạng thái: {selected.SeatStatus}",
-                    "Chi tiết ghế", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                HandleView(selected);
+            }
+            else if (r.rcEdit.Contains(p))
+            {
+                HandleEdit(selected);
+            }
+            else if (r.rcBlock.Contains(p))
+            {
+                HandleBlock(selected);
+            }
+        }
+
+        // --------------------------- ACTIONS ---------------------------
+        private void HandleView(FlightSeatDTO selected)
+        {
+            MessageBox.Show(
+                $"🎫 Thông tin chi tiết ghế\n\n" +
+                $"━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+                $"FlightSeat ID: {selected.FlightSeatId}\n" +
+                $"Chuyến bay: {selected.FlightName}\n" +
+                $"Máy bay: {selected.AircraftName}\n" +
+                $"Số ghế: {selected.SeatNumber}\n" +
+                $"Hạng ghế: {selected.ClassName}\n" +
+                $"Giá cơ bản: {selected.BasePrice:#,0}₫\n" +
+                $"Trạng thái: {selected.SeatStatus}\n" +
+                $"━━━━━━━━━━━━━━━━━━━━━━━━",
+                "Chi tiết ghế",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information
+            );
+        }
+
+        private void HandleEdit(FlightSeatDTO selected)
+        {
+            try
+            {
+                // Mở form sửa với đầy đủ thông tin cần thiết
+                var editForm = new EditFlightSeatForm(
+                    selected.FlightSeatId,
+                    selected.AircraftId,  // ✅ Sửa: Truyền AircraftId thay vì FlightId
+                    selected.SeatId,
+                    selected.ClassId,
+                    selected.BasePrice
+                );
+
+                if (editForm.ShowDialog() == DialogResult.OK)
+                {
+                    // ⚠️ QUAN TRỌNG: EditFlightSeatForm trả về AircraftId (không phải FlightId)
+                    // Nhưng để cập nhật flight_seats, ta cần giữ nguyên FlightId hiện tại
+                    var updatedDto = new FlightSeatDTO(
+                        selected.FlightSeatId,
+                        selected.FlightId,        // ✅ Giữ nguyên FlightId cũ
+                        editForm.SelectedSeatId,  // ✅ SeatId mới từ form
+                        editForm.NewPrice,        // ✅ Giá mới
+                        selected.SeatStatus       // ✅ Giữ nguyên trạng thái
+                    );
+
+                    // Gọi BUS để cập nhật
+                    bool success = _bus.UpdateFlightSeat(updatedDto, out string message);
+
+                    if (success)
+                    {
+                        MessageBox.Show("✅ " + message, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        LoadData(); // Reload toàn bộ dữ liệu
+                    }
+                    else
+                    {
+                        MessageBox.Show("❌ " + message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi sửa thông tin ghế:\n{ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void HandleBlock(FlightSeatDTO selected)
+        {
+            try
+            {
+                string currentStatus = selected.SeatStatus?.ToUpper() ?? "";
+
+                // ✅ Kiểm tra trạng thái - CHỈ cho phép chặn ghế AVAILABLE
+                if (currentStatus == "BLOCKED")
+                {
+                    MessageBox.Show(
+                        $"⛔ Ghế {selected.SeatNumber} đã bị chặn rồi!\n\n" +
+                        "Không thể chặn ghế đã bị chặn.",
+                        "Không thể chặn",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                    return;
+                }
+
+                if (currentStatus == "BOOKED")
+                {
+                    MessageBox.Show(
+                        $"⛔ Ghế {selected.SeatNumber} đã được đặt!\n\n" +
+                        "Không thể chặn ghế đã có người đặt.",
+                        "Không thể chặn",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                    return;
+                }
+
+                // ✅ Chỉ cho phép chặn ghế AVAILABLE
+                if (currentStatus != "AVAILABLE")
+                {
+                    MessageBox.Show(
+                        $"⚠️ Chỉ có thể chặn ghế đang ở trạng thái AVAILABLE.\n\n" +
+                        $"Trạng thái hiện tại: {currentStatus}",
+                        "Không thể chặn",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                    return;
+                }
+
+                // Xác nhận chặn
+                var result = MessageBox.Show(
+                    $"🔒 Bạn có chắc chắn muốn CHẶN ghế {selected.SeatNumber}?\n\n" +
+                    $"Máy bay: {selected.AircraftName}\n" +
+                    $"Hạng: {selected.ClassName}\n" +
+                    $"Giá: {selected.BasePrice:#,0}₫\n\n" +
+                    "Ghế bị chặn sẽ không thể đặt được!",
+                    "Xác nhận Chặn Ghế",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question
+                );
+
+                if (result != DialogResult.Yes) return;
+
+                // Gọi BUS để cập nhật trạng thái sang BLOCKED
+                bool success = _bus.UpdateSeatStatus(selected.FlightSeatId, "BLOCKED", out string message);
+
+                if (success)
+                {
+                    MessageBox.Show(
+                        $"✅ Đã CHẶN ghế {selected.SeatNumber} thành công!\n\n" +
+                        "Ghế này sẽ không thể đặt được nữa.",
+                        "Chặn Thành Công",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                    );
+                    LoadData(); // Reload toàn bộ dữ liệu
+                }
+                else
+                {
+                    MessageBox.Show($"❌ {message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi chặn ghế:\n{ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

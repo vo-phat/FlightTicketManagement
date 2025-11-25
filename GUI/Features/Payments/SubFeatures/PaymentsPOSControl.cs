@@ -145,7 +145,7 @@ namespace GUI.Features.Payments.SubFeatures
 
             btnShowPending = new PrimaryButton
             {
-                Text = "⏳ Booking Pending",
+                Text = "⏳ Hóa đơn cần thanh toán",
                 Width = 150,
                 Height = 40,
                 Margin = new Padding(5, 0, 5, 0)
@@ -463,7 +463,7 @@ namespace GUI.Features.Payments.SubFeatures
         {
             if (table.SelectedRows.Count == 0)
             {
-                MessageBox.Show("Vui lòng chọn một payment để xóa!", "Thông báo",
+                MessageBox.Show("Vui lòng chọn một hóa đơn để xóa!", "Thông báo",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
@@ -473,13 +473,13 @@ namespace GUI.Features.Payments.SubFeatures
 
             if (payment == null)
             {
-                MessageBox.Show("Không thể lấy thông tin payment!", "Lỗi",
+                MessageBox.Show("Không thể lấy thông tin hóa đơn!", "Lỗi",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             // Xác nhận xóa
-            var confirmMsg = $"XÁC NHẬN XÓA PAYMENT\n\n" +
+            var confirmMsg = $"XÁC NHẬN XÓA HÓA ĐƠN\n\n" +
                            $"Payment ID: {payment.PaymentId}\n" +
                            $"Booking ID: {payment.BookingId}\n" +
                            $"Số tiền: {payment.Amount:N0} ₫\n\n" +
@@ -513,7 +513,7 @@ namespace GUI.Features.Payments.SubFeatures
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi khi xóa payment: {ex.Message}", "Lỗi",
+                MessageBox.Show($"Lỗi khi xóa hóa đơn: {ex.Message}", "Lỗi",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -678,13 +678,13 @@ namespace GUI.Features.Payments.SubFeatures
                           $"Tổng tiền booking: {payment.BookingTotalAmount:N0} ₫\n" +
                           $"Chênh lệch: {payment.GetAmountDifference():N0} ₫";
 
-            MessageBox.Show(detailMsg, "Chi tiết Payment",
+            MessageBox.Show(detailMsg, "Chi tiết hóa đơn",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void DeletePaymentFromAction(PaymentDetailDTO payment)
         {
-            var confirmMsg = $"Xóa payment #{payment.PaymentId}?";
+            var confirmMsg = $"Xóa Hóa Đơn #{payment.PaymentId}?";
 
             if (MessageBox.Show(confirmMsg, "Xác nhận xóa",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
