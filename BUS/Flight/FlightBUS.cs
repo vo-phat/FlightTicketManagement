@@ -3,6 +3,7 @@ using DAO.Flight;
 using DTO.Flight;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 
 namespace BUS.Flight
@@ -15,7 +16,7 @@ namespace BUS.Flight
     {
         #region Singleton Pattern
 
-        private static FlightBUS _instance;
+        private static FlightBUS? _instance = null;
         private static readonly object _lock = new object();
 
         private FlightBUS() { }
@@ -111,7 +112,7 @@ namespace BUS.Flight
                 }
 
                 // 3. Kiểm tra trùng số hiệu chuyến bay
-                if (FlightDAO.Instance.IsFlightNumberExists(
+                if (flight.DepartureTime.HasValue && FlightDAO.Instance.IsFlightNumberExists(
                     flight.FlightNumber,
                     flight.DepartureTime.Value))
                 {
@@ -181,7 +182,7 @@ namespace BUS.Flight
                 }
 
                 // 6. Kiểm tra trùng số hiệu (loại trừ chính nó)
-                if (FlightDAO.Instance.IsFlightNumberExists(
+                if (flight.DepartureTime.HasValue && FlightDAO.Instance.IsFlightNumberExists(
                     flight.FlightNumber,
                     flight.DepartureTime.Value,
                     flight.FlightId))
@@ -328,7 +329,8 @@ namespace BUS.Flight
             int? departureAirportId,
             int? arrivalAirportId,
             DateTime? departureDate,
-            int? cabinClassId)
+            int? cabinClassId,
+            string? status = null)
         {
             try
             {
@@ -343,15 +345,16 @@ namespace BUS.Flight
                     return BusinessResult.FailureResult("Vui lòng chọn nơi cất cánh trước khi chọn nơi hạ cánh");
 
                 // 2. Call DAO (truyền thêm flightNumber và departureDate nullable)
-                var flights = FlightDAO.Instance.SearchFlightsForDisplay(
+                DataTable result = FlightDAO.Instance.SearchFlightsForDisplay(
                     flightNumber,
                     departureAirportId,
                     arrivalAirportId,
                     departureDate,
-                    cabinClassId
+                    cabinClassId,
+                    status
                 );
 
-                return BusinessResult.SuccessResult($"Tìm thấy {flights.Rows.Count} chuyến bay", flights);
+                return BusinessResult.SuccessResult($"Tìm thấy {result.Rows.Count} chuyến bay", result);
             }
             catch (Exception ex)
             {

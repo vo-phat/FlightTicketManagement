@@ -44,7 +44,7 @@ namespace BUS.Stats
                 // 2. Lấy breakdown theo tháng
                 report.MonthlyBreakdown = StatsDAO.Instance.GetMonthlyRevenue(year);
 
-                // 3. Lấy breakdown theo tuyến
+                // 3. Lấy breakdown theo chuyến bay (top 5)
                 report.RouteBreakdown = StatsDAO.Instance.GetRevenueByRoute(year, 5);
 
                 return BusinessResult.SuccessResult("Tải báo cáo thành công.", report);

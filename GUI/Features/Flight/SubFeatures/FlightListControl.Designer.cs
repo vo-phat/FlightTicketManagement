@@ -34,6 +34,7 @@
             khuHoi_MotChieu = new GUI.Components.Inputs.UnderlinedComboBox();
             passengerSelectorControl1 = new GUI.Components.Inputs.PassengerSelectorControl();
             cbHangVe = new GUI.Components.Inputs.UnderlinedComboBox();
+            cbTrangThai = new GUI.Components.Inputs.UnderlinedComboBox();
             textFieldMaChuyenBay = new GUI.Components.Inputs.UnderlinedTextField();
             checkBoxTimKiemMaChuyenBay = new CheckBox();
             ((System.ComponentModel.ISupportInitialize)danhSachChuyenBay).BeginInit();
@@ -298,6 +299,23 @@
             cbHangVe.TabIndex = 9;
             cbHangVe.ValueMember = "";
             // 
+            // cbTrangThai
+            // 
+            cbTrangThai.BackColor = Color.Transparent;
+            cbTrangThai.DataSource = null;
+            cbTrangThai.DisplayMember = "";
+            cbTrangThai.LabelText = "Trạng thái";
+            cbTrangThai.Location = new Point(746, 90);
+            cbTrangThai.MinimumSize = new Size(140, 56);
+            cbTrangThai.Name = "cbTrangThai";
+            cbTrangThai.SelectedIndex = -1;
+            cbTrangThai.SelectedItem = null;
+            cbTrangThai.SelectedText = "";
+            cbTrangThai.SelectedValue = null;
+            cbTrangThai.Size = new Size(250, 56);
+            cbTrangThai.TabIndex = 11;
+            cbTrangThai.ValueMember = "";
+            // 
             // textFieldMaChuyenBay
             // 
             textFieldMaChuyenBay.BackColor = Color.Transparent;
@@ -343,6 +361,7 @@
             BackColor = Color.FromArgb(232, 240, 252);
             Controls.Add(checkBoxTimKiemMaChuyenBay);
             Controls.Add(textFieldMaChuyenBay);
+            Controls.Add(cbTrangThai);
             Controls.Add(cbHangVe);
             Controls.Add(khuHoi_MotChieu);
             Controls.Add(noiHaCanh);
@@ -378,6 +397,7 @@
         private DataGridViewTextBoxColumn Column6;
         private DataGridViewTextBoxColumn Column8;
         private Components.Inputs.UnderlinedComboBox cbHangVe;
+        private Components.Inputs.UnderlinedComboBox cbTrangThai;
         private Components.Inputs.UnderlinedTextField textFieldMaChuyenBay;
         private CheckBox checkBoxTimKiemMaChuyenBay;
     }

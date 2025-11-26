@@ -13,7 +13,9 @@ namespace GUI.Features.Flight.SubFeatures
     public partial class FlightDetailControl : UserControl
     {
         public event Action OnBackToListRequested;
+        public event Action<int> OnEditRequested;
 
+        private int _currentFlightId;
         private Label lblTitle;
         private Label vFlightNumber, vRoute, vAircraft, vDeparture, vArrival, vStatus, vSeats;
         private Button btnBack;
@@ -60,6 +62,11 @@ namespace GUI.Features.Flight.SubFeatures
             btnBack = new SecondaryButton("⬅️ Quay lại danh sách");
             btnBack.Click += (s, e) => OnBackToListRequested?.Invoke();
             buttonPanel.Controls.Add(btnBack);
+            
+            var btnEdit = new PrimaryButton("✏️ Chỉnh sửa") { Margin = new Padding(8, 0, 0, 0) };
+            btnEdit.Click += (s, e) => OnEditRequested?.Invoke(_currentFlightId);
+            buttonPanel.Controls.Add(btnEdit);
+            
             mainLayout.Controls.Add(buttonPanel, 0, 1);
 
             var card = new Panel
@@ -97,6 +104,8 @@ namespace GUI.Features.Flight.SubFeatures
 
         public void LoadFlightDetails(int flightId)
         {
+            _currentFlightId = flightId;
+            
             // Reset dữ liệu cũ
             vFlightNumber.Text = vRoute.Text = vAircraft.Text = vDeparture.Text = vArrival.Text = vStatus.Text = vSeats.Text = "(Đang tải...)";
 

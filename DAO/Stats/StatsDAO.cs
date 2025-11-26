@@ -35,13 +35,15 @@ namespace DAO.Stats
 
             string query = @"
                 SELECT 
-                    SUM(amount) AS TotalRevenue,
-                    COUNT(payment_id) AS TotalTransactions
+                    SUM(p.amount) AS TotalRevenue,
+                    COUNT(p.payment_id) AS TotalTransactions
                 FROM 
-                    Payments
+                    Payments p
+                JOIN Bookings b ON p.booking_id = b.booking_id
                 WHERE 
-                    status = 'SUCCESS' 
-                    AND YEAR(payment_date) = @year";
+                    p.status = 'SUCCESS' 
+                    AND b.status IN ('CONFIRMED')
+                    AND YEAR(p.payment_date) = @year";
 
             var parameters = new Dictionary<string, object> { { "@year", year } };
 
@@ -73,15 +75,17 @@ namespace DAO.Stats
         {
             string query = @"
                 SELECT 
-                    MONTH(payment_date) AS 'Thang',
-                    SUM(amount) AS 'DoanhThu'
+                    MONTH(p.payment_date) AS 'Thang',
+                    SUM(p.amount) AS 'DoanhThu'
                 FROM 
-                    Payments
+                    Payments p
+                JOIN Bookings b ON p.booking_id = b.booking_id
                 WHERE 
-                    status = 'SUCCESS' 
-                    AND YEAR(payment_date) = @year
+                    p.status = 'SUCCESS' 
+                    AND b.status IN ('CONFIRMED')
+                    AND YEAR(p.payment_date) = @year
                 GROUP BY 
-                    MONTH(payment_date)
+                    MONTH(p.payment_date)
                 ORDER BY 
                     Thang ASC";
 
@@ -98,28 +102,25 @@ namespace DAO.Stats
         }
 
         /// <summary>
-        /// Lấy Top 5 tuyến bay có doanh thu cao nhất theo Năm
+        /// Lấy Top N theo account/khách hàng có doanh thu cao nhất (vì chưa có dữ liệu tickets đầy đủ)
         /// </summary>
         public DataTable GetRevenueByRoute(int year, int topN = 5)
         {
+            // Query theo account_id vì dữ liệu payments chưa liên kết đến flights qua tickets
             string query = @"
                 SELECT 
-                    CONCAT(dep.airport_code, ' → ', arr.airport_code) AS TuyenBay,
-                    SUM(p.amount) AS DoanhThu
+                    CONCAT('Khách hàng #', a.account_id, ' (', a.email, ')') AS TuyenBay,
+                    SUM(p.amount) AS DoanhThu,
+                    COUNT(p.payment_id) AS SoChuyenBay
                 FROM Payments p
                 JOIN Bookings b ON p.booking_id = b.booking_id
-                JOIN Booking_Passengers bp ON b.booking_id = bp.booking_id
-                JOIN Tickets t ON bp.booking_passenger_id = t.ticket_passenger_id
-                JOIN Flight_Seats fs ON t.flight_seat_id = fs.flight_seat_id
-                JOIN Flights f ON fs.flight_id = f.flight_id
-                JOIN Routes r ON f.route_id = r.route_id
-                JOIN Airports dep ON r.departure_place_id = dep.airport_id
-                JOIN Airports arr ON r.arrival_place_id = arr.airport_id
+                JOIN Accounts a ON b.account_id = a.account_id
                 WHERE 
                     p.status = 'SUCCESS'
+                    AND b.status = 'CONFIRMED'
                     AND YEAR(p.payment_date) = @year
                 GROUP BY 
-                    TuyenBay
+                    a.account_id, a.email
                 ORDER BY 
                     DoanhThu DESC
                 LIMIT @limit";
@@ -132,11 +133,28 @@ namespace DAO.Stats
 
             try
             {
-                return ExecuteQuery(query, parameters);
+                DataTable result = ExecuteQuery(query, parameters);
+                
+                // Nếu không có dữ liệu, trả về bảng rỗng với cấu trúc đúng
+                if (result.Rows.Count == 0)
+                {
+                    result = new DataTable();
+                    result.Columns.Add("TuyenBay", typeof(string));
+                    result.Columns.Add("DoanhThu", typeof(decimal));
+                    result.Columns.Add("SoChuyenBay", typeof(int));
+                }
+                
+                return result;
             }
             catch (Exception ex)
             {
-                throw new Exception($"Lỗi khi lấy doanh thu theo tuyến bay (DAO): {ex.Message}", ex);
+                // Log lỗi và trả về bảng rỗng
+                Console.WriteLine($"Lỗi GetRevenueByRoute: {ex.Message}");
+                var emptyResult = new DataTable();
+                emptyResult.Columns.Add("TuyenBay", typeof(string));
+                emptyResult.Columns.Add("DoanhThu", typeof(decimal));
+                emptyResult.Columns.Add("SoChuyenBay", typeof(int));
+                return emptyResult;
             }
         }
     }

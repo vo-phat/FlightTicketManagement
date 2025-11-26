@@ -38,7 +38,8 @@ namespace GUI.Features.Flight.SubFeatures
                     null,       // departureAirportId
                     null,       // arrivalAirportId
                     startDate,  // departureDate
-                    null        // cabinClassId
+                    null,       // cabinClassId
+                    null        // status
                 );
 
                 if (result.Success)
@@ -89,6 +90,8 @@ namespace GUI.Features.Flight.SubFeatures
             {
                 textFieldMaChuyenBay.Visible = false;
                 checkBoxTimKiemMaChuyenBay.Visible = false;
+                checkBoxTimKiemMaChuyenBay.Checked = false;
+                checkBoxTimKiemMaChuyenBay.Enabled = false;
             }
 
             LoadFlightData();
@@ -127,13 +130,21 @@ namespace GUI.Features.Flight.SubFeatures
                 // Ngược lại, lấy ngày đã chọn
                 DateTime? depDate = allTime ? (DateTime?)null : dateTimeNgayDi.Value;
 
+                // 5b. Lấy trạng thái (nếu có)
+                string? statusFilter = null;
+                if (cbTrangThai.SelectedValue != null && cbTrangThai.SelectedValue != DBNull.Value)
+                {
+                    statusFilter = cbTrangThai.SelectedValue.ToString();
+                }
+
                 // 6. Gọi BUS (với các tham số đã cập nhật)
                 var result = FlightBUS.Instance.SearchFlightsForDisplay(
                     flightNumber,
                     depId,
                     arrId,
                     depDate,
-                    cabinClassId
+                    cabinClassId,
+                    statusFilter
                 );
 
                 if (result.Success)
@@ -173,6 +184,21 @@ namespace GUI.Features.Flight.SubFeatures
                 cbHangVe.DisplayMember = "class_name";
                 cbHangVe.ValueMember = "class_id";
                 cbHangVe.SelectedValue = 1;
+
+                // 1b. Tải Trạng thái chuyến bay (Status)
+                DataTable dtStatus = new DataTable();
+                dtStatus.Columns.Add("status_value", typeof(string));
+                dtStatus.Columns.Add("status_display", typeof(string));
+                dtStatus.Rows.Add(DBNull.Value, "Tất cả trạng thái");
+                dtStatus.Rows.Add("SCHEDULED", "Đã lên lịch");
+                dtStatus.Rows.Add("DELAYED", "Bị hoãn");
+                dtStatus.Rows.Add("CANCELLED", "Đã hủy");
+                dtStatus.Rows.Add("COMPLETED", "Hoàn thành");
+
+                cbTrangThai.DataSource = dtStatus;
+                cbTrangThai.DisplayMember = "status_display";
+                cbTrangThai.ValueMember = "status_value";
+                cbTrangThai.SelectedIndex = 0;
 
                 // 2. Tải danh sách Sân bay ĐI
                 _airportData = AirportDAO.Instance.GetAllAirportsForComboBox();

@@ -98,9 +98,13 @@ namespace GUI.Features.Stats
             };
             filterPanel.Controls.Add(numYear);
 
-            btnLoad = new PrimaryButton("Tải báo cáo");
+            btnLoad = new PrimaryButton("🔍 Xem báo cáo");
             btnLoad.Click += BtnLoad_Click;
             filterPanel.Controls.Add(btnLoad);
+
+            var btnExport = new PrimaryButton("📊 Xuất Excel") { Margin = new Padding(8, 0, 0, 0) };
+            btnExport.Click += BtnExport_Click;
+            filterPanel.Controls.Add(btnExport);
 
             // 4. Summary Panel (Các thẻ tóm tắt)
             summaryPanel = new FlowLayoutPanel
@@ -144,24 +148,31 @@ namespace GUI.Features.Stats
             tblMonthlyData.Columns["Revenue"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             contentSplit.Controls.Add(tblMonthlyData, 0, 0);
 
-            // 5b. Bảng Top Tuyến bay (Bên phải - chi tiết hơn)
+            // 5b. Bảng Top Khách hàng (Bên phải - chi tiết hơn)
             tblTopRoutes = new TableCustom
             {
                 Dock = DockStyle.Fill,
                 Margin = new Padding(12, 0, 0, 0),
                 ReadOnly = true,
                 AllowUserToAddRows = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
             };
 
-            tblTopRoutes.Columns.Add("Route", "Top 5 Tuyến bay (Doanh thu)");
+            tblTopRoutes.Columns.Add("Route", "Top 5 Khách hàng");
+            tblTopRoutes.Columns.Add("Flights", "Số giao dịch");
             tblTopRoutes.Columns.Add("Revenue", "Doanh thu (VND)");
 
+            tblTopRoutes.Columns["Route"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            tblTopRoutes.Columns["Route"].FillWeight = 50;
+            
+            tblTopRoutes.Columns["Flights"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            tblTopRoutes.Columns["Flights"].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            tblTopRoutes.Columns["Flights"].Width = 120;
+            
             tblTopRoutes.Columns["Revenue"].DefaultCellStyle.Format = "N0";
             tblTopRoutes.Columns["Revenue"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
             tblTopRoutes.Columns["Revenue"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-
-            tblTopRoutes.Columns["Route"].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            tblTopRoutes.Columns["Revenue"].FillWeight = 35;
 
             contentSplit.Controls.Add(tblTopRoutes, 1, 0);
         }
@@ -200,6 +211,62 @@ namespace GUI.Features.Stats
         private void BtnLoad_Click(object sender, EventArgs e)
         {
             LoadReport((int)numYear.Value);
+        }
+
+        private void BtnExport_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                // Tạo SaveFileDialog
+                using (var sfd = new SaveFileDialog())
+                {
+                    sfd.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
+                    sfd.FileName = $"BaoCaoDoanhThu_{(int)numYear.Value}.csv";
+                    sfd.Title = "Xuất báo cáo doanh thu";
+
+                    if (sfd.ShowDialog() == DialogResult.OK)
+                    {
+                        using (var writer = new System.IO.StreamWriter(sfd.FileName, false, System.Text.Encoding.UTF8))
+                        {
+                            // Header
+                            writer.WriteLine($"BÁO CÁO DOANH THU NĂM {(int)numYear.Value}");
+                            writer.WriteLine($"Ngày xuất: {DateTime.Now:dd/MM/yyyy HH:mm}");
+                            writer.WriteLine();
+                            
+                            writer.WriteLine($"Tổng doanh thu,{lblTotalRevenue.Controls[0].Text}");
+                            writer.WriteLine($"Tổng giao dịch,{lblTotalTransactions.Controls[0].Text}");
+                            writer.WriteLine();
+
+                            // Monthly data
+                            writer.WriteLine("DOANH THU THEO THÁNG");
+                            writer.WriteLine("Tháng,Doanh thu (VND)");
+                            foreach (DataGridViewRow row in tblMonthlyData.Rows)
+                            {
+                                if (row.IsNewRow) continue;
+                                writer.WriteLine($"{row.Cells[0].Value},{row.Cells[1].Value}");
+                            }
+                            writer.WriteLine();
+
+                            // Top customers
+                            writer.WriteLine("TOP 5 KHÁCH HÀNG");
+                            writer.WriteLine("Khách hàng,Số giao dịch,Doanh thu (VND)");
+                            foreach (DataGridViewRow row in tblTopRoutes.Rows)
+                            {
+                                if (row.IsNewRow) continue;
+                                writer.WriteLine($"{row.Cells[0].Value},{row.Cells[1].Value},{row.Cells[2].Value}");
+                            }
+                        }
+
+                        MessageBox.Show($"Xuất báo cáo thành công!\nFile: {sfd.FileName}", "Thành công", 
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi xuất báo cáo: {ex.Message}", "Lỗi", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void InitializeComponent()
@@ -248,11 +315,26 @@ namespace GUI.Features.Stats
                 tblMonthlyData.Rows.Add(monthName, revenue);
             }
 
-            // 3. Cập nhật Bảng Top Tuyến bay
+            // 3. Cập nhật Bảng Top Khách hàng
             tblTopRoutes.Rows.Clear();
-            foreach (DataRow row in report.RouteBreakdown.Rows)
+            
+            if (report.RouteBreakdown != null && report.RouteBreakdown.Rows.Count > 0)
             {
-                tblTopRoutes.Rows.Add(row["TuyenBay"], row["DoanhThu"]);
+                foreach (DataRow row in report.RouteBreakdown.Rows)
+                {
+                    string customer = row["TuyenBay"]?.ToString() ?? "N/A";
+                    int transactions = row.Table.Columns.Contains("SoChuyenBay") 
+                        ? Convert.ToInt32(row["SoChuyenBay"]) 
+                        : 0;
+                    decimal revenue = Convert.ToDecimal(row["DoanhThu"]);
+                    
+                    tblTopRoutes.Rows.Add(customer, transactions, revenue);
+                }
+            }
+            else
+            {
+                // Hiển thị thông báo nếu không có dữ liệu
+                tblTopRoutes.Rows.Add("Không có dữ liệu", 0, 0);
             }
         }
     }

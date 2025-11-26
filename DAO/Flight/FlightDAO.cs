@@ -382,7 +382,7 @@ namespace DAO.Flight
                     status
                 FROM Flights
                 WHERE route_id = @route_id
-                ORDER BY departue_time DESC";
+                ORDER BY departure_time DESC";
             var parameters = new Dictionary<string, object>
             {
                 {"@routeId", routeId }
@@ -619,7 +619,8 @@ namespace DAO.Flight
     int? departureAirportId,
     int? arrivalAirportId,
     DateTime? departureDate,
-    int? cabinClassId)
+    int? cabinClassId,
+    string? status = null)
         {
             var queryBuilder = new StringBuilder(@"
         SELECT 
@@ -643,8 +644,17 @@ namespace DAO.Flight
             var parameters = new Dictionary<string, object>();
             var whereClauses = new List<string>();
 
-            // Luôn chỉ lấy chuyến bay có thể đặt
-            whereClauses.Add("f.status IN ('SCHEDULED', 'DELAYED')");
+            // Filter theo Status (nếu có)
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                whereClauses.Add("f.status = @status");
+                parameters["@status"] = status;
+            }
+            else
+            {
+                // Mặc định chỉ lấy chuyến bay có thể đặt (nếu không filter status)
+                whereClauses.Add("f.status IN ('SCHEDULED', 'DELAYED')");
+            }
 
             // 1. Lọc theo Ngày đi (NẾU CÓ)
             if (departureDate.HasValue)

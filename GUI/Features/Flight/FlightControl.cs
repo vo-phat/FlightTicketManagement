@@ -33,6 +33,7 @@ namespace GUI.Features.Flight
             };
             flightListControl.OnViewFlightDetailRequested += HandleViewFlightDetail;
             flightDetailControl.OnBackToListRequested += () => SwitchTab(0);
+            flightDetailControl.OnEditRequested += HandleEditFlight;
 
             flightListControl.OnEditFlightRequested += HandleEditFlight;
 
