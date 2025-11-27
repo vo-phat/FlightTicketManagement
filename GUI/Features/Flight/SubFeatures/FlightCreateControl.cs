@@ -43,26 +43,51 @@ namespace GUI.Features.Flight.SubFeatures {
 
             // === Cột 1 ===
             inputPanel.Controls.Add(new UnderlinedTextField("Mã chuyến bay", "") { 
-                MinimumSize = new Size(0, 72), Width = 300 }, 0, 0);
+                MinimumSize = new Size(0, 72), 
+                Width = 300 
+            }, 0, 0);
             inputPanel.Controls.Add(new UnderlinedTextField("Nơi cất cánh", "") { 
-                MinimumSize = new Size(0, 72), Width = 300 }, 0, 1);
-            inputPanel.Controls.Add(new UnderlinedTextField("Mã máy bay", "") { 
-                MinimumSize = new Size(0, 72), Width = 300 }, 0, 2);
+                MinimumSize = new Size(0, 72), 
+                Width = 300 
+            }, 0, 1);
+
+            inputPanel.Controls.Add(new UnderlinedComboBox("Mã máy bay", new object[] { "AG001", "AG002" }) {
+                MinimumSize = new Size(0, 72),
+                Width = 300
+            }, 0, 2);
+
             inputPanel.Controls.Add(new UnderlinedTextField("Giá vé cơ bản", "") { 
                 MinimumSize = new Size(0, 72), Width = 300 }, 0, 3);
 
             // === Cột 2 ===
             inputPanel.Controls.Add(new UnderlinedTextField("Nơi hạ cánh", "") { 
-                MinimumSize = new Size(0, 72), Width = 300 }, 1, 1);
-            inputPanel.Controls.Add(new UnderlinedTextField("Mã tuyến bay", "") { 
-                MinimumSize = new Size(0, 72), Width = 300 }, 1, 2);
+                MinimumSize = new Size(0, 72), 
+                Width = 300 
+            }, 1, 1);
+            inputPanel.Controls.Add(new UnderlinedComboBox("Mã tuyến bay", new object[] { "R001", "R002" }) { 
+                MinimumSize = new Size(0, 72), 
+                Width = 300 
+            }, 1, 2);
             inputPanel.Controls.Add(new DateTimePickerCustom("Thời gian khởi hành", "") { 
-                Width = 300, Height = 72 }, 1, 3);
+                Width = 300, 
+                Height = 72,
+                EnableTime = true,               // bật chọn giờ:phút
+                TimeFormat = "dd/MM/yyyy HH:mm", // hoặc "HH:mm dd/MM/yyyy"
+                ShowUpDownWhenTime = true        // spinner thay vì popup lịch
+            }, 1, 3);
             inputPanel.Controls.Add(new DateTimePickerCustom("Thời gian hạ cánh", "") { 
-                Width = 300, Height = 72 }, 1, 4);
+                Width = 300, 
+                Height = 72,
+                EnableTime = true,               // bật chọn giờ:phút
+                TimeFormat = "dd/MM/yyyy HH:mm", // hoặc "HH:mm dd/MM/yyyy"
+                ShowUpDownWhenTime = true        // spinner thay vì popup lịch
+            }, 1, 4);
 
             // === Hàng thời lượng bay (có thể tự tính hoặc nhập tay) ===
-            inputPanel.Controls.Add(new UnderlinedTextField("Thời gian bay (phút)", "") { MinimumSize = new Size(0, 72), Width = 300 }, 0, 4);
+            inputPanel.Controls.Add(new UnderlinedTextField("Thời gian bay (phút)", "") { 
+                MinimumSize = new Size(0, 72),
+                Width = 300 
+            }, 0, 4);
 
             // Sau khi Add các control vào inputPanel:
             for (int r = 0; r < inputPanel.RowCount; r++) {
@@ -94,36 +119,36 @@ namespace GUI.Features.Flight.SubFeatures {
             buttonRow.Controls.Add(btnCreate);
 
             // ===== Bảng danh sách chuyến bay =====
-            var table = new TableCustom {
-                Dock = DockStyle.Fill,
-                Margin = new Padding(24, 12, 24, 4),
-                AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false,
-                ReadOnly = true,
-                RowHeadersVisible = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
-            };
-            table.Columns.Add("flightId", "Mã chuyến bay");
-            table.Columns.Add("aircraftId", "Mã máy bay");
-            table.Columns.Add("routeId", "Mã tuyến bay");
-            table.Columns.Add("departureAirport", "Nơi cất cánh");
-            table.Columns.Add("arrivalAirport", "Nơi hạ cánh");
-            table.Columns.Add("departureTime", "Khởi hành");
-            table.Columns.Add("arrivalTime", "Hạ cánh");
-            table.Columns.Add("actions", "Thao tác");
+            //var table = new TableCustom {
+            //    Dock = DockStyle.Fill,
+            //    Margin = new Padding(24, 12, 24, 4),
+            //    AllowUserToAddRows = false,
+            //    AllowUserToDeleteRows = false,
+            //    ReadOnly = true,
+            //    RowHeadersVisible = false,
+            //    AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            //    BackgroundColor = Color.White,
+            //    BorderStyle = BorderStyle.FixedSingle
+            //};
+            //table.Columns.Add("flightId", "Mã chuyến bay");
+            //table.Columns.Add("aircraftId", "Mã máy bay");
+            //table.Columns.Add("routeId", "Mã tuyến bay");
+            //table.Columns.Add("departureAirport", "Nơi cất cánh");
+            //table.Columns.Add("arrivalAirport", "Nơi hạ cánh");
+            //table.Columns.Add("departureTime", "Giờ cất cánh");
+            //table.Columns.Add("arrivalTime", "Giờ hạ cánh");
+            //table.Columns.Add("actions", "Thao tác");
 
-            // mẫu hàng trống
-            for (int i = 0; i < 4; i++)
-                table.Rows.Add("", "", "", "", "", "", "", "");
+            //// mẫu hàng trống
+            //for (int i = 0; i < 4; i++)
+            //    table.Rows.Add("", "", "", "", "", "", "", "");
 
             // ===== Layout tổng =====
             var main = new TableLayoutPanel {
                 Dock = DockStyle.Fill,
                 BackColor = Color.Transparent,
                 ColumnCount = 1,
-                RowCount = 4
+                RowCount = 3
             };
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -133,7 +158,7 @@ namespace GUI.Features.Flight.SubFeatures {
             main.Controls.Add(titlePanel, 0, 0);
             main.Controls.Add(inputPanel, 0, 1);
             main.Controls.Add(buttonRow, 0, 2);
-            main.Controls.Add(table, 0, 3);
+            //main.Controls.Add(table, 0, 3);
 
             this.Controls.Clear();
             this.Controls.Add(main);

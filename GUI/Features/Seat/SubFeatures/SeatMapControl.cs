@@ -8,10 +8,8 @@ using DTO.FlightSeat;
 using GUI.Components.Buttons;
 using GUI.Components.Inputs;
 
-namespace GUI.Features.Seat.SubFeatures
-{
-    public class SeatMapControl : UserControl
-    {
+namespace GUI.Features.Seat.SubFeatures {
+    public class SeatMapControl : UserControl {
         private const bool USE_PLAIN_BUTTON_FOR_COLOR = true;
 
         // Kích thước layout
@@ -35,22 +33,19 @@ namespace GUI.Features.Seat.SubFeatures
         private readonly FlightSeatBUS _bus = new();
         private List<FlightSeatDTO> seats = new();
 
-        public SeatMapControl()
-        {
+        public SeatMapControl() {
             InitializeComponent();
             LoadData();
         }
 
         // --------------------------- INIT ---------------------------
-        private void InitializeComponent()
-        {
+        private void InitializeComponent() {
             SuspendLayout();
             Dock = DockStyle.Fill;
             BackColor = Color.FromArgb(232, 240, 252);
             tip = new ToolTip();
 
-            lblTitle = new Label
-            {
+            lblTitle = new Label {
                 Text = "🗺️ Sơ đồ ghế (Seat Map)",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
@@ -59,33 +54,27 @@ namespace GUI.Features.Seat.SubFeatures
             };
 
             // --- Bộ lọc ---
-            filter = new FlowLayoutPanel
-            {
+            filter = new FlowLayoutPanel {
                 Dock = DockStyle.Top,
                 AutoSize = true,
                 Padding = new Padding(24, 12, 24, 12),
                 WrapContents = false
             };
 
-            cbFlight = new UnderlinedComboBox("Chuyến bay", Array.Empty<object>())
-            { Width = 160, Margin = new Padding(0, 0, 24, 0) };
+            cbFlight = new UnderlinedComboBox("Chuyến bay", Array.Empty<object>()) { Width = 160, Margin = new Padding(0, 0, 24, 0) };
 
-            cbAircraft = new UnderlinedComboBox("Máy bay", Array.Empty<object>())
-            { Width = 180, Margin = new Padding(0, 0, 24, 0) };
+            cbAircraft = new UnderlinedComboBox("Máy bay", Array.Empty<object>()) { Width = 180, Margin = new Padding(0, 0, 24, 0) };
 
-            cbClass = new UnderlinedComboBox("Hạng", new object[] { "Tất cả" })
-            { Width = 160, Margin = new Padding(0, 0, 24, 0) };
+            cbClass = new UnderlinedComboBox("Hạng", new object[] { "Tất cả" }) { Width = 160, Margin = new Padding(0, 0, 24, 0) };
 
-            btnRefresh = new PrimaryButton("⟳ Làm mới")
-            { Width = 110, Height = 36 };
+            btnRefresh = new PrimaryButton("⟳ Làm mới") { Width = 110, Height = 36 };
 
             btnRefresh.Click += (_, __) => RefreshSeatMap();
 
             filter.Controls.AddRange(new Control[] { cbFlight, cbAircraft, cbClass, btnRefresh });
 
             // --- Legend ---
-            legend = new FlowLayoutPanel
-            {
+            legend = new FlowLayoutPanel {
                 Dock = DockStyle.Top,
                 AutoSize = true,
                 Padding = new Padding(24, 6, 24, 0),
@@ -96,16 +85,14 @@ namespace GUI.Features.Seat.SubFeatures
             legend.Controls.Add(Badge("BLOCKED", Color.FromArgb(255, 235, 238), Color.FromArgb(183, 28, 28)));
 
             // --- Map host ---
-            mapHost = new Panel
-            {
+            mapHost = new Panel {
                 Dock = DockStyle.Fill,
                 Padding = new Padding(32, 16, 32, 72),
                 AutoScroll = true,
                 BackColor = Color.White
             };
 
-            centerLayout = new TableLayoutPanel
-            {
+            centerLayout = new TableLayoutPanel {
                 Dock = DockStyle.Top,
                 AutoSize = true,
                 ColumnCount = 3
@@ -113,8 +100,7 @@ namespace GUI.Features.Seat.SubFeatures
             centerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
             centerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             centerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-            stack = new FlowLayoutPanel
-            {
+            stack = new FlowLayoutPanel {
                 FlowDirection = FlowDirection.TopDown,
                 AutoSize = true,
                 WrapContents = false
@@ -137,22 +123,19 @@ namespace GUI.Features.Seat.SubFeatures
             ResumeLayout(false);
         }
 
-        private Control Badge(string status, Color bg, Color fg)
-        {
+        private Control Badge(string status, Color bg, Color fg) {
             var p = new Panel { BackColor = bg, Height = 24, Padding = new Padding(10, 3, 10, 3), Margin = new Padding(0, 0, 8, 0), AutoSize = true };
             p.Controls.Add(new Label { Text = status, AutoSize = true, ForeColor = fg });
             return p;
         }
 
         // --------------------------- LOAD DATA ---------------------------
-        
+
 
         // --------------------------- BUILD MAP ---------------------------
         // --------------------------- LOAD DATA ---------------------------
-        private void LoadData()
-        {
-            try
-            {
+        private void LoadData() {
+            try {
                 seats = _bus.GetAllWithDetails();
 
                 // === Chuyến bay ===
@@ -183,16 +166,13 @@ namespace GUI.Features.Seat.SubFeatures
 
                 // Hiển thị ban đầu
                 RefreshSeatMap();
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 MessageBox.Show("Lỗi tải dữ liệu sơ đồ ghế:\n" + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         // --------------------------- BUILD MAP ---------------------------
-        private void RefreshSeatMap()
-        {
+        private void RefreshSeatMap() {
             stack.Controls.Clear();
 
             string selectedFlight = cbFlight.SelectedItem?.ToString() ?? "Tất cả";
@@ -213,10 +193,8 @@ namespace GUI.Features.Seat.SubFeatures
 
             var list = filtered.ToList();
 
-            if (list.Count == 0)
-            {
-                stack.Controls.Add(new Label
-                {
+            if (list.Count == 0) {
+                stack.Controls.Add(new Label {
                     Text = "Không có dữ liệu ghế phù hợp với điều kiện tìm kiếm.",
                     Font = new Font("Segoe UI", 12, FontStyle.Italic),
                     AutoSize = true,
@@ -230,10 +208,8 @@ namespace GUI.Features.Seat.SubFeatures
                              .OrderBy(g => g.Key)
                              .ToList();
 
-            foreach (var group in groups)
-            {
-                var card = new GroupBox
-                {
+            foreach (var group in groups) {
+                var card = new GroupBox {
                     Text = group.Key,
                     Font = new Font("Segoe UI", 10f, FontStyle.Bold),
                     Padding = new Padding(16),
@@ -242,8 +218,7 @@ namespace GUI.Features.Seat.SubFeatures
                     Margin = new Padding(0, 0, 0, 24)
                 };
 
-                var grid = new TableLayoutPanel
-                {
+                var grid = new TableLayoutPanel {
                     ColumnCount = 8,
                     AutoSize = true,
                     AutoSizeMode = AutoSizeMode.GrowAndShrink
@@ -255,21 +230,18 @@ namespace GUI.Features.Seat.SubFeatures
                 for (int i = 0; i < 3; i++) grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, SeatWidth));
 
                 // Gom nhóm theo hàng
-                var rowGroups = group.GroupBy(s =>
-                {
+                var rowGroups = group.GroupBy(s => {
                     string num = new string(s.SeatNumber.TakeWhile(char.IsDigit).ToArray());
                     return int.TryParse(num, out int n) ? n : 0;
                 })
                 .OrderBy(g => g.Key);
 
                 int rowIdx = 0;
-                foreach (var row in rowGroups)
-                {
+                foreach (var row in rowGroups) {
                     grid.RowStyles.Add(new RowStyle(SizeType.Absolute, SeatHeight + SeatGap));
 
                     int rowNo = row.Key;
-                    var lb = new Label
-                    {
+                    var lb = new Label {
                         Text = rowNo.ToString(),
                         Width = RowLabelWidth,
                         Height = SeatHeight,
@@ -280,8 +252,7 @@ namespace GUI.Features.Seat.SubFeatures
                     grid.Controls.Add(lb, 0, rowIdx);
 
                     // A B C / D E F
-                    foreach (var seat in row)
-                    {
+                    foreach (var seat in row) {
                         char col = seat.SeatNumber.Last();
                         int colIndex = "ABCDEF".IndexOf(col);
                         if (colIndex == -1) continue;
@@ -301,8 +272,7 @@ namespace GUI.Features.Seat.SubFeatures
 
 
         // --------------------------- SEAT BUTTON ---------------------------
-        private Button MakeSeat(FlightSeatDTO seat)
-        {
+        private Button MakeSeat(FlightSeatDTO seat) {
             string code = seat.SeatNumber;
             string status = seat.SeatStatus;
             string cabinName = seat.ClassName;
@@ -328,24 +298,19 @@ namespace GUI.Features.Seat.SubFeatures
             return btn;
         }
 
-        private void StyleSeat(Button btn, string status)
-        {
+        private void StyleSeat(Button btn, string status) {
             btn.UseVisualStyleBackColor = false;
 
-            if (status == "AVAILABLE")
-            {
+            if (status == "AVAILABLE") {
                 btn.BackColor = Color.FromArgb(232, 245, 233);
                 btn.FlatAppearance.BorderColor = Color.FromArgb(76, 175, 80);
                 btn.ForeColor = Color.FromArgb(27, 94, 32);
-            }
-            else if (status == "BOOKED")
-            {
+            } else if (status == "BOOKED") {
                 btn.BackColor = Color.FromArgb(236, 239, 241);
                 btn.FlatAppearance.BorderColor = Color.FromArgb(176, 190, 197);
                 btn.ForeColor = Color.FromArgb(55, 71, 79);
-            }
-            else // BLOCKED
-            {
+            } else // BLOCKED
+              {
                 btn.BackColor = Color.FromArgb(255, 235, 238);
                 btn.FlatAppearance.BorderColor = Color.FromArgb(229, 115, 115);
                 btn.ForeColor = Color.FromArgb(183, 28, 28);

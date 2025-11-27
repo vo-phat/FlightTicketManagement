@@ -40,9 +40,8 @@ namespace GUI.Features.CabinClass.SubFeatures
             Margin = new Padding(0, 6, 0, 6)
         };
 
-        private void BuildLayout()
-        {
-            var title = new Label { Text = "💺 Chi tiết hạng ghế", AutoSize = true, Font = new Font("Segoe UI", 20, FontStyle.Bold), Padding = new Padding(24, 20, 24, 0), Dock = DockStyle.Top };
+        private void BuildLayout() {
+            var title = new Label { Text = "🛋 Chi tiết Hạng ghế", AutoSize = true, Font = new Font("Segoe UI", 20, FontStyle.Bold), Padding = new Padding(24, 20, 24, 0), Dock = DockStyle.Top };
             var card = new Panel { BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle, Padding = new Padding(16), Margin = new Padding(24, 8, 24, 24), Dock = DockStyle.Fill };
 
             var grid = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, ColumnCount = 2 };

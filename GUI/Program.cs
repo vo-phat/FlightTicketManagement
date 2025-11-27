@@ -1,22 +1,17 @@
 using GUI.Features.Auth;
 using GUI.Features.Test;
 using GUI.MainApp;
+using DAO.Database;
 
-namespace GUI
-{
-    internal static class Program
-    {
+namespace GUI {
+    internal static class Program {
         [STAThread]
-        static void Main()
-        {
+        static void Main() {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
             Application.Run(new LoginForm());
-
-
-            //Application.Run(new MainForm());
-            //Application.Run(new Form1());
         }
+
     }
 }
