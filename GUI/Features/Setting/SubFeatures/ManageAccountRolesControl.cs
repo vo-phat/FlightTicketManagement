@@ -16,8 +16,8 @@ namespace GUI.Features.Setting.SubFeatures {
 
         private const string ACTION_COL = "Action";
         private const string TXT_VIEW = "Xem";
-        private const string TXT_EDIT = "Phân quyền";
-        private const string TXT_DEL = "Xóa";
+        private const string TXT_EDIT = "Sửa";
+        private const string TXT_DEL = "Khóa";
         private const string SEP = " / ";
 
         private TableLayoutPanel root, filterWrap;
@@ -40,7 +40,7 @@ namespace GUI.Features.Setting.SubFeatures {
 
             // ===== Title =========================================================
             lblTitle = new Label {
-                Text = "👤 Danh sách tài khoản & phân quyền",
+                Text = "👤 Danh sách tài khoản & Quyền",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
                 ForeColor = Color.Black,
@@ -60,7 +60,7 @@ namespace GUI.Features.Setting.SubFeatures {
                 Margin = new Padding(0, 0, 24, 0)
             };
 
-            cbRole = new UnderlinedComboBox("Vai trò", new object[] { "(Tất cả)" }) {
+            cbRole = new UnderlinedComboBox("Vai trò", new object[] { "Tất cả quyền" }) {
                 MinimumSize = new Size(0, 72),
                 Width = 220,
                 Margin = new Padding(0, 6, 24, 6)
@@ -108,7 +108,8 @@ namespace GUI.Features.Setting.SubFeatures {
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
                 BackgroundColor = Color.White,
                 BorderStyle = BorderStyle.None,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                AllowUserToAddRows = false
             };
 
             table.Columns.Add("email", "Email");
@@ -117,7 +118,7 @@ namespace GUI.Features.Setting.SubFeatures {
             var colAction = new DataGridViewTextBoxColumn {
                 Name = ACTION_COL,
                 HeaderText = "Thao tác",
-                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill 
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
             };
             table.Columns.Add(colAction);
 
@@ -182,7 +183,6 @@ namespace GUI.Features.Setting.SubFeatures {
             cbRole.Items.Clear();
             cbRole.Items.Add("(Tất cả)");
             foreach (var r in _allRoles) cbRole.Items.Add(r);
-            //cbRole.DisplayMember = nameof(RoleItem.Name);
             cbRole.SelectedIndex = 0;
 
             ReloadTable();
@@ -219,14 +219,33 @@ namespace GUI.Features.Setting.SubFeatures {
         // =======================================================================
         private void OpenAddAccountDialog() {
             using var f = new AddAccountForm();
-            if (f.ShowDialog(FindForm()) != DialogResult.OK) return;
+            if (f.ShowDialog(FindForm()) != DialogResult.OK)
+                return;
 
-            // TODO: Gắn với DB/service thật
-            // Hiện tại chỉ demo: bạn tự cài đặt lưu DB trong PermissionRepository
-            MessageBox.Show($"(Demo) Đã nhập tài khoản:\n{f.Email}",
-                "Thêm tài khoản", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            try {
+                // isActive = true (mặc định kích hoạt tài khoản)
+                _service.CreateAccountWithRoles(
+                    f.Email,
+                    f.Password,
+                    f.RoleId
+                );
 
-            ReloadAll();
+                MessageBox.Show(
+                    "Thêm tài khoản mới thành công.",
+                    "Thành công",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+
+                ReloadAll();
+            } catch (Exception ex) {
+                MessageBox.Show(
+                    "Không thể thêm tài khoản: " + ex.Message,
+                    "Lỗi",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
         }
 
         // =======================================================================
@@ -299,26 +318,66 @@ namespace GUI.Features.Setting.SubFeatures {
             string roles = row.Cells["roles"].Value?.ToString() ?? "(n/a)";
 
             if (r.rcView.Contains(p)) {
-                bool isActive = Convert.ToBoolean(row.Cells["isActiveHidden"].Value);
-                int failedAttempts = Convert.ToInt32(row.Cells["failedAttemptsHidden"].Value);
-                DateTime createdAt = Convert.ToDateTime(row.Cells["createdAtHidden"].Value);
-
-                using var frm = new AccountDetailForm(email, roles, isActive, failedAttempts, createdAt);
-                frm.StartPosition = FormStartPosition.CenterParent;
-                frm.ShowDialog(FindForm());
+                OpenAccountDetail(accountId);
             } else if (r.rcEdit.Contains(p)) {
                 using var frm = new AccountRoleEditForm(accountId);
                 if (frm.ShowDialog(FindForm()) == DialogResult.OK) {
                     ReloadTable();
                 }
             } else if (r.rcDel.Contains(p)) {
-                if (MessageBox.Show($"Xóa tài khoản '{email}'?", "Xác nhận",
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+                if (MessageBox.Show($"Khóa tài khoản '{email}'?",
+                        "Xác nhận",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning) != DialogResult.Yes)
+                    return;
 
-                // TODO: cài đặt xóa thật trong DB
-                MessageBox.Show("(Demo) Xóa tài khoản chưa được gắn DB.", "Thông báo");
-                ReloadAll();
+                try {
+                    _service.DeleteAccount(accountId);
+
+                    MessageBox.Show(
+                        "Đã khóa tài khoản thành công.",
+                        "Thông báo",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                    );
+
+                    ReloadAll();
+                } catch (Exception ex) {
+                    MessageBox.Show(
+                        "Không thể khóa tài khoản: " + ex.Message,
+                        "Lỗi",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                }
             }
+        }
+        private void OpenAccountDetail(int accountId) {
+            var user = _allUsers.FirstOrDefault(u => u.AccountId == accountId);
+            if (user == null) {
+                MessageBox.Show("Không tìm thấy thông tin tài khoản.", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            var roleIds = _service.GetRoleIdsOfAccount(accountId);
+            var roleNames = _allRoles
+                .Where(r => roleIds.Contains(r.RoleId))
+                .Select(r => r.Name)
+                .ToList();
+
+            string rolesText = roleNames.Any() ? string.Join(", ", roleNames) : "(Chưa gán)";
+
+            using var frm = new AccountDetailForm(
+                user.Email,
+                rolesText,
+                user.IsActive,
+                user.FailedAttempts,
+                user.CreatedAt
+            );
+
+            frm.StartPosition = FormStartPosition.CenterParent;
+            frm.ShowDialog(FindForm());
         }
     }
 }

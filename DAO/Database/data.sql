@@ -15,10 +15,11 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO permissions (permission_code, permission_name) VALUES
     ('home.view',             'Xem trang chủ'),
 
-    ('flights.read',          'Xem / tra cứu chuyến bay'),
+    ('flights.read',          'Tra cứu chuyến bay'),
+    ('flights.create',        'Tạo chuyến bay'),
     ('fare_rules.manage',     'Quản lý quy tắc giá vé'),
 
-    ('tickets.create_search', 'Tạo / tìm đặt chỗ'),
+    ('tickets.create_search', 'Đặt chỗ'),
     ('tickets.mine',          'Xem đặt chỗ của tôi'),
     ('tickets.operate',       'Vận hành vé'),
     ('tickets.history',       'Xem lịch sử vé'),

@@ -114,5 +114,69 @@ namespace DAO.Repositories {
             ExecuteNonQuery(query, parameters);
         }
 
+        public void UnlockAccount(int accountId) {
+            string query = @"UPDATE accounts SET is_active = 1 WHERE account_id = @id";
+
+            var parameters = new Dictionary<string, object> {
+                { "@id", accountId }
+            };
+
+            ExecuteNonQuery(query, parameters);
+        }
+
+        public void AssignUserRole(int accountId) {
+            const string sql = @"
+                INSERT IGNORE INTO account_role (account_id, role_id)
+                SELECT @account_id, r.role_id
+                FROM roles r
+                WHERE r.role_code = 'USER';
+            ";
+
+            var parameters = new Dictionary<string, object> {
+                ["@account_id"] = accountId
+            };
+
+            ExecuteNonQuery(sql, parameters);
+        }
+
+        public void CreateEmptyProfile(int accountId) {
+            const string sql = @"
+                INSERT INTO Passenger_Profiles (account_id)
+                VALUES (@account_id)
+                ON DUPLICATE KEY UPDATE account_id = account_id;
+            ";
+
+            var parameters = new Dictionary<string, object> {
+                ["@account_id"] = accountId
+            };
+
+            ExecuteNonQuery(sql, parameters);
+        }
+
+        public AccountDto GetById(int accountId) {
+            AccountDto account = null;
+
+            string query = $@"
+                SELECT account_id, email, password, failed_attempts, is_active, created_at
+                FROM {TABLE}
+                WHERE account_id = @id";
+
+            var parameters = new Dictionary<string, object> {
+                { "@id", accountId }
+            };
+
+            ExecuteReader(query, reader => {
+                account = new AccountDto {
+                    AccountId = GetInt32(reader, "account_id"),
+                    Email = GetString(reader, "email"),
+                    Password = GetString(reader, "password"),
+                    FailedAttempts = GetInt32(reader, "failed_attempts"),
+                    IsActive = reader.GetBoolean(reader.GetOrdinal("is_active")),
+                    CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at"))
+                };
+            }, parameters);
+
+            return account;
+        }
     }
 }

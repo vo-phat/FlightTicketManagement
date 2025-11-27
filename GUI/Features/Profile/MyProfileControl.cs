@@ -1,4 +1,6 @@
 ﻿using BUS.Auth;
+using BUS.Profile;
+using DTO.Profile;
 using GUI.Components.Buttons;
 using GUI.Features.Auth;
 using GUI.Features.Profile.SubFeatures;
@@ -15,6 +17,7 @@ namespace GUI.Features.Profile {
         private ProfileInfoControl infoControl;
         private ChangePasswordControl changePwdControl;
 
+        private readonly ProfileService _profileService = new ProfileService();
         private readonly int _accountId = UserSession.CurrentAccountId;
 
         public MyProfileControl(int accountId) {
@@ -82,25 +85,37 @@ namespace GUI.Features.Profile {
         }
 
         // TODO: thay bằng gọi Service/Repository thật (EF/Dapper) của bạn
-        private async void HandleSaveProfileAsync(ProfileInfoModel model) {
+        private async void HandleSaveProfileAsync(ProfileInfoDto model) {
             try {
-                // Gợi ý: cập nhật Accounts.email và Passenger_Profiles.* theo account_id
-                // Accounts(email), Passenger_Profiles(full_name, date_of_birth, phone_number, passport_number, nationality)
-                // … gọi DB và thông báo
-                await System.Threading.Tasks.Task.Delay(200);
-                MessageBox.Show("Đã lưu thông tin cá nhân.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                var dto = new ProfileInfoDto {
+                    AccountId = _accountId,
+                    Email = model.Email,
+                    FullName = model.FullName,
+                    DateOfBirth = model.DateOfBirth,
+                    PhoneNumber = model.PhoneNumber,
+                    PassportNumber = model.PassportNumber,
+                    Nationality = model.Nationality
+                };
+
+                _profileService.UpdateProfile(dto);
+
+                MessageBox.Show("Đã lưu thông tin cá nhân.",
+                    "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
             } catch (Exception ex) {
-                MessageBox.Show("Lỗi khi lưu: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Lỗi khi lưu: " + ex.Message,
+                    "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private async void HandleChangePasswordAsync(ChangePasswordModel model) {
             try {
-                // Kiểm tra mật khẩu hiện tại + cập nhật Accounts.password (nhớ hash)
-                await System.Threading.Tasks.Task.Delay(200);
-                MessageBox.Show("Đã đổi mật khẩu.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                _profileService.ChangePassword(_accountId, model.CurrentPassword, model.NewPassword);
+
+                MessageBox.Show("Đã đổi mật khẩu.",
+                    "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
             } catch (Exception ex) {
-                MessageBox.Show("Đổi mật khẩu thất bại: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Đổi mật khẩu thất bại: " + ex.Message,
+                    "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

@@ -77,8 +77,16 @@ namespace BUS.Auth {
                 CreatedAt = DateTime.Now
             };
 
+            // 1. Tạo account
             int newId = _accountDao.Create(dto);
             dto.AccountId = newId;
+
+            // 2. Gán ROLE = USER cho account mới
+            _accountDao.AssignUserRole(newId);
+
+            // 3. Tạo link tới profile (Passenger_Profiles)
+            _accountDao.CreateEmptyProfile(newId);
+
             return dto;
         }
 

@@ -17,7 +17,7 @@ namespace GUI.Features.Setting.SubFeatures {
         private UnderlinedComboBox cboModule;
 
         // Ma trận
-        private TableCustom table;               // dùng TableCustom thay cho DataGridView
+        private TableCustom table;
         private FlowLayoutPanel selectAllRow;
 
         // Hành động
@@ -78,7 +78,7 @@ namespace GUI.Features.Setting.SubFeatures {
                 Margin = new Padding(24, 12, 24, 4),
                 AllowUserToAddRows = false,
                 AllowUserToDeleteRows = false,
-                ReadOnly = false,               // cần tương tác checkbox
+                ReadOnly = false,
                 RowHeadersVisible = false,
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
                 BackgroundColor = Color.White,
