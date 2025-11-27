@@ -1,13 +1,27 @@
-﻿using System;
-using System.Drawing;
-using System.Windows.Forms;
+﻿using BUS.Route;
+using BUS.Airport;
+using DTO.Route;
+using DTO.Airport;
 using GUI.Components.Buttons;
 using GUI.Components.Inputs;
 using GUI.Components.Tables;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Windows.Forms;
 
-namespace GUI.Features.Route.SubFeatures {
-    public class RouteListControl : UserControl {
-        private TableCustom table;
+namespace GUI.Features.Route.SubFeatures
+{
+    public class RouteListControl : UserControl
+    {
+        private readonly RouteBUS _bus = new RouteBUS();
+        private readonly AirportBUS _airportBus = new AirportBUS(); // ✅ thêm BUS để lấy tên sân bay
+        private DataGridView table;
+
+        // Khai báo các control tìm kiếm
+        private UnderlinedTextField txtDepId, txtArrId, txtDistance, txtDuration;
+        private PrimaryButton btnSearch, btnAdd;
 
         private const string ACTION_COL = "Action";
         private const string TXT_VIEW = "Xem";
@@ -15,195 +29,268 @@ namespace GUI.Features.Route.SubFeatures {
         private const string TXT_DEL = "Xóa";
         private const string SEP = " / ";
 
-        private TableLayoutPanel root, filterWrap;
-        private FlowLayoutPanel filterLeft, filterRight;
-        private Label lblTitle;
-        private UnderlinedComboBox cbFrom, cbTo; 
-        private UnderlinedTextField txtDur, txtDist;
+        public event Action<RouteDTO>? ViewRequested;
+        public event Action<RouteDTO>? RequestEdit;
+        public event Action? DataChanged;
 
-        public RouteListControl() { InitializeComponent(); }
+        // Lưu danh sách sân bay vào dictionary
+        private Dictionary<int, string> _airportNames = new();
 
-        private void InitializeComponent() {
+        public RouteListControl()
+        {
+            InitializeComponent();
+            LoadAirportNames(); // ✅ nạp sân bay trước
+            RefreshList();
+        }
+
+        private void InitializeComponent()
+        {
             SuspendLayout();
-            Dock = DockStyle.Fill;
             BackColor = Color.FromArgb(232, 240, 252);
+            Dock = DockStyle.Fill;
+            AutoScroll = true;
 
-            lblTitle = new Label {
+            // === TIÊU ĐỀ ===
+            var lblTitle = new Label
+            {
                 Text = "🧭 Danh sách tuyến bay",
+                Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point),
+                ForeColor = Color.FromArgb(40, 55, 77),
                 AutoSize = true,
-                Font = new Font("Segoe UI", 20, FontStyle.Bold),
-                ForeColor = Color.Black,
-                Padding = new Padding(24, 20, 24, 0),
-                Dock = DockStyle.Top
+                Dock = DockStyle.Top,
+                Padding = new Padding(24, 20, 0, 12)
             };
 
-            // Filters
-            filterLeft = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, WrapContents = false };
-            cbFrom = new UnderlinedComboBox("Mã sân bay đi", new object[] { "AL001", "AL002", "Al003" }) {
-                Height = 64,
-                MinimumSize = new Size(0, 64),
-                Width = 300
-            };
-            cbTo = new UnderlinedComboBox("Mã sân bay đi", new object[] { "AL001", "AL002", "Al003" }) {
-                Height = 64,
-                MinimumSize = new Size(0, 64),
-                Width = 300
-            };
-            txtDist = new UnderlinedTextField("Khoảng cách", "") {
-                MinimumSize = new Size(0, 64),
-                Width = 300
-            };
-            txtDur = new UnderlinedTextField("Thời lượng bay", "") {
-                MinimumSize = new Size(0, 64),
-                Width = 300
-            };
-            filterLeft.Controls.AddRange(new Control[] { cbFrom, cbTo, txtDur, txtDist });
-
-            filterRight = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, FlowDirection = FlowDirection.RightToLeft, WrapContents = false };
-            var btnSearch = new PrimaryButton("🔍 Tìm tuyến bay") { Width = 140, Height = 36 };
-            filterRight.Controls.Add(btnSearch);
-
-            filterWrap = new TableLayoutPanel {
+            // === PANEL BỘ LỌC ===
+            var filterPanel = new FlowLayoutPanel
+            {
                 Dock = DockStyle.Top,
                 AutoSize = true,
-                Padding = new Padding(24, 16, 24, 0),
-                ColumnCount = 2
+                Padding = new Padding(24, 8, 24, 8),
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false,
+                BackColor = Color.FromArgb(250, 253, 255)
             };
-            filterWrap.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
-            filterWrap.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            filterWrap.Controls.Add(filterLeft, 0, 0);
-            filterWrap.Controls.Add(filterRight, 1, 0);
 
-            // Table
-            table = new TableCustom {
+            txtDepId = new UnderlinedTextField("Sân bay khởi hành", "") { Width = 180, Margin = new Padding(6, 4, 6, 4), LineThickness = 1 };
+            txtArrId = new UnderlinedTextField("Sân bay đến", "") { Width = 180, Margin = new Padding(6, 4, 6, 4), LineThickness = 1 };
+            txtDistance = new UnderlinedTextField("Khoảng cách (km)", "") { Width = 180, Margin = new Padding(6, 4, 6, 4), LineThickness = 1 };
+            txtDuration = new UnderlinedTextField("Thời gian (phút)", "") { Width = 180, Margin = new Padding(6, 4, 6, 4), LineThickness = 1 };
+
+            btnSearch = new PrimaryButton("🔍 Tìm") { Width = 90, Height = 40, Margin = new Padding(10, 6, 6, 6) };
+            btnAdd = new PrimaryButton("➕ Thêm") { Width = 110, Height = 40, Margin = new Padding(6) };
+
+            btnSearch.Click += (s, e) => RefreshList();
+            btnAdd.Click += (s, e) => RequestEdit?.Invoke(new RouteDTO());
+
+            filterPanel.Controls.AddRange(new Control[] { txtDepId, txtArrId, txtDistance, txtDuration, btnSearch, btnAdd });
+
+            // === BẢNG DANH SÁCH ===
+            table = new TableCustom
+            {
                 Dock = DockStyle.Fill,
-                Margin = new Padding(24, 12, 24, 24),
-                ReadOnly = true,
-                RowHeadersVisible = false,
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.None
+                ReadOnly = true,
+                AllowUserToAddRows = false,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                CornerRadius = 16,
+                BorderThickness = 2,
+                BorderColor = Color.FromArgb(200, 200, 200),
             };
 
-            // Columns (Routes + Airports)
-            table.Columns.Add("fromAirport", "Sân bay đi");       // Airports.code (departure_place_id)
-            table.Columns.Add("toAirport", "Sân bay đến");        // Airports.code (arrival_place_id)
-            table.Columns.Add("distance", "Khoảng cách (km)");    // distance_km
-            table.Columns.Add("duration", "Thời lượng (phút)");   // duration_minutes
-
-            var colAction = new DataGridViewTextBoxColumn { Name = ACTION_COL, HeaderText = "Thao tác", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells };
-            table.Columns.Add(colAction);
-            var colHiddenId = new DataGridViewTextBoxColumn { Name = "routeIdHidden", Visible = false };
-            table.Columns.Add(colHiddenId);
-
-            // demo rows
-            table.Rows.Add("SGN", "HAN", 1150, 120, null, 1001);
-            table.Rows.Add("SGN", "DAD", 610, 75, null, 1002);
-            table.Rows.Add("HAN", "DAD", 767, 85, null, 1003);
+            table.Columns.Add("depName", "Sân bay khởi hành");
+            table.Columns.Add("arrName", "Sân bay đến");
+            table.Columns.Add("distance", "Khoảng cách (km)");
+            table.Columns.Add("duration", "Thời gian (phút)");
+            table.Columns.Add(ACTION_COL, "Thao tác");
+            table.Columns[ACTION_COL].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            table.Columns[ACTION_COL].Width = 160;
+            table.Columns.Add("routeIdHidden", "ID");
+            table.Columns["routeIdHidden"].Visible = false;
 
             table.CellPainting += Table_CellPainting;
             table.CellMouseMove += Table_CellMouseMove;
             table.CellMouseClick += Table_CellMouseClick;
 
-            // Root
-            root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3 };
-            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
-            root.Controls.Add(lblTitle, 0, 0);
-            root.Controls.Add(filterWrap, 0, 1);
-            root.Controls.Add(table, 0, 2);
+            Controls.Clear();
+            Controls.Add(table);
+            Controls.Add(filterPanel);
+            Controls.Add(lblTitle);
 
-            Controls.Add(root);
             ResumeLayout(false);
         }
 
-        // Action column drawing
-        private (Rectangle rcView, Rectangle rcEdit, Rectangle rcDel) GetRects(Rectangle cellBounds, Font font) {
-            int pad = 6;
-            int x = cellBounds.Left + pad;
-            int y = cellBounds.Top + (cellBounds.Height - font.Height) / 2;
+        // ✅ Nạp tên sân bay vào dictionary
+        private void LoadAirportNames()
+        {
+            try
+            {
+                var airports = _airportBus.GetAllAirports(); // List<AirportDTO>
+                _airportNames = airports.ToDictionary(a => a.AirportId, a => a.AirportName);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Không thể tải danh sách sân bay: " + ex.Message,
+                    "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private bool _isRefreshing = false;
+
+        public void RefreshList()
+        {
+            if (_isRefreshing) return;
+            _isRefreshing = true;
+
+            try
+            {
+                var filteredList = _bus.GetAllRoutes();
+
+                string searchDep = txtDepId.Text?.Trim().ToLower() ?? "";
+                string searchArr = txtArrId.Text?.Trim().ToLower() ?? "";
+                string searchDist = txtDistance.Text?.Trim() ?? "";
+                string searchDur = txtDuration.Text?.Trim() ?? "";
+
+                // ✅ Lọc theo tên sân bay
+                if (!string.IsNullOrEmpty(searchDep))
+                    filteredList = filteredList
+                        .Where(r => _airportNames.ContainsKey(r.DeparturePlaceId) &&
+                                    _airportNames[r.DeparturePlaceId].ToLower().Contains(searchDep))
+                        .ToList();
+
+                if (!string.IsNullOrEmpty(searchArr))
+                    filteredList = filteredList
+                        .Where(r => _airportNames.ContainsKey(r.ArrivalPlaceId) &&
+                                    _airportNames[r.ArrivalPlaceId].ToLower().Contains(searchArr))
+                        .ToList();
+
+                if (!string.IsNullOrEmpty(searchDist))
+                    filteredList = filteredList
+                        .Where(r => r.DistanceKm.HasValue &&
+                                    r.DistanceKm.Value.ToString().Contains(searchDist))
+                        .ToList();
+
+                if (!string.IsNullOrEmpty(searchDur))
+                    filteredList = filteredList
+                        .Where(r => r.DurationMinutes.HasValue &&
+                                    r.DurationMinutes.Value.ToString().Contains(searchDur))
+                        .ToList();
+
+                // ✅ Hiển thị tên thay vì ID
+                table.Rows.Clear();
+                foreach (var r in filteredList)
+                {
+                    string depName = _airportNames.ContainsKey(r.DeparturePlaceId)
+                        ? _airportNames[r.DeparturePlaceId]
+                        : $"#{r.DeparturePlaceId}";
+                    string arrName = _airportNames.ContainsKey(r.ArrivalPlaceId)
+                        ? _airportNames[r.ArrivalPlaceId]
+                        : $"#{r.ArrivalPlaceId}";
+
+                    table.Rows.Add(
+                        depName,
+                        arrName,
+                        r.DistanceKm?.ToString() ?? "N/A",
+                        r.DurationMinutes?.ToString() ?? "N/A",
+                        null,
+                        r.RouteId
+                    );
+                }
+
+                table.InvalidateColumn(table.Columns[ACTION_COL].Index);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi tải danh sách tuyến bay: " + ex.Message);
+            }
+            finally
+            {
+                _isRefreshing = false;
+            }
+        }
+
+        // ====== Giữ nguyên các hàm vẽ ======
+        private (Rectangle rcView, Rectangle rcEdit, Rectangle rcDel) GetRects(Rectangle b, Font f)
+        {
+            int pad = 6, x = b.Left + pad, y = b.Top + (b.Height - f.Height) / 2;
             var flags = TextFormatFlags.NoPadding;
-            var szV = TextRenderer.MeasureText(TXT_VIEW, font, Size.Empty, flags);
-            var szS = TextRenderer.MeasureText(SEP, font, Size.Empty, flags);
-            var szE = TextRenderer.MeasureText(TXT_EDIT, font, Size.Empty, flags);
-            var szD = TextRenderer.MeasureText(TXT_DEL, font, Size.Empty, flags);
+            var szV = TextRenderer.MeasureText(TXT_VIEW, f, Size.Empty, flags);
+            var szS = TextRenderer.MeasureText(SEP, f, Size.Empty, flags);
+            var szE = TextRenderer.MeasureText(TXT_EDIT, f, Size.Empty, flags);
+            var szD = TextRenderer.MeasureText(TXT_DEL, f, Size.Empty, flags);
             var rcV = new Rectangle(new Point(x, y), szV); x += szV.Width + szS.Width;
             var rcE = new Rectangle(new Point(x, y), szE); x += szE.Width + szS.Width;
             var rcD = new Rectangle(new Point(x, y), szD);
             return (rcV, rcE, rcD);
         }
 
-        private void Table_CellPainting(object? s, DataGridViewCellPaintingEventArgs e) {
-            if (e.RowIndex < 0) return;
-            if (table.Columns[e.ColumnIndex].Name != ACTION_COL) return;
-
+        private void Table_CellPainting(object? s, DataGridViewCellPaintingEventArgs e)
+        {
+            if (e.RowIndex < 0 || table.Columns[e.ColumnIndex].Name != ACTION_COL) return;
             e.Handled = true;
             e.Paint(e.ClipBounds, DataGridViewPaintParts.Background | DataGridViewPaintParts.Border);
-
-            var font = e.CellStyle.Font ?? table.Font;
-            var r = GetRects(e.CellBounds, font);
-
-            Color link = Color.FromArgb(0, 92, 175);
-            Color sep = Color.FromArgb(120, 120, 120);
-            Color del = Color.FromArgb(220, 53, 69);
-
-            TextRenderer.DrawText(e.Graphics, TXT_VIEW, font, r.rcView.Location, link, TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(e.Graphics, SEP, font, new Point(r.rcView.Right, r.rcView.Top), sep, TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(e.Graphics, TXT_EDIT, font, r.rcEdit.Location, link, TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(e.Graphics, SEP, font, new Point(r.rcEdit.Right, r.rcEdit.Top), sep, TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(e.Graphics, TXT_DEL, font, r.rcDel.Location, del, TextFormatFlags.NoPadding);
+            var f = e.CellStyle.Font ?? table.Font;
+            var r = GetRects(e.CellBounds, f);
+            Color link = Color.FromArgb(0, 92, 175), sep = Color.FromArgb(120, 120, 120), del = Color.FromArgb(220, 53, 69);
+            TextRenderer.DrawText(e.Graphics, TXT_VIEW, f, r.rcView.Location, link, TextFormatFlags.NoPadding);
+            TextRenderer.DrawText(e.Graphics, SEP, f, new Point(r.rcView.Right, r.rcView.Top), sep, TextFormatFlags.NoPadding);
+            TextRenderer.DrawText(e.Graphics, TXT_EDIT, f, r.rcEdit.Location, link, TextFormatFlags.NoPadding);
+            TextRenderer.DrawText(e.Graphics, SEP, f, new Point(r.rcEdit.Right, r.rcEdit.Top), sep, TextFormatFlags.NoPadding);
+            TextRenderer.DrawText(e.Graphics, TXT_DEL, f, r.rcDel.Location, del, TextFormatFlags.NoPadding);
         }
 
-        private void Table_CellMouseMove(object? s, DataGridViewCellMouseEventArgs e) {
+        private void Table_CellMouseMove(object? s, DataGridViewCellMouseEventArgs e)
+        {
             if (e.RowIndex < 0 || e.ColumnIndex < 0) { table.Cursor = Cursors.Default; return; }
             if (table.Columns[e.ColumnIndex].Name != ACTION_COL) { table.Cursor = Cursors.Default; return; }
-
             var rect = table.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, false);
-            var font = table[e.ColumnIndex, e.RowIndex].InheritedStyle?.Font ?? table.Font;
-            var r = GetRects(rect, font);
+            var f = table[e.ColumnIndex, e.RowIndex].InheritedStyle?.Font ?? table.Font;
+            var r = GetRects(rect, f);
             var p = new Point(e.Location.X + rect.Left, e.Location.Y + rect.Top);
             table.Cursor = (r.rcView.Contains(p) || r.rcEdit.Contains(p) || r.rcDel.Contains(p)) ? Cursors.Hand : Cursors.Default;
         }
 
-        private void Table_CellMouseClick(object? s, DataGridViewCellMouseEventArgs e) {
+        private void Table_CellMouseClick(object? s, DataGridViewCellMouseEventArgs e)
+        {
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
             if (table.Columns[e.ColumnIndex].Name != ACTION_COL) return;
 
             var rect = table.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, false);
-            var font = table[e.ColumnIndex, e.RowIndex].InheritedStyle?.Font ?? table.Font;
-            var r = GetRects(rect, font);
+            var f = table[e.ColumnIndex, e.RowIndex].InheritedStyle?.Font ?? table.Font;
+            var r = GetRects(rect, f);
             var p = new Point(e.Location.X + rect.Left, e.Location.Y + rect.Top);
 
             var row = table.Rows[e.RowIndex];
-            string routeId = row.Cells["routeIdHidden"].Value?.ToString() ?? "";
-            string from = row.Cells["fromAirport"].Value?.ToString() ?? "(n/a)";
-            string to = row.Cells["toAirport"].Value?.ToString() ?? "(n/a)";
-            string dist = row.Cells["distance"].Value?.ToString() ?? "0";
-            string dur = row.Cells["duration"].Value?.ToString() ?? "0";
+            int id = Convert.ToInt32(row.Cells["routeIdHidden"].Value);
 
-            if (r.rcView.Contains(p)) {
-                using (var frm = new RouteDetailForm(from, to, dist, dur)) {
-                    frm.StartPosition = FormStartPosition.CenterParent;
-                    frm.ShowDialog(FindForm());
+            // Lấy lại ID thật từ tên sân bay (dựa theo dictionary)
+            int depId = _airportNames.FirstOrDefault(x => row.Cells["depName"].Value?.ToString() == x.Value).Key;
+            int arrId = _airportNames.FirstOrDefault(x => row.Cells["arrName"].Value?.ToString() == x.Value).Key;
+
+            string distStr = row.Cells["distance"].Value?.ToString();
+            string durStr = row.Cells["duration"].Value?.ToString();
+
+            int? distance = distStr != "N/A" && int.TryParse(distStr, out int dist) ? dist : (int?)null;
+            int? duration = durStr != "N/A" && int.TryParse(durStr, out int dur) ? dur : (int?)null;
+
+            var dto = new RouteDTO(id, depId, arrId, distance, duration);
+
+            if (r.rcView.Contains(p))
+                ViewRequested?.Invoke(dto);
+            else if (r.rcEdit.Contains(p))
+                RequestEdit?.Invoke(dto);
+            else if (r.rcDel.Contains(p))
+            {
+                if (MessageBox.Show($"Bạn có chắc muốn xóa tuyến bay #{id} ({_airportNames[depId]} → {_airportNames[arrId]})?",
+                    "Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    string message;
+                    bool ok = _bus.DeleteRoute(id, out message);
+                    MessageBox.Show(message, ok ? "Thành công" : "Lỗi",
+                        MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+                    if (ok) RefreshList();
                 }
-            } else if (r.rcEdit.Contains(p)) {
-                MessageBox.Show($"Sửa tuyến #{routeId} ({from}→{to})", "Sửa", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            } else if (r.rcDel.Contains(p)) {
-                MessageBox.Show($"Xóa tuyến #{routeId} ({from}→{to})", "Xóa", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-        }
-    }
-
-    internal class RouteDetailForm : Form {
-        public RouteDetailForm(string from, string to, string distance, string duration) {
-            Text = $"Chi tiết tuyến {from} → {to}";
-            Size = new Size(800, 520);
-            BackColor = Color.White;
-
-            var detail = new RouteDetailControl { Dock = DockStyle.Fill };
-            detail.LoadRouteInfo(from, to, distance, duration);
-            Controls.Add(detail);
         }
     }
 }

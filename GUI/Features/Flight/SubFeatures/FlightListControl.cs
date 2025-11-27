@@ -6,6 +6,7 @@ using GUI.Features.Flight;
 using GUI.Components.Inputs;
 using GUI.Components.Tables;
 
+
 namespace GUI.Features.Flight.SubFeatures {
     public class FlightListControl : UserControl {
         private TableCustom table;
@@ -29,7 +30,6 @@ namespace GUI.Features.Flight.SubFeatures {
         public FlightListControl() {
             InitializeComponent();
         }
-
         private void InitializeComponent() {
             SuspendLayout();
 
@@ -147,21 +147,9 @@ namespace GUI.Features.Flight.SubFeatures {
             table.Columns.Add(colIdHidden);
 
             // Demo data (có thể bỏ)
-            table.Rows.Add("VN123", "SGN (HCM)", "HAN (HN)",
-                DateTime.Now.AddHours(2).ToString("HH:mm dd/MM/yyyy"),
-                DateTime.Now.AddHours(3.5).ToString("HH:mm dd/MM/yyyy"),
-                "SCHEDULED", 20, null, 1001);
-            table.Rows.Add("VN456", "DAD (ĐN)", "HAN (HN)",
-                DateTime.Now.AddHours(4).ToString("HH:mm dd/MM/yyyy"),
-                DateTime.Now.AddHours(5.5).ToString("HH:mm dd/MM/yyyy"),
-                "DELAYED", 15, null, 1002);
-            table.Rows.Add("VN789", "SGN (HCM)", "DAD (ĐN)",
-                DateTime.Now.AddHours(6).ToString("HH:mm dd/MM/yyyy"),
-                DateTime.Now.AddHours(7.2).ToString("HH:mm dd/MM/yyyy"),
-                "SCHEDULED", 5, null, 1003);
-
-            // Vẽ/hover/click cho cột thao tác
-            table.CellPainting += Table_CellPainting;
+            
+        // Vẽ/hover/click cho cột thao tác
+        table.CellPainting += Table_CellPainting;
             table.CellMouseMove += Table_CellMouseMove;
             table.CellMouseClick += Table_CellMouseClick;
 
