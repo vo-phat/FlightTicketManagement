@@ -3,30 +3,36 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DAO.Repositories {
-    public class RolePermissionRepository {
-        public List<Permission> GetAllPermissions() {
+namespace DAO.Repositories
+{
+    public class RolePermissionRepository
+    {
+        public List<Permission> GetAllPermissions()
+        {
             using var db = new Context();
             return db.Permissions.AsNoTracking()
                      .OrderBy(p => p.PermissionCode)
                      .ToList();
         }
 
-        public List<Role> GetAllRoles() {
+        public List<Role> GetAllRoles()
+        {
             using var db = new Context();
             return db.Roles.AsNoTracking()
                      .OrderBy(r => r.RoleName)
                      .ToList();
         }
 
-        public List<Account> GetAllAccounts() {
+        public List<Account> GetAllAccounts()
+        {
             using var db = new Context();
             return db.Accounts.AsNoTracking()
                      .OrderBy(a => a.Email)
                      .ToList();
         }
 
-        public HashSet<int> GetPermissionIdsOfRole(int roleId) {
+        public HashSet<int> GetPermissionIdsOfRole(int roleId)
+        {
             using var db = new Context();
             return db.RolePermissions.AsNoTracking()
                      .Where(rp => rp.RoleId == roleId)
@@ -34,7 +40,8 @@ namespace DAO.Repositories {
                      .ToHashSet();
         }
 
-        public void SavePermissionsForRole(int roleId, IEnumerable<int> permIds) {
+        public void SavePermissionsForRole(int roleId, IEnumerable<int> permIds)
+        {
             using var db = new Context();
             using var tx = db.Database.BeginTransaction();
 
@@ -49,7 +56,8 @@ namespace DAO.Repositories {
             tx.Commit();
         }
 
-        public HashSet<int> GetRoleIdsOfAccount(int accountId) {
+        public HashSet<int> GetRoleIdsOfAccount(int accountId)
+        {
             using var db = new Context();
             return db.AccountRoles.AsNoTracking()
                      .Where(ar => ar.AccountId == accountId)
@@ -57,7 +65,8 @@ namespace DAO.Repositories {
                      .ToHashSet();
         }
 
-        public void SaveRolesForAccount(int accountId, IEnumerable<int> roleIds) {
+        public void SaveRolesForAccount(int accountId, IEnumerable<int> roleIds)
+        {
             using var db = new Context();
             using var tx = db.Database.BeginTransaction();
 
@@ -72,7 +81,8 @@ namespace DAO.Repositories {
             tx.Commit();
         }
 
-        public HashSet<int> GetEffectivePermissionIdsOfAccount(int accountId) {
+        public HashSet<int> GetEffectivePermissionIdsOfAccount(int accountId)
+        {
             using var db = new Context();
 
             var roleIds = db.AccountRoles

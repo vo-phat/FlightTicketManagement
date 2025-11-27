@@ -4,11 +4,14 @@ using MySqlConnector;
 using DTO.Account;
 using DAO.Database;
 
-namespace DAO.Repositories {
-    public class AccountDao : BaseDAO {
+namespace DAO.Repositories
+{
+    public class AccountDao : BaseDAO
+    {
         private const string TABLE = "accounts";
 
-        public AccountDto GetByEmail(string email) {
+        public AccountDto GetByEmail(string email)
+        {
             AccountDto account = null;
 
             string query = $@"
@@ -21,7 +24,8 @@ namespace DAO.Repositories {
             };
 
             ExecuteReader(query, reader => {
-                account = new AccountDto {
+                account = new AccountDto
+                {
                     AccountId = GetInt32(reader, "account_id"),
                     Email = GetString(reader, "email"),
                     Password = GetString(reader, "password"),
@@ -34,7 +38,8 @@ namespace DAO.Repositories {
             return account;
         }
 
-        public bool ExistsByEmail(string email) {
+        public bool ExistsByEmail(string email)
+        {
             string query = $@"SELECT COUNT(*) FROM {TABLE} WHERE email = @email";
             var parameters = new Dictionary<string, object> {
                 { "@email", email }
@@ -45,7 +50,8 @@ namespace DAO.Repositories {
             return count > 0;
         }
 
-        public int Create(AccountDto account) {
+        public int Create(AccountDto account)
+        {
             string query = $@"INSERT INTO {TABLE}(email, password, failed_attempts, is_active)
                             VALUES (@email, @password, @failed_attempts, @is_active);";
 
@@ -60,7 +66,8 @@ namespace DAO.Repositories {
         }
 
 
-        public void UpdatePassword(int accountId, string hashedPassword) {
+        public void UpdatePassword(int accountId, string hashedPassword)
+        {
             string query = $@"
                 UPDATE {TABLE}
                 SET password = @password, failed_attempts = 0
@@ -74,7 +81,8 @@ namespace DAO.Repositories {
             ExecuteNonQuery(query, parameters);
         }
 
-        public void DecreaseFailedAttempts(int accountId) {
+        public void DecreaseFailedAttempts(int accountId)
+        {
             string query = $@"UPDATE {TABLE}
                             SET failed_attempts = CASE
                             WHEN failed_attempts > 0 THEN failed_attempts - 1
@@ -89,7 +97,8 @@ namespace DAO.Repositories {
             ExecuteNonQuery(query, parameters);
         }
 
-        public void ResetFailedAttemptsToDefault(int accountId) {
+        public void ResetFailedAttemptsToDefault(int accountId)
+        {
             string query = $@"UPDATE {TABLE}
                             SET failed_attempts = @val
                             WHERE account_id = @id";
@@ -102,7 +111,8 @@ namespace DAO.Repositories {
             ExecuteNonQuery(query, parameters);
         }
 
-        public void LockAccount(int accountId) {
+        public void LockAccount(int accountId)
+        {
             string query = $@"UPDATE {TABLE}
                             SET is_active = 0
                             WHERE account_id = @id";
@@ -114,7 +124,8 @@ namespace DAO.Repositories {
             ExecuteNonQuery(query, parameters);
         }
 
-        public void UnlockAccount(int accountId) {
+        public void UnlockAccount(int accountId)
+        {
             string query = @"UPDATE accounts SET is_active = 1 WHERE account_id = @id";
 
             var parameters = new Dictionary<string, object> {
@@ -124,7 +135,8 @@ namespace DAO.Repositories {
             ExecuteNonQuery(query, parameters);
         }
 
-        public void AssignUserRole(int accountId) {
+        public void AssignUserRole(int accountId)
+        {
             const string sql = @"
                 INSERT IGNORE INTO account_role (account_id, role_id)
                 SELECT @account_id, r.role_id
@@ -132,28 +144,32 @@ namespace DAO.Repositories {
                 WHERE r.role_code = 'USER';
             ";
 
-            var parameters = new Dictionary<string, object> {
+            var parameters = new Dictionary<string, object>
+            {
                 ["@account_id"] = accountId
             };
 
             ExecuteNonQuery(sql, parameters);
         }
 
-        public void CreateEmptyProfile(int accountId) {
+        public void CreateEmptyProfile(int accountId)
+        {
             const string sql = @"
                 INSERT INTO Passenger_Profiles (account_id)
                 VALUES (@account_id)
                 ON DUPLICATE KEY UPDATE account_id = account_id;
             ";
 
-            var parameters = new Dictionary<string, object> {
+            var parameters = new Dictionary<string, object>
+            {
                 ["@account_id"] = accountId
             };
 
             ExecuteNonQuery(sql, parameters);
         }
 
-        public AccountDto GetById(int accountId) {
+        public AccountDto GetById(int accountId)
+        {
             AccountDto account = null;
 
             string query = $@"
@@ -166,7 +182,8 @@ namespace DAO.Repositories {
             };
 
             ExecuteReader(query, reader => {
-                account = new AccountDto {
+                account = new AccountDto
+                {
                     AccountId = GetInt32(reader, "account_id"),
                     Email = GetString(reader, "email"),
                     Password = GetString(reader, "password"),

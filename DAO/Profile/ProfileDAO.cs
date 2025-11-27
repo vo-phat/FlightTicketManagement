@@ -4,8 +4,10 @@ using DAO.Database;
 using DTO.Profile;
 using MySqlConnector;
 
-namespace DAO.Repositories {
-    public class ProfileDao : BaseDAO {
+namespace DAO.Repositories
+{
+    public class ProfileDao : BaseDAO
+    {
         private const string ACCOUNT_TABLE = "accounts";
         private const string PROFILE_TABLE = "Passenger_Profiles";
 
@@ -13,7 +15,8 @@ namespace DAO.Repositories {
         /// Lấy thông tin profile theo account_id
         /// JOIN accounts + Passenger_Profiles để lấy Email + thông tin hồ sơ.
         /// </summary>
-        public ProfileInfoDto GetByAccountId(int accountId) {
+        public ProfileInfoDto GetByAccountId(int accountId)
+        {
             ProfileInfoDto profile = null;
 
             string query = $@"
@@ -28,12 +31,14 @@ namespace DAO.Repositories {
                 LEFT JOIN {PROFILE_TABLE} p ON p.account_id = a.account_id
                 WHERE a.account_id = @account_id";
 
-            var parameters = new Dictionary<string, object> {
+            var parameters = new Dictionary<string, object>
+            {
                 ["@account_id"] = accountId
             };
 
             ExecuteReader(query, reader => {
-                profile = new ProfileInfoDto {
+                profile = new ProfileInfoDto
+                {
                     AccountId = GetInt32(reader, "account_id"),
                     Email = GetString(reader, "email") ?? string.Empty,
                     FullName = GetString(reader, "full_name") ?? string.Empty,
@@ -52,7 +57,8 @@ namespace DAO.Repositories {
         /// - Update email trong bảng accounts
         /// - Insert hoặc Update bản ghi trong Passenger_Profiles
         /// </summary>
-        public void Save(ProfileInfoDto profile) {
+        public void Save(ProfileInfoDto profile)
+        {
             if (profile == null)
                 throw new ArgumentNullException(nameof(profile));
 
@@ -62,7 +68,8 @@ namespace DAO.Repositories {
                 SET email = @Email
                 WHERE account_id = @AccountId";
 
-            var accountParams = new Dictionary<string, object> {
+            var accountParams = new Dictionary<string, object>
+            {
                 ["@Email"] = profile.Email,
                 ["@AccountId"] = profile.AccountId
             };
@@ -75,7 +82,8 @@ namespace DAO.Repositories {
                 FROM {PROFILE_TABLE}
                 WHERE account_id = @AccountId";
 
-            var checkParams = new Dictionary<string, object> {
+            var checkParams = new Dictionary<string, object>
+            {
                 ["@AccountId"] = profile.AccountId
             };
 
@@ -83,7 +91,8 @@ namespace DAO.Repositories {
             int count = Convert.ToInt32(result);
 
             // Params chung cho insert/update
-            var profileParams = new Dictionary<string, object> {
+            var profileParams = new Dictionary<string, object>
+            {
                 ["@AccountId"] = profile.AccountId,
                 ["@FullName"] = (object?)profile.FullName ?? DBNull.Value,
                 ["@Dob"] = (object?)profile.DateOfBirth ?? DBNull.Value,
@@ -92,7 +101,8 @@ namespace DAO.Repositories {
                 ["@Nationality"] = (object?)profile.Nationality ?? DBNull.Value
             };
 
-            if (count == 0) {
+            if (count == 0)
+            {
                 // 3a. Chưa có -> INSERT mới
                 string insertSql = $@"
                     INSERT INTO {PROFILE_TABLE}
@@ -101,7 +111,9 @@ namespace DAO.Repositories {
                         (@AccountId, @FullName, @Dob, @Phone, @Passport, @Nationality);";
 
                 ExecuteNonQuery(insertSql, profileParams);
-            } else {
+            }
+            else
+            {
                 // 3b. Đã có -> UPDATE
                 string updateProfileSql = $@"
                     UPDATE {PROFILE_TABLE}

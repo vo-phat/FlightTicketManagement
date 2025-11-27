@@ -173,6 +173,46 @@ namespace DAO.Route
 
             return results;
         }
+        public Dictionary<int, string> GetRouteDisplayList()
+        {
+            var routes = new Dictionary<int, string>();
+
+            string query = @"
+                SELECT 
+                    r.route_id,
+                    CONCAT(dep.airport_code, ' → ', arr.airport_code) AS route_name
+                FROM routes r
+                JOIN airports dep ON r.departure_place_id = dep.airport_id
+                JOIN airports arr ON r.arrival_place_id = arr.airport_id
+                ORDER BY dep.airport_code, arr.airport_code;
+            ";
+
+            try
+            {
+                using (var conn = DatabaseConnection.GetConnection())
+                {
+                    conn.Open();
+                    using (var cmd = new MySqlCommand(query, conn))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            int id = reader.GetInt32("route_id");
+                            string name = reader.GetString("route_name");
+                            routes[id] = name;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Lỗi khi lấy danh sách tuyến bay: " + ex.Message, ex);
+            }
+
+            return routes;
+        }
         #endregion
     }
+
+
 }

@@ -6,12 +6,15 @@ using DTO.Permissions;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace BUS.Auth {
-    public class RolePermissionService {
+namespace BUS.Auth
+{
+    public class RolePermissionService
+    {
         private readonly RolePermissionRepository _repo = new();
         private readonly AccountDao _accountDao = new();
 
-        public List<PermissionItem> GetAllPermissions() {
+        public List<PermissionItem> GetAllPermissions()
+        {
             var entities = _repo.GetAllPermissions();
 
             // LINQ to Object: map entity -> DTO + Group
@@ -27,10 +30,12 @@ namespace BUS.Auth {
                 .ToList();
         }
 
-        private static string MapGroupFromCode(string code) {
+        private static string MapGroupFromCode(string code)
+        {
             if (string.IsNullOrWhiteSpace(code)) return "Misc";
             var prefix = code.Split('.')[0].ToLowerInvariant();
-            return prefix switch {
+            return prefix switch
+            {
                 "flights" => "Flights",
                 "fare_rules" => "Flights",
                 "tickets" => "Tickets",
@@ -71,7 +76,8 @@ namespace BUS.Auth {
 
         public HashSet<int> GetEffectivePermissionIdsOfAccount(int accountId)
             => _repo.GetEffectivePermissionIdsOfAccount(accountId);
-        public int CreateAccountWithRoles(string email, string password, int roleId) {
+        public int CreateAccountWithRoles(string email, string password, int roleId)
+        {
             if (string.IsNullOrWhiteSpace(email))
                 throw new Exception("Email không được để trống.");
 
@@ -87,7 +93,8 @@ namespace BUS.Auth {
             if (_accountDao.ExistsByEmail(email))
                 throw new Exception("Email đã tồn tại trong hệ thống.");
 
-            var dto = new AccountDto {
+            var dto = new AccountDto
+            {
                 Email = email,
                 Password = PasswordHasher.Hash(password),
                 FailedAttempts = AccountDto.DEFAULT_FAILED_ATTEMPTS,
@@ -103,29 +110,34 @@ namespace BUS.Auth {
 
             return newId;
         }
-        public void DeleteAccount(int accountId) {
+        public void DeleteAccount(int accountId)
+        {
             _repo.SaveRolesForAccount(accountId, Enumerable.Empty<int>());
             _accountDao.LockAccount(accountId);
         }
-        public void UpdatePasswordForAccount(int accountId, string newPassword) {
+        public void UpdatePasswordForAccount(int accountId, string newPassword)
+        {
             if (string.IsNullOrWhiteSpace(newPassword))
                 throw new Exception("Mật khẩu mới không được để trống.");
 
-             AccountValidator.ValidatePassword(newPassword);
+            AccountValidator.ValidatePassword(newPassword);
 
             string hash = PasswordHasher.Hash(newPassword);
             _accountDao.UpdatePassword(accountId, hash);
         }
 
-        public void ResetFailedAttempts(int accountId) {
+        public void ResetFailedAttempts(int accountId)
+        {
             _accountDao.ResetFailedAttemptsToDefault(accountId);
         }
 
-        public void UnlockAccount(int accountId) {
+        public void UnlockAccount(int accountId)
+        {
             _accountDao.UnlockAccount(accountId);   // gọi xuống DAO
         }
 
-        public HashSet<string> GetEffectivePermissionCodesOfAccount(int accountId) {
+        public HashSet<string> GetEffectivePermissionCodesOfAccount(int accountId)
+        {
             // Lấy danh sách id quyền hiệu lực của account
             var idSet = _repo.GetEffectivePermissionIdsOfAccount(accountId);
             if (idSet == null || idSet.Count == 0)
