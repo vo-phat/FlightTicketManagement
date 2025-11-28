@@ -99,6 +99,7 @@ namespace DAO.Database
                 }
 
                 return command.ExecuteNonQuery();
+<<<<<<< Updated upstream
             }
             catch (MySqlException ex)
             {
@@ -106,6 +107,12 @@ namespace DAO.Database
             }
             finally
             {
+=======
+            } catch (MySqlException ex) {
+                // Re-throw MySqlException để giữ nguyên error code cho caller xử lý
+                throw;
+            } finally {
+>>>>>>> Stashed changes
                 command?.Dispose();
                 connection?.Close();
             }

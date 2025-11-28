@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 
 using BUS.Stats;
 using DTO.Stats;
@@ -265,10 +266,208 @@ namespace GUI.Features.Stats
             catch (Exception ex)
             {
                 MessageBox.Show($"Lỗi khi xuất báo cáo: {ex.Message}", "Lỗi", 
+=======
+using System;
+using System.Drawing;
+using System.Windows.Forms;
+using System.Linq;
+using BUS.Flight;
+using DTO.Flight;
+
+namespace GUI.Features.Stats {
+    public class StatsControl : UserControl {
+        private readonly FlightBUS _flightBUS;
+        private TableLayoutPanel mainPanel;
+        private Label lblTitle;
+        private Panel statsPanel;
+        private Button btnRefresh;
+
+        public StatsControl() {
+            _flightBUS = new FlightBUS();
+            InitializeComponent();
+            LoadStatistics();
+        }
+
+        private void InitializeComponent() {
+            SuspendLayout();
+
+            Dock = DockStyle.Fill;
+            BackColor = Color.FromArgb(232, 240, 252);
+
+            // Title
+            lblTitle = new Label {
+                Text = "📊 Thống kê chuyến bay",
+                AutoSize = true,
+                Font = new Font("Segoe UI", 20, FontStyle.Bold),
+                ForeColor = Color.Black,
+                Padding = new Padding(24, 20, 24, 16),
+                Dock = DockStyle.Top
+            };
+
+            // Top buttons panel
+            var buttonContainer = new Panel {
+                Dock = DockStyle.Top,
+                Height = 56,
+                Padding = new Padding(24, 8, 24, 8),
+                BackColor = Color.Transparent
+            };
+
+            // Refresh button
+            btnRefresh = new Button {
+                Text = "🔄 Làm mới",
+                AutoSize = true,
+                Height = 40,
+                Padding = new Padding(12, 6, 12, 6),
+                BackColor = Color.FromArgb(0, 123, 255),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Location = new Point(0, 8)
+            };
+            btnRefresh.Click += (s, e) => LoadStatistics();
+
+            // Export button
+            var btnExport = new Button {
+                Text = "📊 Xuất Excel",
+                AutoSize = true,
+                Height = 40,
+                Padding = new Padding(12, 6, 12, 6),
+                BackColor = Color.FromArgb(40, 167, 69),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Location = new Point(140, 8)
+            };
+            btnExport.Click += BtnExport_Click;
+
+            // Filter by date range
+            var btnFilterToday = new Button {
+                Text = "📅 Hôm nay",
+                AutoSize = true,
+                Height = 40,
+                Padding = new Padding(12, 6, 12, 6),
+                BackColor = Color.FromArgb(108, 117, 125),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Location = new Point(300, 8)
+            };
+            btnFilterToday.Click += (s, e) => FilterByDateRange(DateTime.Now.Date, DateTime.Now.Date);
+
+            var btnFilterWeek = new Button {
+                Text = "📅 Tuần này",
+                AutoSize = true,
+                Height = 40,
+                Padding = new Padding(12, 6, 12, 6),
+                BackColor = Color.FromArgb(108, 117, 125),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Location = new Point(440, 8)
+            };
+            btnFilterWeek.Click += (s, e) => {
+                var startOfWeek = DateTime.Now.Date.AddDays(-(int)DateTime.Now.DayOfWeek);
+                FilterByDateRange(startOfWeek, startOfWeek.AddDays(7));
+            };
+
+            var btnFilterMonth = new Button {
+                Text = "📅 Tháng này",
+                AutoSize = true,
+                Height = 40,
+                Padding = new Padding(12, 6, 12, 6),
+                BackColor = Color.FromArgb(108, 117, 125),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Location = new Point(590, 8)
+            };
+            btnFilterMonth.Click += (s, e) => {
+                var startOfMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                FilterByDateRange(startOfMonth, startOfMonth.AddMonths(1).AddDays(-1));
+            };
+
+            buttonContainer.Controls.Add(btnRefresh);
+            buttonContainer.Controls.Add(btnExport);
+            buttonContainer.Controls.Add(btnFilterToday);
+            buttonContainer.Controls.Add(btnFilterWeek);
+            buttonContainer.Controls.Add(btnFilterMonth);
+
+            // Stats panel
+            statsPanel = new Panel {
+                Dock = DockStyle.Fill,
+                Padding = new Padding(24),
+                AutoScroll = true,
+                BackColor = Color.Transparent
+            };
+
+            // Main panel
+            mainPanel = new TableLayoutPanel {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 3,
+                BackColor = Color.Transparent
+            };
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+
+            mainPanel.Controls.Add(lblTitle, 0, 0);
+            mainPanel.Controls.Add(buttonContainer, 0, 1);
+            mainPanel.Controls.Add(statsPanel, 0, 2);
+
+            Controls.Add(mainPanel);
+            ResumeLayout(false);
+        }
+
+        private void LoadStatistics() {
+            try {
+                statsPanel.Controls.Clear();
+
+                var flights = _flightBUS.GetAllFlights();
+                
+                // Calculate statistics
+                int totalFlights = flights.Count;
+                int scheduledCount = flights.Count(f => f.Status == FlightStatus.SCHEDULED);
+                int delayedCount = flights.Count(f => f.Status == FlightStatus.DELAYED);
+                int cancelledCount = flights.Count(f => f.Status == FlightStatus.CANCELLED);
+                int completedCount = flights.Count(f => f.Status == FlightStatus.COMPLETED);
+
+                // Today's flights
+                var today = DateTime.Now.Date;
+                var todayFlights = flights.Where(f => f.DepartureTime.HasValue && 
+                    f.DepartureTime.Value.Date == today).ToList();
+
+                // Upcoming flights (next 7 days)
+                var upcomingFlights = flights.Where(f => f.DepartureTime.HasValue && 
+                    f.DepartureTime.Value > DateTime.Now && 
+                    f.DepartureTime.Value <= DateTime.Now.AddDays(7)).ToList();
+
+                // Create stats cards
+                var cardContainer = new FlowLayoutPanel {
+                    Dock = DockStyle.Top,
+                    AutoSize = true,
+                    FlowDirection = FlowDirection.LeftToRight,
+                    WrapContents = true,
+                    Padding = new Padding(0, 0, 0, 16)
+                };
+
+                cardContainer.Controls.Add(CreateStatCard("Tổng số chuyến bay", totalFlights.ToString(), Color.FromArgb(52, 152, 219)));
+                cardContainer.Controls.Add(CreateStatCard("Đã lên lịch", scheduledCount.ToString(), Color.FromArgb(46, 204, 113)));
+                cardContainer.Controls.Add(CreateStatCard("Bị trễ", delayedCount.ToString(), Color.FromArgb(241, 196, 15)));
+                cardContainer.Controls.Add(CreateStatCard("Đã hủy", cancelledCount.ToString(), Color.FromArgb(231, 76, 60)));
+                cardContainer.Controls.Add(CreateStatCard("Hoàn thành", completedCount.ToString(), Color.FromArgb(149, 165, 166)));
+                cardContainer.Controls.Add(CreateStatCard("Hôm nay", todayFlights.Count.ToString(), Color.FromArgb(155, 89, 182)));
+                cardContainer.Controls.Add(CreateStatCard("7 ngày tới", upcomingFlights.Count.ToString(), Color.FromArgb(52, 73, 94)));
+
+                statsPanel.Controls.Add(cardContainer);
+
+                // Detailed breakdown section
+                var detailSection = CreateDetailSection("Chi tiết theo trạng thái", flights);
+                statsPanel.Controls.Add(detailSection);
+
+            } catch (Exception ex) {
+                MessageBox.Show("Lỗi khi tải thống kê: " + ex.Message, "Lỗi",
+>>>>>>> Stashed changes
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
+<<<<<<< Updated upstream
         private void InitializeComponent()
         {
 
@@ -335,6 +534,283 @@ namespace GUI.Features.Stats
             {
                 // Hiển thị thông báo nếu không có dữ liệu
                 tblTopRoutes.Rows.Add("Không có dữ liệu", 0, 0);
+=======
+        private Panel CreateStatCard(string title, string value, Color color) {
+            var card = new Panel {
+                Width = 200,
+                Height = 120,
+                Margin = new Padding(0, 0, 16, 16),
+                BackColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle,
+                Cursor = Cursors.Hand
+            };
+
+            var lblTitle = new Label {
+                Text = title,
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                ForeColor = Color.FromArgb(100, 100, 100),
+                AutoSize = false,
+                Size = new Size(180, 40),
+                Location = new Point(10, 10),
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            var lblValue = new Label {
+                Text = value,
+                Font = new Font("Segoe UI", 28, FontStyle.Bold),
+                ForeColor = color,
+                AutoSize = false,
+                Size = new Size(180, 60),
+                Location = new Point(10, 50),
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            card.Controls.Add(lblTitle);
+            card.Controls.Add(lblValue);
+
+            // Hover effect
+            card.MouseEnter += (s, e) => card.BackColor = Color.FromArgb(240, 240, 240);
+            card.MouseLeave += (s, e) => card.BackColor = Color.White;
+
+            // Click to show details
+            card.Click += (s, e) => ShowCardDetails(title);
+            lblTitle.Click += (s, e) => ShowCardDetails(title);
+            lblValue.Click += (s, e) => ShowCardDetails(title);
+
+            return card;
+        }
+
+        private void ShowCardDetails(string cardTitle) {
+            try {
+                var flights = _flightBUS.GetAllFlights();
+                var filteredFlights = cardTitle switch {
+                    "Đã lên lịch" => flights.Where(f => f.Status == FlightStatus.SCHEDULED).ToList(),
+                    "Bị trễ" => flights.Where(f => f.Status == FlightStatus.DELAYED).ToList(),
+                    "Đã hủy" => flights.Where(f => f.Status == FlightStatus.CANCELLED).ToList(),
+                    "Hoàn thành" => flights.Where(f => f.Status == FlightStatus.COMPLETED).ToList(),
+                    "Hôm nay" => flights.Where(f => f.DepartureTime.HasValue && 
+                        f.DepartureTime.Value.Date == DateTime.Now.Date).ToList(),
+                    "7 ngày tới" => flights.Where(f => f.DepartureTime.HasValue && 
+                        f.DepartureTime.Value > DateTime.Now && 
+                        f.DepartureTime.Value <= DateTime.Now.AddDays(7)).ToList(),
+                    _ => flights
+                };
+
+                var detailForm = new Form {
+                    Text = $"Chi tiết - {cardTitle}",
+                    Size = new Size(800, 500),
+                    StartPosition = FormStartPosition.CenterParent
+                };
+
+                var dgv = new DataGridView {
+                    Dock = DockStyle.Fill,
+                    AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                    ReadOnly = true,
+                    AllowUserToAddRows = false,
+                    BackgroundColor = Color.White
+                };
+
+                dgv.Columns.Add("FlightNumber", "Số hiệu");
+                dgv.Columns.Add("AircraftId", "Máy bay");
+                dgv.Columns.Add("RouteId", "Tuyến bay");
+                dgv.Columns.Add("DepartureTime", "Giờ khởi hành");
+                dgv.Columns.Add("ArrivalTime", "Giờ hạ cánh");
+                dgv.Columns.Add("Status", "Trạng thái");
+
+                foreach (var flight in filteredFlights) {
+                    dgv.Rows.Add(
+                        flight.FlightNumber,
+                        flight.AircraftId,
+                        flight.RouteId,
+                        flight.DepartureTime?.ToString("dd/MM/yyyy HH:mm") ?? "N/A",
+                        flight.ArrivalTime?.ToString("dd/MM/yyyy HH:mm") ?? "N/A",
+                        flight.Status.GetDescription()
+                    );
+                }
+
+                detailForm.Controls.Add(dgv);
+                detailForm.ShowDialog();
+            }
+            catch (Exception ex) {
+                MessageBox.Show("Lỗi khi hiển thị chi tiết: " + ex.Message, "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private Panel CreateDetailSection(string sectionTitle, System.Collections.Generic.List<FlightDTO> flights) {
+            var section = new Panel {
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                Padding = new Padding(0, 16, 0, 0),
+                BackColor = Color.Transparent
+            };
+
+            var lblSection = new Label {
+                Text = sectionTitle,
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                AutoSize = true,
+                Dock = DockStyle.Top,
+                Padding = new Padding(0, 0, 0, 12)
+            };
+            section.Controls.Add(lblSection);
+
+            // Group by status
+            var groupedFlights = flights.GroupBy(f => f.Status)
+                .OrderByDescending(g => g.Count())
+                .ToList();
+
+            var detailPanel = new FlowLayoutPanel {
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false
+            };
+
+            foreach (var group in groupedFlights) {
+                var statusPanel = new Panel {
+                    Width = 600,
+                    Height = 40,
+                    Margin = new Padding(0, 4, 0, 4),
+                    BackColor = Color.White,
+                    BorderStyle = BorderStyle.FixedSingle
+                };
+
+                var lblStatus = new Label {
+                    Text = group.Key.GetDescription(),
+                    Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                    AutoSize = false,
+                    Size = new Size(200, 40),
+                    Location = new Point(10, 0),
+                    TextAlign = ContentAlignment.MiddleLeft
+                };
+
+                var lblCount = new Label {
+                    Text = $"{group.Count()} chuyến bay",
+                    Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                    AutoSize = false,
+                    Size = new Size(150, 40),
+                    Location = new Point(220, 0),
+                    TextAlign = ContentAlignment.MiddleLeft
+                };
+
+                double percentage = (double)group.Count() / flights.Count * 100;
+                var lblPercentage = new Label {
+                    Text = $"{percentage:F1}%",
+                    Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                    ForeColor = Color.FromArgb(0, 123, 255),
+                    AutoSize = false,
+                    Size = new Size(100, 40),
+                    Location = new Point(380, 0),
+                    TextAlign = ContentAlignment.MiddleLeft
+                };
+
+                statusPanel.Controls.Add(lblStatus);
+                statusPanel.Controls.Add(lblCount);
+                statusPanel.Controls.Add(lblPercentage);
+
+                detailPanel.Controls.Add(statusPanel);
+            }
+
+            section.Controls.Add(detailPanel);
+            detailPanel.BringToFront();
+
+            return section;
+        }
+
+        private void FilterByDateRange(DateTime startDate, DateTime endDate) {
+            try {
+                statsPanel.Controls.Clear();
+
+                var allFlights = _flightBUS.GetAllFlights();
+                var flights = allFlights.Where(f => f.DepartureTime.HasValue && 
+                    f.DepartureTime.Value.Date >= startDate && 
+                    f.DepartureTime.Value.Date <= endDate).ToList();
+                
+                // Update title
+                lblTitle.Text = $"📊 Thống kê chuyến bay ({startDate:dd/MM/yyyy} - {endDate:dd/MM/yyyy})";
+
+                // Calculate statistics
+                int totalFlights = flights.Count;
+                int scheduledCount = flights.Count(f => f.Status == FlightStatus.SCHEDULED);
+                int delayedCount = flights.Count(f => f.Status == FlightStatus.DELAYED);
+                int cancelledCount = flights.Count(f => f.Status == FlightStatus.CANCELLED);
+                int completedCount = flights.Count(f => f.Status == FlightStatus.COMPLETED);
+
+                // Today's flights
+                var today = DateTime.Now.Date;
+                var todayFlights = flights.Where(f => f.DepartureTime.HasValue && 
+                    f.DepartureTime.Value.Date == today).ToList();
+
+                // Upcoming flights (next 7 days)
+                var upcomingFlights = flights.Where(f => f.DepartureTime.HasValue && 
+                    f.DepartureTime.Value > DateTime.Now && 
+                    f.DepartureTime.Value <= DateTime.Now.AddDays(7)).ToList();
+
+                // Create stats cards
+                var cardContainer = new FlowLayoutPanel {
+                    Dock = DockStyle.Top,
+                    AutoSize = true,
+                    FlowDirection = FlowDirection.LeftToRight,
+                    WrapContents = true,
+                    Padding = new Padding(0, 0, 0, 16)
+                };
+
+                cardContainer.Controls.Add(CreateStatCard("Tổng số chuyến bay", totalFlights.ToString(), Color.FromArgb(52, 152, 219)));
+                cardContainer.Controls.Add(CreateStatCard("Đã lên lịch", scheduledCount.ToString(), Color.FromArgb(46, 204, 113)));
+                cardContainer.Controls.Add(CreateStatCard("Bị trễ", delayedCount.ToString(), Color.FromArgb(241, 196, 15)));
+                cardContainer.Controls.Add(CreateStatCard("Đã hủy", cancelledCount.ToString(), Color.FromArgb(231, 76, 60)));
+                cardContainer.Controls.Add(CreateStatCard("Hoàn thành", completedCount.ToString(), Color.FromArgb(149, 165, 166)));
+                cardContainer.Controls.Add(CreateStatCard("Hôm nay", todayFlights.Count.ToString(), Color.FromArgb(155, 89, 182)));
+                cardContainer.Controls.Add(CreateStatCard("7 ngày tới", upcomingFlights.Count.ToString(), Color.FromArgb(52, 73, 94)));
+
+                statsPanel.Controls.Add(cardContainer);
+
+                // Detailed breakdown section
+                if (flights.Count > 0) {
+                    var detailSection = CreateDetailSection("Chi tiết theo trạng thái", flights);
+                    statsPanel.Controls.Add(detailSection);
+                } else {
+                    var noDataLabel = new Label {
+                        Text = "⚠️ Không có dữ liệu trong khoảng thời gian này",
+                        Font = new Font("Segoe UI", 12, FontStyle.Italic),
+                        ForeColor = Color.Gray,
+                        AutoSize = true,
+                        Padding = new Padding(0, 20, 0, 0)
+                    };
+                    statsPanel.Controls.Add(noDataLabel);
+                }
+
+            } catch (Exception ex) {
+                MessageBox.Show("Lỗi khi lọc thống kê: " + ex.Message, "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnExport_Click(object? sender, EventArgs e) {
+            try {
+                var flights = _flightBUS.GetAllFlights();
+                var csv = "Flight Number,Aircraft ID,Route ID,Departure Time,Arrival Time,Status\n";
+                
+                foreach (var flight in flights) {
+                    csv += $"{flight.FlightNumber},{flight.AircraftId},{flight.RouteId}," +
+                           $"{flight.DepartureTime:yyyy-MM-dd HH:mm},{flight.ArrivalTime:yyyy-MM-dd HH:mm}," +
+                           $"{flight.Status.GetDescription()}\n";
+                }
+
+                var saveDialog = new SaveFileDialog {
+                    Filter = "CSV Files (*.csv)|*.csv|All Files (*.*)|*.*",
+                    FileName = $"FlightStats_{DateTime.Now:yyyyMMdd_HHmmss}.csv"
+                };
+
+                if (saveDialog.ShowDialog() == DialogResult.OK) {
+                    System.IO.File.WriteAllText(saveDialog.FileName, csv);
+                    MessageBox.Show("Xuất dữ liệu thành công!", "Thành công",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            } catch (Exception ex) {
+                MessageBox.Show("Lỗi khi xuất dữ liệu: " + ex.Message, "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+>>>>>>> Stashed changes
             }
         }
     }

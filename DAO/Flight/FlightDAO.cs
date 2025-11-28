@@ -218,11 +218,8 @@ namespace DAO.Flight
             }
             catch (MySqlException ex)
             {
-                if(ex.Number == 1451) // Foreign key constraint fails
-                {
-                    throw new Exception($"Không thể xóa chuyến bay với ID {flightId} vì có dữ liệu liên quan.", ex);
-                }
-                throw new Exception($"Lỗi khi xóa chuyến bay với ID {flightId}: {ex.Message}", ex);
+                // Re-throw MySqlException để BUS có thể catch với error code
+                throw;
             }
         }
         #endregion
@@ -360,7 +357,7 @@ namespace DAO.Flight
                 ExecuteReader(query, reader =>
                 {
                     flights.Add(MapReaderToDTO(reader));
-                });
+                }, parameters);
                 return flights;
             }
             catch (Exception ex)
@@ -381,7 +378,11 @@ namespace DAO.Flight
                     arrival_time,
                     status
                 FROM Flights
+<<<<<<< Updated upstream
                 WHERE route_id = @route_id
+=======
+                WHERE route_id = @routeId
+>>>>>>> Stashed changes
                 ORDER BY departure_time DESC";
             var parameters = new Dictionary<string, object>
             {
@@ -392,7 +393,7 @@ namespace DAO.Flight
                 ExecuteReader(query, reader =>
                 {
                     flights.Add(MapReaderToDTO(reader));
-                });
+                }, parameters);
                 return flights;
             }
             catch (Exception ex)

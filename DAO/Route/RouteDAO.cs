@@ -59,5 +59,47 @@ namespace DAO.Route
                 throw new Exception("Lỗi khi lấy danh sách tuyến bay: " + ex.Message, ex);
             }
         }
+<<<<<<< Updated upstream
+=======
+
+        public RouteDTO GetRouteById(int routeId)
+        {
+            string query = "SELECT route_id, departure_place_id, arrival_place_id, distance_km, duration_minutes FROM routes WHERE route_id = @id";
+
+            try
+            {
+                using (var connection = DatabaseConnection.GetConnection())
+                {
+                    connection.Open();
+                    using (var command = new MySqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@id", routeId);
+                        using (var reader = command.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                return new RouteDTO(
+                                    reader.GetInt32("route_id"),
+                                    reader.GetInt32("departure_place_id"),
+                                    reader.GetInt32("arrival_place_id"),
+                                    reader["distance_km"] == DBNull.Value ? (int?)null : reader.GetInt32("distance_km"),
+                                    reader["duration_minutes"] == DBNull.Value ? (int?)null : reader.GetInt32("duration_minutes")
+                                );
+                            }
+                            else
+                            {
+                                throw new Exception($"Không tìm thấy tuyến bay với ID {routeId}");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi lấy tuyến bay ID {routeId}: {ex.Message}", ex);
+            }
+        }
+        #endregion
+>>>>>>> Stashed changes
     }
 }
