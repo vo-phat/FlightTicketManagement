@@ -70,7 +70,8 @@ namespace GUI.Features.Ticket
         }
         private void btnCreateAndFindSeat_Click(object sender, EventArgs e)
         {
-            switchTab(0);
+            MessageBox.Show("Chức năng đang phát triển!");
+            //switchTab(0);
         }
 
         private void btnOpsTicket_Click(object sender, EventArgs e)
@@ -112,6 +113,9 @@ namespace GUI.Features.Ticket
 
         }
 
-        
+        private void pnlHeaderTicket_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
     }
 }

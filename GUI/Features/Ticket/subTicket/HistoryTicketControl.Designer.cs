@@ -31,24 +31,24 @@
             DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
-            tableCustom1 = new GUI.Components.Tables.TableCustom();
-            underlinedTextField1 = new GUI.Components.Inputs.UnderlinedTextField();
+            dgvTicketNumberHistory = new GUI.Components.Tables.TableCustom();
+            txtNumberHistoryTicket = new GUI.Components.Inputs.UnderlinedTextField();
             underlinedTextField2 = new GUI.Components.Inputs.UnderlinedTextField();
-            SearchTicketHistory = new GUI.Components.Buttons.PrimaryButton();
-            ((System.ComponentModel.ISupportInitialize)tableCustom1).BeginInit();
+            btnSearchTicketHistory = new GUI.Components.Buttons.PrimaryButton();
+            ((System.ComponentModel.ISupportInitialize)dgvTicketNumberHistory).BeginInit();
             SuspendLayout();
             // 
-            // tableCustom1
+            // dgvTicketNumberHistory
             // 
-            tableCustom1.AllowUserToResizeRows = false;
+            dgvTicketNumberHistory.AllowUserToResizeRows = false;
             dataGridViewCellStyle4.BackColor = Color.FromArgb(248, 250, 252);
-            tableCustom1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
-            tableCustom1.BackgroundColor = Color.White;
-            tableCustom1.BorderColor = Color.FromArgb(40, 40, 40);
-            tableCustom1.BorderStyle = BorderStyle.None;
-            tableCustom1.BorderThickness = 2;
-            tableCustom1.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            tableCustom1.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
+            dgvTicketNumberHistory.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
+            dgvTicketNumberHistory.BackgroundColor = Color.White;
+            dgvTicketNumberHistory.BorderColor = Color.FromArgb(40, 40, 40);
+            dgvTicketNumberHistory.BorderStyle = BorderStyle.None;
+            dgvTicketNumberHistory.BorderThickness = 2;
+            dgvTicketNumberHistory.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            dgvTicketNumberHistory.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
             dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle5.BackColor = Color.White;
             dataGridViewCellStyle5.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
@@ -57,9 +57,9 @@
             dataGridViewCellStyle5.SelectionBackColor = Color.White;
             dataGridViewCellStyle5.SelectionForeColor = Color.FromArgb(126, 185, 232);
             dataGridViewCellStyle5.WrapMode = DataGridViewTriState.False;
-            tableCustom1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
-            tableCustom1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            tableCustom1.CornerRadius = 16;
+            dgvTicketNumberHistory.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
+            dgvTicketNumberHistory.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvTicketNumberHistory.CornerRadius = 16;
             dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle6.BackColor = Color.White;
             dataGridViewCellStyle6.Font = new Font("Segoe UI", 10F);
@@ -68,50 +68,52 @@
             dataGridViewCellStyle6.SelectionBackColor = Color.FromArgb(155, 209, 243);
             dataGridViewCellStyle6.SelectionForeColor = Color.White;
             dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
-            tableCustom1.DefaultCellStyle = dataGridViewCellStyle6;
-            tableCustom1.EnableHeadersVisualStyles = false;
-            tableCustom1.GridColor = Color.FromArgb(230, 235, 240);
-            tableCustom1.HeaderBackColor = Color.White;
-            tableCustom1.HeaderForeColor = Color.FromArgb(126, 185, 232);
-            tableCustom1.HoverBackColor = Color.FromArgb(232, 245, 255);
-            tableCustom1.Location = new Point(135, 380);
-            tableCustom1.MultiSelect = false;
-            tableCustom1.Name = "tableCustom1";
-            tableCustom1.RowAltBackColor = Color.FromArgb(248, 250, 252);
-            tableCustom1.RowBackColor = Color.White;
-            tableCustom1.RowForeColor = Color.FromArgb(33, 37, 41);
-            tableCustom1.RowHeadersVisible = false;
-            tableCustom1.RowHeadersWidth = 51;
-            tableCustom1.RowTemplate.Height = 40;
-            tableCustom1.SelectionBackColor = Color.FromArgb(155, 209, 243);
-            tableCustom1.SelectionForeColor = Color.White;
-            tableCustom1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            tableCustom1.Size = new Size(944, 188);
-            tableCustom1.TabIndex = 2;
+            dgvTicketNumberHistory.DefaultCellStyle = dataGridViewCellStyle6;
+            dgvTicketNumberHistory.EnableHeadersVisualStyles = false;
+            dgvTicketNumberHistory.GridColor = Color.FromArgb(230, 235, 240);
+            dgvTicketNumberHistory.HeaderBackColor = Color.White;
+            dgvTicketNumberHistory.HeaderForeColor = Color.FromArgb(126, 185, 232);
+            dgvTicketNumberHistory.HoverBackColor = Color.FromArgb(232, 245, 255);
+            dgvTicketNumberHistory.Location = new Point(135, 380);
+            dgvTicketNumberHistory.MultiSelect = false;
+            dgvTicketNumberHistory.Name = "dgvTicketNumberHistory";
+            dgvTicketNumberHistory.RowAltBackColor = Color.FromArgb(248, 250, 252);
+            dgvTicketNumberHistory.RowBackColor = Color.White;
+            dgvTicketNumberHistory.RowForeColor = Color.FromArgb(33, 37, 41);
+            dgvTicketNumberHistory.RowHeadersVisible = false;
+            dgvTicketNumberHistory.RowHeadersWidth = 51;
+            dgvTicketNumberHistory.RowTemplate.Height = 40;
+            dgvTicketNumberHistory.SelectionBackColor = Color.FromArgb(155, 209, 243);
+            dgvTicketNumberHistory.SelectionForeColor = Color.White;
+            dgvTicketNumberHistory.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvTicketNumberHistory.Size = new Size(944, 188);
+            dgvTicketNumberHistory.TabIndex = 2;
+            dgvTicketNumberHistory.CellContentClick += tableCustom1_CellContentClick;
             // 
-            // underlinedTextField1
+            // txtNumberHistoryTicket
             // 
-            underlinedTextField1.BackColor = Color.Transparent;
-            underlinedTextField1.FocusedLineThickness = 3;
-            underlinedTextField1.InheritParentBackColor = true;
-            underlinedTextField1.LabelForeColor = Color.FromArgb(70, 70, 70);
-            underlinedTextField1.LabelText = "Nhãn";
-            underlinedTextField1.LineColor = Color.FromArgb(40, 40, 40);
-            underlinedTextField1.LineColorFocused = Color.FromArgb(0, 92, 175);
-            underlinedTextField1.LineThickness = 2;
-            underlinedTextField1.Location = new Point(179, 213);
-            underlinedTextField1.Name = "underlinedTextField1";
-            underlinedTextField1.Padding = new Padding(0, 4, 0, 8);
-            underlinedTextField1.PasswordChar = '\0';
-            underlinedTextField1.PlaceholderText = "Placeholder";
-            underlinedTextField1.ReadOnly = false;
-            underlinedTextField1.ReadOnlyLineColor = Color.FromArgb(200, 200, 200);
-            underlinedTextField1.ReadOnlyTextColor = Color.FromArgb(90, 90, 90);
-            underlinedTextField1.Size = new Size(188, 62);
-            underlinedTextField1.TabIndex = 3;
-            underlinedTextField1.TextForeColor = Color.FromArgb(30, 30, 30);
-            underlinedTextField1.UnderlineSpacing = 2;
-            underlinedTextField1.UseSystemPasswordChar = false;
+            txtNumberHistoryTicket.BackColor = Color.Transparent;
+            txtNumberHistoryTicket.FocusedLineThickness = 3;
+            txtNumberHistoryTicket.InheritParentBackColor = true;
+            txtNumberHistoryTicket.LabelForeColor = Color.FromArgb(70, 70, 70);
+            txtNumberHistoryTicket.LabelText = "TiketNumber";
+            txtNumberHistoryTicket.LineColor = Color.FromArgb(40, 40, 40);
+            txtNumberHistoryTicket.LineColorFocused = Color.FromArgb(0, 92, 175);
+            txtNumberHistoryTicket.LineThickness = 2;
+            txtNumberHistoryTicket.Location = new Point(179, 213);
+            txtNumberHistoryTicket.Name = "txtNumberHistoryTicket";
+            txtNumberHistoryTicket.Padding = new Padding(0, 4, 0, 8);
+            txtNumberHistoryTicket.PasswordChar = '\0';
+            txtNumberHistoryTicket.PlaceholderText = "Placeholder";
+            txtNumberHistoryTicket.ReadOnly = false;
+            txtNumberHistoryTicket.ReadOnlyLineColor = Color.FromArgb(200, 200, 200);
+            txtNumberHistoryTicket.ReadOnlyTextColor = Color.FromArgb(90, 90, 90);
+            txtNumberHistoryTicket.Size = new Size(188, 62);
+            txtNumberHistoryTicket.TabIndex = 3;
+            txtNumberHistoryTicket.TextForeColor = Color.FromArgb(30, 30, 30);
+            txtNumberHistoryTicket.UnderlineSpacing = 2;
+            txtNumberHistoryTicket.UseSystemPasswordChar = false;
+            txtNumberHistoryTicket.Load += TicketNumberHistoryTicket_Load;
             // 
             // underlinedTextField2
             // 
@@ -137,62 +139,62 @@
             underlinedTextField2.UnderlineSpacing = 2;
             underlinedTextField2.UseSystemPasswordChar = false;
             // 
-            // SearchTicketHistory
+            // btnSearchTicketHistory
             // 
-            SearchTicketHistory.AutoSize = true;
-            SearchTicketHistory.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            SearchTicketHistory.BackColor = Color.FromArgb(155, 209, 243);
-            SearchTicketHistory.BorderColor = Color.FromArgb(40, 40, 40);
-            SearchTicketHistory.BorderThickness = 2;
-            SearchTicketHistory.CornerRadius = 22;
-            SearchTicketHistory.EnableHoverEffects = true;
-            SearchTicketHistory.FlatAppearance.BorderSize = 0;
-            SearchTicketHistory.FlatStyle = FlatStyle.Flat;
-            SearchTicketHistory.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            SearchTicketHistory.ForeColor = Color.White;
-            SearchTicketHistory.HoverBackColor = Color.White;
-            SearchTicketHistory.HoverBorderColor = Color.FromArgb(0, 92, 175);
-            SearchTicketHistory.HoverForeColor = Color.FromArgb(0, 92, 175);
-            SearchTicketHistory.Icon = null;
-            SearchTicketHistory.IconSize = new Size(22, 22);
-            SearchTicketHistory.IconSpacing = 10;
-            SearchTicketHistory.Location = new Point(669, 229);
-            SearchTicketHistory.Name = "SearchTicketHistory";
-            SearchTicketHistory.NormalBackColor = Color.FromArgb(155, 209, 243);
-            SearchTicketHistory.NormalBorderColor = Color.FromArgb(40, 40, 40);
-            SearchTicketHistory.NormalForeColor = Color.White;
-            SearchTicketHistory.Padding = new Padding(24, 10, 24, 10);
-            SearchTicketHistory.PreferredMaxWidth = 0;
-            SearchTicketHistory.PressedBackColor = Color.FromArgb(225, 240, 255);
-            SearchTicketHistory.PressedBorderColor = Color.FromArgb(0, 92, 175);
-            SearchTicketHistory.PressedForeColor = Color.FromArgb(0, 92, 175);
-            SearchTicketHistory.Size = new Size(143, 52);
-            SearchTicketHistory.TabIndex = 5;
-            SearchTicketHistory.Text = "Search";
-            SearchTicketHistory.TextAlign = ContentAlignment.MiddleLeft;
-            SearchTicketHistory.UseVisualStyleBackColor = false;
-            SearchTicketHistory.WordWrap = false;
-            SearchTicketHistory.Click += primaryButton1_Click;
+            btnSearchTicketHistory.AutoSize = true;
+            btnSearchTicketHistory.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnSearchTicketHistory.BackColor = Color.FromArgb(155, 209, 243);
+            btnSearchTicketHistory.BorderColor = Color.FromArgb(40, 40, 40);
+            btnSearchTicketHistory.BorderThickness = 2;
+            btnSearchTicketHistory.CornerRadius = 22;
+            btnSearchTicketHistory.EnableHoverEffects = true;
+            btnSearchTicketHistory.FlatAppearance.BorderSize = 0;
+            btnSearchTicketHistory.FlatStyle = FlatStyle.Flat;
+            btnSearchTicketHistory.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            btnSearchTicketHistory.ForeColor = Color.White;
+            btnSearchTicketHistory.HoverBackColor = Color.White;
+            btnSearchTicketHistory.HoverBorderColor = Color.FromArgb(0, 92, 175);
+            btnSearchTicketHistory.HoverForeColor = Color.FromArgb(0, 92, 175);
+            btnSearchTicketHistory.Icon = null;
+            btnSearchTicketHistory.IconSize = new Size(22, 22);
+            btnSearchTicketHistory.IconSpacing = 10;
+            btnSearchTicketHistory.Location = new Point(671, 223);
+            btnSearchTicketHistory.Name = "btnSearchTicketHistory";
+            btnSearchTicketHistory.NormalBackColor = Color.FromArgb(155, 209, 243);
+            btnSearchTicketHistory.NormalBorderColor = Color.FromArgb(40, 40, 40);
+            btnSearchTicketHistory.NormalForeColor = Color.White;
+            btnSearchTicketHistory.Padding = new Padding(24, 10, 24, 10);
+            btnSearchTicketHistory.PreferredMaxWidth = 0;
+            btnSearchTicketHistory.PressedBackColor = Color.FromArgb(225, 240, 255);
+            btnSearchTicketHistory.PressedBorderColor = Color.FromArgb(0, 92, 175);
+            btnSearchTicketHistory.PressedForeColor = Color.FromArgb(0, 92, 175);
+            btnSearchTicketHistory.Size = new Size(143, 52);
+            btnSearchTicketHistory.TabIndex = 5;
+            btnSearchTicketHistory.Text = "Search";
+            btnSearchTicketHistory.TextAlign = ContentAlignment.MiddleLeft;
+            btnSearchTicketHistory.UseVisualStyleBackColor = false;
+            btnSearchTicketHistory.WordWrap = false;
+            btnSearchTicketHistory.Click += btnSearchHistoryTicket;
             // 
             // HistoryTicketControl
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            Controls.Add(SearchTicketHistory);
+            Controls.Add(btnSearchTicketHistory);
             Controls.Add(underlinedTextField2);
-            Controls.Add(underlinedTextField1);
-            Controls.Add(tableCustom1);
+            Controls.Add(txtNumberHistoryTicket);
+            Controls.Add(dgvTicketNumberHistory);
             Name = "HistoryTicketControl";
             Size = new Size(1219, 763);
-            ((System.ComponentModel.ISupportInitialize)tableCustom1).EndInit();
+            ((System.ComponentModel.ISupportInitialize)dgvTicketNumberHistory).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
-        private Components.Tables.TableCustom tableCustom1;
-        private Components.Inputs.UnderlinedTextField underlinedTextField1;
+        private Components.Tables.TableCustom dgvTicketNumberHistory;
+        private Components.Inputs.UnderlinedTextField txtNumberHistoryTicket;
         private Components.Inputs.UnderlinedTextField underlinedTextField2;
-        private Components.Buttons.PrimaryButton SearchTicketHistory;
+        private Components.Buttons.PrimaryButton btnSearchTicketHistory;
     }
 }

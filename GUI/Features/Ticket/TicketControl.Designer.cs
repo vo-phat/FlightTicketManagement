@@ -52,6 +52,7 @@
             pnlHeaderTicket.Name = "pnlHeaderTicket";
             pnlHeaderTicket.Size = new Size(1316, 83);
             pnlHeaderTicket.TabIndex = 0;
+            pnlHeaderTicket.Paint += pnlHeaderTicket_Paint;
             // 
             // btnFrmPassengerInfoTiket
             // 

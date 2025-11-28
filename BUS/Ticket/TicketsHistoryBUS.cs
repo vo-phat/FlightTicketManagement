@@ -9,7 +9,7 @@ namespace BUS.Ticket
 {
     public class TicketsHistoryBUS
     {
-        public List<TicketHistory> GetAllTicketHistories()
+        public List<TicketHistoryDTO> GetAllTicketHistories()
         {
             TicketHistoryDAO ticketHistoryDAO = new TicketHistoryDAO();
             return ticketHistoryDAO.GetAllTicketHistories();

@@ -10,6 +10,7 @@ namespace DAO
     public class DbFlightTicketContext : DbContext
     {
         public DbSet<TicketHistory> TicketsHistory { get; set; }
+        public DbSet<Tickets> Tickets { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -25,6 +26,9 @@ namespace DAO
             modelBuilder.Entity<TicketHistory>()
                 .HasNoKey()
                 .ToTable("ticket_history"); // Tên bảng thật trong DB
+            modelBuilder.Entity<Tickets>()
+                .HasNoKey()
+                .ToTable("tickets"); // Tên bảng thật trong DB
         }
     }
 }
