@@ -5,14 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using DTO.Ticket;
 using DAO.TicketDAO;
-
+using DAO.EF;
 namespace DAO.TicketDAO
 {
     public class TicketHistoryDAO
     {
        public List<TicketHistoryDTO> GetAllTicketHistories()
         {
-            using (var context = new DbFlightTicketContext())
+            using (var context = new Context())
             {
 
                 var data = (from h in context.TicketsHistory
