@@ -29,7 +29,7 @@ namespace GUI.Features.Seat.SubFeatures
         // Giữ lại UnderlinedComboBoxs vì chúng là custom components của bạn
         private UnderlinedComboBox cbAircraft, cbClass;
         private UnderlinedTextField txtSeat;
-        private PrimaryButton btnSearch;
+        private PrimaryButton btnSearch, btnGenerate;
         private SecondaryButton btnClear;
 
         private TableCustom table;
@@ -47,7 +47,8 @@ namespace GUI.Features.Seat.SubFeatures
         private void InitializeComponent()
         {
             SuspendLayout();
-            Dock = DockStyle.Fill; BackColor = Color.FromArgb(232, 240, 252);
+            Dock = DockStyle.Fill;
+            BackColor = Color.FromArgb(232, 240, 252);
 
             lblTitle = new Label
             {
@@ -68,8 +69,10 @@ namespace GUI.Features.Seat.SubFeatures
             filterRight = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, FlowDirection = FlowDirection.RightToLeft, WrapContents = false };
             btnSearch = new PrimaryButton("🔍 Tìm kiếm") { Width = 110, Height = 36 };
             btnClear = new SecondaryButton("⟲ Xóa lọc") { Width = 100, Height = 36, Margin = new Padding(12, 0, 0, 0) };
+            btnGenerate = new PrimaryButton("⚙️ Sinh ghế tự động") { Width = 170, Height = 36, Margin = new Padding(12, 0, 0, 0) };
             filterRight.Controls.Add(btnSearch);
             filterRight.Controls.Add(btnClear);
+            filterRight.Controls.Add(btnGenerate);
 
             filterWrap = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(24, 16, 24, 0), ColumnCount = 2 };
             filterWrap.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
@@ -94,8 +97,9 @@ namespace GUI.Features.Seat.SubFeatures
             table.Columns.Add("aircraft", "Máy bay");
 
             var colAction = new DataGridViewTextBoxColumn { Name = ACTION_COL, HeaderText = "Thao tác", AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells };
+            var colHidden = new DataGridViewTextBoxColumn { Name = "seatIdHidden", Visible = false };
             table.Columns.Add(colAction);
-            table.Columns.Add(new DataGridViewTextBoxColumn { Name = "seatIdHidden", Visible = false });
+            table.Columns.Add(colHidden);
 
             table.CellPainting += Table_CellPainting;
             table.CellMouseMove += Table_CellMouseMove;
@@ -115,7 +119,7 @@ namespace GUI.Features.Seat.SubFeatures
             debounce.Tick += (_, __) => { debounce.Stop(); ApplyFilter(); };
 
             // Root
-            root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3 };
+            root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, BackColor = Color.Transparent };
             root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             root.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
@@ -182,7 +186,7 @@ namespace GUI.Features.Seat.SubFeatures
         {
             string ac = cbAircraft.SelectedItem?.ToString() ?? "Tất cả";
             string cl = cbClass.SelectedItem?.ToString() ?? "Tất cả";
-            string key = (txtSeat.Text ?? "").Trim().ToUpper();
+            string key = (txtSeat.Text ?? "").Trim().ToUpperInvariant();
 
             var q = datasource.AsEnumerable();
 
@@ -240,6 +244,7 @@ namespace GUI.Features.Seat.SubFeatures
             var font = e.CellStyle.Font ?? table.Font;
             var r = GetRects(e.CellBounds, font);
             Color link = Color.FromArgb(0, 92, 175), sep = Color.FromArgb(120, 120, 120), del = Color.FromArgb(220, 53, 69);
+
             TextRenderer.DrawText(e.Graphics, TXT_VIEW, font, r.rcView.Location, link, TextFormatFlags.NoPadding);
             TextRenderer.DrawText(e.Graphics, SEP, font, new Point(r.rcView.Right, r.rcView.Top), sep, TextFormatFlags.NoPadding);
             TextRenderer.DrawText(e.Graphics, TXT_EDIT, font, r.rcEdit.Location, link, TextFormatFlags.NoPadding);

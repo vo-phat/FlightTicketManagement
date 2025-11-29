@@ -8,6 +8,7 @@ namespace GUI.Features.Setting {
     public static class Perm {
         public const string Home_View = "home.view";
         public const string Flights_Read = "flights.read";
+        public const string Flights_Create = "flights.create";
         public const string FareRules_Manage = "fare_rules.manage";
         public const string Tickets_CreateSearch = "tickets.create_search";
         public const string Tickets_Mine = "tickets.mine";

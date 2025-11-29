@@ -1,34 +1,27 @@
-﻿using System;
-using System.Drawing;
-using System.Windows.Forms;
+﻿using BUS.Profile;
+using DTO.Profile;
 using GUI.Components.Buttons;
 using GUI.Components.Inputs;
+using BUS.Auth;
+using System;
+using System.Drawing;
+using System.Windows.Forms;
 
 namespace GUI.Features.Profile.SubFeatures {
-    public class ProfileInfoModel {
-        public string Email { get; set; } = "";
-        public string FullName { get; set; } = "";
-        public DateTime? DateOfBirth { get; set; }
-        public string PhoneNumber { get; set; } = "";
-        public string PassportNumber { get; set; } = "";
-        public string Nationality { get; set; } = "";
-        public string RoleDisplay { get; set; } = ""; // tùy chọn, đọc từ User_Role
-    }
-
     public class ProfileInfoControl : UserControl {
-        public event Action<ProfileInfoModel>? OnSaveRequested;
+        public event Action<ProfileInfoDto>? OnSaveRequested;
 
         private Label lblTitle;
         private UnderlinedTextField txtEmail, txtFullName, txtPhone, txtPassport, txtNationality;
         private DateTimePickerCustom dtpDob;
-        private Label lblRole;
 
         private readonly int _accountId;
+        private readonly ProfileService _profileService = new ProfileService();
 
         public ProfileInfoControl(int accountId) {
             _accountId = accountId;
             InitializeComponent();
-            LoadData(); // nạp dữ liệu ban đầu
+            LoadData();
         }
 
         private void InitializeComponent() {
@@ -55,12 +48,31 @@ namespace GUI.Features.Profile.SubFeatures {
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
 
-            txtEmail = new UnderlinedTextField("Email", "") { MinimumSize = new Size(0, 56), Width = 320 };
-            txtFullName = new UnderlinedTextField("Họ và tên", "") { MinimumSize = new Size(0, 56), Width = 320 };
-            dtpDob = new DateTimePickerCustom("Ngày sinh", "") { Width = 320, Height = 72 };
-            txtPhone = new UnderlinedTextField("Số điện thoại", "") { MinimumSize = new Size(0, 56), Width = 320 };
-            txtPassport = new UnderlinedTextField("Hộ chiếu", "") { MinimumSize = new Size(0, 56), Width = 320 };
-            txtNationality = new UnderlinedTextField("Quốc tịch", "") { MinimumSize = new Size(0, 56), Width = 320 };
+            txtEmail = new UnderlinedTextField("Email", "") { 
+                MinimumSize = new Size(0, 56), 
+                Width = 320,
+                ReadOnly = true
+            };
+            txtFullName = new UnderlinedTextField("Họ và tên", "") { 
+                MinimumSize = new Size(0, 56), 
+                Width = 320 
+            };
+            dtpDob = new DateTimePickerCustom("Ngày sinh", "") { 
+                Width = 320, 
+                Height = 72 
+            };
+            txtPhone = new UnderlinedTextField("Số điện thoại", "") { 
+                MinimumSize = new Size(0, 56), 
+                Width = 320 
+            };
+            txtPassport = new UnderlinedTextField("Hộ chiếu", "") { 
+                MinimumSize = new Size(0, 56), 
+                Width = 320 
+            };
+            txtNationality = new UnderlinedTextField("Quốc tịch", "") { 
+                MinimumSize = new Size(0, 56), 
+                Width = 320 
+            };
 
             // Hàng 1
             grid.Controls.Add(txtEmail, 0, 0);
@@ -72,24 +84,15 @@ namespace GUI.Features.Profile.SubFeatures {
             grid.Controls.Add(txtPassport, 0, 2);
             grid.Controls.Add(txtNationality, 1, 2);
 
-            // Vai trò hiển thị
-            lblRole = new Label {
-                Text = "Vai trò: ",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 10f, FontStyle.Bold),
-                Margin = new Padding(24, 8, 24, 0)
-            };
-
             var btnSave = new PrimaryButton("💾 Lưu thay đổi") { Width = 160, Height = 36, Margin = new Padding(0, 0, 0, 0) };
             btnSave.Click += (s, e) => {
-                var model = new ProfileInfoModel {
+                var model = new ProfileInfoDto {
                     Email = txtEmail.Text,
                     FullName = txtFullName.Text,
                     DateOfBirth = dtpDob.Value,
                     PhoneNumber = txtPhone.Text,
                     PassportNumber = txtPassport.Text,
-                    Nationality = txtNationality.Text,
-                    RoleDisplay = lblRole.Text
+                    Nationality = txtNationality.Text
                 };
                 OnSaveRequested?.Invoke(model);
             };
@@ -114,27 +117,36 @@ namespace GUI.Features.Profile.SubFeatures {
 
             main.Controls.Add(lblTitle, 0, 0);
             main.Controls.Add(grid, 0, 1);
-            main.Controls.Add(lblRole, 0, 2);
             main.Controls.Add(new Panel { Dock = DockStyle.Top, Height = 8 }, 0, 3);
             Controls.Add(main);
             Controls.Add(btnRow);
         }
 
         private void LoadData() {
-            // TODO: Query DB theo _accountId để fill trường.
-            // Gợi ý: SELECT a.email, p.full_name, p.date_of_birth, p.phone_number, p.passport_number, p.nationality
-            //        FROM Accounts a LEFT JOIN Passenger_Profiles p ON p.account_id = a.account_id
-            //        WHERE a.account_id = @_accountId;
-            //        Và lấy Role qua User_Role -> Roles.role_name.
+            try {
+                var profile = _profileService.GetProfile(_accountId);
+                if (profile == null) {
+                    return;
+                }
 
-            // Demo: set tạm
-            txtEmail.Text = "tranngochan@sv.sgu.edu.vn";
-            txtFullName.Text = "Trần Ngọc Hân";
-            dtpDob.Value = new DateTime(2000, 1, 1);
-            txtPhone.Text = "0901234567";
-            txtPassport.Text = "1234567890";
-            txtNationality.Text = "Việt Nam";
-            lblRole.Text = "Vai trò: Khách hàng";
+                txtEmail.Text = profile.Email ?? string.Empty;
+                txtFullName.Text = profile.FullName ?? string.Empty;
+                txtPhone.Text = profile.PhoneNumber ?? string.Empty;
+                txtPassport.Text = profile.PassportNumber ?? string.Empty;
+                txtNationality.Text = profile.Nationality ?? string.Empty;
+
+                if (profile.DateOfBirth.HasValue) {
+                    dtpDob.Value = profile.DateOfBirth.Value;
+                } else {
+                }
+            } catch (Exception ex) {
+                MessageBox.Show(
+                    "Không thể tải thông tin hồ sơ: " + ex.Message,
+                    "Lỗi",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
         }
     }
 }

@@ -119,6 +119,10 @@ namespace BUS.Route
                 throw new Exception("Lỗi khi tìm kiếm tuyến bay: " + ex.Message, ex);
             }
         }
+        public Dictionary<int, string> GetRouteDisplayList()
+        {
+            return routeDAO.GetRouteDisplayList();
+        }
         #endregion
     }
 }

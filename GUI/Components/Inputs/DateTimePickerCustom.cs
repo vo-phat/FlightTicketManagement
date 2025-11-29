@@ -38,14 +38,17 @@ namespace GUI.Components.Inputs {
                 CalendarMonthBackground = Color.White,
                 Width = 140,
                 BackColor = Color.White,
-                MinDate = DateTime.MinValue, // Mặc định không giới hạn ngày quá khứ
-                MaxDate = DateTime.MaxValue  // Mặc định không giới hạn ngày tương lai
+                MinDate = DateTime.MinValue,
+                MaxDate = DateTime.MaxValue
             };
 
             // Bỏ viền mặc định
             _dtp.Paint += (s, e) => {
                 ControlPaint.DrawBorder(e.Graphics, _dtp.ClientRectangle, Color.White, ButtonBorderStyle.None);
             };
+
+            // NEW: chuyển tiếp sự kiện ValueChanged ra ngoài control bọc
+            _dtp.ValueChanged += (s, e) => OnValueChanged(e); // NEW
 
             Padding = new Padding(0, 4, 0, 8);
             Controls.Add(_dtp);
@@ -91,18 +94,93 @@ namespace GUI.Components.Inputs {
             }
         }
 
-        // ✅ Thuộc tính giới hạn ngày tối đa
+        // ✅ Giới hạn ngày
         [Category("Behavior"), Description("Giới hạn ngày tối đa có thể chọn.")]
         public DateTime MaxDate {
             get => _dtp.MaxDate;
             set { _dtp.MaxDate = value; }
         }
 
-        // ✅ Thuộc tính giới hạn ngày tối thiểu (nếu cần)
         [Category("Behavior"), Description("Giới hạn ngày tối thiểu có thể chọn.")]
         public DateTime MinDate {
             get => _dtp.MinDate;
             set { _dtp.MinDate = value; }
         }
+
+        // =========================
+        // 🔥 NEW: Bật/tắt chọn Giờ:Phút
+        // =========================
+
+        private bool _enableTime; // NEW
+
+        /// <summary>
+        /// Bật chọn giờ:phút (dùng spinner). Khi bật sẽ dùng TimeFormat (mặc định "dd/MM/yyyy HH:mm").
+        /// </summary>
+        [Category("Behavior"), Description("Bật chọn giờ:phút bằng spinner.")]
+        public bool EnableTime { // NEW
+            get => _enableTime;
+            set {
+                _enableTime = value;
+                ApplyFormat(); // cập nhật Format/CustomFormat/ShowUpDown theo trạng thái mới
+            }
+        }
+
+        private string _timeFormat = "dd/MM/yyyy HH:mm"; // NEW
+
+        /// <summary>
+        /// Định dạng khi EnableTime=true. Ví dụ: \"HH:mm dd/MM/yyyy\" hoặc \"dd/MM/yyyy HH:mm\".
+        /// </summary>
+        [Category("Behavior"), Description("Định dạng khi EnableTime=true (ví dụ: dd/MM/yyyy HH:mm).")]
+        public string TimeFormat { // NEW
+            get => _timeFormat;
+            set {
+                _timeFormat = string.IsNullOrWhiteSpace(value) ? "dd/MM/yyyy HH:mm" : value;
+                if (_enableTime) ApplyFormat();
+            }
+        }
+
+        private bool _showUpDownWhenTime = true; // NEW
+
+        /// <summary>
+        /// Khi EnableTime=true, có hiển thị spinner UpDown không (khuyến nghị: true).
+        /// </summary>
+        [Category("Behavior"), Description("Khi EnableTime=true, sử dụng spinner UpDown thay vì popup calendar.")]
+        public bool ShowUpDownWhenTime { // NEW
+            get => _showUpDownWhenTime;
+            set {
+                _showUpDownWhenTime = value;
+                if (_enableTime) ApplyFormat();
+            }
+        }
+
+        // NEW: Cho phép chuyển tiếp trực tiếp thuộc tính ShowUpDown nếu muốn dùng cả khi chỉ chọn ngày
+        [Category("Behavior"), Description("Bật spinner UpDown trực tiếp cho DateTimePicker bên trong.")]
+        public bool ShowUpDown {
+            get => _dtp.ShowUpDown;
+            set => _dtp.ShowUpDown = value;
+        }
+
+        // NEW: Phương thức áp định dạng phù hợp
+        private void ApplyFormat() {
+            if (_enableTime) {
+                _dtp.Format = DateTimePickerFormat.Custom;
+                _dtp.CustomFormat = _timeFormat;
+                _dtp.ShowUpDown = _showUpDownWhenTime;
+            } else {
+                // Quay về chọn ngày bình thường
+                if (string.IsNullOrWhiteSpace(_dtp.CustomFormat)) {
+                    _dtp.Format = DateTimePickerFormat.Short;
+                } else {
+                    // Nếu dev đã set CustomFormat bằng property CustomFormat, tôn trọng nó
+                    _dtp.Format = DateTimePickerFormat.Custom;
+                }
+                _dtp.ShowUpDown = false;
+            }
+            Invalidate();
+        }
+
+        // NEW: Phát sự kiện ValueChanged ra ngoài
+        public event EventHandler? ValueChanged;
+        protected virtual void OnValueChanged(EventArgs e) => ValueChanged?.Invoke(this, e);
     }
 }

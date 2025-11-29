@@ -58,12 +58,18 @@ namespace GUI.Features.Flight.SubFeatures {
 
             dtpDepartureDate = new DateTimePickerCustom("Ngày đi", "") {
                 Width = 300,
-                Margin = new Padding(0, 0, 32, 0)
+                Margin = new Padding(0, 0, 32, 0),
+                EnableTime = true,               // bật chọn giờ:phút
+                TimeFormat = "dd/MM/yyyy HH:mm", // hoặc "HH:mm dd/MM/yyyy"
+                ShowUpDownWhenTime = true        // spinner thay vì popup lịch
             };
 
             dtpArrivalDate = new DateTimePickerCustom("Ngày về", "") {
                 Width = 300,
-                Margin = new Padding(0, 0, 32, 0)
+                Margin = new Padding(0, 0, 32, 0),
+                EnableTime = true,               // bật chọn giờ:phút
+                TimeFormat = "dd/MM/yyyy HH:mm", // hoặc "HH:mm dd/MM/yyyy"
+                ShowUpDownWhenTime = true        // spinner thay vì popup lịch
             };
 
             txtDeparturePlace = new UnderlinedTextField("Nơi cất cánh", "") {
@@ -116,13 +122,13 @@ namespace GUI.Features.Flight.SubFeatures {
             };
 
             // Cột hiển thị (khớp DB + nghiệp vụ)
-            table.Columns.Add("flightNumber", "Mã chuyến bay");  // Flights.flight_number
-            table.Columns.Add("fromAirport", "Nơi cất cánh");    // Airports.code từ Routes.from_airport_id
-            table.Columns.Add("toAirport", "Nơi hạ cánh");     // Airports.code từ Routes.to_airport_id
-            table.Columns.Add("departureTime", "Giờ cất cánh");    // Flights.departure_time
-            table.Columns.Add("arrivalTime", "Giờ hạ cánh");     // Flights.arrival_time
-            table.Columns.Add("status", "Trạng thái");      // Flights.status
-            table.Columns.Add("seatAvailable", "Số ghế trống");    // COUNT(Flight_Seats WHERE AVAILABLE)
+            table.Columns.Add("flightNumber", "Mã chuyến bay");
+            table.Columns.Add("fromAirport", "Nơi cất cánh");
+            table.Columns.Add("toAirport", "Nơi hạ cánh");
+            table.Columns.Add("departureTime", "Giờ cất cánh");
+            table.Columns.Add("arrivalTime", "Giờ hạ cánh");
+            table.Columns.Add("status", "Trạng thái");
+            table.Columns.Add("seatAvailable", "Số ghế trống");
 
             // Cột Thao tác (vẽ custom link)
             var colAction = new DataGridViewTextBoxColumn {
@@ -232,7 +238,7 @@ namespace GUI.Features.Flight.SubFeatures {
 
             var row = table.Rows[e.RowIndex];
 
-            string flightId = row.Cells["flightIdHidden"].Value?.ToString() ?? string.Empty; // khóa kỹ thuật
+            string flightId = row.Cells["flightIdHidden"].Value?.ToString() ?? string.Empty;
             string flightNumber = row.Cells["flightNumber"].Value?.ToString() ?? "(n/a)";
             string fromAirport = row.Cells["fromAirport"].Value?.ToString() ?? "(n/a)";
             string toAirport = row.Cells["toAirport"].Value?.ToString() ?? "(n/a)";

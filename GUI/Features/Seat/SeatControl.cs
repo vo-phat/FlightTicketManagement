@@ -5,10 +5,8 @@ using System.Windows.Forms;
 using GUI.Components.Buttons;
 using DTO.Seat; // Cần dùng DTO.Seat để LoadSeatForEdit
 
-namespace GUI.Features.Seat
-{
-    public class SeatControl : UserControl
-    {
+namespace GUI.Features.Seat {
+    public class SeatControl : UserControl {
         private Panel header;
         private FlowLayoutPanel tabs;
 
@@ -22,15 +20,13 @@ namespace GUI.Features.Seat
         private SubFeatures.SeatMapControl seatMap;
         private SubFeatures.SeatDetailControl seatDetail; // THÊM DETAIL CONTROL
 
-        public SeatControl()
-        {
+        public SeatControl() {
             InitializeComponent();
             RebuildTabs();
             SwitchTab(0);
         }
 
-        private void InitializeComponent()
-        {
+        private void InitializeComponent() {
             // Khởi tạo các Sub Controls
             seatList = new SubFeatures.SeatListControl { Dock = DockStyle.Fill };
             seatCreate = new SubFeatures.SeatCreateControl { Dock = DockStyle.Fill };
@@ -116,18 +112,15 @@ namespace GUI.Features.Seat
             ResumeLayout(false);
         }
 
-        private void SeatDetail_CloseRequested(object sender, EventArgs e)
-        {
+        private void SeatDetail_CloseRequested(object sender, EventArgs e) {
             SwitchTab(0); // Chuyển trở lại tab danh sách (index 0)
         }
 
-        private void RebuildTabs()
-        {
+        private void RebuildTabs() {
             tabs.SuspendLayout();
             tabs.Controls.Clear();
 
-            Control MakeTabButton(string text, int index)
-            {
+            Control MakeTabButton(string text, int index) {
                 Button b = (index == currentIndex)
                     ? new PrimaryButton(text)
                     : new SecondaryButton(text);
@@ -138,8 +131,7 @@ namespace GUI.Features.Seat
                 b.FlatAppearance.MouseOverBackColor = Color.White;
                 b.FlatAppearance.MouseDownBackColor = Color.White;
                 b.Click += (_, __) => {
-                    if (currentIndex != index)
-                    {
+                    if (currentIndex != index) {
                         SwitchTab(index);
                     }
                 };
@@ -155,17 +147,14 @@ namespace GUI.Features.Seat
             tabs.ResumeLayout(true);
         }
 
-        private void SwitchTab(int idx)
-        {
+        private void SwitchTab(int idx) {
             currentIndex = idx;
 
             // 1) Cập nhật giao diện nút 
-            if (idx != DETAIL_TAB_INDEX)
-            {
+            if (idx != DETAIL_TAB_INDEX) {
                 RebuildTabs();
                 // Đảm bảo form Tạo/Sửa ở chế độ Tạo mới khi được chọn từ tab
-                if (idx == 1)
-                {
+                if (idx == 1) {
                     // Yêu cầu SeatCreateControl có hàm SetCreateMode()
                     seatCreate.SetCreateMode();
                 }
@@ -174,8 +163,7 @@ namespace GUI.Features.Seat
             // 2) Hiển thị nội dung tương ứng
             if (current != null) current.Visible = false;
 
-            current = idx switch
-            {
+            current = idx switch {
                 0 => seatList,
                 1 => seatCreate,
                 2 => flightSeats,
@@ -193,8 +181,7 @@ namespace GUI.Features.Seat
         /// <summary>
         /// Xử lý hành động SỬA. Lấy DTO và chuyển sang form Create/Edit (Tab 1).
         /// </summary>
-        public void SwitchToEditTab(int seatId)
-        {
+        public void SwitchToEditTab(int seatId) {
             // 1️⃣ Chuyển sang tab Create (hiển thị trước)
             SwitchTab(1);
 
@@ -209,8 +196,7 @@ namespace GUI.Features.Seat
         /// <summary>
         /// Xử lý hành động XEM CHI TIẾT. Chuyển sang tab Detail (Tab 4).
         /// </summary>
-        public void SwitchToDetailTab(int seatId)
-        {
+        public void SwitchToDetailTab(int seatId) {
             seatDetail.LoadSeat(seatId);
             SwitchTab(DETAIL_TAB_INDEX);
         }

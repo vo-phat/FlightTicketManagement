@@ -1,14 +1,12 @@
-﻿using MySqlConnector;
+using MySqlConnector;
 using System;
 
-namespace DAO.Database
-{
+namespace DAO.Database {
     /// <summary>
     /// Class quản lý kết nối đến MySQL Database
     /// Sử dụng Singleton pattern để đảm bảo chỉ có một connection string
     /// </summary>
-    public static class DatabaseConnection
-    {
+    public static class DatabaseConnection {
         // Connection string - chứa thông tin kết nối database
         private static readonly string connectionString =
             "server=localhost;port=3306;user=root;password=;database=flightticketmanagement;SslMode=None;";
@@ -23,14 +21,10 @@ namespace DAO.Database
         /// Người gọi chịu trách nhiệm mở và đóng connection
         /// </summary>
         /// <returns>MySqlConnection object</returns>
-        public static MySqlConnection GetConnection()
-        {
-            try
-            {
+        public static MySqlConnection GetConnection() {
+            try {
                 return new MySqlConnection(connectionString);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 throw new Exception($"Lỗi khi tạo kết nối database: {ex.Message}", ex);
             }
         }
@@ -39,18 +33,13 @@ namespace DAO.Database
         /// Kiểm tra xem có thể kết nối đến database không
         /// </summary>
         /// <returns>True nếu kết nối thành công, False nếu thất bại</returns>
-        public static bool TestConnection()
-        {
-            try
-            {
-                using (var connection = GetConnection())
-                {
+        public static bool TestConnection() {
+            try {
+                using (var connection = GetConnection()) {
                     connection.Open();
                     return connection.State == System.Data.ConnectionState.Open;
                 }
-            }
-            catch
-            {
+            } catch {
                 return false;
             }
         }
@@ -59,18 +48,13 @@ namespace DAO.Database
         /// Lấy thông tin phiên bản MySQL Server
         /// </summary>
         /// <returns>Version string hoặc thông báo lỗi</returns>
-        public static string GetServerVersion()
-        {
-            try
-            {
-                using (var connection = GetConnection())
-                {
+        public static string GetServerVersion() {
+            try {
+                using (var connection = GetConnection()) {
                     connection.Open();
                     return connection.ServerVersion;
                 }
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 return $"Không thể kết nối: {ex.Message}";
             }
         }
