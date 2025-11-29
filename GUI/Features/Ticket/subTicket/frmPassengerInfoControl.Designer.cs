@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
             cboNationalityTicket = new GUI.Components.Inputs.UnderlinedComboBox();
             txtPassportNumberTicket = new GUI.Components.Inputs.UnderlinedTextField();
             txtFullNameTicket = new GUI.Components.Inputs.UnderlinedTextField();
@@ -43,6 +43,8 @@
             dgvPassengerListTicket = new GUI.Components.Tables.TableCustom();
             txtAccountIdTicket = new GUI.Components.Inputs.UnderlinedTextField();
             dtpDateOfBirthTicket = new GUI.Components.Inputs.DateTimePickerCustom();
+            cboBaggageTicket = new GUI.Components.Inputs.UnderlinedComboBox();
+            txtNoteBaggage = new GUI.Components.Inputs.UnderlinedTextField();
             ((System.ComponentModel.ISupportInitialize)dgvPassengerListTicket).BeginInit();
             SuspendLayout();
             // 
@@ -271,34 +273,34 @@
             // dgvPassengerListTicket
             // 
             dgvPassengerListTicket.AllowUserToResizeRows = false;
-            dataGridViewCellStyle1.BackColor = Color.FromArgb(248, 250, 252);
-            dgvPassengerListTicket.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle4.BackColor = Color.FromArgb(248, 250, 252);
+            dgvPassengerListTicket.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
             dgvPassengerListTicket.BackgroundColor = Color.White;
             dgvPassengerListTicket.BorderColor = Color.FromArgb(40, 40, 40);
             dgvPassengerListTicket.BorderStyle = BorderStyle.None;
             dgvPassengerListTicket.BorderThickness = 2;
             dgvPassengerListTicket.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             dgvPassengerListTicket.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = Color.White;
-            dataGridViewCellStyle2.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            dataGridViewCellStyle2.ForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle2.Padding = new Padding(12, 10, 12, 10);
-            dataGridViewCellStyle2.SelectionBackColor = Color.White;
-            dataGridViewCellStyle2.SelectionForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
-            dgvPassengerListTicket.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = Color.White;
+            dataGridViewCellStyle5.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            dataGridViewCellStyle5.ForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle5.Padding = new Padding(12, 10, 12, 10);
+            dataGridViewCellStyle5.SelectionBackColor = Color.White;
+            dataGridViewCellStyle5.SelectionForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.False;
+            dgvPassengerListTicket.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
             dgvPassengerListTicket.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvPassengerListTicket.CornerRadius = 16;
-            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = Color.White;
-            dataGridViewCellStyle3.Font = new Font("Segoe UI", 10F);
-            dataGridViewCellStyle3.ForeColor = Color.FromArgb(33, 37, 41);
-            dataGridViewCellStyle3.Padding = new Padding(12, 6, 12, 6);
-            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(155, 209, 243);
-            dataGridViewCellStyle3.SelectionForeColor = Color.White;
-            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
-            dgvPassengerListTicket.DefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = Color.White;
+            dataGridViewCellStyle6.Font = new Font("Segoe UI", 10F);
+            dataGridViewCellStyle6.ForeColor = Color.FromArgb(33, 37, 41);
+            dataGridViewCellStyle6.Padding = new Padding(12, 6, 12, 6);
+            dataGridViewCellStyle6.SelectionBackColor = Color.FromArgb(155, 209, 243);
+            dataGridViewCellStyle6.SelectionForeColor = Color.White;
+            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
+            dgvPassengerListTicket.DefaultCellStyle = dataGridViewCellStyle6;
             dgvPassengerListTicket.EnableHeadersVisualStyles = false;
             dgvPassengerListTicket.GridColor = Color.FromArgb(230, 235, 240);
             dgvPassengerListTicket.HeaderBackColor = Color.White;
@@ -330,7 +332,7 @@
             txtAccountIdTicket.LineColor = Color.FromArgb(40, 40, 40);
             txtAccountIdTicket.LineColorFocused = Color.FromArgb(0, 92, 175);
             txtAccountIdTicket.LineThickness = 2;
-            txtAccountIdTicket.Location = new Point(942, 128);
+            txtAccountIdTicket.Location = new Point(810, 124);
             txtAccountIdTicket.Name = "txtAccountIdTicket";
             txtAccountIdTicket.Padding = new Padding(0, 4, 0, 8);
             txtAccountIdTicket.PasswordChar = '\0';
@@ -359,10 +361,51 @@
             dtpDateOfBirthTicket.TabIndex = 51;
             dtpDateOfBirthTicket.Value = new DateTime(2025, 10, 30, 10, 46, 34, 110);
             // 
+            // cboBaggageTicket
+            // 
+            cboBaggageTicket.BackColor = Color.Transparent;
+            cboBaggageTicket.LabelText = "Hành lý mua thêm";
+            cboBaggageTicket.Location = new Point(586, 222);
+            cboBaggageTicket.MinimumSize = new Size(140, 56);
+            cboBaggageTicket.Name = "cboBaggageTicket";
+            cboBaggageTicket.SelectedIndex = -1;
+            cboBaggageTicket.SelectedItem = null;
+            cboBaggageTicket.SelectedText = "";
+            cboBaggageTicket.Size = new Size(188, 70);
+            cboBaggageTicket.TabIndex = 52;
+            cboBaggageTicket.Load += cboBaggageTicket_Load;
+            // 
+            // txtNoteBaggage
+            // 
+            txtNoteBaggage.BackColor = Color.Transparent;
+            txtNoteBaggage.FocusedLineThickness = 3;
+            txtNoteBaggage.InheritParentBackColor = true;
+            txtNoteBaggage.LabelForeColor = Color.FromArgb(70, 70, 70);
+            txtNoteBaggage.LabelText = "Note";
+            txtNoteBaggage.LineColor = Color.FromArgb(40, 40, 40);
+            txtNoteBaggage.LineColorFocused = Color.FromArgb(0, 92, 175);
+            txtNoteBaggage.LineThickness = 2;
+            txtNoteBaggage.Location = new Point(820, 222);
+            txtNoteBaggage.Name = "txtNoteBaggage";
+            txtNoteBaggage.Padding = new Padding(0, 4, 0, 8);
+            txtNoteBaggage.PasswordChar = '\0';
+            txtNoteBaggage.PlaceholderText = "Placeholder";
+            txtNoteBaggage.ReadOnly = false;
+            txtNoteBaggage.ReadOnlyLineColor = Color.FromArgb(200, 200, 200);
+            txtNoteBaggage.ReadOnlyTextColor = Color.FromArgb(90, 90, 90);
+            txtNoteBaggage.Size = new Size(188, 70);
+            txtNoteBaggage.TabIndex = 53;
+            txtNoteBaggage.TextForeColor = Color.FromArgb(30, 30, 30);
+            txtNoteBaggage.UnderlineSpacing = 2;
+            txtNoteBaggage.UseSystemPasswordChar = false;
+            txtNoteBaggage.Load += underlinedTextField1_Load;
+            // 
             // frmPassengerInfoControl
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
+            Controls.Add(txtNoteBaggage);
+            Controls.Add(cboBaggageTicket);
             Controls.Add(dtpDateOfBirthTicket);
             Controls.Add(txtAccountIdTicket);
             Controls.Add(dgvPassengerListTicket);
@@ -396,5 +439,7 @@
         private Components.Tables.TableCustom dgvPassengerListTicket;
         private Components.Inputs.UnderlinedTextField txtAccountIdTicket;
         private Components.Inputs.DateTimePickerCustom dtpDateOfBirthTicket;
+        private Components.Inputs.UnderlinedComboBox cboBaggageTicket;
+        private Components.Inputs.UnderlinedTextField txtNoteBaggage;
     }
 }

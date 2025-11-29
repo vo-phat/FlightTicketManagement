@@ -1,15 +1,19 @@
-﻿using DTO.Profile;
+﻿using BUS.Baggage;
+using BUS.Ticket;
+using DTO.BaggageDTO;
+using DTO.Profile;
+using DTO.Ticket;
 using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
-
 namespace GUI.Features.Ticket.subTicket
 {
     public partial class frmPassengerInfoControl : UserControl
     {
         // Nguồn dữ liệu & trạng thái
-        private readonly BindingList<ProfileDTO> _passengers = new(); // CÁCH 1
+        private readonly BindingList<TicketBookingRequestDTO> _passengers = new(); // CÁCH 1
+        
         private readonly BindingSource _bs = new();
         private int _editingIndex = -1; // -1 = thêm mới; >=0 = đang sửa dòng này
         private int _passengerCount = 0;
@@ -17,11 +21,31 @@ namespace GUI.Features.Ticket.subTicket
         public frmPassengerInfoControl()
         {
             InitializeComponent();
-            InitGrid();                        // cấu hình lưới + binding 1 lần
+            InitGrid();
+            LoadCheckBaggage();
+            LoadNationality();
+            // cấu hình lưới + binding 1 lần
             btnAddPassengerTicket.Text = "Nhập";
 
             // Chặn popup DataError mặc định của DGV
             dgvPassengerListTicket.DataError += (s, e) => { e.ThrowException = false; };
+        }
+        private void LoadCheckBaggage()
+        {
+            CheckedBaggageBUS checkedBaggageBUS = new CheckedBaggageBUS();  
+            var baggageList = checkedBaggageBUS.GetAllCheckedBaggage();
+            cboBaggageTicket.DataSource = baggageList;
+            cboBaggageTicket.DisplayMember = "DisplayText";
+            cboBaggageTicket.ValueMember = "CheckedId";
+        }
+        private void LoadNationality()
+        {
+            var bus = new NationalBUS();
+            var list = bus.GetAllNationals();
+
+            cboNationalityTicket.DataSource = list;
+            cboNationalityTicket.DisplayMember = "DisplayName";
+            cboNationalityTicket.ValueMember = "CountryName";
         }
 
         private void InitGrid()
@@ -32,6 +56,10 @@ namespace GUI.Features.Ticket.subTicket
             dgvPassengerListTicket.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvPassengerListTicket.Columns.Clear();
 
+            // ========================================
+            // 1) CỘT HIỂN THỊ CHÍNH (4–5 trường quan trọng)
+            // ========================================
+
             dgvPassengerListTicket.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "colFullName",
@@ -39,6 +67,7 @@ namespace GUI.Features.Ticket.subTicket
                 DataPropertyName = "FullName",
                 FillWeight = 25
             });
+
             dgvPassengerListTicket.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "colDateOfBirth",
@@ -47,42 +76,35 @@ namespace GUI.Features.Ticket.subTicket
                 FillWeight = 15,
                 DefaultCellStyle = new DataGridViewCellStyle { Format = "dd/MM/yyyy" }
             });
-            dgvPassengerListTicket.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                Name = "colFlightDate",
-                HeaderText = "Ngày bay",
-                DataPropertyName = "FlightDate",
-                FillWeight = 15,
-                DefaultCellStyle = new DataGridViewCellStyle { Format = "dd/MM/yyyy" }
-            });
-            dgvPassengerListTicket.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                Name = "colPassport",
-                HeaderText = "Số hộ chiếu",
-                DataPropertyName = "Passport",
-                FillWeight = 18
-            });
-            dgvPassengerListTicket.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                Name = "colEmail",
-                HeaderText = "Email",
-                DataPropertyName = "Email",
-                FillWeight = 20
-            });
-            dgvPassengerListTicket.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                Name = "colNumberSeat",
-                HeaderText = "Số ghế",
-                DataPropertyName = "NumberSeat",
-                FillWeight = 10
-            });
+
             dgvPassengerListTicket.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "colNationality",
                 HeaderText = "Quốc tịch",
                 DataPropertyName = "Nationality",
-                FillWeight = 12
+                FillWeight = 15
             });
+
+            dgvPassengerListTicket.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "colPassportNumber",
+                HeaderText = "Hộ chiếu",
+                DataPropertyName = "PassportNumber",
+                FillWeight = 20
+            });
+
+            dgvPassengerListTicket.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "colSeatNumber",
+                HeaderText = "Số ghế",
+                DataPropertyName = "SeatNumber",
+                FillWeight = 15
+            });
+
+            // ============================
+            // 2) NÚT SỬA
+            // ============================
+
             dgvPassengerListTicket.Columns.Add(new DataGridViewButtonColumn
             {
                 Name = "colAction",
@@ -92,13 +114,48 @@ namespace GUI.Features.Ticket.subTicket
                 AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells
             });
 
+            // ========================================
+            // 3) HIDDEN COLUMNS (vẫn map DTO nhưng ẩn)
+            // ========================================
+
+            AddHiddenColumn("AccountId");
+            AddHiddenColumn("FlightId");
+            AddHiddenColumn("FlightDate");
+            AddHiddenColumn("PhoneNumber");
+            AddHiddenColumn("Email");
+            AddHiddenColumn("SeatId");
+            AddHiddenColumn("FlightSeatId");
+            AddHiddenColumn("ClassId");
+            AddHiddenColumn("CarryOnId");
+            AddHiddenColumn("CheckedId");
+            AddHiddenColumn("Quantity");
+            AddHiddenColumn("BaggageNote");
+            AddHiddenColumn("BaggageDisplayText");
+            AddHiddenColumn("TicketNumber");
+            AddHiddenColumn("Note");
+
             // Binding
-            _bs.DataSource = _passengers;
+            _bs.DataSource = _passengers; // List<TicketBookingRequestDTO>
             dgvPassengerListTicket.DataSource = _bs;
 
-            // Sự kiện click nút "Sửa"
             dgvPassengerListTicket.CellContentClick += dgvPassengerListTicket_CellContentClick;
         }
+
+        /// <summary>
+        /// Thêm cột ẩn nhưng vẫn bind property để giữ dữ liệu đầy đủ.
+        /// </summary>
+        private void AddHiddenColumn(string propertyName)
+        {
+            dgvPassengerListTicket.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "col" + propertyName,
+                HeaderText = propertyName,
+                DataPropertyName = propertyName,
+                Visible = false
+            });
+        }
+
+
 
         private void btnSelectSeatTicket_Click(object sender, EventArgs e)
         {
@@ -110,36 +167,37 @@ namespace GUI.Features.Ticket.subTicket
         {
             if (!ValidateForm()) return;
 
+            // ======== TRƯỜNG HỢP SỬA ========
             if (_editingIndex >= 0)
             {
-                // CẬP NHẬT IN-PLACE
-                var p = _passengers[_editingIndex];
-                MapFormToDto(p);
-                _passengers.ResetItem(_editingIndex); // refresh đúng 1 dòng
+                var dto = _passengers[_editingIndex];       // DTO cũ
+                MapFormToDto(dto);                          // Update DTO cũ
+                _passengers.ResetItem(_editingIndex);       // Refresh 1 dòng
                 _editingIndex = -1;
+
                 btnAddPassengerTicket.Text = "Nhập";
                 ClearForm();
                 return;
             }
 
-            // THÊM MỚI (mỗi lần 1 người – bỏ for)
+            // ======== TRƯỜNG HỢP THÊM MỚI ========
             if (_passengerCount < _ticketCount)
             {
                 _passengerCount++;
 
-                var profile = new ProfileDTO();
-                MapFormToDto(profile);
-                _passengers.Add(profile); // BindingList tự thông báo Add, không cần reset
+                var dto = new TicketBookingRequestDTO();
+                MapFormToDto(dto);
+
+                _passengers.Add(dto);                       // BindingList tự refresh
+
                 ClearForm();
-                //return;
             }
             else
             {
-
                 MessageBox.Show($"Đã đủ {_ticketCount} hành khách cho vé này.");
             }
-           
         }
+
 
         // Bấm nút "Sửa" trong lưới → đổ ngược lên form
         private void dgvPassengerListTicket_CellContentClick(object sender, DataGridViewCellEventArgs e)
@@ -147,34 +205,63 @@ namespace GUI.Features.Ticket.subTicket
             if (e.RowIndex < 0) return;
             if (dgvPassengerListTicket.Columns[e.ColumnIndex].Name != "colAction") return;
 
-            var item = _passengers[e.RowIndex];
+            var item = _passengers[e.RowIndex];          // TicketBookingRequestDTO
             _editingIndex = e.RowIndex;
 
+            // ========= Passenger info =========
             txtFullNameTicket.Text = item.FullName ?? "";
-            txtPhoneNumberTicket.Text = item.NumberPhone ?? "";
+            txtPhoneNumberTicket.Text = item.PhoneNumber ?? "";
             txtEmailTicket.Text = item.Email ?? "";
             cboNationalityTicket.Text = item.Nationality ?? "VN";
-            txtPassportNumberTicket.Text = item.Passport ?? "";
-            txtSeatTicket.Text = item.NumberSeat ?? "";
-            // Nếu DTO là DateTime (không nullable) thì set thẳng:
-            dtpDateOfBirthTicket.Value = item.DateOfBirth;
-            dtpFlightDateTicket.Value = item.FlightDate;
+            txtPassportNumberTicket.Text = item.PassportNumber ?? "";
+
+            // ========= Seat info =========
+            txtSeatTicket.Text = item.SeatNumber ?? "";
+
+            // ========= DateTime? phải check null =========
+            dtpDateOfBirthTicket.Value = item.DateOfBirth ?? DateTime.Now;
+            dtpFlightDateTicket.Value = item.FlightDate ?? DateTime.Now;
+
+            // ========= Baggage info =========
+            cboBaggageTicket.Text = item.BaggageDisplayText ?? "";
+            txtNoteBaggage.Text = item.BaggageNote ?? "";
 
             btnAddPassengerTicket.Text = "Cập nhật";
         }
 
+
         // Helpers
-        private void MapFormToDto(ProfileDTO p)
+        private void MapFormToDto(TicketBookingRequestDTO dto)
         {
-            p.FullName = txtFullNameTicket.Text.Trim();
-            p.NumberPhone = txtPhoneNumberTicket.Text.Trim();
-            p.Email = txtEmailTicket.Text.Trim();
-            p.Nationality = string.IsNullOrWhiteSpace(cboNationalityTicket.Text) ? "VN" : cboNationalityTicket.Text.Trim();
-            p.Passport = txtPassportNumberTicket.Text.Trim();
-            p.DateOfBirth = dtpDateOfBirthTicket.Value.Date;
-            p.FlightDate = dtpFlightDateTicket.Value.Date;
-            p.NumberSeat = txtSeatTicket.Text.Trim();
+            // ========= Passenger info =========
+            dto.FullName = txtFullNameTicket.Text;
+            dto.DateOfBirth = dtpDateOfBirthTicket.Value;
+            dto.PassportNumber = txtPassportNumberTicket.Text;
+            dto.Email = txtEmailTicket.Text;
+            dto.PhoneNumber = txtPhoneNumberTicket.Text;
+            dto.Nationality = cboNationalityTicket.SelectedValue?.ToString();
+
+            // ========= Flight info =========
+            dto.FlightDate = dtpFlightDateTicket.Value;
+            // dto.FlightId => Anh map ở ngoài khi chọn chuyến bay
+
+            // ========= Seat info =========
+            dto.SeatNumber = txtSeatTicket.Text;
+            // dto.SeatId, dto.FlightSeatId, dto.ClassId: 
+            // tùy theo UI của Anh, nếu chưa có thì để null.
+
+            // ========= Baggage info =========
+            if (cboBaggageTicket.SelectedItem != null)
+            {
+                dto.CheckedId = (cboBaggageTicket.SelectedItem as DTO.Baggage.CheckedBaggageDTO)?.CheckedId;
+                dto.BaggageDisplayText = cboBaggageTicket.Text;
+            }
+            dto.BaggageNote = txtNoteBaggage.Text;
+
+            // ========= Ticket info =========
+            // dto.TicketNumber => BUS sẽ tự generate
         }
+
 
         private bool ValidateForm()
         {
@@ -196,6 +283,16 @@ namespace GUI.Features.Ticket.subTicket
             cboNationalityTicket.Text = "VN";
             dtpDateOfBirthTicket.Value = DateTime.Today;
             dtpFlightDateTicket.Value = DateTime.Today;
+        }
+
+        private void underlinedTextField1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void cboBaggageTicket_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }
