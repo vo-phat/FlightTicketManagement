@@ -145,5 +145,58 @@ namespace GUI.Components.Inputs {
 
         public override Size GetPreferredSize(Size proposedSize)
             => new Size(base.GetPreferredSize(proposedSize).Width, CONTROL_HEIGHT);
+        // =====================
+        // Forward ComboBox API
+        // =====================
+
+        // DataSource
+        [Category("Data")]
+        public object? DataSource
+        {
+            get => _combo.DataSource;
+            set => _combo.DataSource = value;
+        }
+
+        // DisplayMember
+        [Category("Data")]
+        public string DisplayMember
+        {
+            get => _combo.DisplayMember;
+            set => _combo.DisplayMember = value;
+        }
+
+        // ValueMember
+        [Category("Data")]
+        public string ValueMember
+        {
+            get => _combo.ValueMember;
+            set => _combo.ValueMember = value;
+        }
+
+        // SelectedValue
+        [Browsable(false)]
+        public object? SelectedValue
+        {
+            get => _combo.SelectedValue;
+            set => _combo.SelectedValue = value;
+        }
+
+        // Text override
+        public override string Text
+        {
+            get => _combo.Text;
+            set => _combo.Text = value;
+        }
+
+        // DropDownStyle
+        [Category("Behavior")]
+        public ComboBoxStyle DropDownStyle
+        {
+            get => _combo.DropDownStyle;
+            set => _combo.DropDownStyle = value;
+        }
+
+        
+
     }
 }

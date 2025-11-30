@@ -7,13 +7,13 @@ using GUI.Features.Baggage;
 using GUI.Features.CabinClass;
 using GUI.Features.FareRules;
 using GUI.Features.Flight;
+using GUI.Features.Payments;
 using GUI.Features.Profile;
 using GUI.Features.Route;
 using GUI.Features.Seat;
+using GUI.Features.Setting;
 using GUI.Features.Stats;
 using GUI.Features.Ticket;
-using GUI.Features.Payments;
-using GUI.Features.Setting;
 using GUI.Properties;
 using DTO.Auth;
 using BUS.Auth;
@@ -382,38 +382,54 @@ namespace GUI.MainApp {
         private void OpenFareRules() {
             ShowControl("FareRules", () => new FareRulesControl());
         }
-
+        /// <summary>
+        /// /Chua xet den viec co tai khoan do la admin hay user, chua quan tam
+        /// 
+        /// 
+        /// </summary>
         private void OpenBookingSearch() {
-            ShowControl("Ticket", () => new TicketControl());
+            var control = new TicketControl();
+            control.switchTab(0);
+            LoadControl(control);
+            //ShowControl("Ticket", () => new TicketControl());
         }
 
         private void OpenMyBookings() {
-            MessageBox.Show("Đặt chỗ của tôi (User). TODO gắn UserControl lọc theo account_id.", "My Bookings");
+            var control = new TicketControl();
+            control.switchTab(0);
+            LoadControl(control);
+            //MessageBox.Show("Đặt chỗ của tôi (User). TODO gắn UserControl lọc theo account_id.", "My Bookings");
         }
 
         private void OpenTicketOps() {
-            MessageBox.Show("Quản lý vé (Staff/Admin) – check-in/đổi trạng thái.", "Ticket Ops");
+            var control = new TicketControl();
+            control.switchTab(2);
+            LoadControl(control);
+            //MessageBox.Show("Quản lý vé (Staff/Admin) – check-in/đổi trạng thái.", "Ticket Ops");
         }
 
         private void OpenTicketHistory() {
-            MessageBox.Show("Lịch sử vé (Admin).", "Ticket History");
+            var control = new TicketControl();
+            control.switchTab(1);
+            LoadControl(control);
+            //MessageBox.Show("Lịch sử vé (Admin).", "Ticket History");
         }
-
+         //Baggage
         private void OpenBaggageCheckin() {
             var control = new BaggageControl();
-            control.SwitchTab(1);
+            control.SwitchTab(0);
             LoadControl(control);
         }
 
         private void OpenBaggageTracking() {
             var control = new BaggageControl();
-            control.SwitchTab(2);
+            control.SwitchTab(1);
             LoadControl(control);
         }
 
         private void OpenBaggageReports() {
             var control = new BaggageControl();
-            control.SwitchTab(0);
+            control.SwitchTab(2);
             LoadControl(control);
         }
 
