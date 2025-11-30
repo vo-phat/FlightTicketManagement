@@ -42,7 +42,7 @@ namespace DTO.Ticket
 
         public int? CarryOnId { get; set; }         // hành lý xách tay thêm (nếu có)
         public int? CheckedId { get; set; }         // hành lý ký gửi mua thêm
-        public int? Quantity { get; set; }          // số lượng kiện hành lý, mặc định = 1
+        public int? Quantity { get; set; } =  1;        // số lượng kiện hành lý, mặc định = 1
         public string? BaggageNote { get; set; }    // ghi chú riêng cho hành lý
 
         // Hiển thị gộp (GUI)

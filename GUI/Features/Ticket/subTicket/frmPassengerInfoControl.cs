@@ -1,11 +1,14 @@
 ﻿using BUS.Baggage;
+using BUS.Profile;
 using BUS.Ticket;
+using DAO.EF;
 using DTO.BaggageDTO;
 using DTO.Profile;
 using DTO.Ticket;
 using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 namespace GUI.Features.Ticket.subTicket
 {
@@ -13,15 +16,18 @@ namespace GUI.Features.Ticket.subTicket
     {
         // Nguồn dữ liệu & trạng thái
         private readonly BindingList<TicketBookingRequestDTO> _passengers = new(); // CÁCH 1
-        
+        private readonly ProfileBUS _profileBus = new ProfileBUS();
         private readonly BindingSource _bs = new();
         private int _editingIndex = -1; // -1 = thêm mới; >=0 = đang sửa dòng này
         private int _passengerCount = 0;
         private int _ticketCount = 2;
+        private int _accountId =1;
         public frmPassengerInfoControl()
         {
+            
             InitializeComponent();
             InitGrid();
+            LoadInfomationAccount(_accountId);
             LoadCheckBaggage();
             LoadNationality();
             // cấu hình lưới + binding 1 lần
@@ -32,7 +38,7 @@ namespace GUI.Features.Ticket.subTicket
         }
         private void LoadCheckBaggage()
         {
-            CheckedBaggageBUS checkedBaggageBUS = new CheckedBaggageBUS();  
+            CheckedBaggageBUS checkedBaggageBUS = new CheckedBaggageBUS();
             var baggageList = checkedBaggageBUS.GetAllCheckedBaggage();
             cboBaggageTicket.DataSource = baggageList;
             cboBaggageTicket.DisplayMember = "DisplayText";
@@ -47,7 +53,25 @@ namespace GUI.Features.Ticket.subTicket
             cboNationalityTicket.DisplayMember = "DisplayName";
             cboNationalityTicket.ValueMember = "CountryName";
         }
+        private void LoadInfomationAccount(int _accountID)
+        {
+            //MessageBox.Show(_accountID.ToString());
+            var profile = _profileBus.GetProfileByAccountId(_accountID);
 
+            if (profile == null)
+            {
+                MessageBox.Show("Không tìm thấy thông tin tài khoản!");
+                return;
+            }
+
+            txtFullNameTicket.Text = profile.FullName ?? "";
+            dtpDateOfBirthTicket.Value = profile.DateOfBirth ?? DateTime.Now;
+            txtPhoneNumberTicket.Text = profile.PhoneNumber ?? "";
+            txtPassportNumberTicket.Text = profile.PassportNumber ?? "";
+            txtEmailTicket.Text = profile.Email ?? "";
+
+            cboNationalityTicket.Text = profile.Nationality ?? "VN";
+        }
         private void InitGrid()
         {
             dgvPassengerListTicket.AutoGenerateColumns = false;
@@ -154,8 +178,7 @@ namespace GUI.Features.Ticket.subTicket
                 Visible = false
             });
         }
-
-
+       
 
         private void btnSelectSeatTicket_Click(object sender, EventArgs e)
         {
@@ -171,7 +194,8 @@ namespace GUI.Features.Ticket.subTicket
             if (_editingIndex >= 0)
             {
                 var dto = _passengers[_editingIndex];       // DTO cũ
-                MapFormToDto(dto);                          // Update DTO cũ
+                MapFormToDto(dto);
+                ShowTicketDtoInfo(dto);// Update DTO cũ
                 _passengers.ResetItem(_editingIndex);       // Refresh 1 dòng
                 _editingIndex = -1;
 
@@ -187,7 +211,7 @@ namespace GUI.Features.Ticket.subTicket
 
                 var dto = new TicketBookingRequestDTO();
                 MapFormToDto(dto);
-
+                ShowTicketDtoInfo(dto);
                 _passengers.Add(dto);                       // BindingList tự refresh
 
                 ClearForm();
@@ -234,21 +258,27 @@ namespace GUI.Features.Ticket.subTicket
         private void MapFormToDto(TicketBookingRequestDTO dto)
         {
             // ========= Passenger info =========
+            if(_editingIndex == -1)
+            {
+                dto.AccountId = _accountId; // nếu user login
+            }
             dto.FullName = txtFullNameTicket.Text;
             dto.DateOfBirth = dtpDateOfBirthTicket.Value;
-            dto.PassportNumber = txtPassportNumberTicket.Text;
-            dto.Email = txtEmailTicket.Text;
             dto.PhoneNumber = txtPhoneNumberTicket.Text;
+            dto.PassportNumber = txtPassportNumberTicket.Text;
             dto.Nationality = cboNationalityTicket.SelectedValue?.ToString();
+            dto.Email = txtEmailTicket.Text;
+            
 
             // ========= Flight info =========
             dto.FlightDate = dtpFlightDateTicket.Value;
-            // dto.FlightId => Anh map ở ngoài khi chọn chuyến bay
+            dto.FlightId = 1; //=> Anh map ở ngoài khi chọn chuyến bay
 
             // ========= Seat info =========
             dto.SeatNumber = txtSeatTicket.Text;
-            // dto.SeatId, dto.FlightSeatId, dto.ClassId: 
-            // tùy theo UI của Anh, nếu chưa có thì để null.
+            dto.SeatId = 1;        // tùy theo UI của Anh, nếu chưa có thì để null.
+            dto.FlightSeatId = 1;  // tùy theo UI của Anh, nếu chưa có thì để null.
+            dto.ClassId = 1;      // tùy theo UI của Anh, nếu chưa có thì để null.
 
             // ========= Baggage info =========
             if (cboBaggageTicket.SelectedItem != null)
@@ -256,6 +286,8 @@ namespace GUI.Features.Ticket.subTicket
                 dto.CheckedId = (cboBaggageTicket.SelectedItem as DTO.Baggage.CheckedBaggageDTO)?.CheckedId;
                 dto.BaggageDisplayText = cboBaggageTicket.Text;
             }
+            dto.Quantity = 1; // mặc định 1 kiện    
+            // carry on id nếu có UI chọn hành lý xách tay thêm thì map tương tự CheckedId
             dto.BaggageNote = txtNoteBaggage.Text;
 
             // ========= Ticket info =========
@@ -293,6 +325,36 @@ namespace GUI.Features.Ticket.subTicket
         private void cboBaggageTicket_Load(object sender, EventArgs e)
         {
 
+        }
+
+        private void btnNextToPayment_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show(_passengers.Count.ToString());
+
+        }
+        public void ShowTicketDtoInfo(TicketBookingRequestDTO dto)
+        {
+            if (dto == null)
+            {
+                MessageBox.Show("DTO null rồi Anh!");
+                return;
+            }
+
+            var sb = new StringBuilder();
+
+            foreach (var prop in typeof(TicketBookingRequestDTO).GetProperties())
+            {
+                var name = prop.Name;
+                var value = prop.GetValue(dto) ?? "(null)";
+
+                // format DateTime?
+                if (value is DateTime dt)
+                    value = dt.ToString("dd/MM/yyyy");
+
+                sb.AppendLine($"{name}: {value}");
+            }
+
+            MessageBox.Show(sb.ToString(), "DEBUG – Dữ liệu TicketBookingRequestDTO");
         }
     }
 }
