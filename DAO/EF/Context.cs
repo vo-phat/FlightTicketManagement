@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using DAO.Database;
+using DTO.Ticket;
 
 namespace DAO.EF {
     public class Context : DbContext {
