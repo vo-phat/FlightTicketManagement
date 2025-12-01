@@ -15,8 +15,8 @@ namespace GUI.Features.Auth {
             StartPosition = FormStartPosition.CenterScreen;
             BackgroundImage = Resources.login;    // ảnh nền máy bay
             BackgroundImageLayout = ImageLayout.Stretch;
-            FormBorderStyle = FormBorderStyle.Sizable;
-            MinimumSize = new Size(860, 720);
+            FormBorderStyle = FormBorderStyle.Sizable; 
+            WindowState = FormWindowState.Maximized;
 
             // Lớp phủ mờ để tăng độ tương phản
             var overlay = new Panel {

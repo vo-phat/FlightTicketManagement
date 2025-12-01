@@ -115,7 +115,22 @@ namespace GUI.Features.Flight
                 flightListControl.LoadFlightData();
             }
 
-            SwitchTab(0);
+                var lbl = new Label {
+                    Text = "Bạn không có quyền truy cập chức năng Chuyến bay.",
+                    Dock = DockStyle.Fill,
+                    TextAlign = ContentAlignment.MiddleCenter,
+                    Font = new Font("Segoe UI", 11, FontStyle.Italic)
+                };
+                Controls.Add(lbl);
+                lbl.BringToFront();
+                return;
+            }
+
+            // Ưu tiên mở tab danh sách nếu có quyền, không thì mở tab tạo
+            if (_canList)
+                SwitchTab(0);
+            else if (_canCreate)
+                SwitchTab(2);
         }
         private void taoMoiChuyenBay_Click(object sender, EventArgs e)
         {

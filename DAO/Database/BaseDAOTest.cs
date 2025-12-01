@@ -1,21 +1,17 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace DAO.Database
-{
+namespace DAO.Database {
     /// <summary>
     /// Test class để kiểm tra BaseDAO hoạt động
     /// </summary>
-    public class BaseDAOTest : BaseDAO
-    {
+    public class BaseDAOTest : BaseDAO {
         /// <summary>
         /// Test kết nối và đếm số bảng
         /// </summary>
-        public string TestConnection()
-        {
-            try
-            {
+        public string TestConnection() {
+            try {
                 // Test ExecuteScalar - Đếm số bảng trong database
                 string query = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'flightticketmanagement'";
                 object result = ExecuteScalar(query);
@@ -31,10 +27,8 @@ namespace DAO.Database
         /// <summary>
         /// Test ExecuteQuery với bảng Airlines
         /// </summary>
-        public string TestExecuteQuery()
-        {
-            try
-            {
+        public string TestExecuteQuery() {
+            try {
                 // Test ExecuteQuery - Lấy danh sách Airlines
                 string query = "SELECT * FROM Airlines LIMIT 5";
                 var dt = ExecuteQuery(query);
@@ -44,8 +38,7 @@ namespace DAO.Database
                 sb.AppendLine();
 
                 // Hiển thị chi tiết
-                foreach (System.Data.DataRow row in dt.Rows)
-                {
+                foreach (System.Data.DataRow row in dt.Rows) {
                     sb.AppendLine($"- ID: {row["airline_id"]}, Code: {row["airline_code"]}, Name: {row["airline_name"]}");
                 }
 
@@ -60,18 +53,15 @@ namespace DAO.Database
         /// <summary>
         /// Test ExecuteReader
         /// </summary>
-        public string TestExecuteReader()
-        {
-            try
-            {
+        public string TestExecuteReader() {
+            try {
                 string query = "SELECT * FROM Airports LIMIT 5";
                 var results = new StringBuilder();
                 results.AppendLine("Test ExecuteReader - Airports:");
                 results.AppendLine();
 
                 int count = 0;
-                ExecuteReader(query, reader =>
-                {
+                ExecuteReader(query, reader => {
                     count++;
                     string code = GetString(reader, "airport_code");
                     string name = GetString(reader, "airport_name");
@@ -94,8 +84,7 @@ namespace DAO.Database
         /// <summary>
         /// Test tất cả các methods
         /// </summary>
-        public string TestAll()
-        {
+        public string TestAll() {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("=== TEST BASE DAO ===");
             sb.AppendLine();
