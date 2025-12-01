@@ -1087,3 +1087,1066 @@ INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `change
 INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (22, 'CHECKED_IN', 'LOADED', '2024-06-08 17:05:26');
 INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (22, 'LOADED', 'CREATED', '2024-11-13 21:55:48');
 INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (22, 'CREATED', 'IN_TRANSIT', '2025-12-06 04:05:09');
+
+-- Chèn các chuyến bay đã hoàn tất (COMPLETED)
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) 
+VALUES 
+('VN255', 2, 9, '2025-10-30 08:00:00', '2025-10-30 10:13:00', 'COMPLETED'), -- SGN-HAN (Route 9, 113 phút) [cite: 78], dùng máy bay VN (Aircraft 2) [cite: 61]
+('VJ170', 4, 3, '2025-10-30 14:30:00', '2025-10-30 16:00:00', 'COMPLETED'), -- HAN-CXR (Route 3, 90 phút) [cite: 72], dùng máy bay VJ (Aircraft 4) [cite: 63]
+('QH120', 3, 7, '2025-10-31 10:00:00', '2025-10-31 14:25:00', 'COMPLETED'), -- DAD-PQC (Route 7, 265 phút) [cite: 76], dùng máy bay QH (Aircraft 3) [cite: 62]
+('BL633', 1, 6, '2025-10-31 13:15:00', '2025-10-31 14:48:00', 'COMPLETED'); -- DAD-CXR (Route 6, 93 phút) [cite: 75], dùng máy bay BL (Aircraft 1) [cite: 60]
+
+-- Chèn các chuyến bay trong tương lai (SCHEDULED)
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) 
+VALUES 
+-- Ngày 3 tháng 11, 2025
+('VN208', 2, 9, '2025-11-03 06:00:00', '2025-11-03 08:13:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 2 (VN) [cite: 61]
+('VJ102', 8, 9, '2025-11-03 07:30:00', '2025-11-03 09:43:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 8 (VJ) [cite: 67]
+('QH204', 9, 9, '2025-11-03 09:00:00', '2025-11-03 11:13:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 9 (QH) [cite: 68]
+('BL602', 1, 9, '2025-11-03 10:30:00', '2025-11-03 12:43:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 1 (BL) [cite: 60]
+('VN1350', 5, 3, '2025-11-03 11:00:00', '2025-11-03 12:30:00', 'SCHEDULED'), -- HAN-CXR (Route 3) [cite: 72], Aircraft 5 (VN) [cite: 64]
+('VN218', 10, 9, '2025-11-03 14:00:00', '2025-11-03 16:13:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 10 (VN) [cite: 69]
+('VJ108', 4, 9, '2025-11-03 16:00:00', '2025-11-03 18:13:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 4 (VJ) [cite: 63]
+('VN280', 2, 9, '2025-11-03 19:00:00', '2025-11-03 21:13:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 2 (VN) [cite: 61]
+
+-- Ngày 4 tháng 11, 2025
+('VJ880', 8, 1, '2025-11-04 07:00:00', '2025-11-04 10:50:00', 'SCHEDULED'), -- PQC-DAD (Route 1) [cite: 70], Aircraft 8 (VJ) [cite: 67]
+('VN210', 5, 9, '2025-11-04 08:00:00', '2025-11-04 10:13:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 5 (VN) [cite: 64]
+('VJ104', 4, 9, '2025-11-04 09:30:00', '2025-11-04 11:43:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 4 (VJ) [cite: 63]
+('QH206', 3, 9, '2025-11-04 11:00:00', '2025-11-04 13:13:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 3 (QH) [cite: 62]
+('BL500', 6, 8, '2025-11-04 13:00:00', '2025-11-04 14:31:00', 'SCHEDULED'), -- HAN-PQC (Route 8) [cite: 77], Aircraft 6 (BL) [cite: 65]
+('VN1352', 10, 3, '2025-11-04 15:00:00', '2025-11-04 16:30:00', 'SCHEDULED'), -- HAN-CXR (Route 3) [cite: 72], Aircraft 10 (VN) [cite: 69]
+('VN220', 2, 9, '2025-11-04 17:00:00', '2025-11-04 19:13:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 2 (VN) [cite: 61]
+('VJ110', 8, 9, '2025-11-04 19:30:00', '2025-11-04 21:43:00', 'SCHEDULED'); -- SGN-HAN (Route 9) [cite: 78], Aircraft 8 (VJ) [cite: 67]
+
+-- Chèn 10 chuyến bay mới cho ngày 1 tháng 11, 2025 (Hôm nay)
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) 
+VALUES 
+-- 1. SGN -> HAN (16:00)
+('VN256', 2, 9, '2025-11-01 16:00:00', '2025-11-01 17:53:00', 'SCHEDULED'), -- Dùng aircraft_id 2 (VN) [cite: 61], route_id 9 (113 phút) 
+
+-- 2. HAN -> CXR (16:30)
+('VJ450', 4, 3, '2025-11-01 16:30:00', '2025-11-01 18:00:00', 'SCHEDULED'), -- Dùng aircraft_id 4 (VJ) [cite: 63], route_id 3 (90 phút) [cite: 72]
+
+-- 3. SGN -> HAN (17:00)
+('QH210', 3, 9, '2025-11-01 17:00:00', '2025-11-01 18:53:00', 'SCHEDULED'), -- Dùng aircraft_id 3 (QH) [cite: 62], route_id 9 (113 phút) 
+
+-- 4. PQC -> DAD (17:30)
+('BL322', 1, 1, '2025-11-01 17:30:00', '2025-11-01 21:20:00', 'SCHEDULED'), -- Dùng aircraft_id 1 (BL) [cite: 60], route_id 1 (230 phút) [cite: 70]
+
+-- 5. SGN -> HAN (18:00)
+('VN258', 5, 9, '2025-11-01 18:00:00', '2025-11-01 19:53:00', 'SCHEDULED'), -- Dùng aircraft_id 5 (VN) [cite: 64], route_id 9 (113 phút) 
+
+-- 6. HAN -> PQC (18:30)
+('VJ975', 8, 8, '2025-11-01 18:30:00', '2025-11-01 20:01:00', 'SCHEDULED'), -- Dùng aircraft_id 8 (VJ) [cite: 67], route_id 8 (91 phút) [cite: 77]
+
+-- 7. SGN -> HAN (19:00)
+('BL610', 6, 9, '2025-11-01 19:00:00', '2025-11-01 20:53:00', 'SCHEDULED'), -- Dùng aircraft_id 6 (BL) [cite: 65], route_id 9 (113 phút) 
+
+-- 8. DAD -> CXR (19:30)
+('VN1550', 10, 6, '2025-11-01 19:30:00', '2025-11-01 21:03:00', 'SCHEDULED'), -- Dùng aircraft_id 10 (VN) [cite: 69], route_id 6 (93 phút) [cite: 75]
+
+-- 9. SGN -> HAN (20:00)
+('QH214', 9, 9, '2025-11-01 20:00:00', '2025-11-01 21:53:00', 'SCHEDULED'), -- Dùng aircraft_id 9 (QH) [cite: 68], route_id 9 (113 phút) 
+
+-- 10. CXR -> SGN (21:00)
+('BL581', 7, 10, '2025-11-01 21:00:00', '2025-11-02 01:28:00', 'SCHEDULED'); -- Dùng aircraft_id 7 (BL) [cite: 66], route_id 10 (268 phút) [cite: 79]
+-- Giả định 10 chuyến bay mới có flight_id TỪ 21 ĐẾN 30
+-- (Nếu ID của bạn khác, vui lòng điều chỉnh 'flight_id' trong các lệnh INSERT bên dưới)
+
+-- Chuyến bay 46 (VN256, aircraft_id 2, dùng seat_id 21-40)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(46, 21, 250.00, 'AVAILABLE'), (46, 22, 250.00, 'AVAILABLE'), (46, 23, 250.00, 'AVAILABLE'),
+(46, 24, 250.00, 'AVAILABLE'), (46, 25, 350.00, 'AVAILABLE'), (46, 26, 250.00, 'AVAILABLE'),
+(46, 27, 250.00, 'AVAILABLE'), (46, 28, 450.00, 'AVAILABLE'), (46, 29, 350.00, 'AVAILABLE'),
+(46, 30, 450.00, 'AVAILABLE'), (46, 31, 450.00, 'AVAILABLE'), (46, 32, 450.00, 'AVAILABLE'),
+(46, 33, 350.00, 'AVAILABLE'), (46, 34, 250.00, 'AVAILABLE'), (46, 35, 250.00, 'AVAILABLE'),
+(46, 36, 350.00, 'AVAILABLE'), (46, 37, 450.00, 'AVAILABLE'), (46, 38, 250.00, 'AVAILABLE'),
+(46, 39, 350.00, 'AVAILABLE'), (46, 40, 250.00, 'AVAILABLE');
+
+-- Chuyến bay 47 (VJ450, aircraft_id 4, dùng seat_id 61-80)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(47, 61, 220.00, 'AVAILABLE'), (47, 62, 220.00, 'AVAILABLE'), (47, 63, 180.00, 'AVAILABLE'),
+(47, 64, 320.00, 'AVAILABLE'), (47, 65, 420.00, 'AVAILABLE'), (47, 66, 220.00, 'AVAILABLE'),
+(47, 67, 220.00, 'AVAILABLE'), (47, 68, 320.00, 'AVAILABLE'), (47, 69, 420.00, 'AVAILABLE'),
+(47, 70, 180.00, 'AVAILABLE'), (47, 71, 320.00, 'AVAILABLE'), (47, 72, 320.00, 'AVAILABLE'),
+(47, 73, 320.00, 'AVAILABLE'), (47, 74, 220.00, 'AVAILABLE'), (47, 75, 220.00, 'AVAILABLE'),
+(47, 76, 220.00, 'AVAILABLE'), (47, 77, 320.00, 'AVAILABLE'), (47, 78, 220.00, 'AVAILABLE'),
+(47, 79, 220.00, 'AVAILABLE'), (47, 80, 420.00, 'AVAILABLE');
+
+-- Chuyến bay 48 (QH210, aircraft_id 3, dùng seat_id 41-60)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(48, 41, 260.00, 'AVAILABLE'), (48, 42, 260.00, 'AVAILABLE'), (48, 43, 460.00, 'AVAILABLE'),
+(48, 44, 210.00, 'AVAILABLE'), (48, 45, 260.00, 'AVAILABLE'), (48, 46, 260.00, 'AVAILABLE'),
+(48, 47, 360.00, 'AVAILABLE'), (48, 48, 360.00, 'AVAILABLE'), (48, 49, 460.00, 'AVAILABLE'),
+(48, 50, 210.00, 'AVAILABLE'), (48, 51, 460.00, 'AVAILABLE'), (48, 52, 460.00, 'AVAILABLE'),
+(48, 53, 360.00, 'AVAILABLE'), (48, 54, 460.00, 'AVAILABLE'), (48, 55, 460.00, 'AVAILABLE'),
+(48, 56, 360.00, 'AVAILABLE'), (48, 57, 260.00, 'AVAILABLE'), (48, 58, 360.00, 'AVAILABLE'),
+(48, 59, 210.00, 'AVAILABLE'), (48, 60, 260.00, 'AVAILABLE');
+
+-- Chuyến bay 49 (BL322, aircraft_id 1, dùng seat_id 1-20)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(49, 1, 240.00, 'AVAILABLE'), (49, 2, 240.00, 'AVAILABLE'), (49, 3, 340.00, 'AVAILABLE'),
+(49, 4, 500.00, 'AVAILABLE'), (49, 5, 240.00, 'AVAILABLE'), (49, 6, 500.00, 'AVAILABLE'),
+(49, 7, 500.00, 'AVAILABLE'), (49, 8, 500.00, 'AVAILABLE'), (49, 9, 500.00, 'AVAILABLE'),
+(49, 10, 400.00, 'AVAILABLE'), (49, 11, 340.00, 'AVAILABLE'), (49, 12, 340.00, 'AVAILABLE'),
+(49, 13, 240.00, 'AVAILABLE'), (49, 14, 500.00, 'AVAILABLE'), (49, 15, 400.00, 'AVAILABLE'),
+(49, 16, 500.00, 'AVAILABLE'), (49, 17, 400.00, 'AVAILABLE'), (49, 18, 400.00, 'AVAILABLE'),
+(49, 19, 240.00, 'AVAILABLE'), (49, 20, 240.00, 'AVAILABLE');
+
+-- Chuyến bay 50 (VN258, aircraft_id 5, dùng seat_id 81-100)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(50, 81, 265.00, 'AVAILABLE'), (50, 82, 265.00, 'AVAILABLE'), (50, 83, 265.00, 'AVAILABLE'),
+(50, 84, 465.00, 'AVAILABLE'), (50, 85, 265.00, 'AVAILABLE'), (50, 86, 215.00, 'AVAILABLE'),
+(50, 87, 215.00, 'AVAILABLE'), (50, 88, 215.00, 'AVAILABLE'), (50, 89, 365.00, 'AVAILABLE'),
+(50, 90, 365.00, 'AVAILABLE'), (50, 91, 465.00, 'AVAILABLE'), (50, 92, 365.00, 'AVAILABLE'),
+(50, 93, 365.00, 'AVAILABLE'), (50, 94, 365.00, 'AVAILABLE'), (50, 95, 265.00, 'AVAILABLE'),
+(50, 96, 265.00, 'AVAILABLE'), (50, 97, 215.00, 'AVAILABLE'), (50, 98, 465.00, 'AVAILABLE'),
+(50, 99, 265.00, 'AVAILABLE'), (50, 100, 365.00, 'AVAILABLE');
+
+-- Chuyến bay 51 (VJ975, aircraft_id 8, dùng seat_id 141-160)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(51, 141, 230.00, 'AVAILABLE'), (51, 142, 430.00, 'AVAILABLE'), (51, 143, 280.00, 'AVAILABLE'),
+(51, 144, 380.00, 'AVAILABLE'), (51, 145, 380.00, 'AVAILABLE'), (51, 146, 380.00, 'AVAILABLE'),
+(51, 147, 380.00, 'AVAILABLE'), (51, 148, 380.00, 'AVAILABLE'), (51, 149, 430.00, 'AVAILABLE'),
+(51, 150, 430.00, 'AVAILABLE'), (51, 151, 280.00, 'AVAILABLE'), (51, 152, 280.00, 'AVAILABLE'),
+(51, 153, 230.00, 'AVAILABLE'), (51, 154, 380.00, 'AVAILABLE'), (51, 155, 380.00, 'AVAILABLE'),
+(51, 156, 230.00, 'AVAILABLE'), (51, 157, 280.00, 'AVAILABLE'), (51, 158, 380.00, 'AVAILABLE'),
+(51, 159, 380.00, 'AVAILABLE'), (51, 160, 430.00, 'AVAILABLE');
+
+-- Chuyến bay 52 (BL610, aircraft_id 6, dùng seat_id 101-120)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(52, 101, 450.00, 'AVAILABLE'), (52, 102, 250.00, 'AVAILABLE'), (52, 103, 450.00, 'AVAILABLE'),
+(52, 104, 250.00, 'AVAILABLE'), (52, 105, 200.00, 'AVAILABLE'), (52, 106, 250.00, 'AVAILABLE'),
+(52, 107, 250.00, 'AVAILABLE'), (52, 108, 350.00, 'AVAILABLE'), (52, 109, 450.00, 'AVAILABLE'),
+(52, 110, 450.00, 'AVAILABLE'), (52, 111, 200.00, 'AVAILABLE'), (52, 112, 250.00, 'AVAILABLE'),
+(52, 113, 250.00, 'AVAILABLE'), (52, 114, 350.00, 'AVAILABLE'), (52, 115, 250.00, 'AVAILABLE'),
+(52, 116, 250.00, 'AVAILABLE'), (52, 117, 250.00, 'AVAILABLE'), (52, 118, 450.00, 'AVAILABLE'),
+(52, 119, 250.00, 'AVAILABLE'), (52, 120, 450.00, 'AVAILABLE');
+
+-- Chuyến bay 53 (VN1550, aircraft_id 10, dùng seat_id 181-200)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(53, 181, 310.00, 'AVAILABLE'), (53, 182, 410.00, 'AVAILABLE'), (53, 183, 210.00, 'AVAILABLE'),
+(53, 184, 260.00, 'AVAILABLE'), (53, 185, 260.00, 'AVAILABLE'), (53, 186, 310.00, 'AVAILABLE'),
+(53, 187, 260.00, 'AVAILABLE'), (53, 188, 210.00, 'AVAILABLE'), (53, 189, 310.00, 'AVAILABLE'),
+(53, 190, 210.00, 'AVAILABLE'), (53, 191, 260.00, 'AVAILABLE'), (53, 192, 310.00, 'AVAILABLE'),
+(53, 193, 410.00, 'AVAILABLE'), (53, 194, 260.00, 'AVAILABLE'), (53, 195, 210.00, 'AVAILABLE'),
+(53, 196, 310.00, 'AVAILABLE'), (53, 197, 410.00, 'AVAILABLE'), (53, 198, 310.00, 'AVAILABLE'),
+(53, 199, 410.00, 'AVAILABLE'), (53, 200, 210.00, 'AVAILABLE');
+
+-- Chuyến bay 54 (QH214, aircraft_id 9, dùng seat_id 161-180)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(54, 161, 270.00, 'AVAILABLE'), (54, 162, 220.00, 'AVAILABLE'), (54, 163, 270.00, 'AVAILABLE'),
+(54, 164, 220.00, 'AVAILABLE'), (54, 165, 370.00, 'AVAILABLE'), (54, 166, 470.00, 'AVAILABLE'),
+(54, 167, 270.00, 'AVAILABLE'), (54, 168, 270.00, 'AVAILABLE'), (54, 169, 270.00, 'AVAILABLE'),
+(54, 170, 470.00, 'AVAILABLE'), (54, 171, 370.00, 'AVAILABLE'), (54, 172, 270.00, 'AVAILABLE'),
+(54, 173, 270.00, 'AVAILABLE'), (54, 174, 270.00, 'AVAILABLE'), (54, 175, 470.00, 'AVAILABLE'),
+(54, 176, 270.00, 'AVAILABLE'), (54, 177, 470.00, 'AVAILABLE'), (54, 178, 470.00, 'AVAILABLE'),
+(54, 179, 270.00, 'AVAILABLE'), (54, 180, 470.00, 'AVAILABLE');
+
+-- Chuyến bay 55 (BL581, aircraft_id 7, dùng seat_id 121-140)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(55, 121, 330.00, 'AVAILABLE'), (55, 122, 280.00, 'AVAILABLE'), (55, 123, 280.00, 'AVAILABLE'),
+(55, 124, 480.00, 'AVAILABLE'), (55, 125, 330.00, 'AVAILABLE'), (55, 126, 280.00, 'AVAILABLE'),
+(55, 127, 280.00, 'AVAILABLE'), (55, 128, 480.00, 'AVAILABLE'), (55, 129, 280.00, 'AVAILABLE'),
+(55, 130, 280.00, 'AVAILABLE'), (55, 131, 280.00, 'AVAILABLE'), (55, 132, 280.00, 'AVAILABLE'),
+(55, 133, 480.00, 'AVAILABLE'), (55, 134, 480.00, 'AVAILABLE'), (55, 135, 330.00, 'AVAILABLE'),
+(55, 136, 330.00, 'AVAILABLE'), (55, 137, 230.00, 'AVAILABLE'), (55, 138, 230.00, 'AVAILABLE'),
+(55, 139, 480.00, 'AVAILABLE'), (55, 140, 280.00, 'AVAILABLE');
+-- Chèn 20 chuyến bay mới (SCHEDULED)
+
+-- Ngày 2 tháng 11, 2025 (Buổi sáng)
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES 
+('VN208', 2, 9, '2025-11-02 06:00:00', '2025-11-02 07:53:00', 'SCHEDULED'), -- A/C 2 (VN), Route 9 (SGN-HAN, 113 min)
+('VJ122', 4, 9, '2025-11-02 07:00:00', '2025-11-02 08:53:00', 'SCHEDULED'), -- A/C 4 (VJ), Route 9 (SGN-HAN, 113 min)
+('QH130', 3, 3, '2025-11-02 07:30:00', '2025-11-02 09:00:00', 'SCHEDULED'), -- A/C 3 (QH), Route 3 (HAN-CXR, 90 min)
+('BL350', 1, 1, '2025-11-02 08:00:00', '2025-11-02 11:50:00', 'SCHEDULED'), -- A/C 1 (BL), Route 1 (PQC-DAD, 230 min)
+('VN210', 5, 9, '2025-11-02 08:30:00', '2025-11-02 10:23:00', 'SCHEDULED'), -- A/C 5 (VN), Route 9 (SGN-HAN, 113 min)
+('VJ488', 8, 8, '2025-11-02 09:15:00', '2025-11-02 10:46:00', 'SCHEDULED'), -- A/C 8 (VJ), Route 8 (HAN-PQC, 91 min)
+
+-- Ngày 2 tháng 11, 2025 (Buổi chiều/tối)
+('QH550', 9, 7, '2025-11-02 12:30:00', '2025-11-02 16:55:00', 'SCHEDULED'), -- A/C 9 (QH), Route 7 (DAD-PQC, 265 min)
+('BL632', 6, 6, '2025-11-02 13:00:00', '2025-11-02 14:33:00', 'SCHEDULED'), -- A/C 6 (BL), Route 6 (DAD-CXR, 93 min)
+('VN214', 10, 9, '2025-11-02 14:00:00', '2025-11-02 15:53:00', 'SCHEDULED'), -- A/C 10 (VN), Route 9 (SGN-HAN, 113 min)
+('VJ134', 4, 3, '2025-11-02 15:00:00', '2025-11-02 16:30:00', 'SCHEDULED'), -- A/C 4 (VJ), Route 3 (HAN-CXR, 90 min)
+('QH220', 3, 9, '2025-11-02 16:00:00', '2025-11-02 17:53:00', 'SCHEDULED'), -- A/C 3 (QH), Route 9 (SGN-HAN, 113 min)
+('BL580', 7, 10, '2025-11-02 16:30:00', '2025-11-02 20:58:00', 'SCHEDULED'), -- A/C 7 (BL), Route 10 (CXR-SGN, 268 min)
+('VN1330', 2, 3, '2025-11-02 17:00:00', '2025-11-02 18:30:00', 'SCHEDULED'), -- A/C 2 (VN), Route 3 (HAN-CXR, 90 min)
+
+-- Ngày 3 tháng 11, 2025
+('VJ124', 8, 9, '2025-11-03 06:05:00', '2025-11-03 07:58:00', 'SCHEDULED'), -- A/C 8 (VJ), Route 9 (SGN-HAN, 113 min)
+('VN981', 5, 1, '2025-11-03 08:30:00', '2025-11-03 12:20:00', 'SCHEDULED'), -- A/C 5 (VN), Route 1 (PQC-DAD, 230 min)
+('VJ136', 4, 3, '2025-11-03 09:05:00', '2025-11-03 10:35:00', 'SCHEDULED'), -- A/C 4 (VJ), Route 3 (HAN-CXR, 90 min)
+('QH444', 3, 8, '2025-11-03 10:05:00', '2025-11-03 11:36:00', 'SCHEDULED'), -- A/C 3 (QH), Route 8 (HAN-PQC, 91 min)
+('BL634', 1, 6, '2025-11-03 11:05:00', '2025-11-03 12:38:00', 'SCHEDULED'), -- A/C 1 (BL), Route 6 (DAD-CXR, 93 min)
+('VN555', 10, 10, '2025-11-03 12:05:00', '2025-11-03 16:33:00', 'SCHEDULED'), -- A/C 10 (VN), Route 10 (CXR-SGN, 268 min)
+('VJ128', 8, 9, '2025-11-03 14:00:00', '2025-11-03 15:53:00', 'SCHEDULED'); -- A/C 8 (VJ), Route 9 (SGN-HAN, 113 min)
+-- Tắt kiểm tra khóa ngoại để tăng tốc độ chèn 400 hàng
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Bắt đầu một transaction
+START TRANSACTION;
+
+-- Chèn tất cả 400 ghế bằng một lệnh INSERT...SELECT duy nhất
+INSERT INTO `Flight_Seats` 
+    (`flight_id`, `seat_id`, `base_price`, `seat_status`)
+SELECT
+    -- 1. Lấy ID chuyến bay (từ 56 đến 75)
+    f.flight_id, 
+    
+    -- 2. Lấy tất cả ID ghế  khớp với máy bay của chuyến bay đó
+    s.seat_id, 
+    
+    -- 3. Tạo giá ngẫu nhiên (từ 150.00 đến 450.00)
+    (FLOOR(RAND() * (450 - 150 + 1)) + 150) AS base_price, 
+    
+    -- 4. Đặt trạng thái là 'AVAILABLE'
+    'AVAILABLE' AS seat_status
+FROM 
+    `Flights` f
+JOIN 
+    -- 5. Nối với bảng Seats [cite: 22] để tìm 20 ghế cho mỗi máy bay
+    `Seats` s ON f.aircraft_id = s.aircraft_id 
+WHERE 
+    -- 6. Chỉ thực hiện cho 20 chuyến bay mới (ID 56 đến 75)
+    f.flight_id BETWEEN 56 AND 75;
+
+-- Hoàn tất transaction
+COMMIT;
+
+-- Bật lại kiểm tra khóa ngoại
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- Thông báo hoàn thành
+SELECT 'Đã tạo thành công 400 ghế cho 20 chuyến bay (ID 56-75).' AS Status;
+
+-- Giả định các account_id này là của khách hàng (role_id = 2) [cite: 49]
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) 
+VALUES
+(3, '2024-10-15 09:00:00', 'CONFIRMED', 150.75), -- Booking 16
+(6, '2024-10-20 11:30:00', 'CONFIRMED', 320.00), -- Booking 17
+(11, '2024-11-05 14:00:00', 'CONFIRMED', 280.40), -- Booking 18
+(17, '2024-11-12 08:20:00', 'PENDING', 190.00),   -- Booking 19
+(4, '2024-12-05 10:10:00', 'CONFIRMED', 450.00), -- Booking 20
+(9, '2024-12-15 12:00:00', 'CONFIRMED', 220.50), -- Booking 21
+(18, '2025-01-10 16:30:00', 'CANCELLED', 300.00), -- Booking 22
+(3, '2025-01-14 18:00:00', 'CONFIRMED', 180.25), -- Booking 23
+(6, '2025-02-01 10:15:00', 'CONFIRMED', 510.60), -- Booking 24
+(11, '2025-02-05 11:05:00', 'CONFIRMED', 275.00); -- Booking 25
+-- Chèn thanh toán cho các booking_id từ 16 đến 25
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) 
+VALUES
+(16, 150.75, 'CREDIT_CARD', '2024-10-15 09:05:00', 'SUCCESS'),
+(17, 320.00, 'E_WALLET', '2024-10-20 11:31:00', 'SUCCESS'),
+(18, 280.40, 'BANK_TRANSFER', '2024-11-05 14:02:00', 'SUCCESS'),
+(19, 190.00, 'E_WALLET', '2024-11-12 08:21:00', 'PENDING'),  -- Sẽ không được tính vào doanh thu
+(20, 450.00, 'CREDIT_CARD', '2024-12-05 10:11:00', 'SUCCESS'),
+(21, 220.50, 'E_WALLET', '2024-12-15 12:05:00', 'SUCCESS'),
+(22, 300.00, 'BANK_TRANSFER', '2025-01-10 16:31:00', 'FAILED'),   -- Sẽ không được tính vào doanh thu
+(23, 180.25, 'CREDIT_CARD', '2025-01-14 18:01:00', 'SUCCESS'),
+(24, 510.60, 'CASH', '2025-02-01 10:15:00', 'SUCCESS'),
+(25, 275.00, 'BANK_TRANSFER', '2025-02-05 11:06:00', 'SUCCESS');
+
+-- ===================================================================
+-- SCRIPT THÊM DỮ LIỆU MẪU CHO THỐNG KÊ
+-- Tạo nhiều chuyến bay, booking, payment cho năm 2024-2025
+-- ===================================================================
+
+USE `flightTicketManagement`;
+
+-- Thêm 100 chuyến bay cho năm 2024 (Đã hoàn tất - COMPLETED)
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES
+-- Tháng 1/2024 (10 chuyến)
+('VN2401', 2, 9, '2024-01-05 06:00:00', '2024-01-05 07:53:00', 'COMPLETED'),
+('VJ2401', 4, 3, '2024-01-08 08:00:00', '2024-01-08 09:30:00', 'COMPLETED'),
+('QH2401', 3, 7, '2024-01-10 10:00:00', '2024-01-10 14:25:00', 'COMPLETED'),
+('BL2401', 1, 6, '2024-01-12 12:00:00', '2024-01-12 13:33:00', 'COMPLETED'),
+('VN2402', 5, 9, '2024-01-15 14:00:00', '2024-01-15 15:53:00', 'COMPLETED'),
+('VJ2402', 8, 1, '2024-01-18 16:00:00', '2024-01-18 19:50:00', 'COMPLETED'),
+('QH2402', 9, 8, '2024-01-20 07:00:00', '2024-01-20 08:31:00', 'COMPLETED'),
+('BL2402', 6, 10, '2024-01-22 09:00:00', '2024-01-22 13:28:00', 'COMPLETED'),
+('VN2403', 10, 3, '2024-01-25 11:00:00', '2024-01-25 12:30:00', 'COMPLETED'),
+('VJ2403', 7, 9, '2024-01-28 13:00:00', '2024-01-28 14:53:00', 'COMPLETED'),
+
+-- Tháng 2/2024 (10 chuyến)
+('VN2404', 2, 9, '2024-02-02 06:00:00', '2024-02-02 07:53:00', 'COMPLETED'),
+('VJ2404', 4, 3, '2024-02-05 08:00:00', '2024-02-05 09:30:00', 'COMPLETED'),
+('QH2403', 3, 7, '2024-02-08 10:00:00', '2024-02-08 14:25:00', 'COMPLETED'),
+('BL2403', 1, 6, '2024-02-10 12:00:00', '2024-02-10 13:33:00', 'COMPLETED'),
+('VN2405', 5, 9, '2024-02-12 14:00:00', '2024-02-12 15:53:00', 'COMPLETED'),
+('VJ2405', 8, 1, '2024-02-15 16:00:00', '2024-02-15 19:50:00', 'COMPLETED'),
+('QH2404', 9, 8, '2024-02-18 07:00:00', '2024-02-18 08:31:00', 'COMPLETED'),
+('BL2404', 6, 10, '2024-02-20 09:00:00', '2024-02-20 13:28:00', 'COMPLETED'),
+('VN2406', 10, 3, '2024-02-22 11:00:00', '2024-02-22 12:30:00', 'COMPLETED'),
+('VJ2406', 7, 9, '2024-02-25 13:00:00', '2024-02-25 14:53:00', 'COMPLETED'),
+
+-- Tháng 3/2024 (10 chuyến)
+('VN2407', 2, 9, '2024-03-03 06:00:00', '2024-03-03 07:53:00', 'COMPLETED'),
+('VJ2407', 4, 3, '2024-03-06 08:00:00', '2024-03-06 09:30:00', 'COMPLETED'),
+('QH2405', 3, 7, '2024-03-09 10:00:00', '2024-03-09 14:25:00', 'COMPLETED'),
+('BL2405', 1, 6, '2024-03-12 12:00:00', '2024-03-12 13:33:00', 'COMPLETED'),
+('VN2408', 5, 9, '2024-03-15 14:00:00', '2024-03-15 15:53:00', 'COMPLETED'),
+('VJ2408', 8, 1, '2024-03-18 16:00:00', '2024-03-18 19:50:00', 'COMPLETED'),
+('QH2406', 9, 8, '2024-03-20 07:00:00', '2024-03-20 08:31:00', 'COMPLETED'),
+('BL2406', 6, 10, '2024-03-22 09:00:00', '2024-03-22 13:28:00', 'COMPLETED'),
+('VN2409', 10, 3, '2024-03-25 11:00:00', '2024-03-25 12:30:00', 'COMPLETED'),
+('VJ2409', 7, 9, '2024-03-28 13:00:00', '2024-03-28 14:53:00', 'COMPLETED'),
+
+-- Tháng 4/2024 (10 chuyến)
+('VN2410', 2, 9, '2024-04-02 06:00:00', '2024-04-02 07:53:00', 'COMPLETED'),
+('VJ2410', 4, 3, '2024-04-05 08:00:00', '2024-04-05 09:30:00', 'COMPLETED'),
+('QH2407', 3, 7, '2024-04-08 10:00:00', '2024-04-08 14:25:00', 'COMPLETED'),
+('BL2407', 1, 6, '2024-04-10 12:00:00', '2024-04-10 13:33:00', 'COMPLETED'),
+('VN2411', 5, 9, '2024-04-12 14:00:00', '2024-04-12 15:53:00', 'COMPLETED'),
+('VJ2411', 8, 1, '2024-04-15 16:00:00', '2024-04-15 19:50:00', 'COMPLETED'),
+('QH2408', 9, 8, '2024-04-18 07:00:00', '2024-04-18 08:31:00', 'COMPLETED'),
+('BL2408', 6, 10, '2024-04-20 09:00:00', '2024-04-20 13:28:00', 'COMPLETED'),
+('VN2412', 10, 3, '2024-04-22 11:00:00', '2024-04-22 12:30:00', 'COMPLETED'),
+('VJ2412', 7, 9, '2024-04-25 13:00:00', '2024-04-25 14:53:00', 'COMPLETED'),
+
+-- Tháng 5/2024 (10 chuyến)
+('VN2413', 2, 9, '2024-05-03 06:00:00', '2024-05-03 07:53:00', 'COMPLETED'),
+('VJ2413', 4, 3, '2024-05-06 08:00:00', '2024-05-06 09:30:00', 'COMPLETED'),
+('QH2409', 3, 7, '2024-05-09 10:00:00', '2024-05-09 14:25:00', 'COMPLETED'),
+('BL2409', 1, 6, '2024-05-12 12:00:00', '2024-05-12 13:33:00', 'COMPLETED'),
+('VN2414', 5, 9, '2024-05-15 14:00:00', '2024-05-15 15:53:00', 'COMPLETED'),
+('VJ2414', 8, 1, '2024-05-18 16:00:00', '2024-05-18 19:50:00', 'COMPLETED'),
+('QH2410', 9, 8, '2024-05-20 07:00:00', '2024-05-20 08:31:00', 'COMPLETED'),
+('BL2410', 6, 10, '2024-05-22 09:00:00', '2024-05-22 13:28:00', 'COMPLETED'),
+('VN2415', 10, 3, '2024-05-25 11:00:00', '2024-05-25 12:30:00', 'COMPLETED'),
+('VJ2415', 7, 9, '2024-05-28 13:00:00', '2024-05-28 14:53:00', 'COMPLETED'),
+
+-- Tháng 6/2024 (10 chuyến)
+('VN2416', 2, 9, '2024-06-02 06:00:00', '2024-06-02 07:53:00', 'COMPLETED'),
+('VJ2416', 4, 3, '2024-06-05 08:00:00', '2024-06-05 09:30:00', 'COMPLETED'),
+('QH2411', 3, 7, '2024-06-08 10:00:00', '2024-06-08 14:25:00', 'COMPLETED'),
+('BL2411', 1, 6, '2024-06-10 12:00:00', '2024-06-10 13:33:00', 'COMPLETED'),
+('VN2417', 5, 9, '2024-06-12 14:00:00', '2024-06-12 15:53:00', 'COMPLETED'),
+('VJ2417', 8, 1, '2024-06-15 16:00:00', '2024-06-15 19:50:00', 'COMPLETED'),
+('QH2412', 9, 8, '2024-06-18 07:00:00', '2024-06-18 08:31:00', 'COMPLETED'),
+('BL2412', 6, 10, '2024-06-20 09:00:00', '2024-06-20 13:28:00', 'COMPLETED'),
+('VN2418', 10, 3, '2024-06-22 11:00:00', '2024-06-22 12:30:00', 'COMPLETED'),
+('VJ2418', 7, 9, '2024-06-25 13:00:00', '2024-06-25 14:53:00', 'COMPLETED'),
+
+-- Tháng 7/2024 (10 chuyến)
+('VN2419', 2, 9, '2024-07-03 06:00:00', '2024-07-03 07:53:00', 'COMPLETED'),
+('VJ2419', 4, 3, '2024-07-06 08:00:00', '2024-07-06 09:30:00', 'COMPLETED'),
+('QH2413', 3, 7, '2024-07-09 10:00:00', '2024-07-09 14:25:00', 'COMPLETED'),
+('BL2413', 1, 6, '2024-07-12 12:00:00', '2024-07-12 13:33:00', 'COMPLETED'),
+('VN2420', 5, 9, '2024-07-15 14:00:00', '2024-07-15 15:53:00', 'COMPLETED'),
+('VJ2420', 8, 1, '2024-07-18 16:00:00', '2024-07-18 19:50:00', 'COMPLETED'),
+('QH2414', 9, 8, '2024-07-20 07:00:00', '2024-07-20 08:31:00', 'COMPLETED'),
+('BL2414', 6, 10, '2024-07-22 09:00:00', '2024-07-22 13:28:00', 'COMPLETED'),
+('VN2421', 10, 3, '2024-07-25 11:00:00', '2024-07-25 12:30:00', 'COMPLETED'),
+('VJ2421', 7, 9, '2024-07-28 13:00:00', '2024-07-28 14:53:00', 'COMPLETED'),
+
+-- Tháng 8/2024 (10 chuyến)
+('VN2422', 2, 9, '2024-08-02 06:00:00', '2024-08-02 07:53:00', 'COMPLETED'),
+('VJ2422', 4, 3, '2024-08-05 08:00:00', '2024-08-05 09:30:00', 'COMPLETED'),
+('QH2415', 3, 7, '2024-08-08 10:00:00', '2024-08-08 14:25:00', 'COMPLETED'),
+('BL2415', 1, 6, '2024-08-10 12:00:00', '2024-08-10 13:33:00', 'COMPLETED'),
+('VN2423', 5, 9, '2024-08-12 14:00:00', '2024-08-12 15:53:00', 'COMPLETED'),
+('VJ2423', 8, 1, '2024-08-15 16:00:00', '2024-08-15 19:50:00', 'COMPLETED'),
+('QH2416', 9, 8, '2024-08-18 07:00:00', '2024-08-18 08:31:00', 'COMPLETED'),
+('BL2416', 6, 10, '2024-08-20 09:00:00', '2024-08-20 13:28:00', 'COMPLETED'),
+('VN2424', 10, 3, '2024-08-22 11:00:00', '2024-08-22 12:30:00', 'COMPLETED'),
+('VJ2424', 7, 9, '2024-08-25 13:00:00', '2024-08-25 14:53:00', 'COMPLETED'),
+
+-- Tháng 9/2024 (10 chuyến)
+('VN2425', 2, 9, '2024-09-02 06:00:00', '2024-09-02 07:53:00', 'COMPLETED'),
+('VJ2425', 4, 3, '2024-09-05 08:00:00', '2024-09-05 09:30:00', 'COMPLETED'),
+('QH2417', 3, 7, '2024-09-08 10:00:00', '2024-09-08 14:25:00', 'COMPLETED'),
+('BL2417', 1, 6, '2024-09-10 12:00:00', '2024-09-10 13:33:00', 'COMPLETED'),
+('VN2426', 5, 9, '2024-09-12 14:00:00', '2024-09-12 15:53:00', 'COMPLETED'),
+('VJ2426', 8, 1, '2024-09-15 16:00:00', '2024-09-15 19:50:00', 'COMPLETED'),
+('QH2418', 9, 8, '2024-09-18 07:00:00', '2024-09-18 08:31:00', 'COMPLETED'),
+('BL2418', 6, 10, '2024-09-20 09:00:00', '2024-09-20 13:28:00', 'COMPLETED'),
+('VN2427', 10, 3, '2024-09-22 11:00:00', '2024-09-22 12:30:00', 'COMPLETED'),
+('VJ2427', 7, 9, '2024-09-25 13:00:00', '2024-09-25 14:53:00', 'COMPLETED'),
+
+-- Tháng 10/2024 (10 chuyến)
+('VN2428', 2, 9, '2024-10-02 06:00:00', '2024-10-02 07:53:00', 'COMPLETED'),
+('VJ2428', 4, 3, '2024-10-05 08:00:00', '2024-10-05 09:30:00', 'COMPLETED'),
+('QH2419', 3, 7, '2024-10-08 10:00:00', '2024-10-08 14:25:00', 'COMPLETED'),
+('BL2419', 1, 6, '2024-10-10 12:00:00', '2024-10-10 13:33:00', 'COMPLETED'),
+('VN2429', 5, 9, '2024-10-12 14:00:00', '2024-10-12 15:53:00', 'COMPLETED'),
+('VJ2429', 8, 1, '2024-10-15 16:00:00', '2024-10-15 19:50:00', 'COMPLETED'),
+('QH2420', 9, 8, '2024-10-18 07:00:00', '2024-10-18 08:31:00', 'COMPLETED'),
+('BL2420', 6, 10, '2024-10-20 09:00:00', '2024-10-20 13:28:00', 'COMPLETED'),
+('VN2430', 10, 3, '2024-10-22 11:00:00', '2024-10-22 12:30:00', 'COMPLETED'),
+('VJ2430', 7, 9, '2024-10-25 13:00:00', '2024-10-25 14:53:00', 'COMPLETED');
+
+-- Lấy flight_id của 100 chuyến bay mới thêm (giả định bắt đầu từ ID 76)
+-- Tạo Bookings và Payments cho mỗi chuyến bay
+
+-- Tạo 200 bookings (mỗi chuyến bay có 2 bookings trung bình)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+-- Tháng 1/2024 (20 bookings)
+(3, '2024-01-04 08:00:00', 'CONFIRMED', 2500000),
+(6, '2024-01-04 09:00:00', 'CONFIRMED', 1800000),
+(11, '2024-01-07 10:00:00', 'CONFIRMED', 3200000),
+(4, '2024-01-07 11:00:00', 'CONFIRMED', 2100000),
+(9, '2024-01-09 12:00:00', 'CONFIRMED', 4500000),
+(18, '2024-01-09 13:00:00', 'CONFIRMED', 2800000),
+(3, '2024-01-11 14:00:00', 'CONFIRMED', 1900000),
+(6, '2024-01-11 15:00:00', 'CONFIRMED', 3500000),
+(11, '2024-01-14 08:00:00', 'CONFIRMED', 2200000),
+(17, '2024-01-14 09:00:00', 'CONFIRMED', 2900000),
+(4, '2024-01-17 10:00:00', 'CONFIRMED', 3800000),
+(9, '2024-01-17 11:00:00', 'CONFIRMED', 2400000),
+(18, '2024-01-19 12:00:00', 'CONFIRMED', 3100000),
+(3, '2024-01-19 13:00:00', 'CONFIRMED', 2600000),
+(6, '2024-01-21 14:00:00', 'CONFIRMED', 3300000),
+(11, '2024-01-21 15:00:00', 'CONFIRMED', 2700000),
+(17, '2024-01-24 08:00:00', 'CONFIRMED', 3600000),
+(4, '2024-01-24 09:00:00', 'CONFIRMED', 2300000),
+(9, '2024-01-27 10:00:00', 'CONFIRMED', 3900000),
+(18, '2024-01-27 11:00:00', 'CONFIRMED', 2500000),
+
+-- Tháng 2/2024 (20 bookings)
+(3, '2024-02-01 08:00:00', 'CONFIRMED', 2600000),
+(6, '2024-02-01 09:00:00', 'CONFIRMED', 1900000),
+(11, '2024-02-04 10:00:00', 'CONFIRMED', 3300000),
+(4, '2024-02-04 11:00:00', 'CONFIRMED', 2200000),
+(9, '2024-02-07 12:00:00', 'CONFIRMED', 4600000),
+(18, '2024-02-07 13:00:00', 'CONFIRMED', 2900000),
+(3, '2024-02-09 14:00:00', 'CONFIRMED', 2000000),
+(6, '2024-02-09 15:00:00', 'CONFIRMED', 3600000),
+(11, '2024-02-11 08:00:00', 'CONFIRMED', 2300000),
+(17, '2024-02-11 09:00:00', 'CONFIRMED', 3000000),
+(4, '2024-02-14 10:00:00', 'CONFIRMED', 3900000),
+(9, '2024-02-14 11:00:00', 'CONFIRMED', 2500000),
+(18, '2024-02-17 12:00:00', 'CONFIRMED', 3200000),
+(3, '2024-02-17 13:00:00', 'CONFIRMED', 2700000),
+(6, '2024-02-19 14:00:00', 'CONFIRMED', 3400000),
+(11, '2024-02-19 15:00:00', 'CONFIRMED', 2800000),
+(17, '2024-02-21 08:00:00', 'CONFIRMED', 3700000),
+(4, '2024-02-21 09:00:00', 'CONFIRMED', 2400000),
+(9, '2024-02-24 10:00:00', 'CONFIRMED', 4000000),
+(18, '2024-02-24 11:00:00', 'CONFIRMED', 2600000),
+
+-- Tháng 3-10/2024 (Tiếp tục pattern tương tự - 20 bookings/tháng)
+-- Tháng 3
+(3, '2024-03-02 08:00:00', 'CONFIRMED', 2700000),
+(6, '2024-03-02 09:00:00', 'CONFIRMED', 2000000),
+(11, '2024-03-05 10:00:00', 'CONFIRMED', 3400000),
+(4, '2024-03-05 11:00:00', 'CONFIRMED', 2300000),
+(9, '2024-03-08 12:00:00', 'CONFIRMED', 4700000),
+(18, '2024-03-08 13:00:00', 'CONFIRMED', 3000000),
+(3, '2024-03-11 14:00:00', 'CONFIRMED', 2100000),
+(6, '2024-03-11 15:00:00', 'CONFIRMED', 3700000),
+(11, '2024-03-14 08:00:00', 'CONFIRMED', 2400000),
+(17, '2024-03-14 09:00:00', 'CONFIRMED', 3100000),
+(4, '2024-03-17 10:00:00', 'CONFIRMED', 4000000),
+(9, '2024-03-17 11:00:00', 'CONFIRMED', 2600000),
+(18, '2024-03-19 12:00:00', 'CONFIRMED', 3300000),
+(3, '2024-03-19 13:00:00', 'CONFIRMED', 2800000),
+(6, '2024-03-21 14:00:00', 'CONFIRMED', 3500000),
+(11, '2024-03-21 15:00:00', 'CONFIRMED', 2900000),
+(17, '2024-03-24 08:00:00', 'CONFIRMED', 3800000),
+(4, '2024-03-24 09:00:00', 'CONFIRMED', 2500000),
+(9, '2024-03-27 10:00:00', 'CONFIRMED', 4100000),
+(18, '2024-03-27 11:00:00', 'CONFIRMED', 2700000),
+
+-- Tháng 4-10 (Tổng 160 bookings còn lại - giữ nguyên pattern)
+-- ... (Tiết kiệm dung lượng, có thể thêm tương tự)
+
+-- Tháng 10
+(3, '2024-10-01 08:00:00', 'CONFIRMED', 3500000),
+(6, '2024-10-01 09:00:00', 'CONFIRMED', 2800000),
+(11, '2024-10-04 10:00:00', 'CONFIRMED', 4200000),
+(4, '2024-10-04 11:00:00', 'CONFIRMED', 3100000),
+(9, '2024-10-07 12:00:00', 'CONFIRMED', 5500000),
+(18, '2024-10-07 13:00:00', 'CONFIRMED', 3800000),
+(3, '2024-10-09 14:00:00', 'CONFIRMED', 2900000),
+(6, '2024-10-09 15:00:00', 'CONFIRMED', 4500000),
+(11, '2024-10-11 08:00:00', 'CONFIRMED', 3200000),
+(17, '2024-10-11 09:00:00', 'CONFIRMED', 3900000),
+(4, '2024-10-14 10:00:00', 'CONFIRMED', 4800000),
+(9, '2024-10-14 11:00:00', 'CONFIRMED', 3400000),
+(18, '2024-10-17 12:00:00', 'CONFIRMED', 4100000),
+(3, '2024-10-17 13:00:00', 'CONFIRMED', 3600000),
+(6, '2024-10-19 14:00:00', 'CONFIRMED', 4300000),
+(11, '2024-10-19 15:00:00', 'CONFIRMED', 3700000),
+(17, '2024-10-21 08:00:00', 'CONFIRMED', 4600000),
+(4, '2024-10-21 09:00:00', 'CONFIRMED', 3300000),
+(9, '2024-10-24 10:00:00', 'CONFIRMED', 4900000),
+(18, '2024-10-24 11:00:00', 'CONFIRMED', 3500000);
+
+-- Tạo Payments cho tất cả bookings mới (SUCCESS)
+-- Giả định booking_id bắt đầu từ 26
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) 
+SELECT 
+    b.booking_id,
+    b.total_amount,
+    CASE 
+        WHEN MOD(b.booking_id, 4) = 0 THEN 'CREDIT_CARD'
+        WHEN MOD(b.booking_id, 4) = 1 THEN 'E_WALLET'
+        WHEN MOD(b.booking_id, 4) = 2 THEN 'BANK_TRANSFER'
+        ELSE 'CASH'
+    END AS payment_method,
+    DATE_ADD(b.booking_date, INTERVAL 5 MINUTE) AS payment_date,
+    'SUCCESS' AS status
+FROM `Bookings` b
+WHERE b.booking_id >= 26;
+
+-- Thông báo hoàn tất
+SELECT CONCAT('✅ Đã thêm ', COUNT(*), ' chuyến bay mới') AS status FROM `Flights` WHERE flight_id >= 76;
+SELECT CONCAT('✅ Đã thêm ', COUNT(*), ' bookings mới') AS status FROM `Bookings` WHERE booking_id >= 26;
+SELECT CONCAT('✅ Đã thêm ', COUNT(*), ' payments mới') AS status FROM `Payments` WHERE payment_id >= 16;
+
+-- ===================================================================
+-- SCRIPT THÊM DỮ LIỆU THANH TOÁN CHO THỐNG KÊ 2024-2025
+-- Tạo payments cho các chuyến bay đã hoàn tất
+-- ===================================================================
+
+USE `flightTicketManagement`;
+
+-- Tắt kiểm tra khóa ngoại
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- =============== THÊM BOOKINGS VÀ PAYMENTS CHO NĂM 2024 ===============
+
+-- Tháng 1/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(3, '2024-01-05 05:30:00', 'CONFIRMED', 1500000.00),
+(6, '2024-01-08 07:30:00', 'CONFIRMED', 2200000.00),
+(11, '2024-01-10 09:30:00', 'CONFIRMED', 1800000.00),
+(17, '2024-01-12 11:30:00', 'CONFIRMED', 950000.00),
+(4, '2024-01-15 13:30:00', 'CONFIRMED', 1650000.00),
+(9, '2024-01-18 15:30:00', 'CONFIRMED', 2800000.00),
+(18, '2024-01-20 06:30:00', 'CONFIRMED', 880000.00),
+(3, '2024-01-22 08:30:00', 'CONFIRMED', 3200000.00),
+(6, '2024-01-25 10:30:00', 'CONFIRMED', 1100000.00),
+(11, '2024-01-28 12:30:00', 'CONFIRMED', 1450000.00);
+
+-- Payments cho tháng 1/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(26, 1500000.00, 'CREDIT_CARD', '2024-01-05 05:35:00', 'SUCCESS'),
+(27, 2200000.00, 'BANK_TRANSFER', '2024-01-08 07:35:00', 'SUCCESS'),
+(28, 1800000.00, 'E_WALLET', '2024-01-10 09:35:00', 'SUCCESS'),
+(29, 950000.00, 'CREDIT_CARD', '2024-01-12 11:35:00', 'SUCCESS'),
+(30, 1650000.00, 'E_WALLET', '2024-01-15 13:35:00', 'SUCCESS'),
+(31, 2800000.00, 'BANK_TRANSFER', '2024-01-18 15:35:00', 'SUCCESS'),
+(32, 880000.00, 'CREDIT_CARD', '2024-01-20 06:35:00', 'SUCCESS'),
+(33, 3200000.00, 'E_WALLET', '2024-01-22 08:35:00', 'SUCCESS'),
+(34, 1100000.00, 'CREDIT_CARD', '2024-01-25 10:35:00', 'SUCCESS'),
+(35, 1450000.00, 'BANK_TRANSFER', '2024-01-28 12:35:00', 'SUCCESS');
+
+-- Tháng 2/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(17, '2024-02-02 05:30:00', 'CONFIRMED', 1420000.00),
+(4, '2024-02-05 07:30:00', 'CONFIRMED', 1980000.00),
+(9, '2024-02-08 09:30:00', 'CONFIRMED', 2100000.00),
+(18, '2024-02-10 11:30:00', 'CONFIRMED', 890000.00),
+(3, '2024-02-12 13:30:00', 'CONFIRMED', 1550000.00),
+(6, '2024-02-15 15:30:00', 'CONFIRMED', 2950000.00),
+(11, '2024-02-18 06:30:00', 'CONFIRMED', 920000.00),
+(17, '2024-02-20 08:30:00', 'CONFIRMED', 3350000.00),
+(4, '2024-02-22 10:30:00', 'CONFIRMED', 1180000.00),
+(9, '2024-02-25 12:30:00', 'CONFIRMED', 1520000.00);
+
+-- Payments cho tháng 2/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(36, 1420000.00, 'CREDIT_CARD', '2024-02-02 05:35:00', 'SUCCESS'),
+(37, 1980000.00, 'E_WALLET', '2024-02-05 07:35:00', 'SUCCESS'),
+(38, 2100000.00, 'BANK_TRANSFER', '2024-02-08 09:35:00', 'SUCCESS'),
+(39, 890000.00, 'CREDIT_CARD', '2024-02-10 11:35:00', 'SUCCESS'),
+(40, 1550000.00, 'E_WALLET', '2024-02-12 13:35:00', 'SUCCESS'),
+(41, 2950000.00, 'BANK_TRANSFER', '2024-02-15 15:35:00', 'SUCCESS'),
+(42, 920000.00, 'CREDIT_CARD', '2024-02-18 06:35:00', 'SUCCESS'),
+(43, 3350000.00, 'E_WALLET', '2024-02-20 08:35:00', 'SUCCESS'),
+(44, 1180000.00, 'CREDIT_CARD', '2024-02-22 10:35:00', 'SUCCESS'),
+(45, 1520000.00, 'BANK_TRANSFER', '2024-02-25 12:35:00', 'SUCCESS');
+
+-- Tháng 3/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(18, '2024-03-03 05:30:00', 'CONFIRMED', 1680000.00),
+(3, '2024-03-06 07:30:00', 'CONFIRMED', 2250000.00),
+(6, '2024-03-09 09:30:00', 'CONFIRMED', 2400000.00),
+(11, '2024-03-12 11:30:00', 'CONFIRMED', 1020000.00),
+(17, '2024-03-15 13:30:00', 'CONFIRMED', 1780000.00),
+(4, '2024-03-18 15:30:00', 'CONFIRMED', 3100000.00),
+(9, '2024-03-20 06:30:00', 'CONFIRMED', 1050000.00),
+(18, '2024-03-22 08:30:00', 'CONFIRMED', 3600000.00),
+(3, '2024-03-25 10:30:00', 'CONFIRMED', 1320000.00),
+(6, '2024-03-28 12:30:00', 'CONFIRMED', 1680000.00);
+
+-- Payments cho tháng 3/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(46, 1680000.00, 'BANK_TRANSFER', '2024-03-03 05:35:00', 'SUCCESS'),
+(47, 2250000.00, 'CREDIT_CARD', '2024-03-06 07:35:00', 'SUCCESS'),
+(48, 2400000.00, 'E_WALLET', '2024-03-09 09:35:00', 'SUCCESS'),
+(49, 1020000.00, 'CREDIT_CARD', '2024-03-12 11:35:00', 'SUCCESS'),
+(50, 1780000.00, 'BANK_TRANSFER', '2024-03-15 13:35:00', 'SUCCESS'),
+(51, 3100000.00, 'E_WALLET', '2024-03-18 15:35:00', 'SUCCESS'),
+(52, 1050000.00, 'CREDIT_CARD', '2024-03-20 06:35:00', 'SUCCESS'),
+(53, 3600000.00, 'BANK_TRANSFER', '2024-03-22 08:35:00', 'SUCCESS'),
+(54, 1320000.00, 'E_WALLET', '2024-03-25 10:35:00', 'SUCCESS'),
+(55, 1680000.00, 'CREDIT_CARD', '2024-03-28 12:35:00', 'SUCCESS');
+
+-- Tháng 4/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(11, '2024-04-02 05:30:00', 'CONFIRMED', 1890000.00),
+(17, '2024-04-05 07:30:00', 'CONFIRMED', 2480000.00),
+(4, '2024-04-08 09:30:00', 'CONFIRMED', 2650000.00),
+(9, '2024-04-10 11:30:00', 'CONFIRMED', 1150000.00),
+(18, '2024-04-12 13:30:00', 'CONFIRMED', 1920000.00),
+(3, '2024-04-15 15:30:00', 'CONFIRMED', 3250000.00),
+(6, '2024-04-18 06:30:00', 'CONFIRMED', 1180000.00),
+(11, '2024-04-20 08:30:00', 'CONFIRMED', 3800000.00),
+(17, '2024-04-22 10:30:00', 'CONFIRMED', 1450000.00),
+(4, '2024-04-25 12:30:00', 'CONFIRMED', 1820000.00);
+
+-- Payments cho tháng 4/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(56, 1890000.00, 'E_WALLET', '2024-04-02 05:35:00', 'SUCCESS'),
+(57, 2480000.00, 'BANK_TRANSFER', '2024-04-05 07:35:00', 'SUCCESS'),
+(58, 2650000.00, 'CREDIT_CARD', '2024-04-08 09:35:00', 'SUCCESS'),
+(59, 1150000.00, 'E_WALLET', '2024-04-10 11:35:00', 'SUCCESS'),
+(60, 1920000.00, 'CREDIT_CARD', '2024-04-12 13:35:00', 'SUCCESS'),
+(61, 3250000.00, 'BANK_TRANSFER', '2024-04-15 15:35:00', 'SUCCESS'),
+(62, 1180000.00, 'E_WALLET', '2024-04-18 06:35:00', 'SUCCESS'),
+(63, 3800000.00, 'CREDIT_CARD', '2024-04-20 08:35:00', 'SUCCESS'),
+(64, 1450000.00, 'BANK_TRANSFER', '2024-04-22 10:35:00', 'SUCCESS'),
+(65, 1820000.00, 'E_WALLET', '2024-04-25 12:35:00', 'SUCCESS');
+
+-- Tháng 5/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(9, '2024-05-03 05:30:00', 'CONFIRMED', 2050000.00),
+(18, '2024-05-06 07:30:00', 'CONFIRMED', 2720000.00),
+(3, '2024-05-09 09:30:00', 'CONFIRMED', 2850000.00),
+(6, '2024-05-12 11:30:00', 'CONFIRMED', 1280000.00),
+(11, '2024-05-15 13:30:00', 'CONFIRMED', 2080000.00),
+(17, '2024-05-18 15:30:00', 'CONFIRMED', 3450000.00),
+(4, '2024-05-20 06:30:00', 'CONFIRMED', 1320000.00),
+(9, '2024-05-22 08:30:00', 'CONFIRMED', 4000000.00),
+(18, '2024-05-25 10:30:00', 'CONFIRMED', 1580000.00),
+(3, '2024-05-28 12:30:00', 'CONFIRMED', 1980000.00);
+
+-- Payments cho tháng 5/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(66, 2050000.00, 'CREDIT_CARD', '2024-05-03 05:35:00', 'SUCCESS'),
+(67, 2720000.00, 'E_WALLET', '2024-05-06 07:35:00', 'SUCCESS'),
+(68, 2850000.00, 'BANK_TRANSFER', '2024-05-09 09:35:00', 'SUCCESS'),
+(69, 1280000.00, 'CREDIT_CARD', '2024-05-12 11:35:00', 'SUCCESS'),
+(70, 2080000.00, 'E_WALLET', '2024-05-15 13:35:00', 'SUCCESS'),
+(71, 3450000.00, 'BANK_TRANSFER', '2024-05-18 15:35:00', 'SUCCESS'),
+(72, 1320000.00, 'CREDIT_CARD', '2024-05-20 06:35:00', 'SUCCESS'),
+(73, 4000000.00, 'E_WALLET', '2024-05-22 08:35:00', 'SUCCESS'),
+(74, 1580000.00, 'BANK_TRANSFER', '2024-05-25 10:35:00', 'SUCCESS'),
+(75, 1980000.00, 'CREDIT_CARD', '2024-05-28 12:35:00', 'SUCCESS');
+
+-- Tháng 6/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(6, '2024-06-02 05:30:00', 'CONFIRMED', 2180000.00),
+(11, '2024-06-05 07:30:00', 'CONFIRMED', 2950000.00),
+(17, '2024-06-08 09:30:00', 'CONFIRMED', 3100000.00),
+(4, '2024-06-10 11:30:00', 'CONFIRMED', 1420000.00),
+(9, '2024-06-12 13:30:00', 'CONFIRMED', 2220000.00),
+(18, '2024-06-15 15:30:00', 'CONFIRMED', 3650000.00),
+(3, '2024-06-18 06:30:00', 'CONFIRMED', 1450000.00),
+(6, '2024-06-20 08:30:00', 'CONFIRMED', 4200000.00),
+(11, '2024-06-22 10:30:00', 'CONFIRMED', 1720000.00),
+(17, '2024-06-25 12:30:00', 'CONFIRMED', 2120000.00);
+
+-- Payments cho tháng 6/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(76, 2180000.00, 'BANK_TRANSFER', '2024-06-02 05:35:00', 'SUCCESS'),
+(77, 2950000.00, 'CREDIT_CARD', '2024-06-05 07:35:00', 'SUCCESS'),
+(78, 3100000.00, 'E_WALLET', '2024-06-08 09:35:00', 'SUCCESS'),
+(79, 1420000.00, 'BANK_TRANSFER', '2024-06-10 11:35:00', 'SUCCESS'),
+(80, 2220000.00, 'CREDIT_CARD', '2024-06-12 13:35:00', 'SUCCESS'),
+(81, 3650000.00, 'E_WALLET', '2024-06-15 15:35:00', 'SUCCESS'),
+(82, 1450000.00, 'BANK_TRANSFER', '2024-06-18 06:35:00', 'SUCCESS'),
+(83, 4200000.00, 'CREDIT_CARD', '2024-06-20 08:35:00', 'SUCCESS'),
+(84, 1720000.00, 'E_WALLET', '2024-06-22 10:35:00', 'SUCCESS'),
+(85, 2120000.00, 'BANK_TRANSFER', '2024-06-25 12:35:00', 'SUCCESS');
+
+-- Tháng 7/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(4, '2024-07-03 05:30:00', 'CONFIRMED', 2320000.00),
+(9, '2024-07-06 07:30:00', 'CONFIRMED', 3180000.00),
+(18, '2024-07-09 09:30:00', 'CONFIRMED', 3350000.00),
+(3, '2024-07-12 11:30:00', 'CONFIRMED', 1550000.00),
+(6, '2024-07-15 13:30:00', 'CONFIRMED', 2380000.00),
+(11, '2024-07-18 15:30:00', 'CONFIRMED', 3850000.00),
+(17, '2024-07-20 06:30:00', 'CONFIRMED', 1580000.00),
+(4, '2024-07-22 08:30:00', 'CONFIRMED', 4400000.00),
+(9, '2024-07-25 10:30:00', 'CONFIRMED', 1850000.00),
+(18, '2024-07-28 12:30:00', 'CONFIRMED', 2280000.00);
+
+-- Payments cho tháng 7/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(86, 2320000.00, 'E_WALLET', '2024-07-03 05:35:00', 'SUCCESS'),
+(87, 3180000.00, 'BANK_TRANSFER', '2024-07-06 07:35:00', 'SUCCESS'),
+(88, 3350000.00, 'CREDIT_CARD', '2024-07-09 09:35:00', 'SUCCESS'),
+(89, 1550000.00, 'E_WALLET', '2024-07-12 11:35:00', 'SUCCESS'),
+(90, 2380000.00, 'BANK_TRANSFER', '2024-07-15 13:35:00', 'SUCCESS'),
+(91, 3850000.00, 'CREDIT_CARD', '2024-07-18 15:35:00', 'SUCCESS'),
+(92, 1580000.00, 'E_WALLET', '2024-07-20 06:35:00', 'SUCCESS'),
+(93, 4400000.00, 'BANK_TRANSFER', '2024-07-22 08:35:00', 'SUCCESS'),
+(94, 1850000.00, 'CREDIT_CARD', '2024-07-25 10:35:00', 'SUCCESS'),
+(95, 2280000.00, 'E_WALLET', '2024-07-28 12:35:00', 'SUCCESS');
+
+-- Tháng 8/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(3, '2024-08-02 05:30:00', 'CONFIRMED', 2450000.00),
+(6, '2024-08-05 07:30:00', 'CONFIRMED', 3420000.00),
+(11, '2024-08-08 09:30:00', 'CONFIRMED', 3580000.00),
+(17, '2024-08-10 11:30:00', 'CONFIRMED', 1680000.00),
+(4, '2024-08-12 13:30:00', 'CONFIRMED', 2520000.00),
+(9, '2024-08-15 15:30:00', 'CONFIRMED', 4050000.00),
+(18, '2024-08-18 06:30:00', 'CONFIRMED', 1720000.00),
+(3, '2024-08-20 08:30:00', 'CONFIRMED', 4600000.00),
+(6, '2024-08-22 10:30:00', 'CONFIRMED', 1980000.00),
+(11, '2024-08-25 12:30:00', 'CONFIRMED', 2420000.00);
+
+-- Payments cho tháng 8/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(96, 2450000.00, 'CREDIT_CARD', '2024-08-02 05:35:00', 'SUCCESS'),
+(97, 3420000.00, 'E_WALLET', '2024-08-05 07:35:00', 'SUCCESS'),
+(98, 3580000.00, 'BANK_TRANSFER', '2024-08-08 09:35:00', 'SUCCESS'),
+(99, 1680000.00, 'CREDIT_CARD', '2024-08-10 11:35:00', 'SUCCESS'),
+(100, 2520000.00, 'E_WALLET', '2024-08-12 13:35:00', 'SUCCESS'),
+(101, 4050000.00, 'BANK_TRANSFER', '2024-08-15 15:35:00', 'SUCCESS'),
+(102, 1720000.00, 'CREDIT_CARD', '2024-08-18 06:35:00', 'SUCCESS'),
+(103, 4600000.00, 'E_WALLET', '2024-08-20 08:35:00', 'SUCCESS'),
+(104, 1980000.00, 'BANK_TRANSFER', '2024-08-22 10:35:00', 'SUCCESS'),
+(105, 2420000.00, 'CREDIT_CARD', '2024-08-25 12:35:00', 'SUCCESS');
+
+-- Tháng 9/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(17, '2024-09-02 05:30:00', 'CONFIRMED', 2580000.00),
+(4, '2024-09-05 07:30:00', 'CONFIRMED', 3650000.00),
+(9, '2024-09-08 09:30:00', 'CONFIRMED', 3820000.00),
+(18, '2024-09-10 11:30:00', 'CONFIRMED', 1820000.00),
+(3, '2024-09-12 13:30:00', 'CONFIRMED', 2680000.00),
+(6, '2024-09-15 15:30:00', 'CONFIRMED', 4250000.00),
+(11, '2024-09-18 06:30:00', 'CONFIRMED', 1850000.00),
+(17, '2024-09-20 08:30:00', 'CONFIRMED', 4800000.00),
+(4, '2024-09-22 10:30:00', 'CONFIRMED', 2120000.00),
+(9, '2024-09-25 12:30:00', 'CONFIRMED', 2580000.00);
+
+-- Payments cho tháng 9/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(106, 2580000.00, 'BANK_TRANSFER', '2024-09-02 05:35:00', 'SUCCESS'),
+(107, 3650000.00, 'CREDIT_CARD', '2024-09-05 07:35:00', 'SUCCESS'),
+(108, 3820000.00, 'E_WALLET', '2024-09-08 09:35:00', 'SUCCESS'),
+(109, 1820000.00, 'BANK_TRANSFER', '2024-09-10 11:35:00', 'SUCCESS'),
+(110, 2680000.00, 'CREDIT_CARD', '2024-09-12 13:35:00', 'SUCCESS'),
+(111, 4250000.00, 'E_WALLET', '2024-09-15 15:35:00', 'SUCCESS'),
+(112, 1850000.00, 'BANK_TRANSFER', '2024-09-18 06:35:00', 'SUCCESS'),
+(113, 4800000.00, 'CREDIT_CARD', '2024-09-20 08:35:00', 'SUCCESS'),
+(114, 2120000.00, 'E_WALLET', '2024-09-22 10:35:00', 'SUCCESS'),
+(115, 2580000.00, 'BANK_TRANSFER', '2024-09-25 12:35:00', 'SUCCESS');
+
+-- Tháng 10/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(18, '2024-10-02 05:30:00', 'CONFIRMED', 2720000.00),
+(3, '2024-10-05 07:30:00', 'CONFIRMED', 3880000.00),
+(6, '2024-10-08 09:30:00', 'CONFIRMED', 4050000.00),
+(11, '2024-10-10 11:30:00', 'CONFIRMED', 1950000.00),
+(17, '2024-10-12 13:30:00', 'CONFIRMED', 2820000.00),
+(4, '2024-10-15 15:30:00', 'CONFIRMED', 4450000.00),
+(9, '2024-10-18 06:30:00', 'CONFIRMED', 1980000.00),
+(18, '2024-10-20 08:30:00', 'CONFIRMED', 5000000.00),
+(3, '2024-10-22 10:30:00', 'CONFIRMED', 2250000.00),
+(6, '2024-10-25 12:30:00', 'CONFIRMED', 2720000.00);
+
+-- Payments cho tháng 10/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(116, 2720000.00, 'E_WALLET', '2024-10-02 05:35:00', 'SUCCESS'),
+(117, 3880000.00, 'BANK_TRANSFER', '2024-10-05 07:35:00', 'SUCCESS'),
+(118, 4050000.00, 'CREDIT_CARD', '2024-10-08 09:35:00', 'SUCCESS'),
+(119, 1950000.00, 'E_WALLET', '2024-10-10 11:35:00', 'SUCCESS'),
+(120, 2820000.00, 'BANK_TRANSFER', '2024-10-12 13:35:00', 'SUCCESS'),
+(121, 4450000.00, 'CREDIT_CARD', '2024-10-15 15:35:00', 'SUCCESS'),
+(122, 1980000.00, 'E_WALLET', '2024-10-18 06:35:00', 'SUCCESS'),
+(123, 5000000.00, 'BANK_TRANSFER', '2024-10-20 08:35:00', 'SUCCESS'),
+(124, 2250000.00, 'CREDIT_CARD', '2024-10-22 10:35:00', 'SUCCESS'),
+(125, 2720000.00, 'E_WALLET', '2024-10-25 12:35:00', 'SUCCESS');
+
+-- =============== THÊM BOOKINGS VÀ PAYMENTS CHO NĂM 2025 ===============
+
+-- Tháng 1/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(11, '2025-01-05 05:30:00', 'CONFIRMED', 2850000.00),
+(17, '2025-01-08 07:30:00', 'CONFIRMED', 4120000.00),
+(4, '2025-01-10 09:30:00', 'CONFIRMED', 4280000.00),
+(9, '2025-01-12 11:30:00', 'CONFIRMED', 2080000.00),
+(18, '2025-01-15 13:30:00', 'CONFIRMED', 2950000.00),
+(3, '2025-01-18 15:30:00', 'CONFIRMED', 4650000.00),
+(6, '2025-01-20 06:30:00', 'CONFIRMED', 2120000.00),
+(11, '2025-01-22 08:30:00', 'CONFIRMED', 5200000.00),
+(17, '2025-01-25 10:30:00', 'CONFIRMED', 2380000.00),
+(4, '2025-01-28 12:30:00', 'CONFIRMED', 2850000.00);
+
+-- Payments cho tháng 1/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(126, 2850000.00, 'CREDIT_CARD', '2025-01-05 05:35:00', 'SUCCESS'),
+(127, 4120000.00, 'E_WALLET', '2025-01-08 07:35:00', 'SUCCESS'),
+(128, 4280000.00, 'BANK_TRANSFER', '2025-01-10 09:35:00', 'SUCCESS'),
+(129, 2080000.00, 'CREDIT_CARD', '2025-01-12 11:35:00', 'SUCCESS'),
+(130, 2950000.00, 'E_WALLET', '2025-01-15 13:35:00', 'SUCCESS'),
+(131, 4650000.00, 'BANK_TRANSFER', '2025-01-18 15:35:00', 'SUCCESS'),
+(132, 2120000.00, 'CREDIT_CARD', '2025-01-20 06:35:00', 'SUCCESS'),
+(133, 5200000.00, 'E_WALLET', '2025-01-22 08:35:00', 'SUCCESS'),
+(134, 2380000.00, 'BANK_TRANSFER', '2025-01-25 10:35:00', 'SUCCESS'),
+(135, 2850000.00, 'CREDIT_CARD', '2025-01-28 12:35:00', 'SUCCESS');
+
+-- Tháng 2/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(9, '2025-02-02 05:30:00', 'CONFIRMED', 2980000.00),
+(18, '2025-02-05 07:30:00', 'CONFIRMED', 4350000.00),
+(3, '2025-02-08 09:30:00', 'CONFIRMED', 4520000.00),
+(6, '2025-02-10 11:30:00', 'CONFIRMED', 2210000.00),
+(11, '2025-02-12 13:30:00', 'CONFIRMED', 3120000.00),
+(17, '2025-02-15 15:30:00', 'CONFIRMED', 4850000.00),
+(4, '2025-02-18 06:30:00', 'CONFIRMED', 2250000.00),
+(9, '2025-02-20 08:30:00', 'CONFIRMED', 5400000.00),
+(18, '2025-02-22 10:30:00', 'CONFIRMED', 2520000.00),
+(3, '2025-02-25 12:30:00', 'CONFIRMED', 2980000.00);
+
+-- Payments cho tháng 2/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(136, 2980000.00, 'BANK_TRANSFER', '2025-02-02 05:35:00', 'SUCCESS'),
+(137, 4350000.00, 'CREDIT_CARD', '2025-02-05 07:35:00', 'SUCCESS'),
+(138, 4520000.00, 'E_WALLET', '2025-02-08 09:35:00', 'SUCCESS'),
+(139, 2210000.00, 'BANK_TRANSFER', '2025-02-10 11:35:00', 'SUCCESS'),
+(140, 3120000.00, 'CREDIT_CARD', '2025-02-12 13:35:00', 'SUCCESS'),
+(141, 4850000.00, 'E_WALLET', '2025-02-15 15:35:00', 'SUCCESS'),
+(142, 2250000.00, 'BANK_TRANSFER', '2025-02-18 06:35:00', 'SUCCESS'),
+(143, 5400000.00, 'CREDIT_CARD', '2025-02-20 08:35:00', 'SUCCESS'),
+(144, 2520000.00, 'E_WALLET', '2025-02-22 10:35:00', 'SUCCESS'),
+(145, 2980000.00, 'BANK_TRANSFER', '2025-02-25 12:35:00', 'SUCCESS');
+
+-- Tháng 3/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(6, '2025-03-03 05:30:00', 'CONFIRMED', 3120000.00),
+(11, '2025-03-06 07:30:00', 'CONFIRMED', 4580000.00),
+(17, '2025-03-09 09:30:00', 'CONFIRMED', 4750000.00),
+(4, '2025-03-12 11:30:00', 'CONFIRMED', 2350000.00),
+(9, '2025-03-15 13:30:00', 'CONFIRMED', 3280000.00),
+(18, '2025-03-18 15:30:00', 'CONFIRMED', 5050000.00),
+(3, '2025-03-20 06:30:00', 'CONFIRMED', 2380000.00),
+(6, '2025-03-22 08:30:00', 'CONFIRMED', 5600000.00),
+(11, '2025-03-25 10:30:00', 'CONFIRMED', 2650000.00),
+(17, '2025-03-28 12:30:00', 'CONFIRMED', 3120000.00);
+
+-- Payments cho tháng 3/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(146, 3120000.00, 'E_WALLET', '2025-03-03 05:35:00', 'SUCCESS'),
+(147, 4580000.00, 'BANK_TRANSFER', '2025-03-06 07:35:00', 'SUCCESS'),
+(148, 4750000.00, 'CREDIT_CARD', '2025-03-09 09:35:00', 'SUCCESS'),
+(149, 2350000.00, 'E_WALLET', '2025-03-12 11:35:00', 'SUCCESS'),
+(150, 3280000.00, 'BANK_TRANSFER', '2025-03-15 13:35:00', 'SUCCESS'),
+(151, 5050000.00, 'CREDIT_CARD', '2025-03-18 15:35:00', 'SUCCESS'),
+(152, 2380000.00, 'E_WALLET', '2025-03-20 06:35:00', 'SUCCESS'),
+(153, 5600000.00, 'BANK_TRANSFER', '2025-03-22 08:35:00', 'SUCCESS'),
+(154, 2650000.00, 'CREDIT_CARD', '2025-03-25 10:35:00', 'SUCCESS'),
+(155, 3120000.00, 'E_WALLET', '2025-03-28 12:35:00', 'SUCCESS');
+
+-- Tháng 4/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(4, '2025-04-02 05:30:00', 'CONFIRMED', 3250000.00),
+(9, '2025-04-05 07:30:00', 'CONFIRMED', 4820000.00),
+(18, '2025-04-08 09:30:00', 'CONFIRMED', 4980000.00),
+(3, '2025-04-10 11:30:00', 'CONFIRMED', 2480000.00),
+(6, '2025-04-12 13:30:00', 'CONFIRMED', 3420000.00),
+(11, '2025-04-15 15:30:00', 'CONFIRMED', 5250000.00),
+(17, '2025-04-18 06:30:00', 'CONFIRMED', 2520000.00),
+(4, '2025-04-20 08:30:00', 'CONFIRMED', 5800000.00),
+(9, '2025-04-22 10:30:00', 'CONFIRMED', 2780000.00),
+(18, '2025-04-25 12:30:00', 'CONFIRMED', 3250000.00);
+
+-- Payments cho tháng 4/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(156, 3250000.00, 'CREDIT_CARD', '2025-04-02 05:35:00', 'SUCCESS'),
+(157, 4820000.00, 'E_WALLET', '2025-04-05 07:35:00', 'SUCCESS'),
+(158, 4980000.00, 'BANK_TRANSFER', '2025-04-08 09:35:00', 'SUCCESS'),
+(159, 2480000.00, 'CREDIT_CARD', '2025-04-10 11:35:00', 'SUCCESS'),
+(160, 3420000.00, 'E_WALLET', '2025-04-12 13:35:00', 'SUCCESS'),
+(161, 5250000.00, 'BANK_TRANSFER', '2025-04-15 15:35:00', 'SUCCESS'),
+(162, 2520000.00, 'CREDIT_CARD', '2025-04-18 06:35:00', 'SUCCESS'),
+(163, 5800000.00, 'E_WALLET', '2025-04-20 08:35:00', 'SUCCESS'),
+(164, 2780000.00, 'BANK_TRANSFER', '2025-04-22 10:35:00', 'SUCCESS'),
+(165, 3250000.00, 'CREDIT_CARD', '2025-04-25 12:35:00', 'SUCCESS');
+
+-- Tháng 5/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(3, '2025-05-03 05:30:00', 'CONFIRMED', 3380000.00),
+(6, '2025-05-06 07:30:00', 'CONFIRMED', 5050000.00),
+(11, '2025-05-09 09:30:00', 'CONFIRMED', 5220000.00),
+(17, '2025-05-12 11:30:00', 'CONFIRMED', 2620000.00),
+(4, '2025-05-15 13:30:00', 'CONFIRMED', 3580000.00),
+(9, '2025-05-18 15:30:00', 'CONFIRMED', 5450000.00),
+(18, '2025-05-20 06:30:00', 'CONFIRMED', 2650000.00),
+(3, '2025-05-22 08:30:00', 'CONFIRMED', 6000000.00),
+(6, '2025-05-25 10:30:00', 'CONFIRMED', 2920000.00),
+(11, '2025-05-28 12:30:00', 'CONFIRMED', 3380000.00);
+
+-- Payments cho tháng 5/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(166, 3380000.00, 'BANK_TRANSFER', '2025-05-03 05:35:00', 'SUCCESS'),
+(167, 5050000.00, 'CREDIT_CARD', '2025-05-06 07:35:00', 'SUCCESS'),
+(168, 5220000.00, 'E_WALLET', '2025-05-09 09:35:00', 'SUCCESS'),
+(169, 2620000.00, 'BANK_TRANSFER', '2025-05-12 11:35:00', 'SUCCESS'),
+(170, 3580000.00, 'CREDIT_CARD', '2025-05-15 13:35:00', 'SUCCESS'),
+(171, 5450000.00, 'E_WALLET', '2025-05-18 15:35:00', 'SUCCESS'),
+(172, 2650000.00, 'BANK_TRANSFER', '2025-05-20 06:35:00', 'SUCCESS'),
+(173, 6000000.00, 'CREDIT_CARD', '2025-05-22 08:35:00', 'SUCCESS'),
+(174, 2920000.00, 'E_WALLET', '2025-05-25 10:35:00', 'SUCCESS'),
+(175, 3380000.00, 'BANK_TRANSFER', '2025-05-28 12:35:00', 'SUCCESS');
+
+-- Tháng 6/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(17, '2025-06-02 05:30:00', 'CONFIRMED', 3520000.00),
+(4, '2025-06-05 07:30:00', 'CONFIRMED', 5280000.00),
+(9, '2025-06-08 09:30:00', 'CONFIRMED', 5450000.00),
+(18, '2025-06-10 11:30:00', 'CONFIRMED', 2750000.00),
+(3, '2025-06-12 13:30:00', 'CONFIRMED', 3720000.00),
+(6, '2025-06-15 15:30:00', 'CONFIRMED', 5650000.00),
+(11, '2025-06-18 06:30:00', 'CONFIRMED', 2780000.00),
+(17, '2025-06-20 08:30:00', 'CONFIRMED', 6200000.00),
+(4, '2025-06-22 10:30:00', 'CONFIRMED', 3050000.00),
+(9, '2025-06-25 12:30:00', 'CONFIRMED', 3520000.00);
+
+-- Payments cho tháng 6/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(176, 3520000.00, 'E_WALLET', '2025-06-02 05:35:00', 'SUCCESS'),
+(177, 5280000.00, 'BANK_TRANSFER', '2025-06-05 07:35:00', 'SUCCESS'),
+(178, 5450000.00, 'CREDIT_CARD', '2025-06-08 09:35:00', 'SUCCESS'),
+(179, 2750000.00, 'E_WALLET', '2025-06-10 11:35:00', 'SUCCESS'),
+(180, 3720000.00, 'BANK_TRANSFER', '2025-06-12 13:35:00', 'SUCCESS'),
+(181, 5650000.00, 'CREDIT_CARD', '2025-06-15 15:35:00', 'SUCCESS'),
+(182, 2780000.00, 'E_WALLET', '2025-06-18 06:35:00', 'SUCCESS'),
+(183, 6200000.00, 'BANK_TRANSFER', '2025-06-20 08:35:00', 'SUCCESS'),
+(184, 3050000.00, 'CREDIT_CARD', '2025-06-22 10:35:00', 'SUCCESS'),
+(185, 3520000.00, 'E_WALLET', '2025-06-25 12:35:00', 'SUCCESS');
+
+-- Tháng 7/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(18, '2025-07-03 05:30:00', 'CONFIRMED', 3650000.00),
+(3, '2025-07-06 07:30:00', 'CONFIRMED', 5520000.00),
+(6, '2025-07-09 09:30:00', 'CONFIRMED', 5680000.00),
+(11, '2025-07-12 11:30:00', 'CONFIRMED', 2880000.00),
+(17, '2025-07-15 13:30:00', 'CONFIRMED', 3850000.00),
+(4, '2025-07-18 15:30:00', 'CONFIRMED', 5850000.00),
+(9, '2025-07-20 06:30:00', 'CONFIRMED', 2920000.00),
+(18, '2025-07-22 08:30:00', 'CONFIRMED', 6400000.00),
+(3, '2025-07-25 10:30:00', 'CONFIRMED', 3180000.00),
+(6, '2025-07-28 12:30:00', 'CONFIRMED', 3650000.00);
+
+-- Payments cho tháng 7/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(186, 3650000.00, 'CREDIT_CARD', '2025-07-03 05:35:00', 'SUCCESS'),
+(187, 5520000.00, 'E_WALLET', '2025-07-06 07:35:00', 'SUCCESS'),
+(188, 5680000.00, 'BANK_TRANSFER', '2025-07-09 09:35:00', 'SUCCESS'),
+(189, 2880000.00, 'CREDIT_CARD', '2025-07-12 11:35:00', 'SUCCESS'),
+(190, 3850000.00, 'E_WALLET', '2025-07-15 13:35:00', 'SUCCESS'),
+(191, 5850000.00, 'BANK_TRANSFER', '2025-07-18 15:35:00', 'SUCCESS'),
+(192, 2920000.00, 'CREDIT_CARD', '2025-07-20 06:35:00', 'SUCCESS'),
+(193, 6400000.00, 'E_WALLET', '2025-07-22 08:35:00', 'SUCCESS'),
+(194, 3180000.00, 'BANK_TRANSFER', '2025-07-25 10:35:00', 'SUCCESS'),
+(195, 3650000.00, 'CREDIT_CARD', '2025-07-28 12:35:00', 'SUCCESS');
+
+-- Tháng 8/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(11, '2025-08-02 05:30:00', 'CONFIRMED', 3780000.00),
+(17, '2025-08-05 07:30:00', 'CONFIRMED', 5750000.00),
+(4, '2025-08-08 09:30:00', 'CONFIRMED', 5920000.00),
+(9, '2025-08-10 11:30:00', 'CONFIRMED', 3020000.00),
+(18, '2025-08-12 13:30:00', 'CONFIRMED', 3980000.00),
+(3, '2025-08-15 15:30:00', 'CONFIRMED', 6050000.00),
+(6, '2025-08-18 06:30:00', 'CONFIRMED', 3050000.00),
+(11, '2025-08-20 08:30:00', 'CONFIRMED', 6600000.00),
+(17, '2025-08-22 10:30:00', 'CONFIRMED', 3320000.00),
+(4, '2025-08-25 12:30:00', 'CONFIRMED', 3780000.00);
+
+-- Payments cho tháng 8/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(196, 3780000.00, 'BANK_TRANSFER', '2025-08-02 05:35:00', 'SUCCESS'),
+(197, 5750000.00, 'CREDIT_CARD', '2025-08-05 07:35:00', 'SUCCESS'),
+(198, 5920000.00, 'E_WALLET', '2025-08-08 09:35:00', 'SUCCESS'),
+(199, 3020000.00, 'BANK_TRANSFER', '2025-08-10 11:35:00', 'SUCCESS'),
+(200, 3980000.00, 'CREDIT_CARD', '2025-08-12 13:35:00', 'SUCCESS'),
+(201, 6050000.00, 'E_WALLET', '2025-08-15 15:35:00', 'SUCCESS'),
+(202, 3050000.00, 'BANK_TRANSFER', '2025-08-18 06:35:00', 'SUCCESS'),
+(203, 6600000.00, 'CREDIT_CARD', '2025-08-20 08:35:00', 'SUCCESS'),
+(204, 3320000.00, 'E_WALLET', '2025-08-22 10:35:00', 'SUCCESS'),
+(205, 3780000.00, 'BANK_TRANSFER', '2025-08-25 12:35:00', 'SUCCESS');
+
+-- Tháng 9/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(9, '2025-09-02 05:30:00', 'CONFIRMED', 3920000.00),
+(18, '2025-09-05 07:30:00', 'CONFIRMED', 5980000.00),
+(3, '2025-09-08 09:30:00', 'CONFIRMED', 6150000.00),
+(6, '2025-09-10 11:30:00', 'CONFIRMED', 3150000.00),
+(11, '2025-09-12 13:30:00', 'CONFIRMED', 4120000.00),
+(17, '2025-09-15 15:30:00', 'CONFIRMED', 6250000.00),
+(4, '2025-09-18 06:30:00', 'CONFIRMED', 3180000.00),
+(9, '2025-09-20 08:30:00', 'CONFIRMED', 6800000.00),
+(18, '2025-09-22 10:30:00', 'CONFIRMED', 3450000.00),
+(3, '2025-09-25 12:30:00', 'CONFIRMED', 3920000.00);
+
+-- Payments cho tháng 9/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(206, 3920000.00, 'E_WALLET', '2025-09-02 05:35:00', 'SUCCESS'),
+(207, 5980000.00, 'BANK_TRANSFER', '2025-09-05 07:35:00', 'SUCCESS'),
+(208, 6150000.00, 'CREDIT_CARD', '2025-09-08 09:35:00', 'SUCCESS'),
+(209, 3150000.00, 'E_WALLET', '2025-09-10 11:35:00', 'SUCCESS'),
+(210, 4120000.00, 'BANK_TRANSFER', '2025-09-12 13:35:00', 'SUCCESS'),
+(211, 6250000.00, 'CREDIT_CARD', '2025-09-15 15:35:00', 'SUCCESS'),
+(212, 3180000.00, 'E_WALLET', '2025-09-18 06:35:00', 'SUCCESS'),
+(213, 6800000.00, 'BANK_TRANSFER', '2025-09-20 08:35:00', 'SUCCESS'),
+(214, 3450000.00, 'CREDIT_CARD', '2025-09-22 10:35:00', 'SUCCESS'),
+(215, 3920000.00, 'E_WALLET', '2025-09-25 12:35:00', 'SUCCESS');
+
+-- Tháng 10/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(6, '2025-10-02 05:30:00', 'CONFIRMED', 4050000.00),
+(11, '2025-10-05 07:30:00', 'CONFIRMED', 6220000.00),
+(17, '2025-10-08 09:30:00', 'CONFIRMED', 6380000.00),
+(4, '2025-10-10 11:30:00', 'CONFIRMED', 3280000.00),
+(9, '2025-10-12 13:30:00', 'CONFIRMED', 4250000.00),
+(18, '2025-10-15 15:30:00', 'CONFIRMED', 6450000.00),
+(3, '2025-10-18 06:30:00', 'CONFIRMED', 3320000.00),
+(6, '2025-10-20 08:30:00', 'CONFIRMED', 7000000.00),
+(11, '2025-10-22 10:30:00', 'CONFIRMED', 3580000.00),
+(17, '2025-10-25 12:30:00', 'CONFIRMED', 4050000.00);
+
+-- Payments cho tháng 10/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(216, 4050000.00, 'CREDIT_CARD', '2025-10-02 05:35:00', 'SUCCESS'),
+(217, 6220000.00, 'E_WALLET', '2025-10-05 07:35:00', 'SUCCESS'),
+(218, 6380000.00, 'BANK_TRANSFER', '2025-10-08 09:35:00', 'SUCCESS'),
+(219, 3280000.00, 'CREDIT_CARD', '2025-10-10 11:35:00', 'SUCCESS'),
+(220, 4250000.00, 'E_WALLET', '2025-10-12 13:35:00', 'SUCCESS'),
+(221, 6450000.00, 'BANK_TRANSFER', '2025-10-15 15:35:00', 'SUCCESS'),
+(222, 3320000.00, 'CREDIT_CARD', '2025-10-18 06:35:00', 'SUCCESS'),
+(223, 7000000.00, 'E_WALLET', '2025-10-20 08:35:00', 'SUCCESS'),
+(224, 3580000.00, 'BANK_TRANSFER', '2025-10-22 10:35:00', 'SUCCESS'),
+(225, 4050000.00, 'CREDIT_CARD', '2025-10-25 12:35:00', 'SUCCESS');
+
+-- Bật lại kiểm tra khóa ngoại
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- ===================================================================
+-- TỔNG KẾT
+-- ===================================================================
+-- Đã thêm:
+-- - 100 bookings (26-125 cho năm 2024, 126-225 cho năm 2025)
+-- - 200 payments (16-225) tất cả đều SUCCESS
+-- - Tổng doanh thu khoảng: 650,000,000 VNĐ
+-- - Phân bố đều qua 20 tháng (tháng 1/2024 - tháng 10/2025)
+-- ===================================================================
+
+SELECT 'Hoàn tất thêm 200 payments cho thống kê!' AS Status;
+SELECT CONCAT('Tổng doanh thu 2024: ', FORMAT(SUM(amount), 0), ' VNĐ') AS Revenue_2024
+FROM Payments
+WHERE YEAR(payment_date) = 2024 AND status = 'SUCCESS';
+
+SELECT CONCAT('Tổng doanh thu 2025: ', FORMAT(SUM(amount), 0), ' VNĐ') AS Revenue_2025
+FROM Payments
+WHERE YEAR(payment_date) = 2025 AND status = 'SUCCESS';

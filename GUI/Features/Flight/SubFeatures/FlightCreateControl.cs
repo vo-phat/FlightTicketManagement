@@ -1,167 +1,282 @@
-using GUI.Components.Buttons;
-using GUI.Components.Inputs;
-using GUI.Components.Tables;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using BUS.Flight; // Thêm BUS
+using DAO.Aircraft; // Thêm DAO mới
+using DAO.Route;   // Thêm DAO mới
+using DTO.Flight;  // Thêm DTO
 
-namespace GUI.Features.Flight.SubFeatures {
-    public class FlightCreateControl : UserControl {
-        public FlightCreateControl() {
+namespace GUI.Features.Flight.SubFeatures
+{
+    public partial class FlightCreateControl : UserControl
+    {
+        private int _currentRouteDurationMinutes = 0;
+        private int? _editingFlightId = null;
+        public event Action OnSaveSuccess;
+        
+        public FlightCreateControl()
+        {
             InitializeComponent();
+            LoadInitialData();
+
+            dtpDepartureTime.DateTimePicker.ValueChanged += dtpDepartureTime_ValueChanged;
         }
 
-        private void InitializeComponent() {
-            this.Dock = DockStyle.Fill;
-            this.BackColor = Color.FromArgb(232, 240, 252);
+        private void FlightCreateControl_Load(object sender, EventArgs e)
+        {
+            dtpDepartureTime.DateTimePicker.Format = DateTimePickerFormat.Custom;
+            dtpDepartureTime.DateTimePicker.CustomFormat = "dd/MM/yyyy HH:mm";
 
-            // ===== Tiêu đề =====
-            var titlePanel = new Panel {
-                Dock = DockStyle.Top,
-                Padding = new Padding(24, 20, 24, 0),
-                Height = 60
-            };
-            var lblTitle = new Label {
-                Text = "✈️ Tạo chuyến bay mới",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 20, FontStyle.Bold),
-                ForeColor = Color.Black
-            };
-            titlePanel.Controls.Add(lblTitle);
+            dtpArrivalTime.DateTimePicker.Format = DateTimePickerFormat.Custom;
+            dtpArrivalTime.DateTimePicker.CustomFormat = "dd/MM/yyyy HH:mm";
+        }
+        
+        public void LoadFlightForEdit(int flightId)
+        {
+            _editingFlightId = flightId;
+            lblTitle.Text = "✏️ Chỉnh sửa chuyến bay";
+            btnSave.Text = "💾 Cập nhật chuyến bay";
 
-            // ===== Khối input (2 cột × 5 hàng) =====
-            var inputPanel = new TableLayoutPanel {
-                Dock = DockStyle.Top,
-                BackColor = Color.Transparent,
-                Padding = new Padding(24, 12, 24, 0),
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                ColumnCount = 2,
-                RowCount = 5
-            };
-            inputPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-            inputPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-            for (int i = 0; i < 5; i++)
-                inputPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 60));
+            dtpDepartureTime.DateTimePicker.MinDate = new DateTime(2004, 1, 1);
+            dtpArrivalTime.DateTimePicker.MinDate = new DateTime(2004, 1, 1);
 
-            // === Cột 1 ===
-            inputPanel.Controls.Add(new UnderlinedTextField("Mã chuyến bay", "") { 
-                MinimumSize = new Size(0, 72), 
-                Width = 300 
-            }, 0, 0);
-            inputPanel.Controls.Add(new UnderlinedTextField("Nơi cất cánh", "") { 
-                MinimumSize = new Size(0, 72), 
-                Width = 300 
-            }, 0, 1);
-
-            inputPanel.Controls.Add(new UnderlinedComboBox("Mã máy bay", new object[] { "AG001", "AG002" }) {
-                MinimumSize = new Size(0, 72),
-                Width = 300
-            }, 0, 2);
-
-            inputPanel.Controls.Add(new UnderlinedTextField("Giá vé cơ bản", "") { 
-                MinimumSize = new Size(0, 72), Width = 300 }, 0, 3);
-
-            // === Cột 2 ===
-            inputPanel.Controls.Add(new UnderlinedTextField("Nơi hạ cánh", "") { 
-                MinimumSize = new Size(0, 72), 
-                Width = 300 
-            }, 1, 1);
-            inputPanel.Controls.Add(new UnderlinedComboBox("Mã tuyến bay", new object[] { "R001", "R002" }) { 
-                MinimumSize = new Size(0, 72), 
-                Width = 300 
-            }, 1, 2);
-            inputPanel.Controls.Add(new DateTimePickerCustom("Thời gian khởi hành", "") { 
-                Width = 300, 
-                Height = 72,
-                EnableTime = true,               // bật chọn giờ:phút
-                TimeFormat = "dd/MM/yyyy HH:mm", // hoặc "HH:mm dd/MM/yyyy"
-                ShowUpDownWhenTime = true        // spinner thay vì popup lịch
-            }, 1, 3);
-            inputPanel.Controls.Add(new DateTimePickerCustom("Thời gian hạ cánh", "") { 
-                Width = 300, 
-                Height = 72,
-                EnableTime = true,               // bật chọn giờ:phút
-                TimeFormat = "dd/MM/yyyy HH:mm", // hoặc "HH:mm dd/MM/yyyy"
-                ShowUpDownWhenTime = true        // spinner thay vì popup lịch
-            }, 1, 4);
-
-            // === Hàng thời lượng bay (có thể tự tính hoặc nhập tay) ===
-            inputPanel.Controls.Add(new UnderlinedTextField("Thời gian bay (phút)", "") { 
-                MinimumSize = new Size(0, 72),
-                Width = 300 
-            }, 0, 4);
-
-            // Sau khi Add các control vào inputPanel:
-            for (int r = 0; r < inputPanel.RowCount; r++) {
-                int h = 0;
-                for (int c = 0; c < inputPanel.ColumnCount; c++) {
-                    var ctl = inputPanel.GetControlFromPosition(c, r);
-                    if (ctl != null) {
-                        h = Math.Max(h, ctl.GetPreferredSize(Size.Empty).Height + ctl.Margin.Vertical);
-                    }
-                }
-                inputPanel.RowStyles[r] = new RowStyle(SizeType.Absolute, Math.Max(72, h));
+            var result = FlightBUS.Instance.GetFlightById(flightId);
+            if (!result.Success)
+            {
+                MessageBox.Show(result.GetFullErrorMessage(), "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ClearForm();
+                return;
             }
 
+            var flight = result.GetData<FlightDTO>();
 
-            // ===== Nút tạo mới =====
-            var btnCreate = new PrimaryButton("➕ Tạo chuyến bay") {
-                Height = 40,
-                Width = 180,
-                Margin = new Padding(0, 12, 0, 12),
-                Anchor = AnchorStyles.Right
-            };
-            var buttonRow = new FlowLayoutPanel {
-                Dock = DockStyle.Top,
-                FlowDirection = FlowDirection.RightToLeft,
-                AutoSize = true,
-                Padding = new Padding(24, 0, 24, 0),
-                WrapContents = false
-            };
-            buttonRow.Controls.Add(btnCreate);
+            try
+            {
+                txtFlightNumber.Text = flight.FlightNumber;
 
-            // ===== Bảng danh sách chuyến bay =====
-            //var table = new TableCustom {
-            //    Dock = DockStyle.Fill,
-            //    Margin = new Padding(24, 12, 24, 4),
-            //    AllowUserToAddRows = false,
-            //    AllowUserToDeleteRows = false,
-            //    ReadOnly = true,
-            //    RowHeadersVisible = false,
-            //    AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-            //    BackgroundColor = Color.White,
-            //    BorderStyle = BorderStyle.FixedSingle
-            //};
-            //table.Columns.Add("flightId", "Mã chuyến bay");
-            //table.Columns.Add("aircraftId", "Mã máy bay");
-            //table.Columns.Add("routeId", "Mã tuyến bay");
-            //table.Columns.Add("departureAirport", "Nơi cất cánh");
-            //table.Columns.Add("arrivalAirport", "Nơi hạ cánh");
-            //table.Columns.Add("departureTime", "Giờ cất cánh");
-            //table.Columns.Add("arrivalTime", "Giờ hạ cánh");
-            //table.Columns.Add("actions", "Thao tác");
+                cbAircraft.SelectedValue = flight.AircraftId;
+                cbRoute.SelectedValue = flight.RouteId;
+                cbStatus.SelectedValue = flight.Status;
 
-            //// mẫu hàng trống
-            //for (int i = 0; i < 4; i++)
-            //    table.Rows.Add("", "", "", "", "", "", "", "");
+                if (flight.DepartureTime.HasValue)
+                    dtpDepartureTime.Value = flight.DepartureTime.Value;
 
-            // ===== Layout tổng =====
-            var main = new TableLayoutPanel {
-                Dock = DockStyle.Fill,
-                BackColor = Color.Transparent,
-                ColumnCount = 1,
-                RowCount = 3
-            };
-            main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            main.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
+                if (flight.ArrivalTime.HasValue)
+                    dtpArrivalTime.Value = flight.ArrivalTime.Value;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi điền thông tin: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
 
-            main.Controls.Add(titlePanel, 0, 0);
-            main.Controls.Add(inputPanel, 0, 1);
-            main.Controls.Add(buttonRow, 0, 2);
-            //main.Controls.Add(table, 0, 3);
+        private void LoadInitialData()
+        {
+            try
+            {
+                cbAircraft.DataSource = AircraftDAO.Instance.GetAllAircraftForComboBox();
+                cbAircraft.DisplayMember = "DisplayName";
+                cbAircraft.ValueMember = "aircraft_id";
+                cbAircraft.SelectedIndex = -1;
+                cbAircraft.SelectedIndexChanged += cbAircraft_SelectedIndexChanged;
 
-            this.Controls.Clear();
-            this.Controls.Add(main);
+                cbRoute.DataSource = RouteDAO.Instance.GetAllRoutesForComboBox();
+                cbRoute.DisplayMember = "DisplayName";
+                cbRoute.ValueMember = "route_id";
+                cbRoute.SelectedIndex = -1;
+                cbRoute.SelectedIndexChanged += cbRoute_SelectedIndexChanged;
+
+                var statusValues = Enum.GetValues(typeof(FlightStatus))
+                    .Cast<FlightStatus>()
+                    .Select(s => new { Value = s, Description = s.GetDescription() })
+                    .ToList();
+
+                cbStatus.DataSource = statusValues;
+                cbStatus.DisplayMember = "Description";
+                cbStatus.ValueMember = "Value";
+                cbStatus.SelectedValue = FlightStatus.SCHEDULED;
+
+                DateTime minDate = DateTime.Now.AddHours(1);
+                DateTime defaultDate = DateTime.Now.AddDays(1);
+
+                dtpDepartureTime.DateTimePicker.MinDate = minDate;
+                dtpDepartureTime.Value = (defaultDate > minDate) ? defaultDate : minDate;
+
+                dtpArrivalTime.DateTimePicker.MinDate = dtpDepartureTime.Value;
+                dtpArrivalTime.Value = dtpDepartureTime.Value.AddHours(2);
+
+                txtFlightNumber.LabelText = "Số hiệu chuyến bay";
+                txtFlightNumber.PlaceholderText = "Chọn máy bay để gợi ý...";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi tải danh sách: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        private void cbRoute_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _currentRouteDurationMinutes = 0;
+            if (cbRoute.SelectedItem is DataRowView selectedRoute)
+            {
+                object durationObj = selectedRoute["duration_minutes"];
+                if (durationObj != DBNull.Value && durationObj != null)
+                {
+                    _currentRouteDurationMinutes = Convert.ToInt32(durationObj);
+                }
+            }
+            SuggestArrivalTime();
+        }
+        
+        private void dtpDepartureTime_ValueChanged(object sender, EventArgs e)
+        {
+            dtpArrivalTime.DateTimePicker.MinDate = dtpDepartureTime.Value;
+
+            SuggestArrivalTime();
+        }
+        
+        private void SuggestArrivalTime()
+        {
+            if (_currentRouteDurationMinutes <= 0)
+            {
+                if (dtpArrivalTime.Value < dtpDepartureTime.Value)
+                {
+                    dtpArrivalTime.Value = dtpDepartureTime.Value.AddHours(1);
+                }
+                return;
+            }
+
+            try
+            {
+                DateTime departureTime = dtpDepartureTime.Value;
+
+                DateTime suggestedArrivalTime = departureTime.AddMinutes(_currentRouteDurationMinutes);
+
+                dtpArrivalTime.Value = suggestedArrivalTime;
+            }
+            catch (Exception)
+            {
+                dtpArrivalTime.Value = dtpDepartureTime.Value.AddHours(1);
+            }
+        }
+        
+        private void cbAircraft_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (cbAircraft.SelectedItem is DataRowView selectedAircraft)
+            {
+                try
+                {
+                    string airlineCode = selectedAircraft["airline_code"]?.ToString();
+
+                    if (!string.IsNullOrEmpty(airlineCode))
+                    {
+                        LoadSuggestedFlightNumber(airlineCode);
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    txtFlightNumber.PlaceholderText = "Lỗi (không tìm thấy code)";
+                }
+            }
+            else
+            {
+                txtFlightNumber.PlaceholderText = "Chọn máy bay để gợi ý...";
+            }
+        }
+        
+        private void LoadSuggestedFlightNumber(string prefix)
+        {
+            var result = FlightBUS.Instance.SuggestNextFlightNumber(prefix);
+
+            if (result.Success && result.Data != null)
+            {
+                txtFlightNumber.PlaceholderText = $"VD: {result.Data.ToString()}";
+            }
+            else
+            {
+                txtFlightNumber.PlaceholderText = $"VD: {prefix.ToUpper()}1";
+            }
+        }
+        
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 1. Thu thập dữ liệu
+                var flight = new FlightDTO
+                {
+                    FlightNumber = txtFlightNumber.Text,
+                    AircraftId = Convert.ToInt32(cbAircraft.SelectedValue),
+                    RouteId = Convert.ToInt32(cbRoute.SelectedValue),
+                    DepartureTime = dtpDepartureTime.Value,
+                    ArrivalTime = dtpArrivalTime.Value,
+                    Status = (FlightStatus)cbStatus.SelectedValue
+                };
+
+                // 2. Gọi BUS
+                BUS.Common.BusinessResult result;
+                if (_editingFlightId.HasValue)
+                {
+                    flight.FlightId = _editingFlightId.Value;
+                    result = FlightBUS.Instance.UpdateFlight(flight);
+                }
+                else
+                {
+                    result = FlightBUS.Instance.CreateFlight(flight);
+                }
+
+                // 3. Hiển thị kết quả
+                if (result.Success)
+                {
+                    MessageBox.Show(result.Message, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    ClearForm();
+
+                    OnSaveSuccess?.Invoke();
+                }
+                else
+                {
+                    MessageBox.Show(result.GetFullErrorMessage(), "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (FormatException)
+            {
+                MessageBox.Show("Vui lòng chọn đầy đủ Máy bay và Tuyến bay.", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Đã xảy ra lỗi không mong muốn: {ex.Message}", "Lỗi hệ thống", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        public void ClearForm()
+        {
+            _editingFlightId = null;
+            lblTitle.Text = "➕ Tạo chuyến bay";
+            btnSave.Text = "💾 Lưu chuyến bay";
+
+            txtFlightNumber.Text = "";
+            cbAircraft.SelectedIndex = -1;
+            cbRoute.SelectedIndex = -1;
+            cbStatus.SelectedValue = FlightStatus.SCHEDULED;
+
+            DateTime minDate = DateTime.Now.AddHours(1);
+            DateTime defaultDate = DateTime.Now.AddDays(1);
+
+            dtpDepartureTime.DateTimePicker.MinDate = minDate;
+            dtpDepartureTime.Value = (defaultDate > minDate) ? defaultDate : minDate;
+
+            dtpArrivalTime.DateTimePicker.MinDate = dtpDepartureTime.Value;
+            dtpArrivalTime.Value = dtpDepartureTime.Value.AddHours(2);
+
+            _currentRouteDurationMinutes = 0;
+            txtFlightNumber.PlaceholderText = "Chọn máy bay để gợi ý...";
         }
     }
 }

@@ -1,9 +1,12 @@
-﻿using DAO.Database;
+﻿using BUS.Flight;
+using DAO.Database;
 using DAO.Flight;
 using DTO.Flight;
 using System;
 using System.Text;
 using System.Windows.Forms;
+using BUS.Flight;
+using BUS.Common;
 
 namespace GUI
 {
@@ -330,13 +333,263 @@ namespace GUI
             }
         }
         #endregion
+        #region Flight BUS
+        private void btnTestFlightBUS_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                txtResult.Clear();
+                txtResult.Text = "Đang test Flight BUS...\r\n\r\n";
+                this.Refresh();
+
+                StringBuilder result = new StringBuilder();
+                result.AppendLine("=== TEST 5: FLIGHT BUS ===");
+                result.AppendLine();
+
+                // Test 1: GetAllFlights
+                result.AppendLine("Test 5.1: GetAllFlights()");
+                result.AppendLine("---");
+                var getAllResult = FlightBUS.Instance.GetAllFlights();
+                if (getAllResult.Success)
+                {
+                    var flights = getAllResult.GetData<List<FlightDTO>>();
+                    result.AppendLine($"{getAllResult.Message}");
+                    result.AppendLine($"   Số lượng: {flights.Count}");
+                }
+                else
+                {
+                    result.AppendLine($"{getAllResult.GetFullErrorMessage()}");
+                }
+                result.AppendLine();
+
+                // Test 2: GetFlightStatistics
+                result.AppendLine("Test 5.2: GetFlightStatistics()");
+                result.AppendLine("---");
+                var statsResult = FlightBUS.Instance.GetFlightStatistics();
+                if (statsResult.Success)
+                {
+                    result.AppendLine($"{statsResult.Message}");
+
+                    var statsData = statsResult.Data;
+                    var statsType = statsData.GetType();
+
+                    int total = (int)statsType.GetProperty("Total").GetValue(statsData);
+                    int scheduled = (int)statsType.GetProperty("Scheduled").GetValue(statsData);
+                    int delayed = (int)statsType.GetProperty("Delayed").GetValue(statsData);
+                    int cancelled = (int)statsType.GetProperty("Cancelled").GetValue(statsData);
+                    int completed = (int)statsType.GetProperty("Completed").GetValue(statsData);
+
+                    result.AppendLine($"   Tổng cộng: {total}");
+                    result.AppendLine($"   - SCHEDULED: {scheduled}");
+                    result.AppendLine($"   - DELAYED: {delayed}");
+                    result.AppendLine($"   - CANCELLED: {cancelled}");
+                    result.AppendLine($"   - COMPLETED: {completed}");
+                }
+                else
+                {
+                    result.AppendLine($"{statsResult.GetFullErrorMessage()}");
+                }
+                result.AppendLine();
+                result.AppendLine();
+
+                // Test 3: CreateFlight - Validation Error
+                result.AppendLine("Test 5.3: CreateFlight() - Test Validation");
+                result.AppendLine("---");
+                var invalidFlight = new FlightDTO();
+                var createInvalidResult = FlightBUS.Instance.CreateFlight(invalidFlight);
+                if (!createInvalidResult.Success)
+                {
+                    result.AppendLine($"Validation hoạt động đúng!");
+                    result.AppendLine($"   Lỗi: {createInvalidResult.Message}");
+                }
+                else
+                {
+                    result.AppendLine($"Validation không hoạt động!");
+                }
+                result.AppendLine();
+                result.AppendLine();
+
+                // Test 4: CreateFlight - Business Rule Validation
+                result.AppendLine("Test 5.4: CreateFlight() - Test Business Rules");
+                result.AppendLine("---");
+                var tooSoonFlight = new FlightDTO(
+                    "TEST" + DateTime.Now.ToString("HHmmss"),
+                    1,
+                    1,
+                    DateTime.Now.AddMinutes(30), // Chỉ 30 phút (rule: phải 2 giờ)
+                    DateTime.Now.AddMinutes(90)
+                );
+                var createTooSoonResult = FlightBUS.Instance.CreateFlight(tooSoonFlight);
+                if (!createTooSoonResult.Success)
+                {
+                    result.AppendLine($"Business rule validation hoạt động!");
+                    result.AppendLine($"   Lỗi: {createTooSoonResult.GetFullErrorMessage()}");
+                }
+                else
+                {
+                    result.AppendLine($"Business rule không hoạt động!");
+                }
+                result.AppendLine();
+                result.AppendLine();
+
+                // Test 5: CreateFlight - Success
+                result.AppendLine("Test 5.5: CreateFlight() - Tạo chuyến bay hợp lệ");
+                result.AppendLine("---");
+                var validFlight = new FlightDTO(
+                    "TEST" + DateTime.Now.ToString("HHmmss"),
+                    1,
+                    1,
+                    DateTime.Now.AddDays(7),
+                    DateTime.Now.AddDays(7).AddHours(2)
+                );
+                var createValidResult = FlightBUS.Instance.CreateFlight(validFlight);
+                if (createValidResult.Success)
+                {
+                    var createdFlight = createValidResult.GetData<FlightDTO>();
+                    result.AppendLine($"{createValidResult.Message}");
+                    result.AppendLine($"   Flight ID: {createdFlight.FlightId}");
+                    result.AppendLine($"   Flight Number: {createdFlight.FlightNumber}");
+
+                    // Test 6: GetFlightById
+                    result.AppendLine();
+                    result.AppendLine("Test 5.6: GetFlightById()");
+                    result.AppendLine("---");
+                    var getByIdResult = FlightBUS.Instance.GetFlightById(createdFlight.FlightId);
+                    if (getByIdResult.Success)
+                    {
+                        result.AppendLine($"{getByIdResult.Message}");
+                    }
+
+                    // Test 7: UpdateFlight
+                    result.AppendLine();
+                    result.AppendLine("Test 5.7: UpdateFlight()");
+                    result.AppendLine("---");
+                    createdFlight.FlightNumber = "UPDATED" + DateTime.Now.ToString("HHmm");
+                    var updateResult = FlightBUS.Instance.UpdateFlight(createdFlight);
+                    result.AppendLine($"{(updateResult.Success ? "" : "")} {updateResult.Message}");
+
+                    // Test 8: UpdateFlightStatus
+                    result.AppendLine();
+                    result.AppendLine("Test 5.8: UpdateFlightStatus()");
+                    result.AppendLine("---");
+                    var statusResult = FlightBUS.Instance.UpdateFlightStatus(
+                        createdFlight.FlightId,
+                        FlightStatus.DELAYED
+                    );
+                    result.AppendLine($"{(statusResult.Success ? "" : "")} {statusResult.Message}");
+
+                    // Test 9: Invalid Status Transition
+                    result.AppendLine();
+                    result.AppendLine("Test 5.9: UpdateFlightStatus() - Invalid Transition");
+                    result.AppendLine("---");
+                    var invalidStatusResult = FlightBUS.Instance.UpdateFlightStatus(
+                        createdFlight.FlightId,
+                        FlightStatus.COMPLETED
+                    );
+                    // Phải delay -> completed
+                    invalidStatusResult = FlightBUS.Instance.UpdateFlightStatus(
+                        createdFlight.FlightId,
+                        FlightStatus.COMPLETED
+                    );
+                    result.AppendLine($"{(invalidStatusResult.Success ? "" : "")} {invalidStatusResult.Message}");
+
+                    // Test 10: Try to modify COMPLETED flight (should fail)
+                    result.AppendLine();
+                    result.AppendLine("Test 5.10: UpdateFlight() - Cannot modify COMPLETED");
+                    result.AppendLine("---");
+                    var modifyCompletedResult = FlightBUS.Instance.UpdateFlight(createdFlight);
+                    if (!modifyCompletedResult.Success)
+                    {
+                        result.AppendLine($"Rule hoạt động: {modifyCompletedResult.Message}");
+                    }
+                    else
+                    {
+                        result.AppendLine($"Rule không hoạt động!");
+                    }
+
+                    // Test 11: Try to delete COMPLETED flight (should fail)
+                    result.AppendLine();
+                    result.AppendLine("Test 5.11: DeleteFlight() - Cannot delete COMPLETED");
+                    result.AppendLine("---");
+                    var deleteCompletedResult = FlightBUS.Instance.DeleteFlight(createdFlight.FlightId);
+                    if (!deleteCompletedResult.Success)
+                    {
+                        result.AppendLine($"Rule hoạt động: {deleteCompletedResult.Message}");
+                    }
+                    else
+                    {
+                        result.AppendLine($"Rule không hoạt động!");
+                    }
+                }
+                else
+                {
+                    result.AppendLine($"Không thể tạo flight test: {createValidResult.GetFullErrorMessage()}");
+                }
+
+                result.AppendLine();
+                result.AppendLine();
+
+                // Test 12: SearchFlightsByNumber
+                result.AppendLine("Test 5.12: SearchFlightsByNumber()");
+                result.AppendLine("---");
+                var searchResult = FlightBUS.Instance.SearchFlightsByNumber("VN");
+                if (searchResult.Success)
+                {
+                    var foundFlights = searchResult.GetData<List<FlightDTO>>();
+                    result.AppendLine($"{searchResult.Message}");
+                    if (foundFlights.Count > 0)
+                    {
+                        result.AppendLine($"   Ví dụ: {foundFlights[0].FlightNumber}");
+                    }
+                }
+
+                result.AppendLine();
+                result.AppendLine();
+
+                // Test 13: GetFlightsByStatus
+                result.AppendLine("Test 5.13: GetFlightsByStatus()");
+                result.AppendLine("---");
+                var statusFlightsResult = FlightBUS.Instance.GetFlightsByStatus(FlightStatus.SCHEDULED);
+                if (statusFlightsResult.Success)
+                {
+                    result.AppendLine($"{statusFlightsResult.Message}");
+                }
+
+                result.AppendLine();
+                result.AppendLine();
+
+                // Test 14: GetFlightsByDateRange
+                result.AppendLine("Test 5.14: GetFlightsByDateRange()");
+                result.AppendLine("---");
+                var dateRangeResult = FlightBUS.Instance.GetFlightsByDateRange(
+                    DateTime.Now.Date,
+                    DateTime.Now.Date.AddMonths(1)
+                );
+                if (dateRangeResult.Success)
+                {
+                    result.AppendLine($"{dateRangeResult.Message}");
+                }
+
+                result.AppendLine();
+                result.AppendLine();
+                result.AppendLine("=== KẾT THÚC TEST FLIGHT BUS ===");
+
+                txtResult.Text = result.ToString();
+            }
+            catch (Exception ex)
+            {
+                txtResult.Text = $"LỖI:\r\n\r\n{ex.Message}\r\n\r\nStack Trace:\r\n{ex.StackTrace}";
+            }
+        }
+
+        #endregion
 
         #region Clear Button
 
         private void btnClear_Click(object sender, EventArgs e)
         {
             txtResult.Clear();
-            txtResult.Text = "=== FLIGHT TICKET MANAGEMENT - TEST CONSOLE ===\r\n\r\n" +
+            txtResult.Text = " === FLIGHT TICKET MANAGEMENT - TEST CONSOLE ===\r\n\r\n" +
                            "Nhấn các nút bên trái để chạy test:\r\n" +
                            "1. Test Database Connection\r\n" +
                            "2. Test Flight DTO\r\n" +

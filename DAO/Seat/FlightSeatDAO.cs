@@ -9,6 +9,26 @@ namespace DAO.FlightSeat
 {
     public class FlightSeatDAO
     {
+        private static FlightSeatDAO instance;
+        public static FlightSeatDAO Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = new FlightSeatDAO();
+                }
+                return instance;
+            }
+        }
+
+        private FlightSeatDAO() { }
+
+        public List<FlightSeatDTO> GetByFlightId(int flightId)
+        {
+            return GetSeatsByFlight(flightId);
+        }
+
         #region Lấy danh sách ghế theo chuyến bay
         public List<FlightSeatDTO> GetSeatsByFlight(int flightId)
         {
@@ -267,6 +287,29 @@ namespace DAO.FlightSeat
             }
 
             return results;
+        }
+        #endregion
+
+        #region Xóa tất cả ghế của chuyến bay
+        public bool DeleteByFlightId(int flightId)
+        {
+            string query = "DELETE FROM flight_seats WHERE flight_id = @flightId";
+
+            try
+            {
+                using var conn = DatabaseConnection.GetConnection();
+                conn.Open();
+
+                using var cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@flightId", flightId);
+
+                int affectedRows = cmd.ExecuteNonQuery();
+                return affectedRows >= 0; // Trả về true ngay cả khi không có dòng nào bị xóa
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi xóa ghế theo chuyến bay: {ex.Message}", ex);
+            }
         }
         #endregion
     }

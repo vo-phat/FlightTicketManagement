@@ -144,11 +144,20 @@ namespace GUI.MainApp {
                     // Chỉ hiển thị menu nếu có ít nhất 1 trong 2 quyền
                     IsVisible = r => HasPerm(Perm.Flights_Read) || HasPerm(Perm.Flights_Create),
                     SubItems = {
-                        ("Quản lý chuyến bay",
-                            r => HasPerm(Perm.Flights_Read) || HasPerm(Perm.Flights_Create),
-                            () => OpenFlightManagement()),
-                        ("Quy tắc giá vé",
-                            r => HasPerm(Perm.FareRules_Manage),
+                        ("Quản lý chuyến bay", r => true,
+                            () => {
+                                // 1. Tạo control (giữ nguyên)
+                                var flightControl = new FlightControl(_role);
+                                // 2. Đăng ký sự kiện điều hướng
+                                flightControl.OnBookFlightRequested += (flightId) => {
+                                    // 1. Chuyển tab "Đặt chỗ & Vé"
+                                    ActivateTab(NavKey.BookingsTickets);
+                                    // 2. Mở màn hình "Tạo/Tìm đặt chỗ"
+                                    OpenBookingSearch();
+                                };
+                                LoadControl(flightControl);
+                            }),
+                        ("Quy tắc giá vé", r => r == AppRole.Admin,
                             () => OpenFareRules())
                     }
                 },

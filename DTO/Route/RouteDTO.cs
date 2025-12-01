@@ -1,167 +1,56 @@
-﻿using System;
+using System;
 
 namespace DTO.Route
 {
     public class RouteDTO
     {
-        #region Private Fields
-        private int _routeId;
-        private int _departurePlaceId;
-        private int _arrivalPlaceId;
-        private int? _distanceKm;
-        private int? _durationMinutes;
-        #endregion
+        public int RouteId { get; set; }
+        public int? DepartureAirportId { get; set; }
+        public int? ArrivalAirportId { get; set; }
+        public int? DurationMinutes { get; set; }
+        public int? DistanceKm { get; set; }
 
-        #region Public Properties
-        public int RouteId
+        // Display properties
+        public string DepartureAirportName { get; set; }
+        public string ArrivalAirportName { get; set; }
+
+        public RouteDTO()
         {
-            get => _routeId;
-            set
-            {
-                if (value < 0)
-                    throw new ArgumentException("Route ID không thể âm");
-                _routeId = value;
-            }
+            DepartureAirportName = string.Empty;
+            ArrivalAirportName = string.Empty;
         }
 
-        public int DeparturePlaceId
-        {
-            get => _departurePlaceId;
-            set
-            {
-                if (value <= 0)
-                    throw new ArgumentException("Departure Place ID phải lớn hơn 0");
-                _departurePlaceId = value;
-            }
-        }
-
-        public int ArrivalPlaceId
-        {
-            get => _arrivalPlaceId;
-            set
-            {
-                if (value <= 0)
-                    throw new ArgumentException("Arrival Place ID phải lớn hơn 0");
-                _arrivalPlaceId = value;
-            }
-        }
-
-        public int? DistanceKm
-        {
-            get => _distanceKm;
-            set
-            {
-                if (value.HasValue && value.Value < 0)
-                    throw new ArgumentException("Khoảng cách (km) không thể âm");
-                _distanceKm = value;
-            }
-        }
-
-        public int? DurationMinutes
-        {
-            get => _durationMinutes;
-            set
-            {
-                if (value.HasValue && value.Value < 0)
-                    throw new ArgumentException("Thời gian bay (phút) không thể âm");
-                _durationMinutes = value;
-            }
-        }
-        #endregion
-
-        #region Constructors
-        public RouteDTO() { }
-
-        public RouteDTO(int departurePlaceId, int arrivalPlaceId, int? distanceKm, int? durationMinutes)
-        {
-            DeparturePlaceId = departurePlaceId;
-            ArrivalPlaceId = arrivalPlaceId;
-            DistanceKm = distanceKm;
-            DurationMinutes = durationMinutes;
-        }
-
-        public RouteDTO(int routeId, int departurePlaceId, int arrivalPlaceId, int? distanceKm, int? durationMinutes)
+        public RouteDTO(int routeId, int? departureAirportId, int? arrivalAirportId, 
+            int? durationMinutes, int? distanceKm)
         {
             RouteId = routeId;
-            DeparturePlaceId = departurePlaceId;
-            ArrivalPlaceId = arrivalPlaceId;
-            DistanceKm = distanceKm;
+            DepartureAirportId = departureAirportId;
+            ArrivalAirportId = arrivalAirportId;
             DurationMinutes = durationMinutes;
+            DistanceKm = distanceKm;
+            DepartureAirportName = string.Empty;
+            ArrivalAirportName = string.Empty;
         }
-        #endregion
 
-        #region Validation Methods
-        public bool IsValid(out string errorMessage)
+        public bool IsValid(out string message)
         {
-            errorMessage = string.Empty;
-
-            if (_departurePlaceId <= 0)
+            if (!DepartureAirportId.HasValue || DepartureAirportId.Value <= 0)
             {
-                errorMessage = "Phải chọn sân bay khởi hành hợp lệ";
+                message = "Departure airport is required";
                 return false;
             }
-
-            if (_arrivalPlaceId <= 0)
+            if (!ArrivalAirportId.HasValue || ArrivalAirportId.Value <= 0)
             {
-                errorMessage = "Phải chọn sân bay đến hợp lệ";
+                message = "Arrival airport is required";
                 return false;
             }
-
-            if (_departurePlaceId == _arrivalPlaceId)
+            if (DepartureAirportId == ArrivalAirportId)
             {
-                errorMessage = "Sân bay khởi hành và đến không được trùng nhau";
+                message = "Departure and arrival airports cannot be the same";
                 return false;
             }
-
-            if (_distanceKm.HasValue && _distanceKm.Value < 0)
-            {
-                errorMessage = "Khoảng cách không thể âm";
-                return false;
-            }
-
-            if (_durationMinutes.HasValue && _durationMinutes.Value < 0)
-            {
-                errorMessage = "Thời gian bay không thể âm";
-                return false;
-            }
-
+            message = string.Empty;
             return true;
         }
-        #endregion
-
-        #region Overrides
-        public override string ToString()
-        {
-            string dist = _distanceKm.HasValue ? $"{_distanceKm.Value} km" : "N/A";
-            string dur = _durationMinutes.HasValue ? $"{_durationMinutes.Value} phút" : "N/A";
-            return $"Route #{_routeId}: {_departurePlaceId} → {_arrivalPlaceId} ({dist}, {dur})";
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj == null || GetType() != obj.GetType())
-                return false;
-            var other = (RouteDTO)obj;
-            return _routeId == other._routeId;
-        }
-
-        public override int GetHashCode()
-        {
-            return _routeId.GetHashCode();
-        }
-        #endregion
-
-        #region Helper Methods
-        public RouteDTO Clone()
-        {
-            return new RouteDTO(
-                _routeId,
-                _departurePlaceId,
-                _arrivalPlaceId,
-                _distanceKm,
-                _durationMinutes
-            );
-        }
-        #endregion
     }
 }
