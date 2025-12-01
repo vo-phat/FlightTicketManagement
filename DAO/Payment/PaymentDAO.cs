@@ -388,12 +388,12 @@ namespace DAO.Payment
                 INNER JOIN bookings b ON p.booking_id = b.booking_id
                 LEFT JOIN accounts a ON b.account_id = a.account_id
                 WHERE CAST(p.payment_id AS CHAR) LIKE @kw
-                    OR CAST(p.booking_id AS CHAR) LIKE @kw
-                    OR CAST(p.amount AS CHAR) LIKE @kw
-                    OR p.payment_method LIKE @kw
-                    OR p.status LIKE @kw
-                    OR b.status LIKE @kw
-                    OR a.email LIKE @kw
+                   OR CAST(p.booking_id AS CHAR) LIKE @kw
+                   OR CAST(p.amount AS CHAR) LIKE @kw
+                   OR p.payment_method LIKE @kw
+                   OR p.status LIKE @kw
+                   OR b.status LIKE @kw
+                   OR a.email LIKE @kw
                 ORDER BY p.payment_date DESC";
 
             try
@@ -435,41 +435,63 @@ namespace DAO.Payment
         }
         #endregion
 
-        #region 🔹 Xử lý thanh toán (Cập nhật logic mới)
+        #region 🔹 Xử lý thanh toán (Transaction - QUAN TRỌNG!)
         /// <summary>
-        /// Xử lý thanh toán: Chỉ cho phép khi Payment PENDING và Booking CONFIRMED.
-        /// Chuyển trạng thái Payment -> SUCCESS.
+        /// Xử lý thanh toán: Cập nhật payment status -> SUCCESS và booking status -> CONFIRMED
+        /// Sử dụng transaction để đảm bảo tính nhất quán dữ liệu
         /// </summary>
-        public bool ProcessPayment(int paymentId)
+        public bool ProcessPayment(int paymentId, int bookingId)
         {
-            // Sử dụng UPDATE với JOIN để kiểm tra chéo điều kiện của cả bảng payments và bookings
-            // Điều kiện: payment.status = PENDING VÀ booking.status = CONFIRMED
-            string query = @"UPDATE payments p
-                             INNER JOIN bookings b ON p.booking_id = b.booking_id
-                             SET p.status = 'SUCCESS'
-                             WHERE p.payment_id = @paymentId
-                               AND p.status = 'PENDING'
-                               AND b.status = 'CONFIRMED'";
+            MySqlConnection connection = null;
+            MySqlTransaction transaction = null;
 
             try
             {
-                using (var connection = DatabaseConnection.GetConnection())
-                {
-                    connection.Open();
-                    using (var command = new MySqlCommand(query, connection))
-                    {
-                        command.Parameters.AddWithValue("@paymentId", paymentId);
+                connection = DatabaseConnection.GetConnection();
+                connection.Open();
+                transaction = connection.BeginTransaction();
 
-                        // ExecuteNonQuery trả về số dòng bị ảnh hưởng
-                        // > 0 nghĩa là tìm thấy bản ghi thỏa mãn điều kiện và đã update thành công
-                        int rowsAffected = command.ExecuteNonQuery();
-                        return rowsAffected > 0;
+                // 1. Cập nhật payment status -> SUCCESS
+                string updatePaymentQuery = "UPDATE payments SET status = 'SUCCESS' WHERE payment_id = @paymentId AND status = 'PENDING'";
+                using (var cmd1 = new MySqlCommand(updatePaymentQuery, connection, transaction))
+                {
+                    cmd1.Parameters.AddWithValue("@paymentId", paymentId);
+                    int rowsAffected1 = cmd1.ExecuteNonQuery();
+                    if (rowsAffected1 == 0)
+                    {
+                        transaction.Rollback();
+                        return false; // Payment không tồn tại hoặc không ở trạng thái PENDING
                     }
                 }
+
+                // 2. Cập nhật booking status -> CONFIRMED
+                string updateBookingQuery = "UPDATE bookings SET status = 'CONFIRMED' WHERE booking_id = @bookingId AND status = 'PENDING'";
+                using (var cmd2 = new MySqlCommand(updateBookingQuery, connection, transaction))
+                {
+                    cmd2.Parameters.AddWithValue("@bookingId", bookingId);
+                    int rowsAffected2 = cmd2.ExecuteNonQuery();
+                    if (rowsAffected2 == 0)
+                    {
+                        transaction.Rollback();
+                        return false; // Booking không tồn tại hoặc không ở trạng thái PENDING
+                    }
+                }
+
+                // 3. Commit transaction nếu cả 2 đều thành công
+                transaction.Commit();
+                return true;
             }
             catch (Exception ex)
             {
-                throw new Exception($"Lỗi khi xử lý thanh toán (ID: {paymentId}): " + ex.Message, ex);
+                // Rollback nếu có lỗi
+                transaction?.Rollback();
+                throw new Exception($"Lỗi khi xử lý thanh toán (Payment ID: {paymentId}, Booking ID: {bookingId}): " + ex.Message, ex);
+            }
+            finally
+            {
+                transaction?.Dispose();
+                connection?.Close();
+                connection?.Dispose();
             }
         }
         #endregion
