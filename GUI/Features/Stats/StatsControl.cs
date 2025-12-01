@@ -1,16 +1,15 @@
-<<<<<<< Updated upstream
-
+﻿
 using BUS.Stats;
 using DTO.Stats;
 using GUI.Components.Buttons;
-using GUI.Components.Tables; // Sử dụng TableCustom
+using GUI.Components.Tables; // Sá»­ dá»¥ng TableCustom
 using System;
 using System.Data;
 using System.Drawing;
 using System.Globalization;
-using System.Linq; // Cần cho ToDictionary
+using System.Linq; // Cáº§n cho ToDictionary
 using System.Windows.Forms;
-// Không cần using System.Windows.Forms.DataVisualization.Charting nữa
+// KhÃ´ng cáº§n using System.Windows.Forms.DataVisualization.Charting ná»¯a
 
 namespace GUI.Features.Stats
 {
@@ -20,31 +19,31 @@ namespace GUI.Features.Stats
         private Label lblTitle;
         private FlowLayoutPanel filterPanel;
 
-        // Bộ lọc theo Năm
+        // Bá»™ lá»c theo NÄƒm
         private NumericUpDown numYear;
         private PrimaryButton btnLoad;
 
-        // Thẻ tóm tắt
+        // Tháº» tÃ³m táº¯t
         private FlowLayoutPanel summaryPanel;
         private Label lblTotalRevenue, lblTotalTransactions;
 
-        // Bảng dữ liệu
-        private TableCustom tblMonthlyData; // Bảng chi tiết Tháng
-        private TableCustom tblTopRoutes;   // Bảng chi tiết Tuyến
+        // Báº£ng dá»¯ liá»‡u
+        private TableCustom tblMonthlyData; // Báº£ng chi tiáº¿t ThÃ¡ng
+        private TableCustom tblTopRoutes;   // Báº£ng chi tiáº¿t Tuyáº¿n
 
         public StatsControl()
         {
             InitializeControl();
-            LoadDefaultReport(); // Tải báo cáo mặc định
+            LoadDefaultReport(); // Táº£i bÃ¡o cÃ¡o máº·c Ä‘á»‹nh
         }
 
         private void InitializeControl()
         {
             this.Controls.Clear();
             this.Dock = DockStyle.Fill;
-            this.BackColor = Color.FromArgb(232, 240, 252); // Nền xám nhạt
+            this.BackColor = Color.FromArgb(232, 240, 252); // Ná»n xÃ¡m nháº¡t
 
-            // 1. Layout chính (4 hàng)
+            // 1. Layout chÃ­nh (4 hÃ ng)
             mainLayout = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
@@ -55,13 +54,13 @@ namespace GUI.Features.Stats
             mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Title
             mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Filter
             mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Summary Cards
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f)); // Content (2 bảng)
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f)); // Content (2 báº£ng)
             this.Controls.Add(mainLayout);
 
             // 2. Title
             lblTitle = new Label
             {
-                Text = "📈 Báo cáo doanh thu",
+                Text = "ðŸ“ˆ BÃ¡o cÃ¡o doanh thu",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
                 Padding = new Padding(24, 20, 24, 0),
@@ -69,7 +68,7 @@ namespace GUI.Features.Stats
             };
             mainLayout.Controls.Add(lblTitle, 0, 0);
 
-            // 3. Filter Panel (Chỉ có NĂM)
+            // 3. Filter Panel (Chá»‰ cÃ³ NÄ‚M)
             filterPanel = new FlowLayoutPanel
             {
                 Dock = DockStyle.Top,
@@ -80,7 +79,7 @@ namespace GUI.Features.Stats
 
             filterPanel.Controls.Add(new Label
             {
-                Text = "Chọn năm báo cáo:",
+                Text = "Chá»n nÄƒm bÃ¡o cÃ¡o:",
                 Font = new Font("Segoe UI", 10f),
                 TextAlign = ContentAlignment.MiddleLeft,
                 Margin = new Padding(0, 8, 5, 0),
@@ -90,8 +89,8 @@ namespace GUI.Features.Stats
             numYear = new NumericUpDown
             {
                 Minimum = 2020,
-                Maximum = 2030, // Cho phép xem tương lai (nếu cần)
-                // Dữ liệu trong database.txt tập trung vào 2024, 2025
+                Maximum = 2030, // Cho phÃ©p xem tÆ°Æ¡ng lai (náº¿u cáº§n)
+                // Dá»¯ liá»‡u trong database.txt táº­p trung vÃ o 2024, 2025
                 Value = 2024,
                 Width = 100,
                 Font = new Font("Segoe UI", 10f),
@@ -99,28 +98,28 @@ namespace GUI.Features.Stats
             };
             filterPanel.Controls.Add(numYear);
 
-            btnLoad = new PrimaryButton("🔍 Xem báo cáo");
+            btnLoad = new PrimaryButton("ðŸ” Xem bÃ¡o cÃ¡o");
             btnLoad.Click += BtnLoad_Click;
             filterPanel.Controls.Add(btnLoad);
 
-            var btnExport = new PrimaryButton("📊 Xuất Excel") { Margin = new Padding(8, 0, 0, 0) };
+            var btnExport = new PrimaryButton("ðŸ“Š Xuáº¥t Excel") { Margin = new Padding(8, 0, 0, 0) };
             btnExport.Click += BtnExport_Click;
             filterPanel.Controls.Add(btnExport);
 
-            // 4. Summary Panel (Các thẻ tóm tắt)
+            // 4. Summary Panel (CÃ¡c tháº» tÃ³m táº¯t)
             summaryPanel = new FlowLayoutPanel
             {
                 Dock = DockStyle.Top,
                 AutoSize = true,
                 Padding = new Padding(24, 0, 24, 12)
             };
-            lblTotalRevenue = CreateSummaryCard("Tổng Doanh thu (Năm)", "0 VND");
-            lblTotalTransactions = CreateSummaryCard("Tổng Giao dịch (Năm)", "0");
+            lblTotalRevenue = CreateSummaryCard("Tá»•ng Doanh thu (NÄƒm)", "0 VND");
+            lblTotalTransactions = CreateSummaryCard("Tá»•ng Giao dá»‹ch (NÄƒm)", "0");
             summaryPanel.Controls.Add(lblTotalRevenue);
             summaryPanel.Controls.Add(lblTotalTransactions);
             mainLayout.Controls.Add(summaryPanel, 0, 2);
 
-            // 5. Khu vực nội dung (chia 2 cột)
+            // 5. Khu vá»±c ná»™i dung (chia 2 cá»™t)
             var contentSplit = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
@@ -128,12 +127,12 @@ namespace GUI.Features.Stats
                 BackColor = Color.Transparent,
                 Padding = new Padding(24, 0, 24, 24)
             };
-            // Cột bên trái 40%, bên phải 60%
+            // Cá»™t bÃªn trÃ¡i 40%, bÃªn pháº£i 60%
             contentSplit.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40f));
             contentSplit.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60f));
             mainLayout.Controls.Add(contentSplit, 0, 3);
 
-            // 5a. Bảng Chi tiết Tháng (Bên trái)
+            // 5a. Báº£ng Chi tiáº¿t ThÃ¡ng (BÃªn trÃ¡i)
             tblMonthlyData = new TableCustom
             {
                 Dock = DockStyle.Fill,
@@ -141,7 +140,7 @@ namespace GUI.Features.Stats
                 ReadOnly = true,
                 AllowUserToAddRows = false
             };
-            tblMonthlyData.Columns.Add("Month", "Tháng");
+            tblMonthlyData.Columns.Add("Month", "ThÃ¡ng");
             tblMonthlyData.Columns.Add("Revenue", "Doanh thu (VND)");
             tblMonthlyData.Columns["Revenue"].DefaultCellStyle.Format = "N0";
             tblMonthlyData.Columns["Revenue"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
@@ -149,7 +148,7 @@ namespace GUI.Features.Stats
             tblMonthlyData.Columns["Revenue"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             contentSplit.Controls.Add(tblMonthlyData, 0, 0);
 
-            // 5b. Bảng Top Khách hàng (Bên phải - chi tiết hơn)
+            // 5b. Báº£ng Top KhÃ¡ch hÃ ng (BÃªn pháº£i - chi tiáº¿t hÆ¡n)
             tblTopRoutes = new TableCustom
             {
                 Dock = DockStyle.Fill,
@@ -159,8 +158,8 @@ namespace GUI.Features.Stats
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
             };
 
-            tblTopRoutes.Columns.Add("Route", "Top 5 Khách hàng");
-            tblTopRoutes.Columns.Add("Flights", "Số giao dịch");
+            tblTopRoutes.Columns.Add("Route", "Top 5 KhÃ¡ch hÃ ng");
+            tblTopRoutes.Columns.Add("Flights", "Sá»‘ giao dá»‹ch");
             tblTopRoutes.Columns.Add("Revenue", "Doanh thu (VND)");
 
             tblTopRoutes.Columns["Route"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
@@ -178,7 +177,7 @@ namespace GUI.Features.Stats
             contentSplit.Controls.Add(tblTopRoutes, 1, 0);
         }
 
-        // Helper tạo thẻ tóm tắt
+        // Helper táº¡o tháº» tÃ³m táº¯t
         private Label CreateSummaryCard(string title, string value)
         {
             var lbl = new Label
@@ -194,7 +193,7 @@ namespace GUI.Features.Stats
             var valLabel = new Label
             {
                 Font = new Font("Segoe UI", 16f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(0, 92, 175), // Màu xanh
+                ForeColor = Color.FromArgb(0, 92, 175), // MÃ u xanh
                 Text = value,
                 Dock = DockStyle.Bottom,
                 TextAlign = ContentAlignment.BottomLeft,
@@ -218,29 +217,29 @@ namespace GUI.Features.Stats
         {
             try
             {
-                // Tạo SaveFileDialog
+                // Táº¡o SaveFileDialog
                 using (var sfd = new SaveFileDialog())
                 {
                     sfd.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
                     sfd.FileName = $"BaoCaoDoanhThu_{(int)numYear.Value}.csv";
-                    sfd.Title = "Xuất báo cáo doanh thu";
+                    sfd.Title = "Xuáº¥t bÃ¡o cÃ¡o doanh thu";
 
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
                         using (var writer = new System.IO.StreamWriter(sfd.FileName, false, System.Text.Encoding.UTF8))
                         {
                             // Header
-                            writer.WriteLine($"BÁO CÁO DOANH THU NĂM {(int)numYear.Value}");
-                            writer.WriteLine($"Ngày xuất: {DateTime.Now:dd/MM/yyyy HH:mm}");
+                            writer.WriteLine($"BÃO CÃO DOANH THU NÄ‚M {(int)numYear.Value}");
+                            writer.WriteLine($"NgÃ y xuáº¥t: {DateTime.Now:dd/MM/yyyy HH:mm}");
                             writer.WriteLine();
                             
-                            writer.WriteLine($"Tổng doanh thu,{lblTotalRevenue.Controls[0].Text}");
-                            writer.WriteLine($"Tổng giao dịch,{lblTotalTransactions.Controls[0].Text}");
+                            writer.WriteLine($"Tá»•ng doanh thu,{lblTotalRevenue.Controls[0].Text}");
+                            writer.WriteLine($"Tá»•ng giao dá»‹ch,{lblTotalTransactions.Controls[0].Text}");
                             writer.WriteLine();
 
                             // Monthly data
-                            writer.WriteLine("DOANH THU THEO THÁNG");
-                            writer.WriteLine("Tháng,Doanh thu (VND)");
+                            writer.WriteLine("DOANH THU THEO THÃNG");
+                            writer.WriteLine("ThÃ¡ng,Doanh thu (VND)");
                             foreach (DataGridViewRow row in tblMonthlyData.Rows)
                             {
                                 if (row.IsNewRow) continue;
@@ -249,8 +248,8 @@ namespace GUI.Features.Stats
                             writer.WriteLine();
 
                             // Top customers
-                            writer.WriteLine("TOP 5 KHÁCH HÀNG");
-                            writer.WriteLine("Khách hàng,Số giao dịch,Doanh thu (VND)");
+                            writer.WriteLine("TOP 5 KHÃCH HÃ€NG");
+                            writer.WriteLine("KhÃ¡ch hÃ ng,Sá»‘ giao dá»‹ch,Doanh thu (VND)");
                             foreach (DataGridViewRow row in tblTopRoutes.Rows)
                             {
                                 if (row.IsNewRow) continue;
@@ -258,216 +257,18 @@ namespace GUI.Features.Stats
                             }
                         }
 
-                        MessageBox.Show($"Xuất báo cáo thành công!\nFile: {sfd.FileName}", "Thành công", 
+                        MessageBox.Show($"Xuáº¥t bÃ¡o cÃ¡o thÃ nh cÃ´ng!\nFile: {sfd.FileName}", "ThÃ nh cÃ´ng", 
                             MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi khi xuất báo cáo: {ex.Message}", "Lỗi", 
-=======
-using System;
-using System.Drawing;
-using System.Windows.Forms;
-using System.Linq;
-using BUS.Flight;
-using DTO.Flight;
-
-namespace GUI.Features.Stats {
-    public class StatsControl : UserControl {
-        private readonly FlightBUS _flightBUS;
-        private TableLayoutPanel mainPanel;
-        private Label lblTitle;
-        private Panel statsPanel;
-        private Button btnRefresh;
-
-        public StatsControl() {
-            _flightBUS = new FlightBUS();
-            InitializeComponent();
-            LoadStatistics();
-        }
-
-        private void InitializeComponent() {
-            SuspendLayout();
-
-            Dock = DockStyle.Fill;
-            BackColor = Color.FromArgb(232, 240, 252);
-
-            // Title
-            lblTitle = new Label {
-                Text = "📊 Thống kê chuyến bay",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 20, FontStyle.Bold),
-                ForeColor = Color.Black,
-                Padding = new Padding(24, 20, 24, 16),
-                Dock = DockStyle.Top
-            };
-
-            // Top buttons panel
-            var buttonContainer = new Panel {
-                Dock = DockStyle.Top,
-                Height = 56,
-                Padding = new Padding(24, 8, 24, 8),
-                BackColor = Color.Transparent
-            };
-
-            // Refresh button
-            btnRefresh = new Button {
-                Text = "🔄 Làm mới",
-                AutoSize = true,
-                Height = 40,
-                Padding = new Padding(12, 6, 12, 6),
-                BackColor = Color.FromArgb(0, 123, 255),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Location = new Point(0, 8)
-            };
-            btnRefresh.Click += (s, e) => LoadStatistics();
-
-            // Export button
-            var btnExport = new Button {
-                Text = "📊 Xuất Excel",
-                AutoSize = true,
-                Height = 40,
-                Padding = new Padding(12, 6, 12, 6),
-                BackColor = Color.FromArgb(40, 167, 69),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Location = new Point(140, 8)
-            };
-            btnExport.Click += BtnExport_Click;
-
-            // Filter by date range
-            var btnFilterToday = new Button {
-                Text = "📅 Hôm nay",
-                AutoSize = true,
-                Height = 40,
-                Padding = new Padding(12, 6, 12, 6),
-                BackColor = Color.FromArgb(108, 117, 125),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Location = new Point(300, 8)
-            };
-            btnFilterToday.Click += (s, e) => FilterByDateRange(DateTime.Now.Date, DateTime.Now.Date);
-
-            var btnFilterWeek = new Button {
-                Text = "📅 Tuần này",
-                AutoSize = true,
-                Height = 40,
-                Padding = new Padding(12, 6, 12, 6),
-                BackColor = Color.FromArgb(108, 117, 125),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Location = new Point(440, 8)
-            };
-            btnFilterWeek.Click += (s, e) => {
-                var startOfWeek = DateTime.Now.Date.AddDays(-(int)DateTime.Now.DayOfWeek);
-                FilterByDateRange(startOfWeek, startOfWeek.AddDays(7));
-            };
-
-            var btnFilterMonth = new Button {
-                Text = "📅 Tháng này",
-                AutoSize = true,
-                Height = 40,
-                Padding = new Padding(12, 6, 12, 6),
-                BackColor = Color.FromArgb(108, 117, 125),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Location = new Point(590, 8)
-            };
-            btnFilterMonth.Click += (s, e) => {
-                var startOfMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-                FilterByDateRange(startOfMonth, startOfMonth.AddMonths(1).AddDays(-1));
-            };
-
-            buttonContainer.Controls.Add(btnRefresh);
-            buttonContainer.Controls.Add(btnExport);
-            buttonContainer.Controls.Add(btnFilterToday);
-            buttonContainer.Controls.Add(btnFilterWeek);
-            buttonContainer.Controls.Add(btnFilterMonth);
-
-            // Stats panel
-            statsPanel = new Panel {
-                Dock = DockStyle.Fill,
-                Padding = new Padding(24),
-                AutoScroll = true,
-                BackColor = Color.Transparent
-            };
-
-            // Main panel
-            mainPanel = new TableLayoutPanel {
-                Dock = DockStyle.Fill,
-                ColumnCount = 1,
-                RowCount = 3,
-                BackColor = Color.Transparent
-            };
-            mainPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            mainPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            mainPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-
-            mainPanel.Controls.Add(lblTitle, 0, 0);
-            mainPanel.Controls.Add(buttonContainer, 0, 1);
-            mainPanel.Controls.Add(statsPanel, 0, 2);
-
-            Controls.Add(mainPanel);
-            ResumeLayout(false);
-        }
-
-        private void LoadStatistics() {
-            try {
-                statsPanel.Controls.Clear();
-
-                var flights = _flightBUS.GetAllFlights();
-                
-                // Calculate statistics
-                int totalFlights = flights.Count;
-                int scheduledCount = flights.Count(f => f.Status == FlightStatus.SCHEDULED);
-                int delayedCount = flights.Count(f => f.Status == FlightStatus.DELAYED);
-                int cancelledCount = flights.Count(f => f.Status == FlightStatus.CANCELLED);
-                int completedCount = flights.Count(f => f.Status == FlightStatus.COMPLETED);
-
-                // Today's flights
-                var today = DateTime.Now.Date;
-                var todayFlights = flights.Where(f => f.DepartureTime.HasValue && 
-                    f.DepartureTime.Value.Date == today).ToList();
-
-                // Upcoming flights (next 7 days)
-                var upcomingFlights = flights.Where(f => f.DepartureTime.HasValue && 
-                    f.DepartureTime.Value > DateTime.Now && 
-                    f.DepartureTime.Value <= DateTime.Now.AddDays(7)).ToList();
-
-                // Create stats cards
-                var cardContainer = new FlowLayoutPanel {
-                    Dock = DockStyle.Top,
-                    AutoSize = true,
-                    FlowDirection = FlowDirection.LeftToRight,
-                    WrapContents = true,
-                    Padding = new Padding(0, 0, 0, 16)
-                };
-
-                cardContainer.Controls.Add(CreateStatCard("Tổng số chuyến bay", totalFlights.ToString(), Color.FromArgb(52, 152, 219)));
-                cardContainer.Controls.Add(CreateStatCard("Đã lên lịch", scheduledCount.ToString(), Color.FromArgb(46, 204, 113)));
-                cardContainer.Controls.Add(CreateStatCard("Bị trễ", delayedCount.ToString(), Color.FromArgb(241, 196, 15)));
-                cardContainer.Controls.Add(CreateStatCard("Đã hủy", cancelledCount.ToString(), Color.FromArgb(231, 76, 60)));
-                cardContainer.Controls.Add(CreateStatCard("Hoàn thành", completedCount.ToString(), Color.FromArgb(149, 165, 166)));
-                cardContainer.Controls.Add(CreateStatCard("Hôm nay", todayFlights.Count.ToString(), Color.FromArgb(155, 89, 182)));
-                cardContainer.Controls.Add(CreateStatCard("7 ngày tới", upcomingFlights.Count.ToString(), Color.FromArgb(52, 73, 94)));
-
-                statsPanel.Controls.Add(cardContainer);
-
-                // Detailed breakdown section
-                var detailSection = CreateDetailSection("Chi tiết theo trạng thái", flights);
-                statsPanel.Controls.Add(detailSection);
-
-            } catch (Exception ex) {
-                MessageBox.Show("Lỗi khi tải thống kê: " + ex.Message, "Lỗi",
->>>>>>> Stashed changes
+                MessageBox.Show($"Lá»—i khi xuáº¥t bÃ¡o cÃ¡o: {ex.Message}", "Lá»—i", 
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-<<<<<<< Updated upstream
         private void InitializeComponent()
         {
 
@@ -478,32 +279,32 @@ namespace GUI.Features.Stats {
             var result = StatsBUS.Instance.GetRevenueReport(year);
             if (!result.Success)
             {
-                MessageBox.Show(result.GetFullErrorMessage(), "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(result.GetFullErrorMessage(), "Lá»—i", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             var report = result.GetData<RevenueReportViewModel>();
 
-            // 1. Cập nhật Thẻ Tóm tắt
+            // 1. Cáº­p nháº­t Tháº» TÃ³m táº¯t
             (lblTotalRevenue.Controls[0] as Label).Text = $"{report.TotalRevenue:N0} VND";
             (lblTotalTransactions.Controls[0] as Label).Text = $"{report.TotalTransactions:N0}";
 
-            // 2. Cập nhật Bảng Chi tiết Tháng
+            // 2. Cáº­p nháº­t Báº£ng Chi tiáº¿t ThÃ¡ng
             tblMonthlyData.Rows.Clear();
-            var culture = new CultureInfo("vi-VN"); // "Tháng 1", "Tháng 2"
+            var culture = new CultureInfo("vi-VN"); // "ThÃ¡ng 1", "ThÃ¡ng 2"
 
-            // Chuyển data sang Dictionary (Tháng -> DoanhThu)
+            // Chuyá»ƒn data sang Dictionary (ThÃ¡ng -> DoanhThu)
             var monthlyData = report.MonthlyBreakdown.AsEnumerable()
                 .ToDictionary(
                     row => row.Field<int>("Thang"), // Key
                     row => row.Field<decimal>("DoanhThu") // Value
                 );
 
-            // Luôn hiển thị 12 tháng
+            // LuÃ´n hiá»ƒn thá»‹ 12 thÃ¡ng
             for (int i = 1; i <= 12; i++)
             {
                 string monthName = culture.DateTimeFormat.GetMonthName(i);
-                monthName = char.ToUpper(monthName[0]) + monthName.Substring(1); // "Tháng 1"
+                monthName = char.ToUpper(monthName[0]) + monthName.Substring(1); // "ThÃ¡ng 1"
 
                 decimal revenue = 0;
                 if (monthlyData.ContainsKey(i))
@@ -514,7 +315,7 @@ namespace GUI.Features.Stats {
                 tblMonthlyData.Rows.Add(monthName, revenue);
             }
 
-            // 3. Cập nhật Bảng Top Khách hàng
+            // 3. Cáº­p nháº­t Báº£ng Top KhÃ¡ch hÃ ng
             tblTopRoutes.Rows.Clear();
             
             if (report.RouteBreakdown != null && report.RouteBreakdown.Rows.Count > 0)
@@ -532,285 +333,8 @@ namespace GUI.Features.Stats {
             }
             else
             {
-                // Hiển thị thông báo nếu không có dữ liệu
-                tblTopRoutes.Rows.Add("Không có dữ liệu", 0, 0);
-=======
-        private Panel CreateStatCard(string title, string value, Color color) {
-            var card = new Panel {
-                Width = 200,
-                Height = 120,
-                Margin = new Padding(0, 0, 16, 16),
-                BackColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                Cursor = Cursors.Hand
-            };
-
-            var lblTitle = new Label {
-                Text = title,
-                Font = new Font("Segoe UI", 10, FontStyle.Regular),
-                ForeColor = Color.FromArgb(100, 100, 100),
-                AutoSize = false,
-                Size = new Size(180, 40),
-                Location = new Point(10, 10),
-                TextAlign = ContentAlignment.MiddleLeft
-            };
-
-            var lblValue = new Label {
-                Text = value,
-                Font = new Font("Segoe UI", 28, FontStyle.Bold),
-                ForeColor = color,
-                AutoSize = false,
-                Size = new Size(180, 60),
-                Location = new Point(10, 50),
-                TextAlign = ContentAlignment.MiddleLeft
-            };
-
-            card.Controls.Add(lblTitle);
-            card.Controls.Add(lblValue);
-
-            // Hover effect
-            card.MouseEnter += (s, e) => card.BackColor = Color.FromArgb(240, 240, 240);
-            card.MouseLeave += (s, e) => card.BackColor = Color.White;
-
-            // Click to show details
-            card.Click += (s, e) => ShowCardDetails(title);
-            lblTitle.Click += (s, e) => ShowCardDetails(title);
-            lblValue.Click += (s, e) => ShowCardDetails(title);
-
-            return card;
-        }
-
-        private void ShowCardDetails(string cardTitle) {
-            try {
-                var flights = _flightBUS.GetAllFlights();
-                var filteredFlights = cardTitle switch {
-                    "Đã lên lịch" => flights.Where(f => f.Status == FlightStatus.SCHEDULED).ToList(),
-                    "Bị trễ" => flights.Where(f => f.Status == FlightStatus.DELAYED).ToList(),
-                    "Đã hủy" => flights.Where(f => f.Status == FlightStatus.CANCELLED).ToList(),
-                    "Hoàn thành" => flights.Where(f => f.Status == FlightStatus.COMPLETED).ToList(),
-                    "Hôm nay" => flights.Where(f => f.DepartureTime.HasValue && 
-                        f.DepartureTime.Value.Date == DateTime.Now.Date).ToList(),
-                    "7 ngày tới" => flights.Where(f => f.DepartureTime.HasValue && 
-                        f.DepartureTime.Value > DateTime.Now && 
-                        f.DepartureTime.Value <= DateTime.Now.AddDays(7)).ToList(),
-                    _ => flights
-                };
-
-                var detailForm = new Form {
-                    Text = $"Chi tiết - {cardTitle}",
-                    Size = new Size(800, 500),
-                    StartPosition = FormStartPosition.CenterParent
-                };
-
-                var dgv = new DataGridView {
-                    Dock = DockStyle.Fill,
-                    AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                    ReadOnly = true,
-                    AllowUserToAddRows = false,
-                    BackgroundColor = Color.White
-                };
-
-                dgv.Columns.Add("FlightNumber", "Số hiệu");
-                dgv.Columns.Add("AircraftId", "Máy bay");
-                dgv.Columns.Add("RouteId", "Tuyến bay");
-                dgv.Columns.Add("DepartureTime", "Giờ khởi hành");
-                dgv.Columns.Add("ArrivalTime", "Giờ hạ cánh");
-                dgv.Columns.Add("Status", "Trạng thái");
-
-                foreach (var flight in filteredFlights) {
-                    dgv.Rows.Add(
-                        flight.FlightNumber,
-                        flight.AircraftId,
-                        flight.RouteId,
-                        flight.DepartureTime?.ToString("dd/MM/yyyy HH:mm") ?? "N/A",
-                        flight.ArrivalTime?.ToString("dd/MM/yyyy HH:mm") ?? "N/A",
-                        flight.Status.GetDescription()
-                    );
-                }
-
-                detailForm.Controls.Add(dgv);
-                detailForm.ShowDialog();
-            }
-            catch (Exception ex) {
-                MessageBox.Show("Lỗi khi hiển thị chi tiết: " + ex.Message, "Lỗi",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private Panel CreateDetailSection(string sectionTitle, System.Collections.Generic.List<FlightDTO> flights) {
-            var section = new Panel {
-                Dock = DockStyle.Top,
-                AutoSize = true,
-                Padding = new Padding(0, 16, 0, 0),
-                BackColor = Color.Transparent
-            };
-
-            var lblSection = new Label {
-                Text = sectionTitle,
-                Font = new Font("Segoe UI", 14, FontStyle.Bold),
-                AutoSize = true,
-                Dock = DockStyle.Top,
-                Padding = new Padding(0, 0, 0, 12)
-            };
-            section.Controls.Add(lblSection);
-
-            // Group by status
-            var groupedFlights = flights.GroupBy(f => f.Status)
-                .OrderByDescending(g => g.Count())
-                .ToList();
-
-            var detailPanel = new FlowLayoutPanel {
-                Dock = DockStyle.Top,
-                AutoSize = true,
-                FlowDirection = FlowDirection.TopDown,
-                WrapContents = false
-            };
-
-            foreach (var group in groupedFlights) {
-                var statusPanel = new Panel {
-                    Width = 600,
-                    Height = 40,
-                    Margin = new Padding(0, 4, 0, 4),
-                    BackColor = Color.White,
-                    BorderStyle = BorderStyle.FixedSingle
-                };
-
-                var lblStatus = new Label {
-                    Text = group.Key.GetDescription(),
-                    Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                    AutoSize = false,
-                    Size = new Size(200, 40),
-                    Location = new Point(10, 0),
-                    TextAlign = ContentAlignment.MiddleLeft
-                };
-
-                var lblCount = new Label {
-                    Text = $"{group.Count()} chuyến bay",
-                    Font = new Font("Segoe UI", 10, FontStyle.Regular),
-                    AutoSize = false,
-                    Size = new Size(150, 40),
-                    Location = new Point(220, 0),
-                    TextAlign = ContentAlignment.MiddleLeft
-                };
-
-                double percentage = (double)group.Count() / flights.Count * 100;
-                var lblPercentage = new Label {
-                    Text = $"{percentage:F1}%",
-                    Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                    ForeColor = Color.FromArgb(0, 123, 255),
-                    AutoSize = false,
-                    Size = new Size(100, 40),
-                    Location = new Point(380, 0),
-                    TextAlign = ContentAlignment.MiddleLeft
-                };
-
-                statusPanel.Controls.Add(lblStatus);
-                statusPanel.Controls.Add(lblCount);
-                statusPanel.Controls.Add(lblPercentage);
-
-                detailPanel.Controls.Add(statusPanel);
-            }
-
-            section.Controls.Add(detailPanel);
-            detailPanel.BringToFront();
-
-            return section;
-        }
-
-        private void FilterByDateRange(DateTime startDate, DateTime endDate) {
-            try {
-                statsPanel.Controls.Clear();
-
-                var allFlights = _flightBUS.GetAllFlights();
-                var flights = allFlights.Where(f => f.DepartureTime.HasValue && 
-                    f.DepartureTime.Value.Date >= startDate && 
-                    f.DepartureTime.Value.Date <= endDate).ToList();
-                
-                // Update title
-                lblTitle.Text = $"📊 Thống kê chuyến bay ({startDate:dd/MM/yyyy} - {endDate:dd/MM/yyyy})";
-
-                // Calculate statistics
-                int totalFlights = flights.Count;
-                int scheduledCount = flights.Count(f => f.Status == FlightStatus.SCHEDULED);
-                int delayedCount = flights.Count(f => f.Status == FlightStatus.DELAYED);
-                int cancelledCount = flights.Count(f => f.Status == FlightStatus.CANCELLED);
-                int completedCount = flights.Count(f => f.Status == FlightStatus.COMPLETED);
-
-                // Today's flights
-                var today = DateTime.Now.Date;
-                var todayFlights = flights.Where(f => f.DepartureTime.HasValue && 
-                    f.DepartureTime.Value.Date == today).ToList();
-
-                // Upcoming flights (next 7 days)
-                var upcomingFlights = flights.Where(f => f.DepartureTime.HasValue && 
-                    f.DepartureTime.Value > DateTime.Now && 
-                    f.DepartureTime.Value <= DateTime.Now.AddDays(7)).ToList();
-
-                // Create stats cards
-                var cardContainer = new FlowLayoutPanel {
-                    Dock = DockStyle.Top,
-                    AutoSize = true,
-                    FlowDirection = FlowDirection.LeftToRight,
-                    WrapContents = true,
-                    Padding = new Padding(0, 0, 0, 16)
-                };
-
-                cardContainer.Controls.Add(CreateStatCard("Tổng số chuyến bay", totalFlights.ToString(), Color.FromArgb(52, 152, 219)));
-                cardContainer.Controls.Add(CreateStatCard("Đã lên lịch", scheduledCount.ToString(), Color.FromArgb(46, 204, 113)));
-                cardContainer.Controls.Add(CreateStatCard("Bị trễ", delayedCount.ToString(), Color.FromArgb(241, 196, 15)));
-                cardContainer.Controls.Add(CreateStatCard("Đã hủy", cancelledCount.ToString(), Color.FromArgb(231, 76, 60)));
-                cardContainer.Controls.Add(CreateStatCard("Hoàn thành", completedCount.ToString(), Color.FromArgb(149, 165, 166)));
-                cardContainer.Controls.Add(CreateStatCard("Hôm nay", todayFlights.Count.ToString(), Color.FromArgb(155, 89, 182)));
-                cardContainer.Controls.Add(CreateStatCard("7 ngày tới", upcomingFlights.Count.ToString(), Color.FromArgb(52, 73, 94)));
-
-                statsPanel.Controls.Add(cardContainer);
-
-                // Detailed breakdown section
-                if (flights.Count > 0) {
-                    var detailSection = CreateDetailSection("Chi tiết theo trạng thái", flights);
-                    statsPanel.Controls.Add(detailSection);
-                } else {
-                    var noDataLabel = new Label {
-                        Text = "⚠️ Không có dữ liệu trong khoảng thời gian này",
-                        Font = new Font("Segoe UI", 12, FontStyle.Italic),
-                        ForeColor = Color.Gray,
-                        AutoSize = true,
-                        Padding = new Padding(0, 20, 0, 0)
-                    };
-                    statsPanel.Controls.Add(noDataLabel);
-                }
-
-            } catch (Exception ex) {
-                MessageBox.Show("Lỗi khi lọc thống kê: " + ex.Message, "Lỗi",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void BtnExport_Click(object? sender, EventArgs e) {
-            try {
-                var flights = _flightBUS.GetAllFlights();
-                var csv = "Flight Number,Aircraft ID,Route ID,Departure Time,Arrival Time,Status\n";
-                
-                foreach (var flight in flights) {
-                    csv += $"{flight.FlightNumber},{flight.AircraftId},{flight.RouteId}," +
-                           $"{flight.DepartureTime:yyyy-MM-dd HH:mm},{flight.ArrivalTime:yyyy-MM-dd HH:mm}," +
-                           $"{flight.Status.GetDescription()}\n";
-                }
-
-                var saveDialog = new SaveFileDialog {
-                    Filter = "CSV Files (*.csv)|*.csv|All Files (*.*)|*.*",
-                    FileName = $"FlightStats_{DateTime.Now:yyyyMMdd_HHmmss}.csv"
-                };
-
-                if (saveDialog.ShowDialog() == DialogResult.OK) {
-                    System.IO.File.WriteAllText(saveDialog.FileName, csv);
-                    MessageBox.Show("Xuất dữ liệu thành công!", "Thành công",
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-            } catch (Exception ex) {
-                MessageBox.Show("Lỗi khi xuất dữ liệu: " + ex.Message, "Lỗi",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
->>>>>>> Stashed changes
+                // Hiá»ƒn thá»‹ thÃ´ng bÃ¡o náº¿u khÃ´ng cÃ³ dá»¯ liá»‡u
+                tblTopRoutes.Rows.Add("KhÃ´ng cÃ³ dá»¯ liá»‡u", 0, 0);
             }
         }
     }

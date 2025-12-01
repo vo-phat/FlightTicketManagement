@@ -75,6 +75,15 @@ namespace BUS.Common
             };
         }
 
+        public static BusinessResult ValidationError(string error)
+        {
+            return new BusinessResult(false, error)
+            {
+                ValidationErrors = new List<string> { error },
+                ErrorCode = "VALIDATION_ERROR"
+            };
+        }
+
         #endregion
 
         #region Helper Methods

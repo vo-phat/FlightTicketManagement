@@ -36,21 +36,7 @@ namespace GUI.Features.Flight
             flightDetailControl.OnEditRequested += HandleEditFlight;
 
             flightListControl.OnEditFlightRequested += HandleEditFlight;
-
-<<<<<<< Updated upstream
             flightCreateControl.OnSaveSuccess += HandleSaveSuccess;
-=======
-            // Wire up events
-            createControl.DataChanged += () => {
-                listControl.RefreshFlightList();
-                SwitchTab(0); // Switch to list after creating
-            };
-
-            Controls.Add(listControl);
-            Controls.Add(detailControl);
-            Controls.Add(createControl);
-            Controls.Add(buttonPanel);
->>>>>>> Stashed changes
 
             panelContent.Controls.Add(panelFlightList);
             panelContent.Controls.Add(panelFlightCreate);

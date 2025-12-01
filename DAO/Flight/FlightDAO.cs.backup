@@ -378,7 +378,11 @@ namespace DAO.Flight
                     arrival_time,
                     status
                 FROM Flights
+<<<<<<< Updated upstream
                 WHERE route_id = @route_id
+=======
+                WHERE route_id = @routeId
+>>>>>>> Stashed changes
                 ORDER BY departure_time DESC";
             var parameters = new Dictionary<string, object>
             {
@@ -717,43 +721,6 @@ namespace DAO.Flight
             }
         }
         #endregion
-
-        // Add missing methods
-        public bool ExistsByFlightNumber(string flightNumber)
-        {
-            return IsFlightNumberExists(flightNumber, DateTime.MinValue, 0);
-        }
-
-        public List<FlightDTO> Search(string flightNumber, int? departureAirportId, int? arrivalAirportId, 
-            DateTime? departureDate, string status)
-        {
-            // Use existing search methods
-            var results = GetAll();
-            
-            if (!string.IsNullOrEmpty(flightNumber))
-                results = results.Where(f => f.FlightNumber.Contains(flightNumber.ToUpper())).ToList();
-            
-            if (departureDate.HasValue)
-                results = results.Where(f => f.DepartureTime.HasValue && 
-                    f.DepartureTime.Value.Date == departureDate.Value.Date).ToList();
-            
-            if (!string.IsNullOrEmpty(status) && Enum.TryParse<FlightStatus>(status, true, out var statusEnum))
-                results = results.Where(f => f.Status == statusEnum).ToList();
-            
-            return results;
-        }
-
-        public List<FlightDTO> GetByRoute(int departureAirportId, int arrivalAirportId, DateTime? departureDate)
-        {
-            // This requires JOIN with routes table - simplified version returns empty list
-            // Full implementation would need route lookup
-            return new List<FlightDTO>();
-        }
-
-        public List<FlightDTO> GetByAircraftId(int aircraftId)
-        {
-            return GetByAircartId(aircraftId);
-        }
 
     }
 }

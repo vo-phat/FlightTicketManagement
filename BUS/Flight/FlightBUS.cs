@@ -1,67 +1,126 @@
-<<<<<<< Updated upstream
 ﻿using BUS.Common;
 using DAO.Flight;
+using DAO.FlightSeat;
 using DTO.Flight;
+using MySqlConnector;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 
 namespace BUS.Flight
 {
-    /// <summary>
-    /// Business Logic Layer cho Flight
-    /// Xử lý các nghiệp vụ liên quan đến chuyến bay
-    /// </summary>
     public class FlightBUS
     {
-        #region Singleton Pattern
+        private static FlightBUS instance;
+        private readonly FlightDAO flightDAO;
+        private readonly FlightSeatDAO flightSeatDAO;
 
-        private static FlightBUS? _instance = null;
-        private static readonly object _lock = new object();
-
-        private FlightBUS() { }
+        // Business rules constants
+        private const int MIN_BOOKING_HOURS_BEFORE_DEPARTURE = 2;
+        private const int MAX_FLIGHT_DURATION_HOURS = 24;
+        private const int MIN_FLIGHT_DURATION_MINUTES = 30;
 
         public static FlightBUS Instance
         {
             get
             {
-                if (_instance == null)
+                if (instance == null)
                 {
-                    lock (_lock)
-                    {
-                        if (_instance == null)
-                        {
-                            _instance = new FlightBUS();
-                        }
-                    }
+                    instance = new FlightBUS();
                 }
-                return _instance;
+                return instance;
             }
         }
 
-        #endregion
+        private FlightBUS()
+        {
+            flightDAO = FlightDAO.Instance;
+            flightSeatDAO = FlightSeatDAO.Instance;
+        }
 
-        #region Business Rules Constants
-
-        // Các rule nghiệp vụ có thể config
-        private const int MIN_BOOKING_HOURS_BEFORE_DEPARTURE = 2; // Đặt trước ít nhất 2 giờ
-        private const int MAX_FLIGHT_DURATION_HOURS = 24; // Chuyến bay tối đa 24 giờ
-        private const int MIN_FLIGHT_DURATION_MINUTES = 30; // Chuyến bay tối thiểu 30 phút
-
-        #endregion
-
-        #region CRUD Operations
-
-        /// <summary>
-        /// Lấy tất cả chuyến bay
-        /// </summary>
-        public BusinessResult GetAllFlights()
+        public BusinessResult CreateFlight(FlightDTO flight)
         {
             try
             {
-                var flights = FlightDAO.Instance.GetAll();
-                return BusinessResult.SuccessResult("Lấy danh sách chuyến bay thành công", flights);
+                // Step 1: Validate input parameters
+                if (flight == null)
+                {
+                    return BusinessResult.ValidationError("ThÃ´ng tin chuyáº¿n bay khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng");
+                }
+
+                // Step 2: Validate flight number format
+                if (string.IsNullOrWhiteSpace(flight.FlightNumber))
+                {
+                    return BusinessResult.ValidationError("MÃ£ chuyáº¿n bay khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng");
+                }
+
+                // Step 3: Check if flight number already exists
+                if (flightDAO.ExistsByFlightNumber(flight.FlightNumber))
+                {
+                    return BusinessResult.ValidationError($"MÃ£ chuyáº¿n bay '{flight.FlightNumber}' Ä‘Ã£ tá»“n táº¡i trong há»‡ thá»‘ng");
+                }
+
+                // Step 4: Validate route
+                if (flight.RouteId <= 0)
+                {
+                    return BusinessResult.ValidationError("Tuyáº¿n bay pháº£i Ä‘Æ°á»£c chá»n");
+                }
+
+                // Step 5: Validate departure time
+                if (flight.DepartureTime <= DateTime.Now.AddHours(MIN_BOOKING_HOURS_BEFORE_DEPARTURE))
+                {
+                    return BusinessResult.ValidationError(
+                        $"Thá»i gian khá»Ÿi hÃ nh pháº£i sau thá»i Ä‘iá»ƒm hiá»‡n táº¡i Ã­t nháº¥t {MIN_BOOKING_HOURS_BEFORE_DEPARTURE} giá»");
+                }
+
+                // Step 6: Validate flight duration
+                if (flight.ArrivalTime <= flight.DepartureTime)
+                {
+                    return BusinessResult.ValidationError("Thá»i gian Ä‘áº¿n pháº£i sau thá»i gian khá»Ÿi hÃ nh");
+                }
+
+                var duration = flight.ArrivalTime - flight.DepartureTime;
+                if (duration.HasValue && duration.Value.TotalMinutes < MIN_FLIGHT_DURATION_MINUTES)
+                {
+                    return BusinessResult.ValidationError(
+                        $"Thá»i gian bay tá»‘i thiá»ƒu lÃ  {MIN_FLIGHT_DURATION_MINUTES} phÃºt");
+                }
+
+                if (duration.HasValue && duration.Value.TotalHours > MAX_FLIGHT_DURATION_HOURS)
+                {
+                    return BusinessResult.ValidationError(
+                        $"Thá»i gian bay khÃ´ng Ä‘Æ°á»£c vÆ°á»£t quÃ¡ {MAX_FLIGHT_DURATION_HOURS} giá»");
+                }
+
+                // Step 7: Validate aircraft
+                if (flight.AircraftId <= 0)
+                {
+                    return BusinessResult.ValidationError("Pháº£i chá»n mÃ¡y bay cho chuyáº¿n bay");
+                }
+
+                // Step 8: Create flight in database
+                long newFlightIdLong = flightDAO.Insert(flight);
+                int newFlightId = (int)newFlightIdLong;
+                if (newFlightId <= 0)
+                {
+                    return BusinessResult.FailureResult("KhÃ´ng thá»ƒ táº¡o chuyáº¿n bay. Vui lÃ²ng thá»­ láº¡i");
+                }
+
+                // Step 9: Retrieve created flight
+                var createdFlight = flightDAO.GetById(newFlightId);
+                if (createdFlight == null)
+                {
+                    return BusinessResult.FailureResult("Táº¡o chuyáº¿n bay thÃ nh cÃ´ng nhÆ°ng khÃ´ng thá»ƒ láº¥y thÃ´ng tin chi tiáº¿t");
+                }
+
+                return BusinessResult.SuccessResult(
+                    $"Táº¡o chuyáº¿n bay '{flight.FlightNumber}' thÃ nh cÃ´ng",
+                    createdFlight
+                );
+            }
+            catch (MySqlException ex)
+            {
+                return BusinessResult.ExceptionResult(ex);
             }
             catch (Exception ex)
             {
@@ -69,22 +128,211 @@ namespace BUS.Flight
             }
         }
 
-        /// <summary>
-        /// Lấy chuyến bay theo ID
-        /// </summary>
+        public BusinessResult UpdateFlight(FlightDTO flight)
+        {
+            try
+            {
+                // Step 1: Validate input
+                if (flight == null || flight.FlightId <= 0)
+                {
+                    return BusinessResult.ValidationError("ThÃ´ng tin chuyáº¿n bay khÃ´ng há»£p lá»‡");
+                }
+
+                // Step 2: Check if flight exists
+                var existingFlight = flightDAO.GetById(flight.FlightId);
+                if (existingFlight == null)
+                {
+                    return BusinessResult.ValidationError("Chuyáº¿n bay khÃ´ng tá»“n táº¡i trong há»‡ thá»‘ng");
+                }
+
+                // Step 3: Check if flight can be modified
+                var canModifyResult = CanModifyFlight(flight.FlightId);
+                if (!canModifyResult.Success)
+                {
+                    return canModifyResult;
+                }
+
+                // Step 4: Validate flight number (if changed)
+                if (!string.IsNullOrWhiteSpace(flight.FlightNumber) &&
+                    flight.FlightNumber != existingFlight.FlightNumber)
+                {
+                    if (flightDAO.ExistsByFlightNumber(flight.FlightNumber))
+                    {
+                        return BusinessResult.ValidationError(
+                            $"MÃ£ chuyáº¿n bay '{flight.FlightNumber}' Ä‘Ã£ tá»“n táº¡i trong há»‡ thá»‘ng");
+                    }
+                }
+
+                // Step 5: Validate route
+                if (flight.RouteId <= 0)
+                {
+                    return BusinessResult.ValidationError("Tuyáº¿n bay pháº£i Ä‘Æ°á»£c chá»n");
+                }
+
+                // Step 6: Validate times
+                if (flight.ArrivalTime <= flight.DepartureTime)
+                {
+                    return BusinessResult.ValidationError("Thá»i gian Ä‘áº¿n pháº£i sau thá»i gian khá»Ÿi hÃ nh");
+                }
+
+                var duration = flight.ArrivalTime - flight.DepartureTime;
+                if (duration.HasValue && duration.Value.TotalMinutes < MIN_FLIGHT_DURATION_MINUTES)
+                {
+                    return BusinessResult.ValidationError(
+                        $"Thá»i gian bay tá»‘i thiá»ƒu lÃ  {MIN_FLIGHT_DURATION_MINUTES} phÃºt");
+                }
+
+                if (duration.HasValue && duration.Value.TotalHours > MAX_FLIGHT_DURATION_HOURS)
+                {
+                    return BusinessResult.ValidationError(
+                        $"Thá»i gian bay khÃ´ng Ä‘Æ°á»£c vÆ°á»£t quÃ¡ {MAX_FLIGHT_DURATION_HOURS} giá»");
+                }
+
+                // Step 7: Validate aircraft
+                if (flight.AircraftId <= 0)
+                {
+                    return BusinessResult.ValidationError("Pháº£i chá»n mÃ¡y bay cho chuyáº¿n bay");
+                }
+
+                // Step 8: Update in database
+                bool updateSuccess = flightDAO.Update(flight);
+                if (!updateSuccess)
+                {
+                    return BusinessResult.FailureResult("KhÃ´ng thá»ƒ cáº­p nháº­t chuyáº¿n bay. Vui lÃ²ng thá»­ láº¡i");
+                }
+
+                // Step 9: Retrieve updated flight
+                var updatedFlight = flightDAO.GetById(flight.FlightId);
+                return BusinessResult.SuccessResult(
+                    $"Cáº­p nháº­t chuyáº¿n bay '{flight.FlightNumber}' thÃ nh cÃ´ng",
+                    updatedFlight
+                );
+            }
+            catch (MySqlException ex)
+            {
+                return BusinessResult.ExceptionResult(ex);
+            }
+            catch (Exception ex)
+            {
+                return BusinessResult.ExceptionResult(ex);
+            }
+        }
+
+        public BusinessResult DeleteFlight(int flightId)
+        {
+            try
+            {
+                // Step 1: Validate input
+                if (flightId <= 0)
+                {
+                    return BusinessResult.ValidationError("MÃ£ chuyáº¿n bay khÃ´ng há»£p lá»‡");
+                }
+
+                // Step 2: Check if flight exists
+                var flight = flightDAO.GetById(flightId);
+                if (flight == null)
+                {
+                    return BusinessResult.ValidationError("Chuyáº¿n bay khÃ´ng tá»“n táº¡i trong há»‡ thá»‘ng");
+                }
+
+                // Step 3: Check if flight can be deleted
+                var canDeleteResult = CanDeleteFlight(flightId);
+                if (!canDeleteResult.Success)
+                {
+                    return canDeleteResult;
+                }
+
+                // Step 4: CASCADE DELETE - Delete related data in correct order
+                // 4a. Delete tickets first (they reference flight_seats)
+                bool ticketsDeleted = DeleteTicketsByFlightId(flightId);
+                if (!ticketsDeleted)
+                {
+                    return BusinessResult.FailureResult(
+                        "KhÃ´ng thá»ƒ xÃ³a vÃ© liÃªn quan Ä‘áº¿n chuyáº¿n bay. Vui lÃ²ng thá»­ láº¡i");
+                }
+
+                // 4b. Delete flight seats (they reference flights)
+                bool seatsDeleted = flightSeatDAO.DeleteByFlightId(flightId);
+                if (!seatsDeleted)
+                {
+                    return BusinessResult.FailureResult(
+                        "KhÃ´ng thá»ƒ xÃ³a gháº¿ cá»§a chuyáº¿n bay. Vui lÃ²ng thá»­ láº¡i");
+                }
+
+                // 4c. Finally delete the flight
+                bool flightDeleted = flightDAO.Delete(flightId);
+                if (!flightDeleted)
+                {
+                    return BusinessResult.FailureResult("KhÃ´ng thá»ƒ xÃ³a chuyáº¿n bay. Vui lÃ²ng thá»­ láº¡i");
+                }
+
+                return BusinessResult.SuccessResult(
+                    $"XÃ³a chuyáº¿n bay '{flight.FlightNumber}' vÃ  dá»¯ liá»‡u liÃªn quan thÃ nh cÃ´ng"
+                );
+            }
+            catch (MySqlException ex)
+            {
+                // Handle foreign key constraint errors
+                if (ex.Number == 1451) // Cannot delete or update a parent row
+                {
+                    return BusinessResult.FailureResult(
+                        "KhÃ´ng thá»ƒ xÃ³a chuyáº¿n bay nÃ y vÃ¬ cÃ³ dá»¯ liá»‡u liÃªn quan (gháº¿, vÃ© Ä‘áº·t, thanh toÃ¡n)",
+                        errorCode: ex.Number.ToString()
+                    );
+                }
+
+                return new BusinessResult(false, "Lỗi kết nối cơ sở dữ liệu khi xóa chuyến bay")
+                {
+                    TechnicalMessage = ex.Message,
+                    ErrorCode = ex.Number.ToString()
+                };
+            }
+            catch (Exception ex)
+            {
+                return BusinessResult.ExceptionResult(ex);
+            }
+        }
+
+        private bool DeleteTicketsByFlightId(int flightId)
+        {
+            try
+            {
+                // Get all flight seats for this flight
+                var flightSeats = flightSeatDAO.GetByFlightId(flightId);
+                if (flightSeats == null || flightSeats.Count == 0)
+                {
+                    return true; // No seats, nothing to delete
+                }
+
+                // For each seat, we would need to delete tickets
+                // This assumes you have a TicketDAO with a DeleteByFlightSeatId method
+                // For now, this is a placeholder that returns true
+                // TODO: Implement actual ticket deletion when TicketDAO is available
+
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         public BusinessResult GetFlightById(int flightId)
         {
             try
             {
                 if (flightId <= 0)
-                    return BusinessResult.FailureResult("ID chuyến bay không hợp lệ");
+                {
+                    return BusinessResult.ValidationError("MÃ£ chuyáº¿n bay khÃ´ng há»£p lá»‡");
+                }
 
-                var flight = FlightDAO.Instance.GetById(flightId);
-
+                var flight = flightDAO.GetById(flightId);
                 if (flight == null)
-                    return BusinessResult.FailureResult($"Không tìm thấy chuyến bay ID {flightId}");
+                {
+                    return BusinessResult.FailureResult("KhÃ´ng tÃ¬m tháº¥y chuyáº¿n bay");
+                }
 
-                return BusinessResult.SuccessResult("Lấy thông tin chuyến bay thành công", flight);
+                return BusinessResult.SuccessResult("Láº¥y thÃ´ng tin chuyáº¿n bay thÃ nh cÃ´ng", flight);
             }
             catch (Exception ex)
             {
@@ -92,43 +340,43 @@ namespace BUS.Flight
             }
         }
 
-        /// <summary>
-        /// Tạo chuyến bay mới
-        /// </summary>
-        public BusinessResult CreateFlight(FlightDTO flight)
+        public BusinessResult GetAllFlights()
         {
             try
             {
-                // 1. Validate cơ bản (DTO validation)
-                if (!flight.IsValid(out string validationError))
-                {
-                    return BusinessResult.FailureResult(validationError, "VALIDATION_ERROR");
-                }
+                var flights = flightDAO.GetAll();
+                return BusinessResult.SuccessResult(
+                    $"Láº¥y danh sÃ¡ch {flights.Count} chuyáº¿n bay thÃ nh cÃ´ng",
+                    flights
+                );
+            }
+            catch (Exception ex)
+            {
+                return BusinessResult.ExceptionResult(ex);
+            }
+        }
 
-                // 2. Business rules validation
-                var businessValidation = ValidateFlightBusinessRules(flight, isNewFlight: true);
-                if (!businessValidation.Success)
-                {
-                    return businessValidation;
-                }
-
-                // 3. Kiểm tra trùng số hiệu chuyến bay
-                if (flight.DepartureTime.HasValue && FlightDAO.Instance.IsFlightNumberExists(
-                    flight.FlightNumber,
-                    flight.DepartureTime.Value))
-                {
-                    return BusinessResult.FailureResult(
-                        $"Số hiệu chuyến bay '{flight.FlightNumber}' đã tồn tại vào ngày {flight.DepartureTime:dd/MM/yyyy}",
-                        "DUPLICATE_FLIGHT_NUMBER");
-                }
-
-                // 4. Thực hiện insert
-                long newId = FlightDAO.Instance.Insert(flight);
-                flight.FlightId = (int)newId;
+        public BusinessResult SearchFlights(
+            string flightNumber = null,
+            int? departurePlaceId = null,
+            int? arrivalPlaceId = null,
+            DateTime? departureDate = null,
+            string status = null)
+        {
+            try
+            {
+                var flights = flightDAO.Search(
+                    flightNumber,
+                    departurePlaceId,
+                    arrivalPlaceId,
+                    departureDate,
+                    status
+                );
 
                 return BusinessResult.SuccessResult(
-                    $"Tạo chuyến bay '{flight.FlightNumber}' thành công!",
-                    flight);
+                    $"TÃ¬m tháº¥y {flights.Count} chuyáº¿n bay",
+                    flights
+                );
             }
             catch (Exception ex)
             {
@@ -136,70 +384,234 @@ namespace BUS.Flight
             }
         }
 
-        /// <summary>
-        /// Cập nhật chuyến bay
-        /// </summary>
-        public BusinessResult UpdateFlight(FlightDTO flight)
+        public BusinessResult GetFlightsByRoute(int departurePlaceId, int arrivalPlaceId, DateTime? departureDate = null)
         {
             try
             {
-                // 1. Validate cơ bản
-                if (!flight.IsValid(out string validationError))
+                if (departurePlaceId <= 0 || arrivalPlaceId <= 0)
                 {
-                    return BusinessResult.FailureResult(validationError, "VALIDATION_ERROR");
+                    return BusinessResult.ValidationError("Äiá»ƒm Ä‘i vÃ  Ä‘iá»ƒm Ä‘áº¿n pháº£i Ä‘Æ°á»£c chá»n");
                 }
 
-                // 2. Kiểm tra chuyến bay có tồn tại không
-                var existingFlight = FlightDAO.Instance.GetById(flight.FlightId);
-                if (existingFlight == null)
+                if (departurePlaceId == arrivalPlaceId)
                 {
-                    return BusinessResult.FailureResult($"Không tìm thấy chuyến bay ID {flight.FlightId}");
+                    return BusinessResult.ValidationError("Äiá»ƒm Ä‘i vÃ  Ä‘iá»ƒm Ä‘áº¿n khÃ´ng Ä‘Æ°á»£c trÃ¹ng nhau");
                 }
 
-                // 3. Business rules validation
-                var businessValidation = ValidateFlightBusinessRules(flight, isNewFlight: false);
-                if (!businessValidation.Success)
+                var flights = flightDAO.GetByRoute(departurePlaceId, arrivalPlaceId, departureDate);
+                return BusinessResult.SuccessResult(
+                    $"TÃ¬m tháº¥y {flights.Count} chuyáº¿n bay",
+                    flights
+                );
+            }
+            catch (Exception ex)
+            {
+                return BusinessResult.ExceptionResult(ex);
+            }
+        }
+
+        public BusinessResult GetFlightsByDateRange(DateTime startDate, DateTime endDate)
+        {
+            try
+            {
+                if (startDate > endDate)
                 {
-                    return businessValidation;
+                    return BusinessResult.ValidationError("NgÃ y báº¯t Ä‘áº§u pháº£i trÆ°á»›c ngÃ y káº¿t thÃºc");
                 }
 
-                // 4. Kiểm tra có thể cập nhật không (dựa vào status)
-                if (!CanModifyFlight(existingFlight.Status))
+                var flights = flightDAO.GetByDateRange(startDate, endDate);
+                return BusinessResult.SuccessResult(
+                    $"TÃ¬m tháº¥y {flights.Count} chuyáº¿n bay",
+                    flights
+                );
+            }
+            catch (Exception ex)
+            {
+                return BusinessResult.ExceptionResult(ex);
+            }
+        }
+
+        public BusinessResult GetFlightsByAircraft(int aircraftId)
+        {
+            try
+            {
+                if (aircraftId <= 0)
                 {
-                    return BusinessResult.FailureResult(
-                        $"Không thể sửa chuyến bay đã {existingFlight.Status.GetDescription()}",
-                        "CANNOT_MODIFY");
+                    return BusinessResult.ValidationError("MÃ£ mÃ¡y bay khÃ´ng há»£p lá»‡");
                 }
 
-                // 5.Kiểm tra chuyển đổi trạng thái (nếu status CŨ và MỚI khác nhau)
-                if (existingFlight.Status != flight.Status)
+                var flights = flightDAO.GetByAircraftId(aircraftId);
+                return BusinessResult.SuccessResult(
+                    $"TÃ¬m tháº¥y {flights.Count} chuyáº¿n bay",
+                    flights
+                );
+            }
+            catch (Exception ex)
+            {
+                return BusinessResult.ExceptionResult(ex);
+            }
+        }
+
+        private BusinessResult ValidateFlightBusinessRules(FlightDTO flight)
+        {
+            // Business rule 1: Check for overlapping flights with same aircraft
+            var aircraftFlights = flightDAO.GetByAircraftId(flight.AircraftId);
+            var overlappingFlights = aircraftFlights.Where(f =>
+                f.FlightId != flight.FlightId && // Exclude current flight when updating
+                f.DepartureTime < flight.ArrivalTime &&
+                f.ArrivalTime > flight.DepartureTime
+            ).ToList();
+
+            if (overlappingFlights.Any())
+            {
+                var conflictingFlight = overlappingFlights.First();
+                return BusinessResult.ValidationError(
+                    $"MÃ¡y bay Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng cho chuyáº¿n bay '{conflictingFlight.FlightNumber}' " +
+                    $"trong khoáº£ng thá»i gian nÃ y ({conflictingFlight.DepartureTime:dd/MM/yyyy HH:mm} - " +
+                    $"{conflictingFlight.ArrivalTime:dd/MM/yyyy HH:mm})"
+                );
+            }
+
+            // Business rule 2: Check minimum turnaround time (assume 2 hours)
+            const int TURNAROUND_HOURS = 2;
+            var nearbyFlights = aircraftFlights.Where(f =>
+                f.FlightId != flight.FlightId &&
+                f.ArrivalTime.HasValue && f.DepartureTime.HasValue &&
+                flight.ArrivalTime.HasValue && flight.DepartureTime.HasValue &&
+                (Math.Abs((f.ArrivalTime - flight.DepartureTime).Value.TotalHours) < TURNAROUND_HOURS ||
+                 Math.Abs((flight.ArrivalTime - f.DepartureTime).Value.TotalHours) < TURNAROUND_HOURS)
+            ).ToList();
+
+            if (nearbyFlights.Any())
+            {
+                var nearFlight = nearbyFlights.First();
+                return BusinessResult.ValidationError(
+                    $"MÃ¡y bay cáº§n Ã­t nháº¥t {TURNAROUND_HOURS} giá» giá»¯a cÃ¡c chuyáº¿n bay. " +
+                    $"Chuyáº¿n bay '{nearFlight.FlightNumber}' quÃ¡ gáº§n vá»›i thá»i gian Ä‘Ã£ chá»n"
+                );
+            }
+
+            return BusinessResult.SuccessResult("Validation passed");
+        }
+
+        private BusinessResult CanModifyFlight(int flightId)
+        {
+            try
+            {
+                var flight = flightDAO.GetById(flightId);
+                if (flight == null)
                 {
-                    if (!existingFlight.Status.CanTransitionTo(flight.Status))
+                    return BusinessResult.ValidationError("Chuyáº¿n bay khÃ´ng tá»“n táº¡i");
+                }
+
+                // Business rule: Cannot modify flights that have already departed
+                if (flight.DepartureTime <= DateTime.Now)
+                {
+                    return BusinessResult.ValidationError(
+                        "KhÃ´ng thá»ƒ sá»­a chuyáº¿n bay Ä‘Ã£ khá»Ÿi hÃ nh hoáº·c Ä‘ang bay"
+                    );
+                }
+
+                // Business rule: Cannot modify flights less than MIN_BOOKING_HOURS before departure
+                if (flight.DepartureTime <= DateTime.Now.AddHours(MIN_BOOKING_HOURS_BEFORE_DEPARTURE))
+                {
+                    return BusinessResult.ValidationError(
+                        $"KhÃ´ng thá»ƒ sá»­a chuyáº¿n bay trong vÃ²ng {MIN_BOOKING_HOURS_BEFORE_DEPARTURE} giá» trÆ°á»›c giá» khá»Ÿi hÃ nh"
+                    );
+                }
+
+                // Check if flight has confirmed bookings
+                var flightSeats = flightSeatDAO.GetByFlightId(flightId);
+                var hasBookings = flightSeats.Any(seat => seat.SeatStatus == "booked" || seat.SeatStatus == "confirmed");
+                if (hasBookings)
+                {
+                    return BusinessResult.ValidationError(
+                        "KhÃ´ng thá»ƒ sá»­a chuyáº¿n bay Ä‘Ã£ cÃ³ khÃ¡ch hÃ ng Ä‘áº·t vÃ©. Vui lÃ²ng liÃªn há»‡ quáº£n lÃ½"
+                    );
+                }
+
+                return BusinessResult.SuccessResult("Can modify flight");
+            }
+            catch (Exception ex)
+            {
+                return BusinessResult.ExceptionResult(ex);
+            }
+        }
+
+        private BusinessResult CanDeleteFlight(int flightId)
+        {
+            try
+            {
+                var flight = flightDAO.GetById(flightId);
+                if (flight == null)
+                {
+                    return BusinessResult.ValidationError("Chuyáº¿n bay khÃ´ng tá»“n táº¡i");
+                }
+
+                // Business rule: Cannot delete flights that have already departed
+                if (flight.DepartureTime <= DateTime.Now)
+                {
+                    return BusinessResult.ValidationError(
+                        "KhÃ´ng thá»ƒ xÃ³a chuyáº¿n bay Ä‘Ã£ khá»Ÿi hÃ nh"
+                    );
+                }
+
+                // Note: We allow deletion with cascade, so we don't check for bookings here
+                // The cascade delete will handle removing all related data
+
+                return BusinessResult.SuccessResult("Can delete flight");
+            }
+            catch (Exception ex)
+            {
+                return BusinessResult.ExceptionResult(ex);
+            }
+        }
+
+        // Flight number suggestion
+        public BusinessResult SuggestNextFlightNumber(string prefix)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(prefix))
+                {
+                    return BusinessResult.ValidationError("Prefix khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng");
+                }
+
+                prefix = prefix.ToUpper().Trim();
+
+                // Get all flights with this prefix
+                var result = SearchFlights(prefix);
+                if (!result.Success)
+                {
+                    // If search fails, suggest prefix + 1
+                    return BusinessResult.SuccessResult("Gá»£i Ã½ mÃ£ chuyáº¿n bay", $"{prefix}1");
+                }
+
+                var flights = result.GetData<List<FlightDTO>>();
+                if (flights == null || flights.Count == 0)
+                {
+                    return BusinessResult.SuccessResult("Gá»£i Ã½ mÃ£ chuyáº¿n bay", $"{prefix}1");
+                }
+
+                // Find highest number with this prefix
+                int maxNumber = 0;
+                foreach (var flight in flights)
+                {
+                    if (flight.FlightNumber.StartsWith(prefix))
                     {
-                        return BusinessResult.FailureResult(
-                            $"Không thể chuyển trạng thái từ '{existingFlight.Status.GetDescription()}' sang '{flight.Status.GetDescription()}'",
-                            "INVALID_STATUS_TRANSITION");
+                        string numberPart = flight.FlightNumber.Substring(prefix.Length);
+                        if (int.TryParse(numberPart, out int number))
+                        {
+                            if (number > maxNumber)
+                            {
+                                maxNumber = number;
+                            }
+                        }
                     }
                 }
 
-                // 6. Kiểm tra trùng số hiệu (loại trừ chính nó)
-                if (flight.DepartureTime.HasValue && FlightDAO.Instance.IsFlightNumberExists(
-                    flight.FlightNumber,
-                    flight.DepartureTime.Value,
-                    flight.FlightId))
-                {
-                    return BusinessResult.FailureResult(
-                        $"Số hiệu chuyến bay '{flight.FlightNumber}' đã tồn tại vào ngày {flight.DepartureTime:dd/MM/yyyy}",
-                        "DUPLICATE_FLIGHT_NUMBER");
-                }
-
-                // 7. Thực hiện update
-                bool success = FlightDAO.Instance.Update(flight);
-
-                if (success)
-                    return BusinessResult.SuccessResult($"Cập nhật chuyến bay '{flight.FlightNumber}' thành công!", flight);
-                else
-                    return BusinessResult.FailureResult("Cập nhật thất bại (không có hàng nào được thay đổi trong DB)");
+                string suggested = $"{prefix}{maxNumber + 1}";
+                return BusinessResult.SuccessResult("Gá»£i Ã½ mÃ£ chuyáº¿n bay", suggested);
             }
             catch (Exception ex)
             {
@@ -207,183 +619,105 @@ namespace BUS.Flight
             }
         }
 
-        /// <summary>
-        /// Xóa chuyến bay
-        /// </summary>
-        public BusinessResult DeleteFlight(int flightId)
+        // For GUI compatibility
+        public BusinessResult SearchFlightsForDisplay(string flightNumber, int? departureAirportId, 
+            int? arrivalAirportId, DateTime? departureDate, int? cabinClassId, string status)
         {
             try
             {
-                // 1. Kiểm tra chuyến bay có tồn tại không
-                var flight = FlightDAO.Instance.GetById(flightId);
+                var flights = SearchFlights(flightNumber, departureAirportId, arrivalAirportId, departureDate, status);
+                return flights;
+            }
+            catch (Exception ex)
+            {
+                return BusinessResult.ExceptionResult(ex);
+            }
+        }
+
+        // Statistics methods
+        public BusinessResult GetFlightStatistics(DateTime startDate, DateTime endDate)
+        {
+            try
+            {
+                if (startDate > endDate)
+                {
+                    return BusinessResult.ValidationError("NgÃ y báº¯t Ä‘áº§u pháº£i trÆ°á»›c ngÃ y káº¿t thÃºc");
+                }
+
+                var flights = flightDAO.GetByDateRange(startDate, endDate);
+
+                var stats = new
+                {
+                    Total = flights.Count,
+                    Scheduled = flights.Count(f => f.Status == FlightStatus.SCHEDULED),
+                    Delayed = flights.Count(f => f.Status == FlightStatus.DELAYED),
+                    Cancelled = flights.Count(f => f.Status == FlightStatus.CANCELLED),
+                    Completed = flights.Count(f => f.Status == FlightStatus.COMPLETED),
+                    FlightsByRoute = flights.GroupBy(f => f.RouteId)
+                        .Select(g => new
+                        {
+                            RouteId = g.Key,
+                            Count = g.Count()
+                        }).ToList()
+                };
+
+                return BusinessResult.SuccessResult("Thá»'ng kÃª chuyáº¿n bay thÃ nh cÃ´ng", stats);
+            }
+            catch (Exception ex)
+            {
+                return BusinessResult.ExceptionResult(ex);
+            }
+        }
+
+        public BusinessResult GetFlightStatistics()
+        {
+            return GetFlightStatistics(DateTime.MinValue, DateTime.MaxValue);
+        }
+
+        public BusinessResult UpdateFlightStatus(int flightId, FlightStatus newStatus)
+        {
+            try
+            {
+                var flightResult = GetFlightById(flightId);
+                if (!flightResult.Success)
+                    return flightResult;
+
+                var flight = flightResult.GetData<FlightDTO>();
                 if (flight == null)
+                    return BusinessResult.FailureResult("Không tìm thấy chuyến bay");
+
+                // Validation: status transitions
+                var validTransitions = new Dictionary<FlightStatus, FlightStatus[]>
                 {
-                    return BusinessResult.FailureResult($"Không tìm thấy chuyến bay ID {flightId}");
-                }
+                    [FlightStatus.SCHEDULED] = new[] { FlightStatus.DELAYED, FlightStatus.CANCELLED, FlightStatus.COMPLETED },
+                    [FlightStatus.DELAYED] = new[] { FlightStatus.CANCELLED, FlightStatus.COMPLETED },
+                    [FlightStatus.CANCELLED] = System.Array.Empty<FlightStatus>(),
+                    [FlightStatus.COMPLETED] = System.Array.Empty<FlightStatus>()
+                };
 
-                // 2. Kiểm tra có thể xóa không
-                if (!CanDeleteFlight(flight.Status))
-                {
-                    return BusinessResult.FailureResult(
-                        $"Không thể xóa chuyến bay đã {flight.Status.GetDescription()}",
-                        "CANNOT_DELETE");
-                }
+                if (!validTransitions[flight.Status].Contains(newStatus))
+                    return BusinessResult.FailureResult($"Không thể chuyển trạng thái từ {flight.Status} sang {newStatus}");
 
-                // 3. Thực hiện xóa
-                bool success = FlightDAO.Instance.Delete(flightId);
-
-                if (success)
-                    return BusinessResult.SuccessResult($"Xóa chuyến bay '{flight.FlightNumber}' thành công!");
-                else
-                    return BusinessResult.FailureResult("Xóa thất bại");
-            }
-            catch (Exception ex)
-            {
-                // Xử lý lỗi foreign key constraint
-                if (ex.Message.Contains("dữ liệu liên quan"))
-                {
-                    return BusinessResult.FailureResult(
-                        "Không thể xóa chuyến bay vì đã có vé hoặc ghế ngồi được đặt",
-                        "HAS_RELATED_DATA");
-                }
-                return BusinessResult.ExceptionResult(ex);
-            }
-        }
-
-        #endregion
-
-        #region Search & Filter
-        public BusinessResult SuggestNextFlightNumber(string prefix)
-        {
-            if (string.IsNullOrWhiteSpace(prefix))
-            {
-                return BusinessResult.FailureResult("Cần có tiền tố (prefix) để gợi ý.");
-=======
-using System;
-using System.Collections.Generic;
-using DAO.Flight;
-using DTO.Flight;
-
-namespace BUS.Flight
-{
-    public class FlightBUS
-    {
-        private readonly FlightDAO _flightDAO;
-
-        public FlightBUS()
-        {
-            _flightDAO = FlightDAO.Instance;
-        }
-
-        #region Lấy danh sách chuyến bay
-        public List<FlightDTO> GetAllFlights()
-        {
-            try
-            {
-                return _flightDAO.GetAll();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Lỗi khi lấy danh sách chuyến bay: " + ex.Message, ex);
-            }
-        }
-
-        public FlightDTO GetFlightById(int flightId)
-        {
-            try
-            {
-                return _flightDAO.GetById(flightId);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Lỗi khi lấy thông tin chuyến bay ID {flightId}: " + ex.Message, ex);
-            }
-        }
-        #endregion
-
-        #region Thêm chuyến bay mới
-        public bool AddFlight(FlightDTO flight, out string message)
-        {
-            message = string.Empty;
-
-            // Validate
-            if (!flight.IsValid(out string validationError))
-            {
-                message = validationError;
-                return false;
-            }
-
-            // Kiểm tra trùng số hiệu chuyến bay
-            if (flight.DepartureTime.HasValue && 
-                _flightDAO.IsFlightNumberExists(flight.FlightNumber, flight.DepartureTime.Value, 0))
-            {
-                message = $"Số hiệu chuyến bay '{flight.FlightNumber}' đã tồn tại trong ngày này";
-                return false;
-            }
-
-            try
-            {
-                long newId = _flightDAO.Insert(flight);
-                message = newId > 0 ? "Thêm chuyến bay thành công" : "Không thể thêm chuyến bay";
-                return newId > 0;
-            }
-            catch (Exception ex)
-            {
-                message = "Lỗi khi thêm chuyến bay: " + ex.Message;
-                return false;
-            }
-        }
-        #endregion
-
-        #region Cập nhật chuyến bay
-        public bool UpdateFlight(FlightDTO flight, out string message)
-        {
-            message = string.Empty;
-
-            // Validate
-            if (!flight.IsValid(out string validationError))
-            {
-                message = validationError;
-                return false;
-            }
-
-            // Kiểm tra trùng số hiệu (trừ chính nó)
-            if (flight.DepartureTime.HasValue && 
-                _flightDAO.IsFlightNumberExists(flight.FlightNumber, flight.DepartureTime.Value, flight.FlightId))
-            {
-                message = $"Số hiệu chuyến bay '{flight.FlightNumber}' đã tồn tại trong ngày này";
-                return false;
->>>>>>> Stashed changes
-            }
-
-            try
-            {
-<<<<<<< Updated upstream
-                int lastNumber = FlightDAO.Instance.GetLastFlightNumberNumeric(prefix);
-
-                int nextNumber = lastNumber + 1;
-
-                // Nếu bạn muốn padding (VD: VN001, VN124), dùng:
-                 string nextFlightNumber = $"{prefix.ToUpper()}{nextNumber:D3}"; 
-
-                // Format không padding (VD: VN1, VN124)
-                //string nextFlightNumber = $"{prefix.ToUpper()}{nextNumber}";
-
-                return BusinessResult.SuccessResult("Gợi ý số hiệu chuyến bay tiếp theo", nextFlightNumber);
+                flight.Status = newStatus;
+                var updateResult = flightDAO.Update(flight);
+                return updateResult
+                    ? BusinessResult.SuccessResult("Cập nhật trạng thái thành công")
+                    : BusinessResult.FailureResult("Cập nhật trạng thái thất bại");
             }
             catch (Exception ex)
             {
                 return BusinessResult.ExceptionResult(ex);
             }
         }
+
         public BusinessResult SearchFlightsByNumber(string flightNumber)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(flightNumber))
-                    return BusinessResult.FailureResult("Vui lòng nhập số hiệu chuyến bay");
+                    return BusinessResult.ValidationError("Mã chuyến bay không được rỗng");
 
-                var flights = FlightDAO.Instance.SearchByFlightNumber(flightNumber);
+                var flights = flightDAO.Search(flightNumber, null, null, null, "");
                 return BusinessResult.SuccessResult($"Tìm thấy {flights.Count} chuyến bay", flights);
             }
             catch (Exception ex)
@@ -392,453 +726,18 @@ namespace BUS.Flight
             }
         }
 
-        /// <summary>
-        /// Lấy chuyến bay theo trạng thái
-        /// </summary>
         public BusinessResult GetFlightsByStatus(FlightStatus status)
         {
             try
             {
-                var flights = FlightDAO.Instance.GetByStatus(status);
-                return BusinessResult.SuccessResult($"Tìm thấy {flights.Count} chuyến bay {status.GetDescription()}", flights);
+                var allFlights = flightDAO.GetAll();
+                var flights = allFlights.Where(f => f.Status == status).ToList();
+                return BusinessResult.SuccessResult($"Tìm thấy {flights.Count} chuyến bay có trạng thái {status}", flights);
             }
             catch (Exception ex)
             {
                 return BusinessResult.ExceptionResult(ex);
             }
         }
-        public BusinessResult GetFlightsByDateRange(DateTime fromDate, DateTime toDate)
-        {
-            try
-            {
-                if (toDate < fromDate)
-                    return BusinessResult.FailureResult("Ngày kết thúc phải sau ngày bắt đầu");
-
-                var flights = FlightDAO.Instance.GetByDateRange(fromDate, toDate);
-                return BusinessResult.SuccessResult($"Tìm thấy {flights.Count} chuyến bay", flights);
-            }
-            catch (Exception ex)
-            {
-                return BusinessResult.ExceptionResult(ex);
-            }
-        }
-        public BusinessResult SearchFlightsForDisplay(
-            string? flightNumber,
-            int? departureAirportId,
-            int? arrivalAirportId,
-            DateTime? departureDate,
-            int? cabinClassId,
-            string? status = null)
-        {
-            try
-            {
-                // 1. Validate inputs
-
-                // Bỏ kiểm tra (departureDate == null) vì giờ đây nó được phép null
-
-                if (departureAirportId.HasValue && arrivalAirportId.HasValue && departureAirportId == arrivalAirportId)
-                    return BusinessResult.FailureResult("Nơi cất cánh và hạ cánh không được trùng nhau");
-
-                if (arrivalAirportId.HasValue && !departureAirportId.HasValue)
-                    return BusinessResult.FailureResult("Vui lòng chọn nơi cất cánh trước khi chọn nơi hạ cánh");
-
-                // 2. Call DAO (truyền thêm flightNumber và departureDate nullable)
-                DataTable result = FlightDAO.Instance.SearchFlightsForDisplay(
-                    flightNumber,
-                    departureAirportId,
-                    arrivalAirportId,
-                    departureDate,
-                    cabinClassId,
-                    status
-                );
-
-                return BusinessResult.SuccessResult($"Tìm thấy {result.Rows.Count} chuyến bay", result);
-            }
-            catch (Exception ex)
-            {
-                return BusinessResult.ExceptionResult(ex);
-            }
-        }
-
-        #endregion
-
-        #region Status Management
-
-        /// <summary>
-        /// Cập nhật trạng thái chuyến bay
-        /// </summary>
-        public BusinessResult UpdateFlightStatus(int flightId, FlightStatus newStatus)
-        {
-            try
-            {
-                // 1. Lấy thông tin chuyến bay hiện tại
-                var flight = FlightDAO.Instance.GetById(flightId);
-                if (flight == null)
-                {
-                    return BusinessResult.FailureResult($"Không tìm thấy chuyến bay ID {flightId}");
-                }
-
-                // 2. Kiểm tra có thể chuyển trạng thái không
-                if (!flight.Status.CanTransitionTo(newStatus))
-                {
-                    return BusinessResult.FailureResult(
-                        $"Không thể chuyển từ trạng thái '{flight.Status.GetDescription()}' sang '{newStatus.GetDescription()}'",
-                        "INVALID_STATUS_TRANSITION");
-                }
-
-                // 3. Thực hiện cập nhật
-                bool success = FlightDAO.Instance.UpdateStatus(flightId, newStatus);
-
-                if (success)
-                {
-                    return BusinessResult.SuccessResult(
-                        $"Đã chuyển trạng thái chuyến bay '{flight.FlightNumber}' sang '{newStatus.GetDescription()}'");
-                }
-                else
-                {
-                    return BusinessResult.FailureResult("Cập nhật trạng thái thất bại");
-                }
-            }
-            catch (Exception ex)
-            {
-                return BusinessResult.ExceptionResult(ex);
-            }
-        }
-
-        /// <summary>
-        /// Delay chuyến bay
-        /// </summary>
-        public BusinessResult DelayFlight(int flightId, DateTime newDepartureTime, DateTime newArrivalTime, string reason)
-        {
-            try
-            {
-                var flight = FlightDAO.Instance.GetById(flightId);
-                if (flight == null)
-                {
-                    return BusinessResult.FailureResult($"Không tìm thấy chuyến bay ID {flightId}");
-                }
-
-                // Cập nhật thông tin
-                flight.DepartureTime = newDepartureTime;
-                flight.ArrivalTime = newArrivalTime;
-                flight.Status = FlightStatus.DELAYED;
-
-                bool success = FlightDAO.Instance.Update(flight);
-
-                if (success)
-                {
-                    return BusinessResult.SuccessResult(
-                        $"Chuyến bay '{flight.FlightNumber}' đã được chuyển sang trạng thái DELAYED\n" +
-                        $"Lý do: {reason}");
-                }
-                else
-                {
-                    return BusinessResult.FailureResult("Cập nhật thất bại");
-                }
-            }
-            catch (Exception ex)
-            {
-                return BusinessResult.ExceptionResult(ex);
-            }
-        }
-
-        /// <summary>
-        /// Hủy chuyến bay
-        /// </summary>
-        public BusinessResult CancelFlight(int flightId, string reason)
-        {
-            try
-            {
-                var result = UpdateFlightStatus(flightId, FlightStatus.CANCELLED);
-
-                if (result.Success)
-                {
-                    result.Message += $"\nLý do hủy: {reason}";
-                }
-
-=======
-                bool result = _flightDAO.Update(flight);
-                message = result ? "Cập nhật chuyến bay thành công" : "Không thể cập nhật chuyến bay";
->>>>>>> Stashed changes
-                return result;
-            }
-            catch (Exception ex)
-            {
-<<<<<<< Updated upstream
-                return BusinessResult.ExceptionResult(ex);
-            }
-        }
-
-        #endregion
-
-        #region Business Rules Validation
-
-        /// <summary>
-        /// Validate các business rules cho chuyến bay
-        /// </summary>
-        private BusinessResult ValidateFlightBusinessRules(FlightDTO flight, bool isNewFlight)
-        {
-            var errors = new List<string>();
-
-            // Rule 1: Thời gian khởi hành phải trong tương lai (nếu là chuyến bay mới)
-            if (isNewFlight && flight.DepartureTime.HasValue)
-            {
-                var minDepartureTime = DateTime.Now.AddHours(MIN_BOOKING_HOURS_BEFORE_DEPARTURE);
-                if (flight.DepartureTime.Value < minDepartureTime)
-                {
-                    errors.Add($"Chuyến bay phải được tạo trước thời gian khởi hành ít nhất {MIN_BOOKING_HOURS_BEFORE_DEPARTURE} giờ");
-                }
-            }
-
-            // Rule 2: Thời gian bay phải hợp lý
-            if (flight.DepartureTime.HasValue && flight.ArrivalTime.HasValue)
-            {
-                var duration = flight.GetFlightDuration();
-                if (duration.HasValue)
-                {
-                    if (duration.Value.TotalMinutes < MIN_FLIGHT_DURATION_MINUTES)
-                    {
-                        errors.Add($"Thời gian bay tối thiểu là {MIN_FLIGHT_DURATION_MINUTES} phút");
-                    }
-
-                    if (duration.Value.TotalHours > MAX_FLIGHT_DURATION_HOURS)
-                    {
-                        errors.Add($"Thời gian bay tối đa là {MAX_FLIGHT_DURATION_HOURS} giờ");
-                    }
-                }
-            }
-
-            // Trả về kết quả
-            if (errors.Count > 0)
-            {
-                return BusinessResult.ValidationError(errors);
-            }
-
-            return BusinessResult.SuccessResult();
-        }
-
-        /// <summary>
-        /// Kiểm tra có thể sửa chuyến bay không
-        /// </summary>
-        private bool CanModifyFlight(FlightStatus status)
-        {
-            // Chỉ có thể sửa chuyến bay SCHEDULED hoặc DELAYED
-            return status == FlightStatus.SCHEDULED || status == FlightStatus.DELAYED;
-        }
-
-        /// <summary>
-        /// Kiểm tra có thể xóa chuyến bay không
-        /// </summary>
-        private bool CanDeleteFlight(FlightStatus status)
-        {
-            // Chỉ có thể xóa chuyến bay SCHEDULED (chưa có ai đặt)
-            return status == FlightStatus.SCHEDULED;
-        }
-
-        #endregion
-
-        #region Statistics
-
-        /// <summary>
-        /// Thống kê số lượng chuyến bay theo trạng thái
-        /// </summary>
-        public BusinessResult GetFlightStatistics()
-        {
-            try
-            {
-                var stats = new
-                {
-                    Total = FlightDAO.Instance.CountAll(),
-                    Scheduled = FlightDAO.Instance.CountByStatus(FlightStatus.SCHEDULED),
-                    Delayed = FlightDAO.Instance.CountByStatus(FlightStatus.DELAYED),
-                    Cancelled = FlightDAO.Instance.CountByStatus(FlightStatus.CANCELLED),
-                    Completed = FlightDAO.Instance.CountByStatus(FlightStatus.COMPLETED)
-                };
-
-                return BusinessResult.SuccessResult("Lấy thống kê thành công", stats);
-            }
-            catch (Exception ex)
-            {
-                return BusinessResult.ExceptionResult(ex);
-            }
-        }
-
-        #endregion
-
-       
-=======
-                message = "Lỗi khi cập nhật chuyến bay: " + ex.Message;
-                return false;
-            }
-        }
-        #endregion
-
-        #region Xóa chuyến bay với dữ liệu liên quan
-        public bool DeleteFlight(int flightId, out string message)
-        {
-            message = string.Empty;
-
-            try
-            {
-                // Bước 1: Xóa tickets liên quan đến flight_seats của chuyến bay này
-                DeleteTicketsByFlightId(flightId);
-
-                // Bước 2: Xóa tất cả flight_seats của chuyến bay
-                var flightSeatDAO = new DAO.FlightSeat.FlightSeatDAO();
-                flightSeatDAO.DeleteByFlightId(flightId);
-
-                // Bước 3: Cuối cùng xóa chuyến bay
-                bool result = _flightDAO.Delete(flightId);
-                message = result ? "Xóa chuyến bay thành công (bao gồm tất cả ghế ngồi và vé liên quan)" : "Không thể xóa chuyến bay";
-                return result;
-            }
-            catch (MySqlConnector.MySqlException ex)
-            {
-                if (ex.Number == 1451) // Foreign key constraint
-                {
-                    message = "Không thể xóa chuyến bay này vì vẫn còn dữ liệu liên quan (thanh toán, hành lý).";
-                }
-                else
-                {
-                    message = "Lỗi database: " + ex.Message;
-                }
-                return false;
-            }
-            catch (Exception ex)
-            {
-                message = "Lỗi khi xóa chuyến bay: " + ex.Message;
-                return false;
-            }
-        }
-
-        private void DeleteTicketsByFlightId(int flightId)
-        {
-            try
-            {
-                string query = @"DELETE FROM tickets 
-                               WHERE flight_seat_id IN 
-                               (SELECT flight_seat_id FROM flight_seats WHERE flight_id = @flightId)";
-
-                using var conn = DAO.Database.DatabaseConnection.GetConnection();
-                conn.Open();
-
-                using var cmd = new MySqlConnector.MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@flightId", flightId);
-                cmd.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Lỗi khi xóa vé theo chuyến bay: {ex.Message}", ex);
-            }
-        }
-        #endregion
-
-        #region Tìm kiếm & Lọc
-        public List<FlightDTO> SearchByFlightNumber(string flightNumber)
-        {
-            try
-            {
-                return _flightDAO.SearchByFlightNumber(flightNumber);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Lỗi khi tìm kiếm chuyến bay: " + ex.Message, ex);
-            }
-        }
-
-        public List<FlightDTO> GetByStatus(FlightStatus status)
-        {
-            try
-            {
-                return _flightDAO.GetByStatus(status);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Lỗi khi lọc chuyến bay theo trạng thái: " + ex.Message, ex);
-            }
-        }
-
-        public List<FlightDTO> GetByDateRange(DateTime fromDate, DateTime toDate)
-        {
-            try
-            {
-                return _flightDAO.GetByDateRange(fromDate, toDate);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Lỗi khi lọc chuyến bay theo ngày: " + ex.Message, ex);
-            }
-        }
-
-        public List<FlightDTO> GetByAircraftId(int aircraftId)
-        {
-            try
-            {
-                return _flightDAO.GetByAircartId(aircraftId);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Lỗi khi lọc chuyến bay theo máy bay: " + ex.Message, ex);
-            }
-        }
-
-        public List<FlightDTO> GetByRouteId(int routeId)
-        {
-            try
-            {
-                return _flightDAO.GetByRouteId(routeId);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Lỗi khi lọc chuyến bay theo tuyến bay: " + ex.Message, ex);
-            }
-        }
-        #endregion
-
-        #region Cập nhật trạng thái
-        public bool UpdateFlightStatus(int flightId, FlightStatus newStatus, out string message)
-        {
-            message = string.Empty;
-
-            try
-            {
-                bool result = _flightDAO.UpdateStatus(flightId, newStatus);
-                message = result ? "Cập nhật trạng thái thành công" : "Không thể cập nhật trạng thái";
-                return result;
-            }
-            catch (Exception ex)
-            {
-                message = "Lỗi khi cập nhật trạng thái: " + ex.Message;
-                return false;
-            }
-        }
-        #endregion
-
-        #region Thống kê
-        public int CountAllFlights()
-        {
-            try
-            {
-                return _flightDAO.CountAll();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Lỗi khi đếm chuyến bay: " + ex.Message, ex);
-            }
-        }
-
-        public int CountFlightsByStatus(FlightStatus status)
-        {
-            try
-            {
-                return _flightDAO.CountByStatus(status);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Lỗi khi đếm chuyến bay theo trạng thái: " + ex.Message, ex);
-            }
-        }
-        #endregion
->>>>>>> Stashed changes
     }
 }

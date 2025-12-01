@@ -11,7 +11,7 @@ namespace BUS.Route
 
         public RouteBUS()
         {
-            routeDAO = new RouteDAO();
+            routeDAO = RouteDAO.Instance;
         }
 
         #region Lấy danh sách tuyến bay

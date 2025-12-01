@@ -9,6 +9,26 @@ namespace DAO.FlightSeat
 {
     public class FlightSeatDAO
     {
+        private static FlightSeatDAO instance;
+        public static FlightSeatDAO Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = new FlightSeatDAO();
+                }
+                return instance;
+            }
+        }
+
+        private FlightSeatDAO() { }
+
+        public List<FlightSeatDTO> GetByFlightId(int flightId)
+        {
+            return GetSeatsByFlight(flightId);
+        }
+
         #region Lấy danh sách ghế theo chuyến bay
         public List<FlightSeatDTO> GetSeatsByFlight(int flightId)
         {
