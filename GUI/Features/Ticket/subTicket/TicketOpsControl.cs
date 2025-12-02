@@ -15,6 +15,7 @@ namespace GUI.Features.Ticket.subTicket
     public partial class TicketOpsControl : UserControl
     {
         private TicketBUS _ticketBUS;
+        private TicketListBUS _ticketListBUS;
         private TicketFilterBUS _ticketFilterBUS;
 
         // Hằng số hiển thị
@@ -25,6 +26,7 @@ namespace GUI.Features.Ticket.subTicket
         private const string SEP = " / ";
         public TicketOpsControl()
         {
+            _ticketListBUS = new TicketListBUS();
             InitializeComponent();
             _ticketBUS = new TicketBUS();
             // Vừa khởi tạo chỉ load khoảng 10 vé mới nhất
@@ -346,18 +348,20 @@ namespace GUI.Features.Ticket.subTicket
 
         private void btnSearchOpsTicket_Click(object sender, EventArgs e)
         {
-            string BookingCode  = txtFilterBookingCode.Text.Trim();
-            string FlightCode   = txtFilterFlightCode.Text.Trim();
-            string TicketStatus = cbFilterTicketStatus.Text.Trim();
-            //MessageBox.Show(TicketStatus);
-            DateTime FlightDate = dtpFilterFlightDate.Value;
-            //MessageBox.Show(FlightDate.ToString());
-            string PhoneNumber  = txtFilterPhoneNumber.Text.Trim();
+            List<TicketListDTO> listTicket = _ticketListBUS.GetAllTickets();
+            MessageBox.Show("Count", listTicket.Count.ToString());
+            //string BookingCode  = txtFilterBookingCode.Text.Trim();
+            //string FlightCode   = txtFilterFlightCode.Text.Trim();
+            //string TicketStatus = cbFilterTicketStatus.Text.Trim();
+            ////MessageBox.Show(TicketStatus);
+            //DateTime FlightDate = dtpFilterFlightDate.Value;
+            ////MessageBox.Show(FlightDate.ToString());
+            //string PhoneNumber  = txtFilterPhoneNumber.Text.Trim();
 
-            List<TicketFilterDTO> tickets = _ticketFilterBUS.ListFilterTickets(BookingCode, FlightCode,  FlightDate, TicketStatus, PhoneNumber);
-            SetupAndLoadGrid(tickets);
-            // Xóa form lọc
-            loadForm();
+            ////List<TicketFilterDTO> tickets = _ticketFilterBUS.ListFilterTickets(BookingCode, FlightCode,  FlightDate, TicketStatus, PhoneNumber);
+            ////SetupAndLoadGrid(tickets);
+            //// Xóa form lọc
+            //loadForm();
         }
         private void loadForm()
         {
