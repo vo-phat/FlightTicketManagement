@@ -30,5 +30,10 @@ namespace BUS.Baggage
         {
             return dao.Delete(id);
         }
+        public List<CheckedBaggageDTO> GetAllCheckedBaggage()
+        {
+            DAO.BaggageDAO.CheckedBaggageDAO checkedBaggageDAO = new DAO.BaggageDAO.CheckedBaggageDAO();
+            return checkedBaggageDAO.GetAll();
+        }
     }
 }

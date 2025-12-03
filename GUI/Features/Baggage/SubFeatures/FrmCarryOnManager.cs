@@ -14,8 +14,6 @@ using System;
 using System.Windows.Forms;
 namespace GUI.Features.Baggage.SubFeatures
 {
-
-
     public partial class FrmCarryOnManager : UserControl
     {
         private readonly CarryOnBaggageBUS bus = new CarryOnBaggageBUS();
@@ -23,6 +21,8 @@ namespace GUI.Features.Baggage.SubFeatures
         public FrmCarryOnManager()
         {
             InitializeComponent();
+            LoadClassCombo();
+            LoadCarryOnList();
         }
 
         private void FrmCarryOnManager_Load(object sender, EventArgs e)
@@ -40,8 +40,8 @@ namespace GUI.Features.Baggage.SubFeatures
             var list = dao.GetAll();
 
             cbClass.DataSource = list;
-            cbClass.DisplayMember = "class_name";
-            cbClass.ValueMember = "class_id";
+            cbClass.DisplayMember = "ClassName";
+            cbClass.ValueMember = "ClassId";
         }
 
         // ===============================
@@ -93,10 +93,7 @@ namespace GUI.Features.Baggage.SubFeatures
                 cbClass.SelectedIndex = 0;
         }
 
-        private void btnClear_Click(object sender, EventArgs e)
-        {
-            ClearForm();
-        }
+        
 
         // ===============================
         // 5. THÊM
@@ -187,6 +184,66 @@ namespace GUI.Features.Baggage.SubFeatures
                 MessageBox.Show("Xoá thất bại!");
             }
         }
+
+        private void btnAdd_Click_1(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(txtWeightKg.Text))
+            {
+                MessageBox.Show("Vui lòng nhập trọng lượng");
+                return;
+            }
+
+            CarryOnBaggageDTO dto = new CarryOnBaggageDTO
+            {
+                WeightKg = int.Parse(txtWeightKg.Text),
+                ClassId = (int)cbClass.SelectedValue,
+                SizeLimit = txtSizeLimit.Text,
+                Description = txtDescription.Text,
+                IsDefault = chkIsDefault.Checked
+            };
+
+            if (bus.Add(dto))
+            {
+                MessageBox.Show("Thêm carry-on thành công!");
+                LoadCarryOnList();
+                ClearForm();
+            }
+            else
+            {
+                MessageBox.Show("Thêm thất bại!");
+            }
+        }
+
+
+        private void btnClear_Click_1(object sender, EventArgs e)
+        {
+            ClearForm();
+        }
+
+
+
+        private void btnDelete_Click_1(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(txtCarryOnId.Text))
+            {
+                MessageBox.Show("Vui lòng chọn mục muốn xoá.");
+                return;
+            }
+
+            int id = int.Parse(txtCarryOnId.Text);
+
+            if (bus.Delete(id))
+            {
+                MessageBox.Show("Xoá thành công!");
+                LoadCarryOnList();
+                ClearForm();
+            }
+            else
+            {
+                MessageBox.Show("Xoá thất bại!");
+            }
+        }
+
     }
 
 }

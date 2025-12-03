@@ -16,5 +16,11 @@ namespace GUI.Features.Baggage.SubFeatures
         {
             InitializeComponent();
         }
+        public void FrmTicketBaggageManager_Load(object sender, EventArgs e)
+        {
+            // Load data or initialize components here
+
+
+        }
     }
 }

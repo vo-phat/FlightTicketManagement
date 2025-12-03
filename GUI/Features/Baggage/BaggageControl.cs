@@ -12,7 +12,8 @@ namespace GUI.Features.Baggage
         private BaggageDetailControl baggageDetailsControl;
         private BaggageListControl baggageListControl;
         private BaggageLostReportControl baggageLostReportControl;
-
+        private FrmCarryOnManager frmCarryOnManager;
+        private FrmCheckedBaggageManager frmCheckedBaggageManager;
         public BaggageControl()
         {
             InitializeComponent();
@@ -22,6 +23,8 @@ namespace GUI.Features.Baggage
             baggageDetailsControl = new BaggageDetailControl();
             baggageListControl = new BaggageListControl();
             baggageLostReportControl = new BaggageLostReportControl();
+            frmCarryOnManager = new FrmCarryOnManager();
+            frmCheckedBaggageManager = new FrmCheckedBaggageManager();
 
             // 3 panel TAB: chồng lên nhau
             pnlCheckin.Dock = DockStyle.Fill;
@@ -30,16 +33,16 @@ namespace GUI.Features.Baggage
             pnlLost.Dock = DockStyle.Fill;
 
             // UserControl fill panel
-            baggageCheckinControl.Dock = DockStyle.Fill;
+            frmCarryOnManager.Dock = DockStyle.Fill;
             baggageDetailsControl.Dock = DockStyle.Fill;
             baggageListControl.Dock = DockStyle.Fill;
             baggageLostReportControl.Dock = DockStyle.Fill;
 
             // Add đúng chỗ
-            pnlCheckin.Controls.Add(baggageCheckinControl);
+            pnlCheckin.Controls.Add(frmCarryOnManager);
             pnlDetail.Controls.Add(baggageDetailsControl);
             pnlList.Controls.Add(baggageListControl);
-            pnlLost.Controls.Add(baggageLostReportControl);
+            pnlLost.Controls.Add(frmCheckedBaggageManager);
 
 
             // Add button vào header

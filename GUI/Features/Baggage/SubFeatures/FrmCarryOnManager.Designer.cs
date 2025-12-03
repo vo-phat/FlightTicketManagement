@@ -82,7 +82,7 @@
             dgvCarryOn.HeaderBackColor = Color.White;
             dgvCarryOn.HeaderForeColor = Color.FromArgb(126, 185, 232);
             dgvCarryOn.HoverBackColor = Color.FromArgb(232, 245, 255);
-            dgvCarryOn.Location = new Point(67, 317);
+            dgvCarryOn.Location = new Point(10, 208);
             dgvCarryOn.MultiSelect = false;
             dgvCarryOn.Name = "dgvCarryOn";
             dgvCarryOn.RowAltBackColor = Color.FromArgb(248, 250, 252);
@@ -94,7 +94,7 @@
             dgvCarryOn.SelectionBackColor = Color.FromArgb(155, 209, 243);
             dgvCarryOn.SelectionForeColor = Color.White;
             dgvCarryOn.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvCarryOn.Size = new Size(1181, 188);
+            dgvCarryOn.Size = new Size(1181, 261);
             dgvCarryOn.TabIndex = 0;
             // 
             // txtCarryOnId
@@ -140,7 +140,7 @@
             btnUpdate.Icon = null;
             btnUpdate.IconSize = new Size(22, 22);
             btnUpdate.IconSpacing = 10;
-            btnUpdate.Location = new Point(666, 135);
+            btnUpdate.Location = new Point(606, 135);
             btnUpdate.Name = "btnUpdate";
             btnUpdate.NormalBackColor = Color.FromArgb(155, 209, 243);
             btnUpdate.NormalBorderColor = Color.FromArgb(40, 40, 40);
@@ -247,7 +247,6 @@
             txtDescription.TextForeColor = Color.FromArgb(30, 30, 30);
             txtDescription.UnderlineSpacing = 2;
             txtDescription.UseSystemPasswordChar = false;
-            txtDescription.Load += underlinedTextField4_Load;
             // 
             // underlinedTextField5
             // 
@@ -308,7 +307,7 @@
             btnAdd.TextAlign = ContentAlignment.MiddleLeft;
             btnAdd.UseVisualStyleBackColor = false;
             btnAdd.WordWrap = false;
-            btnAdd.Click += primaryButton2_Click;
+            btnAdd.Click += btnAdd_Click_1;
             // 
             // btnDelete
             // 
@@ -329,7 +328,7 @@
             btnDelete.Icon = null;
             btnDelete.IconSize = new Size(22, 22);
             btnDelete.IconSpacing = 10;
-            btnDelete.Location = new Point(858, 135);
+            btnDelete.Location = new Point(749, 135);
             btnDelete.Name = "btnDelete";
             btnDelete.NormalBackColor = Color.FromArgb(155, 209, 243);
             btnDelete.NormalBorderColor = Color.FromArgb(40, 40, 40);
@@ -345,6 +344,7 @@
             btnDelete.TextAlign = ContentAlignment.MiddleLeft;
             btnDelete.UseVisualStyleBackColor = false;
             btnDelete.WordWrap = false;
+            btnDelete.Click += btnDelete_Click_1;
             // 
             // chkIsDefault
             // 
@@ -375,7 +375,7 @@
             btnClear.Icon = null;
             btnClear.IconSize = new Size(22, 22);
             btnClear.IconSpacing = 10;
-            btnClear.Location = new Point(1031, 135);
+            btnClear.Location = new Point(882, 135);
             btnClear.Name = "btnClear";
             btnClear.NormalBackColor = Color.FromArgb(155, 209, 243);
             btnClear.NormalBorderColor = Color.FromArgb(40, 40, 40);
@@ -391,6 +391,7 @@
             btnClear.TextAlign = ContentAlignment.MiddleLeft;
             btnClear.UseVisualStyleBackColor = false;
             btnClear.WordWrap = false;
+            btnClear.Click += btnClear_Click_1;
             // 
             // FrmCarryOnManager
             // 
@@ -409,7 +410,7 @@
             Controls.Add(txtCarryOnId);
             Controls.Add(dgvCarryOn);
             Name = "FrmCarryOnManager";
-            Size = new Size(1443, 671);
+            Size = new Size(1512, 766);
             ((System.ComponentModel.ISupportInitialize)dgvCarryOn).EndInit();
             ResumeLayout(false);
             PerformLayout();
