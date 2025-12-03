@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 
 namespace DTO.Baggage
 {
-    public class CheckedBaggageDTO
+    public class CabinClassDTO
     {
-        public int CheckedId { get; set; }
-        public int WeightKg { get; set; }
-        public decimal Price { get; set; }
+        public int ClassId { get; set; }
+        public string ClassName { get; set; }
         public string Description { get; set; }
     }
 

@@ -28,7 +28,7 @@ namespace DAO.TicketDAO
             string sql = BaseQuery() +
             @" WHERE 
                 (t.ticket_number LIKE @kw
-                OR p.full_name LIKE @kw
+                OR pp.full_name LIKE @kw
                 OR f.flight_number LIKE @kw) ";
 
             if (status != "ALL")
@@ -142,6 +142,4 @@ namespace DAO.TicketDAO
             return list;
         }
     }
-
-
 }

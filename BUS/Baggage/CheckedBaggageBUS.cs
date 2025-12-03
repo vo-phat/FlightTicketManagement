@@ -1,18 +1,34 @@
-﻿using System;
+﻿using DTO.Baggage;
+using DAO.BaggageDAO;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
-using DTO.Baggage;
 namespace BUS.Baggage
 {
     public class CheckedBaggageBUS
     {
-        public List<CheckedBaggageDTO> GetAllCheckedBaggage()
+        private readonly CheckedBaggageDAO dao = new CheckedBaggageDAO();
+
+        public List<CheckedBaggageDTO> GetAll()
         {
-            DAO.BaggageDAO.CheckedBaggageDAO checkedBaggageDAO = new DAO.BaggageDAO.CheckedBaggageDAO();
-            return checkedBaggageDAO.GetAll();
+            return dao.GetAll();
+        }
+
+        public bool Add(CheckedBaggageDTO dto)
+        {
+            return dao.Insert(dto);
+        }
+
+        public bool Update(CheckedBaggageDTO dto)
+        {
+            return dao.Update(dto);
+        }
+
+        public bool Delete(int id)
+        {
+            return dao.Delete(id);
         }
     }
 }
