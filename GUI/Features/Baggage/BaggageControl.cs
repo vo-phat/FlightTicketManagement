@@ -19,12 +19,14 @@ namespace GUI.Features.Baggage
             InitializeComponent();
 
             // Khởi tạo control con
-            baggageCheckinControl = new BaggageCheckinControl();
-            baggageDetailsControl = new BaggageDetailControl();
-            baggageListControl = new BaggageListControl();
+            //baggageCheckinControl = new BaggageCheckinControl();
+            //baggageDetailsControl = new BaggageDetailControl();
+            //baggageListControl = new BaggageListControl();
             baggageLostReportControl = new BaggageLostReportControl();
             frmCarryOnManager = new FrmCarryOnManager();
             frmCheckedBaggageManager = new FrmCheckedBaggageManager();
+            //int id = 1;
+            //FrmTicketBaggageManager frmTicketBaggageManager = new FrmTicketBaggageManager(id); // demo, không có dùng
 
             // 3 panel TAB: chồng lên nhau
             pnlCheckin.Dock = DockStyle.Fill;
@@ -34,20 +36,20 @@ namespace GUI.Features.Baggage
 
             // UserControl fill panel
             frmCarryOnManager.Dock = DockStyle.Fill;
-            baggageDetailsControl.Dock = DockStyle.Fill;
-            baggageListControl.Dock = DockStyle.Fill;
+            //baggageDetailsControl.Dock = DockStyle.Fill;
+            //baggageListControl.Dock = DockStyle.Fill;
             baggageLostReportControl.Dock = DockStyle.Fill;
 
             // Add đúng chỗ
             pnlCheckin.Controls.Add(frmCarryOnManager);
-            pnlDetail.Controls.Add(baggageDetailsControl);
-            pnlList.Controls.Add(baggageListControl);
+            //pnlDetail.Controls.Add(baggageDetailsControl);
+            //pnlList.Controls.Add(baggageListControl);
             pnlLost.Controls.Add(frmCheckedBaggageManager);
 
 
             // Add button vào header
             //pnlHeaderBaggage.Controls.Add(btnCheckinBaggage);
-            pnlHeaderBaggage.Controls.Add(btnDetailBaggage);
+            //pnlHeaderBaggage.Controls.Add(btnDetailBaggage);
             pnlHeaderBaggage.Controls.Add(btnListBaggage);
             pnlHeaderBaggage.Controls.Add(btnLostBaggage);
             pnlHeaderBaggage.Dock = DockStyle.Top;
@@ -55,7 +57,7 @@ namespace GUI.Features.Baggage
             pnlHeaderBaggage.BringToFront();
             ///
             pnlContentBaggage.Controls.Add(pnlCheckin);
-            pnlContentBaggage.Controls.Add(pnlDetail);
+            //pnlContentBaggage.Controls.Add(pnlDetail);
             pnlContentBaggage.Controls.Add(pnlList);
             pnlContentBaggage.Controls.Add(pnlLost);
             //pnlContentBaggage.Dock = DockStyle.Bottom;
@@ -63,6 +65,10 @@ namespace GUI.Features.Baggage
             pnlContentBaggage.BringToFront();
             // Mặc định show List
             //SwitchTab(2);
+
+            ///
+            btnListBaggage.Visible = false;
+            btnLostBaggage.Visible = false;
         }
 
         private void btnListBaggage_Click(object sender, EventArgs e) => SwitchTab(2);

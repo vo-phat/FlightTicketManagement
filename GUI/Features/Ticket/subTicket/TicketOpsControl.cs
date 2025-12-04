@@ -142,7 +142,14 @@ namespace GUI.Features.Ticket.subTicket
                 UseColumnTextForButtonValue = true,
                 FillWeight = 6
             });
-
+            dgvTicketOpsControl.Columns.Add(new DataGridViewButtonColumn
+            {
+                Name = "btnBaggage",
+                HeaderText = "",
+                Text = "Xem hành lý",
+                UseColumnTextForButtonValue = true,
+                FillWeight = 10
+            });
             // ==========================
             // 4. GẮN DỮ LIỆU
             // ==========================
@@ -179,6 +186,12 @@ namespace GUI.Features.Ticket.subTicket
             else if (col == "btnRefund")
             {
                 MessageBox.Show("Nhấn Hoàn vé — Anh xử lý logic tại đây.");
+            }
+            else if (col == "btnBaggage")
+            {
+                MessageBox.Show("Bạn đang nhấn vào xem hành lý");
+                int ticketId = dto.TicketId; // lấy ID từ DTO
+                OnOpenBaggageManager?.Invoke(ticketId);
             }
         }
         private void SearchTickets()
@@ -220,5 +233,9 @@ namespace GUI.Features.Ticket.subTicket
         {
             SearchTickets();
         }
+
+
+        public event Action<int> OnOpenBaggageManager;
+
     }
 }
