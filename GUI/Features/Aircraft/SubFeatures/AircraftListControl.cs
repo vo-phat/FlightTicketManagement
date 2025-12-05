@@ -16,8 +16,8 @@ namespace GUI.Features.Aircraft.SubFeatures
         private readonly AircraftBUS _bus = new AircraftBUS();
         private DataGridView table;
 
-        // Khai báo các control tìm kiếm
-        private UnderlinedTextField txtAirlineId, txtModel, txtManufacturer, txtCapacity;
+        // Khai báo các control tìm kiếm (ĐÃ XÓA: txtAirlineId - Không còn quản lý Airlines)
+        private UnderlinedTextField txtRegNum, txtModel, txtManufacturer, txtCapacity;
         private PrimaryButton btnSearch;
         private PrimaryButton btnAdd;
 
@@ -68,9 +68,9 @@ namespace GUI.Features.Aircraft.SubFeatures
             };
 
             // --- INPUTS TÙY CHỈNH ---
-            txtAirlineId = new UnderlinedTextField("Mã hãng (ID)", "")
+            txtRegNum = new UnderlinedTextField("Số hiệu (VN-A###)", "")
             {
-                Width = 140,
+                Width = 160,
                 Margin = new Padding(6, 4, 6, 4),
                 InheritParentBackColor = true,
                 LineThickness = 1
@@ -116,7 +116,7 @@ namespace GUI.Features.Aircraft.SubFeatures
             btnAdd.Click += (s, e) => RequestEdit?.Invoke(new AircraftDTO());
 
             filterPanel.Controls.AddRange(new Control[] {
-                txtAirlineId, txtModel, txtManufacturer, txtCapacity, btnSearch, btnAdd
+                txtRegNum, txtModel, txtManufacturer, txtCapacity, btnSearch, btnAdd
             });
 
             // === BẢNG DANH SÁCH TÙY CHỈNH (TableCustom) ===
@@ -132,11 +132,12 @@ namespace GUI.Features.Aircraft.SubFeatures
                 BorderColor = Color.FromArgb(200, 200, 200),
             };
 
-            // 1. Cấu hình các Cột (Giữ nguyên)
-            table.Columns.Add("airlineId", "Mã hãng");
+            // 1. Cấu hình các Cột (ĐÃ CẬP NHẬT: Xóa airlineId, thêm registrationNumber và status)
+            table.Columns.Add("registrationNumber", "Số hiệu đăng ký");
             table.Columns.Add("model", "Model");
             table.Columns.Add("manufacturer", "Hãng sản xuất");
             table.Columns.Add("capacity", "Sức chứa");
+            table.Columns.Add("status", "Trạng thái");
             table.Columns.Add(ACTION_COL, "Thao tác");
             table.Columns[ACTION_COL].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
             table.Columns[ACTION_COL].Width = 160;
@@ -170,18 +171,18 @@ namespace GUI.Features.Aircraft.SubFeatures
                 List<AircraftDTO> filteredList = _bus.GetAllAircrafts();
 
                 // 2. Lấy giá trị tìm kiếm
-                string searchAirline = txtAirlineId.Text?.Trim().ToLower() ?? "";
+                string searchRegNum = txtRegNum.Text?.Trim().ToLower() ?? "";
                 string searchModel = txtModel.Text?.Trim().ToLower() ?? "";
                 string searchManu = txtManufacturer.Text?.Trim().ToLower() ?? "";
                 string searchCap = txtCapacity.Text?.Trim().ToLower() ?? "";
 
                 // 3. Thực hiện LỌC BẰNG LINQ (từng thuộc tính)
 
-                // Lọc theo Airline ID (chuyển đổi ID thành chuỗi để so sánh)
-                if (!string.IsNullOrWhiteSpace(searchAirline))
+                // Lọc theo Registration Number (ĐÃ CẬP NHẬT: thay thế Airline ID)
+                if (!string.IsNullOrWhiteSpace(searchRegNum))
                 {
                     filteredList = filteredList
-                        .Where(a => a.AirlineId.ToString().Contains(searchAirline))
+                        .Where(a => a.RegistrationNumber != null && a.RegistrationNumber.ToLower().Contains(searchRegNum))
                         .ToList();
                 }
 
@@ -214,10 +215,11 @@ namespace GUI.Features.Aircraft.SubFeatures
                 foreach (var a in filteredList)
                 {
                     table.Rows.Add(
-                        a.AirlineId,
+                        a.RegistrationNumber ?? "N/A",
                         a.Model ?? "N/A",
                         a.Manufacturer ?? "N/A",
                         a.Capacity.HasValue ? a.Capacity.Value.ToString() : "N/A",
+                        a.Status ?? "N/A",
                         null,
                         a.AircraftId
                     );
@@ -288,13 +290,14 @@ namespace GUI.Features.Aircraft.SubFeatures
 
             var row = table.Rows[e.RowIndex];
             int id = Convert.ToInt32(row.Cells["aircraftIdHidden"].Value);
-            int airlineId = Convert.ToInt32(row.Cells["airlineId"].Value);
+            string regNum = row.Cells["registrationNumber"].Value?.ToString();
             string model = row.Cells["model"].Value?.ToString();
             string manufacturer = row.Cells["manufacturer"].Value?.ToString();
             string capacityStr = row.Cells["capacity"].Value?.ToString();
             int? capacity = capacityStr != "N/A" && int.TryParse(capacityStr, out int cap) ? cap : (int?)null;
+            string status = row.Cells["status"].Value?.ToString();
 
-            var dto = new AircraftDTO(id, airlineId, model, manufacturer, capacity);
+            var dto = new AircraftDTO(id, regNum, model, manufacturer, capacity, null, status);
 
             if (r.rcView.Contains(p))
                 ViewRequested?.Invoke(dto);

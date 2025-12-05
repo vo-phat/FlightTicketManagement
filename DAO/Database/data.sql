@@ -142,3 +142,20 @@ SELECT r.role_id, p.permission_id
 FROM roles r
 JOIN permissions p
 WHERE r.role_code = 'ADMIN';
+INSERT INTO national (country_name, country_code, phone_code) VALUES
+('Vietnam', 'VN', '+84'),
+('United States', 'US', '+1'),
+('United Kingdom', 'GB', '+44'),
+('Japan', 'JP', '+81'),
+('South Korea', 'KR', '+82'),
+('China', 'CN', '+86'),
+('Singapore', 'SG', '+65'),
+('Thailand', 'TH', '+66'),
+('Malaysia', 'MY', '+60'),
+('Indonesia', 'ID', '+62'),
+('Philippines', 'PH', '+63'),
+('Australia', 'AU', '+61'),
+('France', 'FR', '+33'),
+('Germany', 'DE', '+49'),
+('Canada', 'CA', '+1')
+ON DUPLICATE KEY UPDATE country_name = VALUES(country_name);

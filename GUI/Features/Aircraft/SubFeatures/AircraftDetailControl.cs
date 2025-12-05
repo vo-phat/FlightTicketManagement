@@ -7,7 +7,7 @@ namespace GUI.Features.Aircraft.SubFeatures
 {
     public class AircraftDetailControl : UserControl
     {
-        private Label vAirline, vModel, vManu, vCap;
+        private Label vRegNum, vModel, vManu, vCap, vYear, vStatus;
 
         // Sự kiện để báo cho control cha biết khi bấm nút Đóng
         public event EventHandler CloseRequested;
@@ -56,10 +56,12 @@ namespace GUI.Features.Aircraft.SubFeatures
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
             int r = 0;
-            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Mã hãng (Airline ID):"), 0, r); vAirline = Val("vAirline"); grid.Controls.Add(vAirline, 1, r++);
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Đã XOÁ: Số hiệu đăng ký:"), 0, r); vRegNum = Val("vRegNum"); grid.Controls.Add(vRegNum, 1, r++);
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Model:"), 0, r); vModel = Val("vModel"); grid.Controls.Add(vModel, 1, r++);
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Hãng sản xuất:"), 0, r); vManu = Val("vManu"); grid.Controls.Add(vManu, 1, r++);
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Sức chứa (ghế):"), 0, r); vCap = Val("vCap"); grid.Controls.Add(vCap, 1, r++);
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Năm sản xuất:"), 0, r); vYear = Val("vYear"); grid.Controls.Add(vYear, 1, r++);
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Trạng thái:"), 0, r); vStatus = Val("vStatus"); grid.Controls.Add(vStatus, 1, r++);
 
             card.Controls.Add(grid);
 
@@ -82,10 +84,12 @@ namespace GUI.Features.Aircraft.SubFeatures
         public void LoadAircraft(AircraftDTO dto)
         {
             if (dto == null) return;
-            vAirline.Text = dto.AirlineId.ToString();
+            vRegNum.Text = dto.RegistrationNumber ?? "N/A";
             vModel.Text = dto.Model ?? "N/A";
             vManu.Text = dto.Manufacturer ?? "N/A";
             vCap.Text = dto.Capacity.HasValue ? dto.Capacity.Value.ToString() : "N/A";
+            vYear.Text = dto.ManufactureYear.HasValue ? dto.ManufactureYear.Value.ToString() : "N/A";
+            vStatus.Text = dto.Status ?? "N/A";
         }
 
         private void AircraftDetailControl_Load(object sender, EventArgs e)

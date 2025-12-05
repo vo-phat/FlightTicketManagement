@@ -17,9 +17,7 @@ namespace DAO.Database {
                 object result = ExecuteScalar(query);
 
                 return $"Kết nối thành công!\nSố bảng trong database: {result}";
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 return $"Lỗi kết nối: {ex.Message}";
             }
         }
@@ -43,9 +41,7 @@ namespace DAO.Database {
                 }
 
                 return sb.ToString();
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 return $"Lỗi query: {ex.Message}";
             }
         }
@@ -74,9 +70,7 @@ namespace DAO.Database {
                 results.AppendLine($"Tổng cộng: {count} airports");
 
                 return results.ToString();
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 return $"Lỗi ExecuteReader: {ex.Message}";
             }
         }

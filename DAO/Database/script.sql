@@ -1,6 +1,6 @@
 CREATE DATABASE IF NOT EXISTS `FlightTicketManagement`
   DEFAULT CHARACTER SET utf8mb4
-  DEFAULT COLLATE utf8mb4_0900_ai_ci;
+  DEFAULT COLLATE utf8mb4_unicode_ci;
 
 USE `FlightTicketManagement`;
 
@@ -46,13 +46,18 @@ CREATE TABLE role_permissions (
     FOREIGN KEY (permission_id) REFERENCES permissions(permission_id) ON DELETE CASCADE
 );
 
--- 4. Hãng hàng không
-CREATE TABLE Airlines (
-    airline_id INT AUTO_INCREMENT PRIMARY KEY,
-    airline_code VARCHAR(10) UNIQUE NOT NULL,
-    airline_name VARCHAR(100) NOT NULL,
-    country VARCHAR(100)
+-- 4. Quốc gia (cho danh sách quốc t적)
+CREATE TABLE national (
+    national_id INT AUTO_INCREMENT PRIMARY KEY,
+    country_name VARCHAR(100) NOT NULL,
+    country_code VARCHAR(2) NOT NULL UNIQUE,  -- ISO 3166-1 alpha-2
+    phone_code VARCHAR(10)                     -- Mã điện thoại quốc gia
 );
+
+-- ============================================================================
+-- LƯU Ý: Project này chỉ quản lý VIETNAM AIRLINES - không cần bảng Airlines
+-- Tất cả máy bay đều thuộc Vietnam Airlines
+-- ============================================================================
 
 -- 5. Sân bay
 CREATE TABLE Airports (
@@ -63,14 +68,15 @@ CREATE TABLE Airports (
     country VARCHAR(100)
 );
 
--- 6. Máy bay
+-- 6. Máy bay (Vietnam Airlines)
 CREATE TABLE Aircrafts (
     aircraft_id INT AUTO_INCREMENT PRIMARY KEY,
-    airline_id INT,
+    registration_number VARCHAR(20) UNIQUE NOT NULL, -- VN-A###, VN-B### (số hiệu đăng ký)
     model VARCHAR(100), 
     manufacturer VARCHAR(100), -- nhà sản xuất
     capacity INT, -- dung tích
-    FOREIGN KEY (airline_id) REFERENCES Airlines(airline_id)
+    manufacture_year INT, -- năm sản xuất
+    `status` ENUM('ACTIVE','MAINTENANCE','RETIRED') DEFAULT 'ACTIVE'
 );
 
 -- 7. Tuyến bay
@@ -232,4 +238,10 @@ CREATE TABLE Baggage_History (
     new_status ENUM('CREATED','CHECKED_IN','LOADED','IN_TRANSIT','CLAIMED','LOST'),
     changed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (baggage_id) REFERENCES Baggage(baggage_id)
+);
+CREATE TABLE IF NOT EXISTS national (
+    national_id INT AUTO_INCREMENT PRIMARY KEY,
+    country_name VARCHAR(100) NOT NULL,
+    country_code VARCHAR(2) NOT NULL UNIQUE,
+    phone_code VARCHAR(10)
 );

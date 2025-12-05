@@ -11,7 +11,7 @@ namespace BUS.Route
 
         public RouteBUS()
         {
-            routeDAO = RouteDAO.Instance;
+            routeDAO = new RouteDAO();
         }
 
         #region Lấy danh sách tuyến bay
@@ -122,18 +122,6 @@ namespace BUS.Route
         public Dictionary<int, string> GetRouteDisplayList()
         {
             return routeDAO.GetRouteDisplayList();
-        }
-
-        public RouteDTO GetRouteById(int routeId)
-        {
-            try
-            {
-                return routeDAO.GetRouteById(routeId);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Lỗi khi lấy tuyến bay ID {routeId}: {ex.Message}", ex);
-            }
         }
         #endregion
     }

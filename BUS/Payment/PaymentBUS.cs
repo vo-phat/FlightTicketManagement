@@ -10,15 +10,18 @@ namespace BUS.Payment
     {
         private readonly PaymentDAO _paymentDAO;
 
+        // Constants trạng thái để tránh hardcode string (Nên đưa vào class Constant chung)
+        private const string STATUS_PENDING = "PENDING";
+        private const string STATUS_CONFIRMED = "CONFIRMED";
+        private const string STATUS_SUCCESS = "SUCCESS";
+        private const string STATUS_FAILED = "FAILED";
+
         public PaymentBUS()
         {
             _paymentDAO = new PaymentDAO();
         }
 
         #region 📋 Lấy danh sách tất cả thanh toán
-        /// <summary>
-        /// Lấy tất cả payments (không có thông tin booking)
-        /// </summary>
         public List<PaymentDTO> GetAllPayments()
         {
             try
@@ -31,9 +34,6 @@ namespace BUS.Payment
             }
         }
 
-        /// <summary>
-        /// Lấy tất cả payments với thông tin đầy đủ (có booking, account)
-        /// </summary>
         public List<PaymentDetailDTO> GetAllPaymentsWithDetails()
         {
             try
@@ -48,9 +48,6 @@ namespace BUS.Payment
         #endregion
 
         #region 🧾 Lấy danh sách Bookings có trạng thái PENDING
-        /// <summary>
-        /// Lấy danh sách payments của các bookings đang PENDING
-        /// </summary>
         public List<PaymentDetailDTO> GetPendingBookingsPayments()
         {
             try
@@ -65,9 +62,6 @@ namespace BUS.Payment
         #endregion
 
         #region 🔍 Xem chi tiết Payment
-        /// <summary>
-        /// Lấy thông tin chi tiết của 1 payment
-        /// </summary>
         public PaymentDetailDTO GetPaymentDetail(int paymentId)
         {
             try
@@ -90,8 +84,8 @@ namespace BUS.Payment
 
         #region 💳 Xử lý Thanh toán (Payment Processing)
         /// <summary>
-        /// Xử lý thanh toán: Cập nhật payment status -> SUCCESS và booking status -> CONFIRMED
-        /// Sử dụng transaction trong DAL để đảm bảo tính nhất quán
+        /// Xử lý thanh toán: Chỉ cho phép khi Booking CONFIRMED và Payment PENDING.
+        /// Chuyển trạng thái Payment -> SUCCESS.
         /// </summary>
         public bool ProcessPayment(int paymentId, out string message)
         {
@@ -99,7 +93,7 @@ namespace BUS.Payment
 
             try
             {
-                // Bước 1: Lấy thông tin payment
+                // Bước 1: Lấy thông tin payment hiện tại
                 var payment = _paymentDAO.GetPaymentById(paymentId);
                 if (payment == null)
                 {
@@ -107,61 +101,60 @@ namespace BUS.Payment
                     return false;
                 }
 
-                // Bước 2: Kiểm tra điều kiện thanh toán
-                if (!payment.CanProcessPayment())
+                // Bước 2: Kiểm tra điều kiện nghiệp vụ
+                // 2.1. Thanh toán phải đang ở trạng thái PENDING
+                if (!payment.Status.Equals(STATUS_PENDING, StringComparison.OrdinalIgnoreCase))
                 {
-                    message = "Không thể xử lý thanh toán. ";
-
-                    if (!payment.IsPaymentPending())
-                        message += "Payment không ở trạng thái PENDING. ";
-
-                    if (!payment.IsBookingPending())
-                        message += "Booking không ở trạng thái PENDING.";
-
+                    message = $"Không thể xử lý. Thanh toán đang ở trạng thái '{payment.Status}'.";
                     return false;
                 }
 
-                // Bước 3: Kiểm tra số tiền có khớp không
-                if (!payment.IsAmountMatched())
+                // 2.2. Booking phải ĐÃ ĐƯỢC XÁC NHẬN (CONFIRMED) thì mới thu tiền
+                if (!payment.BookingStatus.Equals(STATUS_CONFIRMED, StringComparison.OrdinalIgnoreCase))
                 {
-                    message = $"Cảnh báo: Số tiền payment ({payment.Amount:N0} VND) " +
-                             $"không khớp với tổng tiền booking ({payment.BookingTotalAmount:N0} VND). " +
-                             $"Chênh lệch: {Math.Abs(payment.GetAmountDifference()):N0} VND";
-                    // Vẫn cho phép thanh toán nhưng cảnh báo
+                    message = $"Không thể thanh toán. Booking chưa được xác nhận (Trạng thái hiện tại: {payment.BookingStatus}).";
+                    return false;
                 }
 
-                // Bước 4: Gọi Payment Gateway (giả lập)
-                bool gatewayResult = MockPaymentGateway(payment.Amount);
+                // Bước 3: Kiểm tra số tiền (Cảnh báo nếu không khớp, nhưng không chặn)
+                if (payment.Amount != payment.BookingTotalAmount)
+                {
+                    // Logic tùy chọn: Có thể log warning hoặc trả về message cảnh báo kèm theo
+                    // message = $"Lưu ý: Số tiền thanh toán ({payment.Amount:N0}) khác tổng tiền Booking ({payment.BookingTotalAmount:N0}).";
+                }
 
+                // Bước 4: Gọi Payment Gateway (Giả lập)
+                bool gatewayResult = MockPaymentGateway(payment.Amount);
                 if (!gatewayResult)
                 {
-                    message = "Thanh toán thất bại! Cổng thanh toán từ chối giao dịch.";
-                    // Có thể cập nhật status thành FAILED
-                    _paymentDAO.UpdatePaymentStatus(paymentId, PaymentDTO.STATUS_FAILED);
+                    message = "Giao dịch bị từ chối bởi cổng thanh toán.";
+                    // Cập nhật trạng thái FAILED
+                    _paymentDAO.UpdatePaymentStatus(paymentId, STATUS_FAILED);
                     return false;
                 }
 
-                // Bước 5: Xử lý thanh toán với transaction
-                bool result = _paymentDAO.ProcessPayment(paymentId, payment.BookingId);
+                // Bước 5: Gọi DAO để cập nhật trạng thái trong Database
+                // Lưu ý: Hàm DAO mới chỉ cần paymentId
+                bool result = _paymentDAO.ProcessPayment(paymentId);
 
                 if (result)
                 {
                     message = $"✅ Thanh toán thành công!\n" +
-                             $"   - Payment ID: {paymentId} -> SUCCESS\n" +
-                             $"   - Booking ID: {payment.BookingId} -> CONFIRMED\n" +
-                             $"   - Số tiền: {payment.Amount:N0} VND\n" +
-                             $"   - Email: {payment.AccountEmail}";
+                              $"   - Payment ID: {paymentId}\n" +
+                              $"   - Số tiền: {payment.Amount:N0} VND";
                     return true;
                 }
                 else
                 {
-                    message = "Không thể xử lý thanh toán. Vui lòng kiểm tra lại dữ liệu.";
+                    // Trường hợp này xảy ra nếu giữa lúc check ở Bước 2 và lúc update ở Bước 5, 
+                    // trạng thái booking hoặc payment đã bị thay đổi bởi người khác.
+                    message = "Lỗi: Dữ liệu đã thay đổi trong quá trình xử lý. Vui lòng làm mới và thử lại.";
                     return false;
                 }
             }
             catch (Exception ex)
             {
-                message = "BUS: Lỗi trong quá trình thanh toán - " + ex.Message;
+                message = "BUS: Lỗi hệ thống khi xử lý thanh toán - " + ex.Message;
                 return false;
             }
         }
@@ -171,44 +164,33 @@ namespace BUS.Payment
         /// </summary>
         private bool MockPaymentGateway(decimal amount)
         {
-            // Giả lập thanh toán:
-            // - Luôn thất bại nếu số tiền <= 0
-            // - Thành công 95% cho các giao dịch hợp lệ
-            if (amount <= 0)
-                return false;
-
+            if (amount <= 0) return false;
+            // Tỷ lệ thành công 95%
             return new Random().Next(0, 100) < 95;
         }
         #endregion
 
         #region ➕ Thêm Payment mới
-        /// <summary>
-        /// Thêm payment mới
-        /// </summary>
         public bool AddPayment(PaymentDTO payment, out string message)
         {
             message = string.Empty;
-
             try
             {
-                // Validate
                 if (!payment.IsValid(out string validationError))
                 {
-                    message = "Dữ liệu thanh toán không hợp lệ: " + validationError;
+                    message = "Dữ liệu không hợp lệ: " + validationError;
                     return false;
                 }
 
-                // Thêm vào DB
                 bool result = _paymentDAO.InsertPayment(payment);
-
                 if (result)
                 {
-                    message = "Thêm payment thành công!";
+                    message = "Thêm thanh toán thành công!";
                     return true;
                 }
                 else
                 {
-                    message = "Không thể thêm payment vào cơ sở dữ liệu.";
+                    message = "Không thể thêm thanh toán vào cơ sở dữ liệu.";
                     return false;
                 }
             }
@@ -221,48 +203,39 @@ namespace BUS.Payment
         #endregion
 
         #region ✏️ Cập nhật Payment
-        /// <summary>
-        /// Cập nhật thông tin payment
-        /// </summary>
         public bool UpdatePayment(PaymentDTO payment, out string message)
         {
             message = string.Empty;
-
             try
             {
-                // Validate
                 if (!payment.IsValid(out string validationError))
                 {
-                    message = "Dữ liệu thanh toán không hợp lệ: " + validationError;
+                    message = "Dữ liệu không hợp lệ: " + validationError;
                     return false;
                 }
 
-                // Kiểm tra payment tồn tại
                 var existing = _paymentDAO.GetPaymentById(payment.PaymentId);
                 if (existing == null)
                 {
-                    message = "Không tìm thấy payment cần cập nhật.";
+                    message = "Không tìm thấy thanh toán cần cập nhật.";
                     return false;
                 }
 
-                // Không cho phép sửa payment đã SUCCESS
-                if (existing.Status == PaymentDTO.STATUS_SUCCESS)
+                if (existing.Status.Equals(STATUS_SUCCESS, StringComparison.OrdinalIgnoreCase))
                 {
-                    message = "Không thể sửa payment đã thành công!";
+                    message = "Không thể sửa đổi thanh toán đã thành công!";
                     return false;
                 }
 
-                // Cập nhật
                 bool result = _paymentDAO.UpdatePayment(payment);
-
                 if (result)
                 {
-                    message = "Cập nhật payment thành công!";
+                    message = "Cập nhật thành công!";
                     return true;
                 }
                 else
                 {
-                    message = "Không thể cập nhật payment.";
+                    message = "Không thể cập nhật.";
                     return false;
                 }
             }
@@ -275,54 +248,48 @@ namespace BUS.Payment
         #endregion
 
         #region ❌ Xóa Payment
-        /// <summary>
-        /// Xóa payment
-        /// </summary>
         public bool DeletePayment(int paymentId, out string message)
         {
             message = string.Empty;
-
             try
             {
                 if (paymentId <= 0)
                 {
-                    message = "Payment ID không hợp lệ.";
+                    message = "ID không hợp lệ.";
                     return false;
                 }
 
-                // Kiểm tra payment tồn tại
                 var payment = _paymentDAO.GetPaymentById(paymentId);
                 if (payment == null)
                 {
-                    message = "Không tìm thấy payment cần xóa.";
+                    message = "Không tìm thấy dữ liệu.";
                     return false;
                 }
 
-                // Không cho phép xóa payment đã SUCCESS
-                if (payment.Status == PaymentDTO.STATUS_SUCCESS)
+                // Logic bảo vệ dữ liệu:
+                // 1. Không xóa payment đã thành công
+                if (payment.Status.Equals(STATUS_SUCCESS, StringComparison.OrdinalIgnoreCase))
                 {
-                    message = "Không thể xóa payment đã thành công!";
+                    message = "Không thể xóa thanh toán đã thành công!";
                     return false;
                 }
 
-                // Không cho phép xóa nếu booking đã CONFIRMED
-                if (payment.BookingStatus == PaymentDetailDTO.BOOKING_STATUS_CONFIRMED)
+                // 2. Không xóa payment của Booking đã Confirmed (vì Booking này đã giữ chỗ)
+                if (payment.BookingStatus.Equals(STATUS_CONFIRMED, StringComparison.OrdinalIgnoreCase))
                 {
-                    message = "Không thể xóa payment của booking đã xác nhận!";
+                    message = "Không thể xóa thanh toán của Booking đã xác nhận!";
                     return false;
                 }
 
-                // Xóa
                 bool result = _paymentDAO.DeletePayment(paymentId);
-
                 if (result)
                 {
-                    message = "Xóa payment thành công!";
+                    message = "Xóa thành công!";
                     return true;
                 }
                 else
                 {
-                    message = "Không thể xóa payment.";
+                    message = "Không thể xóa dữ liệu.";
                     return false;
                 }
             }
@@ -335,119 +302,92 @@ namespace BUS.Payment
         #endregion
 
         #region 🔍 Tìm kiếm Payment
-        /// <summary>
-        /// Tìm kiếm payment theo từ khóa
-        /// </summary>
         public List<PaymentDetailDTO> SearchPayments(string keyword, out string message)
         {
             message = string.Empty;
-
             try
             {
                 if (string.IsNullOrWhiteSpace(keyword))
                 {
-                    message = "Vui lòng nhập từ khóa tìm kiếm.";
+                    message = "Vui lòng nhập từ khóa.";
                     return new List<PaymentDetailDTO>();
                 }
 
                 var results = _paymentDAO.SearchPayments(keyword.Trim());
-
-                if (results.Count == 0)
-                {
-                    message = $"Không tìm thấy kết quả nào cho từ khóa '{keyword}'.";
-                }
-                else
-                {
-                    message = $"Tìm thấy {results.Count} kết quả.";
-                }
-
+                message = results.Count > 0 ? $"Tìm thấy {results.Count} kết quả." : "Không tìm thấy kết quả nào.";
                 return results;
             }
             catch (Exception ex)
             {
-                message = "BUS: Lỗi khi tìm kiếm payment - " + ex.Message;
+                message = "BUS: Lỗi tìm kiếm - " + ex.Message;
                 return new List<PaymentDetailDTO>();
             }
         }
         #endregion
 
         #region 📊 Thống kê Payment
-        /// <summary>
-        /// Lấy tổng số tiền đã thanh toán thành công
-        /// </summary>
         public decimal GetTotalSuccessfulPayments()
         {
             try
             {
+                // Lưu ý: Nếu dữ liệu lớn, nên chuyển logic này xuống DAO (SELECT SUM...)
                 var payments = _paymentDAO.GetAllPayments();
                 return payments
-                    .Where(p => p.Status == PaymentDTO.STATUS_SUCCESS)
+                    .Where(p => p.Status.Equals(STATUS_SUCCESS, StringComparison.OrdinalIgnoreCase))
                     .Sum(p => p.Amount);
             }
             catch (Exception ex)
             {
-                throw new Exception("BUS: Lỗi khi tính tổng thanh toán - " + ex.Message, ex);
+                throw new Exception("BUS: Lỗi thống kê - " + ex.Message, ex);
             }
         }
 
-        /// <summary>
-        /// Đếm số payment theo trạng thái
-        /// </summary>
         public Dictionary<string, int> GetPaymentCountByStatus()
         {
             try
             {
+                // Lưu ý: Nếu dữ liệu lớn, nên chuyển logic này xuống DAO (SELECT COUNT... GROUP BY)
                 var payments = _paymentDAO.GetAllPayments();
                 return new Dictionary<string, int>
                 {
-                    { PaymentDTO.STATUS_PENDING, payments.Count(p => p.Status == PaymentDTO.STATUS_PENDING) },
-                    { PaymentDTO.STATUS_SUCCESS, payments.Count(p => p.Status == PaymentDTO.STATUS_SUCCESS) },
-                    { PaymentDTO.STATUS_FAILED, payments.Count(p => p.Status == PaymentDTO.STATUS_FAILED) }
+                    { STATUS_PENDING, payments.Count(p => p.Status.Equals(STATUS_PENDING, StringComparison.OrdinalIgnoreCase)) },
+                    { STATUS_SUCCESS, payments.Count(p => p.Status.Equals(STATUS_SUCCESS, StringComparison.OrdinalIgnoreCase)) },
+                    { STATUS_FAILED, payments.Count(p => p.Status.Equals(STATUS_FAILED, StringComparison.OrdinalIgnoreCase)) }
                 };
             }
             catch (Exception ex)
             {
-                throw new Exception("BUS: Lỗi khi đếm payment - " + ex.Message, ex);
+                throw new Exception("BUS: Lỗi thống kê - " + ex.Message, ex);
             }
         }
         #endregion
 
-        #region 🔄 Cập nhật trạng thái
-        /// <summary>
-        /// Cập nhật trạng thái payment
-        /// </summary>
+        #region 🔄 Cập nhật trạng thái thủ công
         public bool UpdatePaymentStatus(int paymentId, string newStatus, out string message)
         {
             message = string.Empty;
-
             try
             {
-                // Validate status
                 string normalized = newStatus.Trim().ToUpper();
-                if (normalized != PaymentDTO.STATUS_PENDING &&
-                    normalized != PaymentDTO.STATUS_SUCCESS &&
-                    normalized != PaymentDTO.STATUS_FAILED)
+                if (normalized != STATUS_PENDING && normalized != STATUS_SUCCESS && normalized != STATUS_FAILED)
                 {
                     message = "Trạng thái không hợp lệ.";
                     return false;
                 }
 
                 bool result = _paymentDAO.UpdatePaymentStatus(paymentId, normalized);
-
                 if (result)
                 {
-                    message = $"Cập nhật trạng thái payment thành {normalized}!";
+                    message = $"Cập nhật trạng thái thành {normalized}!";
                     return true;
                 }
-                else
-                {
-                    message = "Không thể cập nhật trạng thái payment.";
-                    return false;
-                }
+
+                message = "Không thể cập nhật trạng thái.";
+                return false;
             }
             catch (Exception ex)
             {
-                message = "BUS: Lỗi khi cập nhật trạng thái - " + ex.Message;
+                message = "BUS: Lỗi cập nhật trạng thái - " + ex.Message;
                 return false;
             }
         }

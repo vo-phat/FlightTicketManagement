@@ -9,26 +9,6 @@ namespace DAO.FlightSeat
 {
     public class FlightSeatDAO
     {
-        private static FlightSeatDAO instance;
-        public static FlightSeatDAO Instance
-        {
-            get
-            {
-                if (instance == null)
-                {
-                    instance = new FlightSeatDAO();
-                }
-                return instance;
-            }
-        }
-
-        private FlightSeatDAO() { }
-
-        public List<FlightSeatDTO> GetByFlightId(int flightId)
-        {
-            return GetSeatsByFlight(flightId);
-        }
-
         #region Lấy danh sách ghế theo chuyến bay
         public List<FlightSeatDTO> GetSeatsByFlight(int flightId)
         {
@@ -290,10 +270,19 @@ namespace DAO.FlightSeat
         }
         #endregion
 
-        #region Xóa tất cả ghế của chuyến bay
-        public bool DeleteByFlightId(int flightId)
+        #region Kiểm tra ghế còn trống
+        /// <summary>
+        /// Kiểm tra ghế có còn trống (AVAILABLE) hay không
+        /// </summary>
+        /// <param name="flightId">Mã chuyến bay</param>
+        /// <param name="seatId">Mã ghế</param>
+        /// <returns>True nếu ghế còn trống (AVAILABLE), False nếu đã được đặt hoặc bị chặn</returns>
+        public bool IsSeatAvailable(int flightId, int seatId)
         {
-            string query = "DELETE FROM flight_seats WHERE flight_id = @flightId";
+            const string query = @"
+                SELECT seat_status 
+                FROM flight_seats 
+                WHERE flight_id = @flightId AND seat_id = @seatId";
 
             try
             {
@@ -302,13 +291,96 @@ namespace DAO.FlightSeat
 
                 using var cmd = new MySqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@flightId", flightId);
+                cmd.Parameters.AddWithValue("@seatId", seatId);
 
-                int affectedRows = cmd.ExecuteNonQuery();
-                return affectedRows >= 0; // Trả về true ngay cả khi không có dòng nào bị xóa
+                var status = cmd.ExecuteScalar()?.ToString();
+
+                // Ghế chỉ available nếu status = 'AVAILABLE'
+                return status == "AVAILABLE";
             }
             catch (Exception ex)
             {
-                throw new Exception($"Lỗi khi xóa ghế theo chuyến bay: {ex.Message}", ex);
+                throw new Exception($"Lỗi khi kiểm tra trạng thái ghế: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Kiểm tra ghế theo số ghế (seat_number) có còn trống không
+        /// </summary>
+        /// <param name="flightId">Mã chuyến bay</param>
+        /// <param name="seatNumber">Số ghế (VD: "12A", "5F")</param>
+        /// <returns>True nếu ghế còn trống, False nếu đã được đặt</returns>
+        public bool IsSeatAvailableBySeatNumber(int flightId, string seatNumber)
+        {
+            const string query = @"
+                SELECT fs.seat_status 
+                FROM flight_seats fs
+                JOIN seats s ON fs.seat_id = s.seat_id
+                WHERE fs.flight_id = @flightId AND s.seat_number = @seatNumber";
+
+            try
+            {
+                using var conn = DatabaseConnection.GetConnection();
+                conn.Open();
+
+                using var cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@flightId", flightId);
+                cmd.Parameters.AddWithValue("@seatNumber", seatNumber.Trim().ToUpper());
+
+                var status = cmd.ExecuteScalar()?.ToString();
+
+                return status == "AVAILABLE";
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi kiểm tra trạng thái ghế theo seat_number: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Lấy thông tin chi tiết ghế để kiểm tra
+        /// </summary>
+        public FlightSeatDTO? GetFlightSeatInfo(int flightId, int seatId)
+        {
+            const string query = @"
+                SELECT fs.flight_seat_id, fs.flight_id, fs.seat_id, 
+                       fs.base_price, fs.seat_status,
+                       s.seat_number, s.class_id, cc.class_name
+                FROM flight_seats fs
+                JOIN seats s ON fs.seat_id = s.seat_id
+                JOIN cabin_classes cc ON s.class_id = cc.class_id
+                WHERE fs.flight_id = @flightId AND fs.seat_id = @seatId";
+
+            try
+            {
+                using var conn = DatabaseConnection.GetConnection();
+                conn.Open();
+
+                using var cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@flightId", flightId);
+                cmd.Parameters.AddWithValue("@seatId", seatId);
+
+                using var reader = cmd.ExecuteReader();
+                if (reader.Read())
+                {
+                    return new FlightSeatDTO(
+                        reader.GetInt32("flight_seat_id"),
+                        reader.GetInt32("flight_id"),
+                        reader.GetInt32("seat_id"),
+                        reader.GetInt32("class_id"),
+                        reader.GetDecimal("base_price"),
+                        reader.GetString("seat_status"),
+                        string.Empty,
+                        reader.GetString("seat_number"),
+                        reader.GetString("class_name")
+                    );
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi lấy thông tin ghế: {ex.Message}", ex);
             }
         }
         #endregion

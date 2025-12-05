@@ -117,5 +117,20 @@ namespace GUI.Features.Ticket
         {
 
         }
+
+        /// <summary>
+        /// Load thông tin đặt vé từ FlightListControl
+        /// Được gọi khi user đã chọn xong chuyến bay và hạng vé
+        /// </summary>
+        public void LoadBookingSelection(DTO.Booking.BookingSelectionDTO selection)
+        {
+            Console.WriteLine($"[TicketControl] Nhận được booking selection: {selection}");
+            
+            // Chuyển sang tab Tạo/Tìm đặt chỗ
+            switchTab(0);
+            
+            // Load thông tin vào BookingSearchControl
+            bookingSearchControl.LoadFromSelection(selection);
+        }
     }
 }

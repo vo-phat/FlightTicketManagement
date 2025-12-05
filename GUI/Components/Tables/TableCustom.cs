@@ -32,6 +32,8 @@ namespace GUI.Components.Tables {
             GridColor = Color.FromArgb(230, 235, 240); // đường kẻ ngang rất nhẹ
 
             // Header
+            ColumnHeadersVisible = true;
+            Console.WriteLine($"[TableCustom Constructor] ColumnHeadersVisible set to: {ColumnHeadersVisible}");
             ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
             ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle {
                 BackColor = _headerBack,
@@ -45,6 +47,7 @@ namespace GUI.Components.Tables {
             };
             ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             ColumnHeadersHeight = 44;
+            Console.WriteLine($"[TableCustom Constructor] ColumnHeadersHeight set to: {ColumnHeadersHeight}");
 
             // Hàng
             DefaultCellStyle = new DataGridViewCellStyle {

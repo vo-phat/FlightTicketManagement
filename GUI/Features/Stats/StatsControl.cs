@@ -1,340 +1,338 @@
-﻿
-using BUS.Stats;
-using DTO.Stats;
-using GUI.Components.Buttons;
-using GUI.Components.Tables; // Sá»­ dá»¥ng TableCustom
 using System;
-using System.Data;
 using System.Drawing;
-using System.Globalization;
-using System.Linq; // Cáº§n cho ToDictionary
 using System.Windows.Forms;
-// KhÃ´ng cáº§n using System.Windows.Forms.DataVisualization.Charting ná»¯a
+using System.Collections.Generic;
+using System.Linq;
+using BUS.Flight;
+using BUS.Payment;
+using DTO.Flight;
+using GUI.Components.Buttons;
 
-namespace GUI.Features.Stats
-{
-    public class StatsControl : UserControl
-    {
-        private TableLayoutPanel mainLayout;
+namespace GUI.Features.Stats {
+    public class StatsControl : UserControl {
+        private TableLayoutPanel mainPanel;
+        private Panel headerPanel;
         private Label lblTitle;
-        private FlowLayoutPanel filterPanel;
+        private DateTimePicker dtpFromDate;
+        private DateTimePicker dtpToDate;
+        private Button btnRefresh;
+        
+        // Flight Stats
+        private Panel flightStatsPanel;
+        private Label lblFlightStatsTitle;
+        private Label lblTotalFlights;
+        private Label lblScheduledFlights;
+        private Label lblDelayedFlights;
+        private Label lblCancelledFlights;
+        private Label lblCompletedFlights;
+        
+        // Payment Stats
+        private Panel paymentStatsPanel;
+        private Label lblPaymentStatsTitle;
+        private Label lblTotalRevenue;
+        private Label lblPendingPayments;
+        private Label lblSuccessfulPayments;
+        private Label lblFailedPayments;
+        
+        // Monthly Report
+        private Panel monthlyReportPanel;
+        private Label lblMonthlyReportTitle;
+        private DataGridView dgvMonthlyReport;
 
-        // Bá»™ lá»c theo NÄƒm
-        private NumericUpDown numYear;
-        private PrimaryButton btnLoad;
+        private readonly FlightBUS _flightBUS;
+        private readonly PaymentBUS _paymentBUS;
 
-        // Tháº» tÃ³m táº¯t
-        private FlowLayoutPanel summaryPanel;
-        private Label lblTotalRevenue, lblTotalTransactions;
-
-        // Báº£ng dá»¯ liá»‡u
-        private TableCustom tblMonthlyData; // Báº£ng chi tiáº¿t ThÃ¡ng
-        private TableCustom tblTopRoutes;   // Báº£ng chi tiáº¿t Tuyáº¿n
-
-        public StatsControl()
-        {
-            InitializeControl();
-            LoadDefaultReport(); // Táº£i bÃ¡o cÃ¡o máº·c Ä‘á»‹nh
+        public StatsControl() {
+            _flightBUS = FlightBUS.Instance;
+            _paymentBUS = new PaymentBUS();
+            InitializeComponent();
+            LoadStatistics();
         }
 
-        private void InitializeControl()
-        {
-            this.Controls.Clear();
-            this.Dock = DockStyle.Fill;
-            this.BackColor = Color.FromArgb(232, 240, 252); // Ná»n xÃ¡m nháº¡t
+        private void InitializeComponent() {
+            this.SuspendLayout();
 
-            // 1. Layout chÃ­nh (4 hÃ ng)
-            mainLayout = new TableLayoutPanel
-            {
+            // Main panel
+            mainPanel = new TableLayoutPanel {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 RowCount = 4,
-                BackColor = Color.Transparent
+                BackColor = Color.FromArgb(232, 240, 252),
+                Padding = new Padding(20)
             };
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Title
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Filter
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Summary Cards
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f)); // Content (2 báº£ng)
-            this.Controls.Add(mainLayout);
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 100F)); // Header
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 200F)); // Flight stats
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 200F)); // Payment stats
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));  // Monthly report
 
-            // 2. Title
-            lblTitle = new Label
-            {
-                Text = "ðŸ“ˆ BÃ¡o cÃ¡o doanh thu",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 20, FontStyle.Bold),
-                Padding = new Padding(24, 20, 24, 0),
-                Dock = DockStyle.Top
-            };
-            mainLayout.Controls.Add(lblTitle, 0, 0);
-
-            // 3. Filter Panel (Chá»‰ cÃ³ NÄ‚M)
-            filterPanel = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Top,
-                AutoSize = true,
-                Padding = new Padding(24, 12, 24, 12)
-            };
-            mainLayout.Controls.Add(filterPanel, 0, 1);
-
-            filterPanel.Controls.Add(new Label
-            {
-                Text = "Chá»n nÄƒm bÃ¡o cÃ¡o:",
-                Font = new Font("Segoe UI", 10f),
-                TextAlign = ContentAlignment.MiddleLeft,
-                Margin = new Padding(0, 8, 5, 0),
-                AutoSize = true
-            });
-
-            numYear = new NumericUpDown
-            {
-                Minimum = 2020,
-                Maximum = 2030, // Cho phÃ©p xem tÆ°Æ¡ng lai (náº¿u cáº§n)
-                // Dá»¯ liá»‡u trong database.txt táº­p trung vÃ o 2024, 2025
-                Value = 2024,
-                Width = 100,
-                Font = new Font("Segoe UI", 10f),
-                Margin = new Padding(0, 5, 15, 0)
-            };
-            filterPanel.Controls.Add(numYear);
-
-            btnLoad = new PrimaryButton("ðŸ” Xem bÃ¡o cÃ¡o");
-            btnLoad.Click += BtnLoad_Click;
-            filterPanel.Controls.Add(btnLoad);
-
-            var btnExport = new PrimaryButton("ðŸ“Š Xuáº¥t Excel") { Margin = new Padding(8, 0, 0, 0) };
-            btnExport.Click += BtnExport_Click;
-            filterPanel.Controls.Add(btnExport);
-
-            // 4. Summary Panel (CÃ¡c tháº» tÃ³m táº¯t)
-            summaryPanel = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Top,
-                AutoSize = true,
-                Padding = new Padding(24, 0, 24, 12)
-            };
-            lblTotalRevenue = CreateSummaryCard("Tá»•ng Doanh thu (NÄƒm)", "0 VND");
-            lblTotalTransactions = CreateSummaryCard("Tá»•ng Giao dá»‹ch (NÄƒm)", "0");
-            summaryPanel.Controls.Add(lblTotalRevenue);
-            summaryPanel.Controls.Add(lblTotalTransactions);
-            mainLayout.Controls.Add(summaryPanel, 0, 2);
-
-            // 5. Khu vá»±c ná»™i dung (chia 2 cá»™t)
-            var contentSplit = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 2,
-                BackColor = Color.Transparent,
-                Padding = new Padding(24, 0, 24, 24)
-            };
-            // Cá»™t bÃªn trÃ¡i 40%, bÃªn pháº£i 60%
-            contentSplit.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40f));
-            contentSplit.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60f));
-            mainLayout.Controls.Add(contentSplit, 0, 3);
-
-            // 5a. Báº£ng Chi tiáº¿t ThÃ¡ng (BÃªn trÃ¡i)
-            tblMonthlyData = new TableCustom
-            {
-                Dock = DockStyle.Fill,
-                Margin = new Padding(0, 0, 12, 0),
-                ReadOnly = true,
-                AllowUserToAddRows = false
-            };
-            tblMonthlyData.Columns.Add("Month", "ThÃ¡ng");
-            tblMonthlyData.Columns.Add("Revenue", "Doanh thu (VND)");
-            tblMonthlyData.Columns["Revenue"].DefaultCellStyle.Format = "N0";
-            tblMonthlyData.Columns["Revenue"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
-            tblMonthlyData.Columns["Month"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            tblMonthlyData.Columns["Revenue"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            contentSplit.Controls.Add(tblMonthlyData, 0, 0);
-
-            // 5b. Báº£ng Top KhÃ¡ch hÃ ng (BÃªn pháº£i - chi tiáº¿t hÆ¡n)
-            tblTopRoutes = new TableCustom
-            {
-                Dock = DockStyle.Fill,
-                Margin = new Padding(12, 0, 0, 0),
-                ReadOnly = true,
-                AllowUserToAddRows = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
-            };
-
-            tblTopRoutes.Columns.Add("Route", "Top 5 KhÃ¡ch hÃ ng");
-            tblTopRoutes.Columns.Add("Flights", "Sá»‘ giao dá»‹ch");
-            tblTopRoutes.Columns.Add("Revenue", "Doanh thu (VND)");
-
-            tblTopRoutes.Columns["Route"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            tblTopRoutes.Columns["Route"].FillWeight = 50;
+            // Header panel
+            InitializeHeader();
             
-            tblTopRoutes.Columns["Flights"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            tblTopRoutes.Columns["Flights"].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-            tblTopRoutes.Columns["Flights"].Width = 120;
+            // Flight statistics panel
+            InitializeFlightStatsPanel();
             
-            tblTopRoutes.Columns["Revenue"].DefaultCellStyle.Format = "N0";
-            tblTopRoutes.Columns["Revenue"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
-            tblTopRoutes.Columns["Revenue"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            tblTopRoutes.Columns["Revenue"].FillWeight = 35;
+            // Payment statistics panel
+            InitializePaymentStatsPanel();
+            
+            // Monthly report panel
+            InitializeMonthlyReportPanel();
 
-            contentSplit.Controls.Add(tblTopRoutes, 1, 0);
+            mainPanel.Controls.Add(headerPanel, 0, 0);
+            mainPanel.Controls.Add(flightStatsPanel, 0, 1);
+            mainPanel.Controls.Add(paymentStatsPanel, 0, 2);
+            mainPanel.Controls.Add(monthlyReportPanel, 0, 3);
+
+            this.Controls.Add(mainPanel);
+            this.ResumeLayout(false);
         }
 
-        // Helper táº¡o tháº» tÃ³m táº¯t
-        private Label CreateSummaryCard(string title, string value)
-        {
-            var lbl = new Label
-            {
+        private void InitializeHeader() {
+            headerPanel = new Panel {
+                Dock = DockStyle.Fill,
                 BackColor = Color.White,
-                Width = 240,
-                Height = 90,
-                Padding = new Padding(12),
-                Margin = new Padding(0, 0, 16, 0),
-                Font = new Font("Segoe UI", 10f, FontStyle.Bold),
-                Text = $"{title}\n"
+                Padding = new Padding(20)
             };
-            var valLabel = new Label
-            {
-                Font = new Font("Segoe UI", 16f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(0, 92, 175), // MÃ u xanh
-                Text = value,
-                Dock = DockStyle.Bottom,
-                TextAlign = ContentAlignment.BottomLeft,
-                Height = 40
+
+            lblTitle = new Label {
+                Text = "📈 BÁO CÁO THỐNG KÊ",
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 92, 175),
+                AutoSize = true,
+                Location = new Point(20, 15)
             };
-            lbl.Controls.Add(valLabel);
-            return lbl;
+
+            Label lblFrom = new Label {
+                Text = "Từ ngày:",
+                Font = new Font("Segoe UI", 9),
+                AutoSize = true,
+                Location = new Point(20, 55)
+            };
+
+            dtpFromDate = new DateTimePicker {
+                Format = DateTimePickerFormat.Short,
+                Location = new Point(90, 52),
+                Width = 120,
+                Value = DateTime.Now.AddMonths(-1)
+            };
+
+            Label lblTo = new Label {
+                Text = "Đến ngày:",
+                Font = new Font("Segoe UI", 9),
+                AutoSize = true,
+                Location = new Point(230, 55)
+            };
+
+            dtpToDate = new DateTimePicker {
+                Format = DateTimePickerFormat.Short,
+                Location = new Point(310, 52),
+                Width = 120,
+                Value = DateTime.Now
+            };
+
+            btnRefresh = new PrimaryButton("Làm mới") {
+                Location = new Point(450, 50),
+                Size = new Size(100, 30)
+            };
+            btnRefresh.Click += BtnRefresh_Click;
+
+            headerPanel.Controls.AddRange(new Control[] { lblTitle, lblFrom, dtpFromDate, lblTo, dtpToDate, btnRefresh });
         }
 
-        private void LoadDefaultReport()
-        {
-            LoadReport((int)numYear.Value);
+        private void InitializeFlightStatsPanel() {
+            flightStatsPanel = new Panel {
+                Dock = DockStyle.Fill,
+                BackColor = Color.White,
+                Padding = new Padding(20),
+                Margin = new Padding(0, 10, 0, 0)
+            };
+
+            lblFlightStatsTitle = new Label {
+                Text = "✈️ THỐNG KÊ CHUYẾN BAY",
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 92, 175),
+                AutoSize = true,
+                Location = new Point(20, 15)
+            };
+
+            lblTotalFlights = CreateStatLabel("Tổng số chuyến bay: 0", new Point(20, 50), Color.FromArgb(52, 73, 94));
+            lblScheduledFlights = CreateStatLabel("Đã lên lịch: 0", new Point(20, 80), Color.FromArgb(52, 152, 219));
+            lblDelayedFlights = CreateStatLabel("Bị hoãn: 0", new Point(20, 110), Color.FromArgb(230, 126, 34));
+            lblCancelledFlights = CreateStatLabel("Đã hủy: 0", new Point(20, 140), Color.FromArgb(231, 76, 60));
+            lblCompletedFlights = CreateStatLabel("Hoàn thành: 0", new Point(300, 80), Color.FromArgb(46, 204, 113));
+
+            flightStatsPanel.Controls.AddRange(new Control[] { 
+                lblFlightStatsTitle, lblTotalFlights, lblScheduledFlights, 
+                lblDelayedFlights, lblCancelledFlights, lblCompletedFlights 
+            });
         }
 
-        private void BtnLoad_Click(object sender, EventArgs e)
-        {
-            LoadReport((int)numYear.Value);
+        private void InitializePaymentStatsPanel() {
+            paymentStatsPanel = new Panel {
+                Dock = DockStyle.Fill,
+                BackColor = Color.White,
+                Padding = new Padding(20),
+                Margin = new Padding(0, 10, 0, 0)
+            };
+
+            lblPaymentStatsTitle = new Label {
+                Text = "💰 THỐNG KÊ DOANH THU",
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 92, 175),
+                AutoSize = true,
+                Location = new Point(20, 15)
+            };
+
+            lblTotalRevenue = CreateStatLabel("Tổng doanh thu: 0 VNĐ", new Point(20, 50), Color.FromArgb(39, 174, 96));
+            lblSuccessfulPayments = CreateStatLabel("Thanh toán thành công: 0", new Point(20, 80), Color.FromArgb(46, 204, 113));
+            lblPendingPayments = CreateStatLabel("Đang chờ: 0", new Point(20, 110), Color.FromArgb(241, 196, 15));
+            lblFailedPayments = CreateStatLabel("Thất bại: 0", new Point(20, 140), Color.FromArgb(231, 76, 60));
+
+            paymentStatsPanel.Controls.AddRange(new Control[] { 
+                lblPaymentStatsTitle, lblTotalRevenue, lblSuccessfulPayments, 
+                lblPendingPayments, lblFailedPayments 
+            });
         }
 
-        private void BtnExport_Click(object? sender, EventArgs e)
-        {
-            try
-            {
-                // Táº¡o SaveFileDialog
-                using (var sfd = new SaveFileDialog())
-                {
-                    sfd.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
-                    sfd.FileName = $"BaoCaoDoanhThu_{(int)numYear.Value}.csv";
-                    sfd.Title = "Xuáº¥t bÃ¡o cÃ¡o doanh thu";
+        private void InitializeMonthlyReportPanel() {
+            monthlyReportPanel = new Panel {
+                Dock = DockStyle.Fill,
+                BackColor = Color.White,
+                Padding = new Padding(20),
+                Margin = new Padding(0, 10, 0, 0)
+            };
 
-                    if (sfd.ShowDialog() == DialogResult.OK)
-                    {
-                        using (var writer = new System.IO.StreamWriter(sfd.FileName, false, System.Text.Encoding.UTF8))
-                        {
-                            // Header
-                            writer.WriteLine($"BÃO CÃO DOANH THU NÄ‚M {(int)numYear.Value}");
-                            writer.WriteLine($"NgÃ y xuáº¥t: {DateTime.Now:dd/MM/yyyy HH:mm}");
-                            writer.WriteLine();
-                            
-                            writer.WriteLine($"Tá»•ng doanh thu,{lblTotalRevenue.Controls[0].Text}");
-                            writer.WriteLine($"Tá»•ng giao dá»‹ch,{lblTotalTransactions.Controls[0].Text}");
-                            writer.WriteLine();
+            lblMonthlyReportTitle = new Label {
+                Text = "📊 BÁO CÁO CHI TIẾT",
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 92, 175),
+                AutoSize = true,
+                Location = new Point(20, 15)
+            };
 
-                            // Monthly data
-                            writer.WriteLine("DOANH THU THEO THÃNG");
-                            writer.WriteLine("ThÃ¡ng,Doanh thu (VND)");
-                            foreach (DataGridViewRow row in tblMonthlyData.Rows)
-                            {
-                                if (row.IsNewRow) continue;
-                                writer.WriteLine($"{row.Cells[0].Value},{row.Cells[1].Value}");
-                            }
-                            writer.WriteLine();
-
-                            // Top customers
-                            writer.WriteLine("TOP 5 KHÃCH HÃ€NG");
-                            writer.WriteLine("KhÃ¡ch hÃ ng,Sá»‘ giao dá»‹ch,Doanh thu (VND)");
-                            foreach (DataGridViewRow row in tblTopRoutes.Rows)
-                            {
-                                if (row.IsNewRow) continue;
-                                writer.WriteLine($"{row.Cells[0].Value},{row.Cells[1].Value},{row.Cells[2].Value}");
-                            }
-                        }
-
-                        MessageBox.Show($"Xuáº¥t bÃ¡o cÃ¡o thÃ nh cÃ´ng!\nFile: {sfd.FileName}", "ThÃ nh cÃ´ng", 
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
+            dgvMonthlyReport = new DataGridView {
+                Location = new Point(20, 50),
+                Width = 800,
+                Height = 250,
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                ReadOnly = true,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                BackgroundColor = Color.White,
+                BorderStyle = BorderStyle.None,
+                ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle {
+                    BackColor = Color.FromArgb(0, 92, 175),
+                    ForeColor = Color.White,
+                    Font = new Font("Segoe UI", 10, FontStyle.Bold)
                 }
+            };
+
+            // Add columns
+            dgvMonthlyReport.Columns.Add("Month", "Tháng/Năm");
+            dgvMonthlyReport.Columns.Add("TotalFlights", "Số chuyến bay");
+            dgvMonthlyReport.Columns.Add("CompletedFlights", "Chuyến hoàn thành");
+            dgvMonthlyReport.Columns.Add("Revenue", "Doanh thu (VNĐ)");
+            dgvMonthlyReport.Columns.Add("SuccessfulPayments", "Thanh toán thành công");
+
+            monthlyReportPanel.Controls.AddRange(new Control[] { lblMonthlyReportTitle, dgvMonthlyReport });
+        }
+
+        private Label CreateStatLabel(string text, Point location, Color foreColor) {
+            return new Label {
+                Text = text,
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                ForeColor = foreColor,
+                AutoSize = true,
+                Location = location
+            };
+        }
+
+        private void BtnRefresh_Click(object sender, EventArgs e) {
+            LoadStatistics();
+        }
+
+        private void LoadStatistics() {
+            try {
+                DateTime fromDate = dtpFromDate.Value.Date;
+                DateTime toDate = dtpToDate.Value.Date.AddDays(1).AddSeconds(-1);
+
+                // Load flight statistics
+                LoadFlightStatistics(fromDate, toDate);
+
+                // Load payment statistics
+                LoadPaymentStatistics();
+
+                // Load monthly report
+                LoadMonthlyReport(fromDate, toDate);
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Lá»—i khi xuáº¥t bÃ¡o cÃ¡o: {ex.Message}", "Lá»—i", 
+            catch (Exception ex) {
+                MessageBox.Show($"Lỗi khi tải thống kê: {ex.Message}", "Lỗi", 
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void InitializeComponent()
-        {
-
+        private void LoadFlightStatistics(DateTime fromDate, DateTime toDate) {
+            try {
+                var stats = _flightBUS.GetFlightStatsByDateRange(fromDate, toDate);
+                
+                lblTotalFlights.Text = $"Tổng số chuyến bay: {stats["Tổng số chuyến bay"]}";
+                lblScheduledFlights.Text = $"Đã lên lịch: {stats["Đã lên lịch"]}";
+                lblDelayedFlights.Text = $"Bị hoãn: {stats["Bị hoãn"]}";
+                lblCancelledFlights.Text = $"Đã hủy: {stats["Đã hủy"]}";
+                lblCompletedFlights.Text = $"Hoàn thành: {stats["Hoàn thành"]}";
+            }
+            catch (Exception ex) {
+                MessageBox.Show($"Lỗi khi tải thống kê chuyến bay: {ex.Message}", "Lỗi", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
 
-        private void LoadReport(int year)
-        {
-            var result = StatsBUS.Instance.GetRevenueReport(year);
-            if (!result.Success)
-            {
-                MessageBox.Show(result.GetFullErrorMessage(), "Lá»—i", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+        private void LoadPaymentStatistics() {
+            try {
+                decimal totalRevenue = _paymentBUS.GetTotalSuccessfulPayments();
+                var countByStatus = _paymentBUS.GetPaymentCountByStatus();
+
+                lblTotalRevenue.Text = $"Tổng doanh thu: {totalRevenue:N0} VNĐ";
+                lblSuccessfulPayments.Text = $"Thanh toán thành công: {countByStatus.GetValueOrDefault("SUCCESS", 0)}";
+                lblPendingPayments.Text = $"Đang chờ: {countByStatus.GetValueOrDefault("PENDING", 0)}";
+                lblFailedPayments.Text = $"Thất bại: {countByStatus.GetValueOrDefault("FAILED", 0)}";
             }
-
-            var report = result.GetData<RevenueReportViewModel>();
-
-            // 1. Cáº­p nháº­t Tháº» TÃ³m táº¯t
-            (lblTotalRevenue.Controls[0] as Label).Text = $"{report.TotalRevenue:N0} VND";
-            (lblTotalTransactions.Controls[0] as Label).Text = $"{report.TotalTransactions:N0}";
-
-            // 2. Cáº­p nháº­t Báº£ng Chi tiáº¿t ThÃ¡ng
-            tblMonthlyData.Rows.Clear();
-            var culture = new CultureInfo("vi-VN"); // "ThÃ¡ng 1", "ThÃ¡ng 2"
-
-            // Chuyá»ƒn data sang Dictionary (ThÃ¡ng -> DoanhThu)
-            var monthlyData = report.MonthlyBreakdown.AsEnumerable()
-                .ToDictionary(
-                    row => row.Field<int>("Thang"), // Key
-                    row => row.Field<decimal>("DoanhThu") // Value
-                );
-
-            // LuÃ´n hiá»ƒn thá»‹ 12 thÃ¡ng
-            for (int i = 1; i <= 12; i++)
-            {
-                string monthName = culture.DateTimeFormat.GetMonthName(i);
-                monthName = char.ToUpper(monthName[0]) + monthName.Substring(1); // "ThÃ¡ng 1"
-
-                decimal revenue = 0;
-                if (monthlyData.ContainsKey(i))
-                {
-                    revenue = monthlyData[i];
-                }
-
-                tblMonthlyData.Rows.Add(monthName, revenue);
+            catch (Exception ex) {
+                MessageBox.Show($"Lỗi khi tải thống kê thanh toán: {ex.Message}", "Lỗi", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
+        }
 
-            // 3. Cáº­p nháº­t Báº£ng Top KhÃ¡ch hÃ ng
-            tblTopRoutes.Rows.Clear();
-            
-            if (report.RouteBreakdown != null && report.RouteBreakdown.Rows.Count > 0)
-            {
-                foreach (DataRow row in report.RouteBreakdown.Rows)
-                {
-                    string customer = row["TuyenBay"]?.ToString() ?? "N/A";
-                    int transactions = row.Table.Columns.Contains("SoChuyenBay") 
-                        ? Convert.ToInt32(row["SoChuyenBay"]) 
-                        : 0;
-                    decimal revenue = Convert.ToDecimal(row["DoanhThu"]);
-                    
-                    tblTopRoutes.Rows.Add(customer, transactions, revenue);
+        private void LoadMonthlyReport(DateTime fromDate, DateTime toDate) {
+            try {
+                dgvMonthlyReport.Rows.Clear();
+
+                // Get monthly revenue report from database
+                var monthlyReport = DAO.Flight.FlightDAO.Instance.GetMonthlyRevenueReport(fromDate, toDate);
+
+                if (monthlyReport != null && monthlyReport.Rows.Count > 0) {
+                    foreach (System.Data.DataRow row in monthlyReport.Rows) {
+                        string monthYear = row["month_year"].ToString();
+                        int totalFlights = Convert.ToInt32(row["total_flights"]);
+                        int completedFlights = Convert.ToInt32(row["completed_flights"]);
+                        decimal totalRevenue = Convert.ToDecimal(row["total_revenue"]);
+                        int successfulPayments = Convert.ToInt32(row["successful_payments"]);
+
+                        dgvMonthlyReport.Rows.Add(
+                            monthYear,
+                            totalFlights,
+                            completedFlights,
+                            totalRevenue.ToString("N0"),
+                            successfulPayments
+                        );
+                    }
+                } else {
+                    dgvMonthlyReport.Rows.Add("Không có dữ liệu", "-", "-", "-", "-");
                 }
             }
-            else
-            {
-                // Hiá»ƒn thá»‹ thÃ´ng bÃ¡o náº¿u khÃ´ng cÃ³ dá»¯ liá»‡u
-                tblTopRoutes.Rows.Add("KhÃ´ng cÃ³ dá»¯ liá»‡u", 0, 0);
+            catch (Exception ex) {
+                MessageBox.Show($"Lỗi khi tải báo cáo tháng: {ex.Message}", "Lỗi", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
     }
