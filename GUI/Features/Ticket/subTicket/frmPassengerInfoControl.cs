@@ -20,12 +20,13 @@ namespace GUI.Features.Ticket.subTicket
         private readonly BindingSource _bs = new();
         private int _editingIndex = -1; // -1 = thêm mới; >=0 = đang sửa dòng này
         private int _passengerCount = 0;
-        private int _ticketCount = 2;
-        private int _accountId =1;
+        private int _ticketCount = 3;
+        private int _accountId = 1;
         public frmPassengerInfoControl()
         {
             
             InitializeComponent();
+            
             InitGrid();
             LoadInfomationAccount(_accountId);
             LoadCheckBaggage();
@@ -207,14 +208,14 @@ namespace GUI.Features.Ticket.subTicket
             // ======== TRƯỜNG HỢP THÊM MỚI ========
             if (_passengerCount < _ticketCount)
             {
-                _passengerCount++;
+               
 
                 var dto = new TicketBookingRequestDTO();
                 MapFormToDto(dto);
                 ShowTicketDtoInfo(dto);
                 _passengers.Add(dto);                       // BindingList tự refresh
-
                 ClearForm();
+                _passengerCount++;
             }
             else
             {
@@ -258,9 +259,10 @@ namespace GUI.Features.Ticket.subTicket
         private void MapFormToDto(TicketBookingRequestDTO dto)
         {
             // ========= Passenger info =========
-            if(_editingIndex == -1)
+            if(_editingIndex == 0 || _passengerCount ==0)
             {
                 dto.AccountId = _accountId; // nếu user login
+                MessageBox.Show(dto.AccountId.ToString());
             }
             dto.FullName = txtFullNameTicket.Text;
             dto.DateOfBirth = dtpDateOfBirthTicket.Value;
@@ -286,7 +288,8 @@ namespace GUI.Features.Ticket.subTicket
                 dto.CheckedId = (cboBaggageTicket.SelectedItem as DTO.Baggage.CheckedBaggageDTO)?.CheckedId;
                 dto.BaggageDisplayText = cboBaggageTicket.Text;
             }
-            dto.Quantity = 1; // mặc định 1 kiện    
+            dto.Quantity = 1; // mặc định 1 kiện
+            dto.CarryOnId = 1;
             // carry on id nếu có UI chọn hành lý xách tay thêm thì map tương tự CheckedId
             dto.BaggageNote = txtNoteBaggage.Text;
 

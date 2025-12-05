@@ -1,6 +1,7 @@
 ﻿using BUS.Ticket;
 using DTO.Ticket;
 using GUI.Features.Ticket.subTicket;
+using GUI.Features.Baggage.SubFeatures;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -25,7 +26,16 @@ namespace GUI.Features.Ticket
             bookingSearchControl = new BookingSearchControl();
             historyTicketControl = new HistoryTicketControl();
             ticketOpsControl = new TicketOpsControl();
+
+            
+
+
             frmPassengerInfoControl = new frmPassengerInfoControl();
+
+            // chức năng xem hành lý của khách
+            //int id = 1;
+            //FrmTicketBaggageManager frmTicketBaggageManager = new FrmTicketBaggageManager(id);
+
 
             pnlBookingSearch.Dock = DockStyle.Fill;
             pnlHistoryTicket.Dock = DockStyle.Fill;
@@ -62,6 +72,17 @@ namespace GUI.Features.Ticket
             pnlHeaderTicket.BringToFront();
 
             //TicketControl.Dock = DockStyle.Fill;
+            ticketOpsControl.OnOpenBaggageManager += TicketOpsControl_OnOpenBaggageManager;
+        }
+        private void TicketOpsControl_OnOpenBaggageManager(int ticketId)
+        {
+            MessageBox.Show($"Mở quản lý hành lý cho vé có ID: {ticketId}");
+            var frm = new FrmTicketBaggageManager(ticketId);
+
+            frm.Dock = DockStyle.Fill;
+            pnlTicketOps.Controls.Clear();
+            pnlTicketOps.Controls.Add(frm);
+            frm.BringToFront();
         }
 
         private void btnHistoryTicketAdmin_Click(object sender, EventArgs e)
@@ -117,5 +138,9 @@ namespace GUI.Features.Ticket
         {
 
         }
+
+        /// Event nhận id
+        
+
     }
 }
