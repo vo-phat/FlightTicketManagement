@@ -14,12 +14,11 @@ namespace DTO.FlightSeat
 
         #region Public Display Properties (Dùng cho JOIN)
         public int AircraftId { get; set; }
-
+        public int AircraftCapacity { get; set; } = 0;    // THÊM: Sức chứa máy bay
         public string AircraftName { get; set; } = "";    // Tên máy bay (Manufacturer Model)
         public string SeatNumber { get; set; } = "";      // Số ghế
         public string ClassName { get; set; } = "";
         public string FlightName { get; set; } = "";      // Tên chuyến bay (ví dụ: VN123)
-                                                          // Hạng ghế
         #endregion
 
         public int ClassId { get; set; }
@@ -97,8 +96,8 @@ namespace DTO.FlightSeat
 
         // Constructor đầy đủ (JOIN)
         public FlightSeatDTO(int flightSeatId, int flightId, int seatId, int classId,
-    decimal basePrice, string seatStatus,
-    string aircraftName, string seatNumber, string className)
+            decimal basePrice, string seatStatus,
+            string aircraftName, string seatNumber, string className)
         {
             FlightSeatId = flightSeatId;
             FlightId = flightId;
@@ -110,9 +109,10 @@ namespace DTO.FlightSeat
             SeatNumber = seatNumber;
             ClassName = className;
         }
+
         public FlightSeatDTO(int flightSeatId, int flightId, int aircraftId, int seatId, int classId,
-    decimal basePrice, string seatStatus,
-    string flightName, string aircraftName, string seatNumber, string className)
+            decimal basePrice, string seatStatus,
+            string flightName, string aircraftName, string seatNumber, string className)
         {
             FlightSeatId = flightSeatId;
             FlightId = flightId;
@@ -128,8 +128,8 @@ namespace DTO.FlightSeat
         }
 
         public FlightSeatDTO(int flightSeatId, int flightId, int aircraftId, int seatId, int classId,
-    decimal basePrice, string seatStatus,
-    string aircraftName, string seatNumber, string className)
+            decimal basePrice, string seatStatus,
+            string aircraftName, string seatNumber, string className)
         {
             FlightSeatId = flightSeatId;
             FlightId = flightId;
@@ -139,6 +139,25 @@ namespace DTO.FlightSeat
             BasePrice = basePrice;
             SeatStatus = seatStatus;
             AircraftName = aircraftName;
+            SeatNumber = seatNumber;
+            ClassName = className;
+        }
+
+        // THÊM: Constructor với AircraftCapacity
+        public FlightSeatDTO(int flightSeatId, int flightId, int aircraftId, int seatId, int classId,
+            decimal basePrice, string seatStatus,
+            string flightName, string aircraftName, int aircraftCapacity, string seatNumber, string className)
+        {
+            FlightSeatId = flightSeatId;
+            FlightId = flightId;
+            AircraftId = aircraftId;
+            SeatId = seatId;
+            ClassId = classId;
+            BasePrice = basePrice;
+            SeatStatus = seatStatus;
+            FlightName = flightName;
+            AircraftName = aircraftName;
+            AircraftCapacity = aircraftCapacity;
             SeatNumber = seatNumber;
             ClassName = className;
         }

@@ -14,33 +14,23 @@ namespace DAO.BaggageDAO
         {
             List<CheckedBaggageDTO> list = new List<CheckedBaggageDTO>();
 
-            using (MySqlConnection conn = DbConnection.GetConnection())
+            using (var conn = DbConnection.GetConnection())
             {
                 conn.Open();
-                // Query from Baggage table with standard checked baggage weights
-                string query = @"
-                    SELECT DISTINCT 
-                        ROW_NUMBER() OVER (ORDER BY allowed_weight_kg) as checked_id,
-                        allowed_weight_kg as weight_kg,
-                        fee as price,
-                        CONCAT('Hành lý ký gửi ', allowed_weight_kg, ' kg') as description
-                    FROM Baggage 
-                    WHERE baggage_type = 'CHECKED'
-                    ORDER BY allowed_weight_kg";
+                string query = "SELECT * FROM checked_baggage";
 
-                using (MySqlCommand cmd = new MySqlCommand(query, conn))
-                using (MySqlDataReader reader = cmd.ExecuteReader())
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+                var reader = cmd.ExecuteReader();
+
+                while (reader.Read())
                 {
-                    while (reader.Read())
+                    list.Add(new CheckedBaggageDTO
                     {
-                        list.Add(new CheckedBaggageDTO
-                        {
-                            CheckedId = reader.GetInt32("checked_id"),
-                            WeightKg = reader.GetInt32("weight_kg"),
-                            Price = reader.GetDecimal("price"),
-                            Description = reader.GetString("description")
-                        });
-                    }
+                        CheckedId = reader.GetInt32("checked_id"),
+                        WeightKg = reader.GetInt32("weight_kg"),
+                        Price = reader.GetDecimal("price"),
+                        Description = reader.GetString("description")
+                    });
                 }
             }
 
@@ -54,6 +44,62 @@ namespace DAO.BaggageDAO
             }
 
             return list;
+        }
+
+        public bool Insert(CheckedBaggageDTO dto)
+        {
+            using (var conn = DbConnection.GetConnection())
+            {
+                conn.Open();
+
+                string query = @"INSERT INTO checked_baggage 
+                             (weight_kg, price, description)
+                             VALUES (@w, @p, @d)";
+
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+
+                cmd.Parameters.AddWithValue("@w", dto.WeightKg);
+                cmd.Parameters.AddWithValue("@p", dto.Price);
+                cmd.Parameters.AddWithValue("@d", dto.Description);
+
+                return cmd.ExecuteNonQuery() > 0;
+            }
+        }
+
+        public bool Update(CheckedBaggageDTO dto)
+        {
+            using (var conn = DbConnection.GetConnection())
+            {
+                conn.Open();
+
+                string query = @"UPDATE checked_baggage
+                             SET weight_kg=@w, price=@p, description=@d
+                             WHERE checked_id=@id";
+
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+
+                cmd.Parameters.AddWithValue("@w", dto.WeightKg);
+                cmd.Parameters.AddWithValue("@p", dto.Price);
+                cmd.Parameters.AddWithValue("@d", dto.Description);
+                cmd.Parameters.AddWithValue("@id", dto.CheckedId);
+
+                return cmd.ExecuteNonQuery() > 0;
+            }
+        }
+
+        public bool Delete(int id)
+        {
+            using (var conn = DbConnection.GetConnection())
+            {
+                conn.Open();
+
+                string query = "DELETE FROM checked_baggage WHERE checked_id=@id";
+
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@id", id);
+
+                return cmd.ExecuteNonQuery() > 0;
+            }
         }
     }
 }

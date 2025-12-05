@@ -30,6 +30,10 @@ namespace GUI.Features.Setting.SubFeatures {
         private Dictionary<int, HashSet<int>> _roleToPermIds = new(); // roleId -> set(permissionId)
         private bool _suspendReload = false;
 
+        // Trạng thái cho Role
+        private int? _selectedRoleId = null;
+        private Button btnAddRole, btnEditRole, btnDeleteRole;
+
         public AssignByRoleControl() { 
             InitializeComponent(); 
         }
@@ -90,6 +94,7 @@ namespace GUI.Features.Setting.SubFeatures {
                 if (table.IsCurrentCellDirty) table.CommitEdit(DataGridViewDataErrorContexts.Commit);
             };
             table.CellValueChanged += Table_CellValueChanged;
+            table.ColumnHeaderMouseClick += Table_ColumnHeaderMouseClick;
 
             // ===== Footer actions ===============================================
             actions = new FlowLayoutPanel {
@@ -98,13 +103,39 @@ namespace GUI.Features.Setting.SubFeatures {
                 FlowDirection = FlowDirection.RightToLeft,
                 Padding = new Padding(24, 8, 24, 8)
             };
+            btnAddRole = new SecondaryButton("➕ Thêm vai trò");
+            btnEditRole = new SecondaryButton("✏️ Sửa vai trò");
+            btnDeleteRole = new SecondaryButton("🗑 Xóa vai trò");
             btnSave = new PrimaryButton("💾 Lưu");
             btnClearAll = new SecondaryButton("Bỏ chọn tất cả");
 
+            btnAddRole.Click += (_, __) =>
+            {
+                using var dlg = new RoleEditForm(null);   // form ở chế độ thêm mới
+                dlg.ShowDialog(this);
+            };
+
+            btnEditRole.Click += (_, __) =>
+            {
+                using var dlg = new RoleEditForm(null);   // tạm thời mở form rỗng
+                dlg.ShowDialog(this);
+            };
+
+            btnDeleteRole.Click += (_, __) =>
+            {
+                MessageBox.Show("Tính năng xóa vai trò sẽ được bổ sung sau.",
+                    "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            };
+
+            /* Bổ sung sau
+            btnAddRole.Click += (_, __) => AddRole();
+            btnEditRole.Click += (_, __) => EditRole();
+            btnDeleteRole.Click += (_, __) => DeleteRole(); 
+            */
             btnSave.Click += (_, __) => SaveAllRoles();
             btnClearAll.Click += (_, __) => ClearAll();
 
-            actions.Controls.AddRange(new Control[] { btnSave, btnClearAll });
+            actions.Controls.AddRange(new Control[] { btnSave, btnClearAll, btnDeleteRole, btnEditRole, btnAddRole });
 
             // ===== Layout tổng ===================================================
             var main = new TableLayoutPanel {
@@ -285,6 +316,32 @@ namespace GUI.Features.Setting.SubFeatures {
 
             foreach (var rid in _roles.Select(r => r.RoleId))
                 _roleToPermIds[rid].Clear();
+        }
+        private void HighlightRoleColumn(int columnIndex) {
+            // Reset màu tất cả header
+            for (int i = 0; i < table.Columns.Count; i++)
+                table.Columns[i].HeaderCell.Style.BackColor = Color.White;
+
+            // Tô màu cho cột đang chọn
+            table.Columns[columnIndex].HeaderCell.Style.BackColor = Color.FromArgb(210, 230, 255);
+        }
+
+        private void ResetHeaderColors() {
+            for (int i = 0; i < table.Columns.Count; i++)
+                table.Columns[i].HeaderCell.Style.BackColor = Color.White;
+        }
+
+        private void Table_ColumnHeaderMouseClick(object? sender, DataGridViewCellMouseEventArgs e) {
+            if (e.ColumnIndex <= 0) {
+                _selectedRoleId = null;
+                ResetHeaderColors();
+                return;
+            }
+
+            var role = _roles[e.ColumnIndex - 1];
+            _selectedRoleId = role.RoleId;
+
+            HighlightRoleColumn(e.ColumnIndex);
         }
     }
 }
