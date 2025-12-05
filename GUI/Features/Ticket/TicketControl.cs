@@ -20,7 +20,6 @@ namespace GUI.Features.Ticket {
         private const int TAB_HISTORY = 1;
         private const int TAB_TICKET_OPS = 2;
         private const int TAB_PASSENGER_INFO = 3;
-
         public TicketControl() {
             InitializeComponent();
             InitializeChildControls();
@@ -110,7 +109,7 @@ namespace GUI.Features.Ticket {
             // Mở panel tương ứng
             switch (index) {
                 case TAB_BOOKING:
-                    pnlBookingSearch.Visible = true;
+                    pnlFrmPassengerInfo.Visible = true;
                     break;
                 case TAB_HISTORY:
                     pnlHistoryTicket.Visible = true;
