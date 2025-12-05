@@ -1,3 +1,5 @@
+using BUS.Auth;
+using DTO.Booking;
 using DTO.Flight;
 using System;
 using System.Drawing;
@@ -9,6 +11,10 @@ namespace GUI.Features.Flight.SubFeatures
     {
         private FlightWithDetailsDTO _flight;
         private string _selectedCabinClass;
+        private int _selectedCabinClassId;
+
+        // Property để lấy thông tin đặt vé sau khi dialog đóng
+        public BookingRequestDTO BookingRequest { get; private set; }
 
         public CabinClassSelectionDialog(FlightWithDetailsDTO flight)
         {
@@ -87,11 +93,11 @@ namespace GUI.Features.Flight.SubFeatures
             };
             Controls.Add(lblSelectClass);
 
-            // Cabin class options
-            CreateCabinClassOption("First Class", "Hạng Nhất", "✈️", Color.FromArgb(255, 215, 0), 20, 185);
-            CreateCabinClassOption("Business", "Hạng Thương Gia", "💼", Color.FromArgb(100, 149, 237), 20, 245);
-            CreateCabinClassOption("Premium Economy", "Hạng Phổ Thông Đặc Biệt", "🎫", Color.FromArgb(60, 179, 113), 20, 305);
-            CreateCabinClassOption("Economy", "Hạng Phổ Thông", "🪑", Color.FromArgb(169, 169, 169), 20, 365);
+            // Cabin class options with IDs
+            CreateCabinClassOption("First Class", "Hạng Nhất", "✈️", Color.FromArgb(255, 215, 0), 20, 185, 1);
+            CreateCabinClassOption("Business", "Hạng Thương Gia", "💼", Color.FromArgb(100, 149, 237), 20, 245, 2);
+            CreateCabinClassOption("Premium Economy", "Hạng Phổ Thông Đặc Biệt", "🎫", Color.FromArgb(60, 179, 113), 20, 305, 3);
+            CreateCabinClassOption("Economy", "Hạng Phổ Thông", "🪑", Color.FromArgb(169, 169, 169), 20, 365, 4);
 
             // Buttons
             var btnConfirm = new Button
@@ -113,6 +119,21 @@ namespace GUI.Features.Flight.SubFeatures
                     MessageBox.Show("Vui lòng chọn hạng vé.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
+
+                // Tạo thông tin đặt vé
+                BookingRequest = new BookingRequestDTO
+                {
+                    AccountId = UserSession.CurrentAccountId,
+                    FlightId = _flight.FlightId,
+                    CabinClassId = _selectedCabinClassId,
+                    CabinClassName = _selectedCabinClass,
+                    BookingDate = DateTime.Now,
+                    FlightNumber = _flight.FlightNumber,
+                    DepartureAirportCode = _flight.DepartureAirportCode,
+                    ArrivalAirportCode = _flight.ArrivalAirportCode,
+                    DepartureTime = _flight.DepartureTime
+                };
+
                 DialogResult = DialogResult.OK;
                 Close();
             };
@@ -138,7 +159,7 @@ namespace GUI.Features.Flight.SubFeatures
             Controls.Add(btnCancel);
         }
 
-        private void CreateCabinClassOption(string className, string displayName, string icon, Color color, int x, int y)
+        private void CreateCabinClassOption(string className, string displayName, string icon, Color color, int x, int y, int cabinClassId)
         {
             var panel = new Panel
             {
@@ -147,7 +168,7 @@ namespace GUI.Features.Flight.SubFeatures
                 BorderStyle = BorderStyle.FixedSingle,
                 BackColor = Color.White,
                 Cursor = Cursors.Hand,
-                Tag = className
+                Tag = (className, cabinClassId)
             };
 
             var lblIcon = new Label
@@ -173,11 +194,12 @@ namespace GUI.Features.Flight.SubFeatures
             EventHandler clickHandler = (s, e) =>
             {
                 _selectedCabinClass = className;
+                _selectedCabinClassId = cabinClassId;
                 
                 // Highlight selected panel
                 foreach (Control ctrl in Controls)
                 {
-                    if (ctrl is Panel p && p.Tag is string)
+                    if (ctrl is Panel p && p.Tag is ValueTuple<string, int>)
                     {
                         p.BackColor = Color.White;
                         p.BorderStyle = BorderStyle.FixedSingle;

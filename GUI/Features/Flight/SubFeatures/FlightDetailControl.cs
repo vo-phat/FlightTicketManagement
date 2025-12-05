@@ -10,7 +10,7 @@ namespace GUI.Features.Flight.SubFeatures
     public class FlightDetailControl : UserControl
     {
         public event EventHandler? CloseRequested;
-        public event Action<FlightWithDetailsDTO>? BookFlightRequested;
+        public event Action<DTO.Booking.BookingRequestDTO>? NavigateToBookingRequested;
         private FlightWithDetailsDTO _currentFlight;
         private Button btnBookFlight;
         private Label vFlightNumber, vAircraftModel, vAircraftManufacturer;
@@ -433,8 +433,11 @@ namespace GUI.Features.Flight.SubFeatures
             {
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
-                    // Chuyển sang trang Tạo/Tìm đặt chỗ
-                    BookFlightRequested?.Invoke(_currentFlight);
+                    // Chuyển sang trang Thông tin khách hàng với thông tin đặt vé
+                    if (dialog.BookingRequest != null)
+                    {
+                        NavigateToBookingRequested?.Invoke(dialog.BookingRequest);
+                    }
                 }
             }
         }

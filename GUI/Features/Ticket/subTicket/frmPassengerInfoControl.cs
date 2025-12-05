@@ -359,5 +359,28 @@ namespace GUI.Features.Ticket.subTicket
 
             MessageBox.Show(sb.ToString(), "DEBUG – Dữ liệu TicketBookingRequestDTO");
         }
+
+        /// <summary>
+        /// Load thông tin booking từ dialog chọn hạng vé
+        /// </summary>
+        public void LoadBookingRequest(DTO.Booking.BookingRequestDTO bookingRequest)
+        {
+            if (bookingRequest == null) return;
+
+            // Hiển thị thông tin chuyến bay đã chọn
+            MessageBox.Show(
+                $"Thông tin đặt vé:\n" +
+                $"Chuyến bay: {bookingRequest.FlightNumber}\n" +
+                $"Tuyến: {bookingRequest.DepartureAirportCode} → {bookingRequest.ArrivalAirportCode}\n" +
+                $"Hạng vé: {bookingRequest.CabinClassName}\n" +
+                $"Giờ khởi hành: {bookingRequest.DepartureTime?.ToString("dd/MM/yyyy HH:mm")}\n\n" +
+                $"Vui lòng điền thông tin hành khách.",
+                "Thông tin đặt vé",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+
+            // TODO: Pre-fill flight và cabin class information vào form
+            // Có thể lưu bookingRequest vào field để dùng khi submit
+        }
     }
 }

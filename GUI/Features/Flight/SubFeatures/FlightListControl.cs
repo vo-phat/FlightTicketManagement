@@ -33,7 +33,7 @@ namespace GUI.Features.Flight.SubFeatures
         private int _hoveredAction = -1; // 0=View, 1=Book, 2=Edit, 3=Delete
 
         public event Action<FlightWithDetailsDTO>? ViewRequested;
-        public event Action<FlightWithDetailsDTO>? BookFlightRequested;
+        public event Action<DTO.Booking.BookingRequestDTO>? NavigateToBookingRequested;
         public event Action<FlightWithDetailsDTO>? RequestEdit;
         public event Action? DataChanged;
 
@@ -652,8 +652,11 @@ namespace GUI.Features.Flight.SubFeatures
             {
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
-                    // Sau khi chọn hạng vé xong, chuyển sang trang Đặt chỗ
-                    BookFlightRequested?.Invoke(flight);
+                    // Chuyển sang trang Thông tin khách hàng với thông tin đặt vé
+                    if (dialog.BookingRequest != null)
+                    {
+                        NavigateToBookingRequested?.Invoke(dialog.BookingRequest);
+                    }
                 }
             }
         }

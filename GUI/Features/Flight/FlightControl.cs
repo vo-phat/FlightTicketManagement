@@ -13,7 +13,7 @@ namespace GUI.Features.Flight
         private SubFeatures.FlightCreateControl create;
         private SubFeatures.FlightDetailControl detail;
 
-        public event Action<DTO.Flight.FlightWithDetailsDTO>? NavigateToBookingRequested;
+        public event Action<DTO.Booking.BookingRequestDTO>? NavigateToBookingRequested;
 
         public FlightControl()
         {
@@ -55,9 +55,9 @@ namespace GUI.Features.Flight
 
             // Event handlers
             detail.CloseRequested += (_, __) => SwitchTab(0);
-            detail.BookFlightRequested += OnBookFlightRequested;
+            detail.NavigateToBookingRequested += OnNavigateToBookingRequested;
             list.ViewRequested += OnListViewRequested;
-            list.BookFlightRequested += OnBookFlightRequested;
+            list.NavigateToBookingRequested += OnNavigateToBookingRequested;
             list.RequestEdit += OnListEditRequested;
             list.DataChanged += () => list.RefreshList();
             create.FlightSaved += (_, __) => { list.RefreshList(); SwitchTab(0); };
@@ -92,10 +92,10 @@ namespace GUI.Features.Flight
             SwitchTab(1);
         }
 
-        private void OnBookFlightRequested(DTO.Flight.FlightWithDetailsDTO flight)
+        private void OnNavigateToBookingRequested(DTO.Booking.BookingRequestDTO bookingRequest)
         {
-            // Thông báo lên MainForm để chuyển sang trang Đặt chỗ
-            NavigateToBookingRequested?.Invoke(flight);
+            // Thông báo lên MainForm để chuyển sang trang Thông tin khách hàng
+            NavigateToBookingRequested?.Invoke(bookingRequest);
         }
 
         private void SwitchTabDetail(DTO.Flight.FlightWithDetailsDTO dto)

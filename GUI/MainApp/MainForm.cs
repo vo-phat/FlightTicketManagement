@@ -486,18 +486,21 @@ namespace GUI.MainApp {
             ActivateTab(NavKey.Flights);
         }
 
-        private void OnNavigateToBookingRequested(DTO.Flight.FlightWithDetailsDTO flight)
+        private void OnNavigateToBookingRequested(DTO.Booking.BookingRequestDTO bookingRequest)
         {
-            // Chuyển sang trang Tạo/Tìm đặt chỗ
-            MessageBox.Show(
-                $"Đang chuyển sang trang đặt vé cho chuyến bay {flight.FlightNumber}\n" +
-                $"{flight.DepartureAirportCode} → {flight.ArrivalAirportCode}\n" +
-                $"Khởi hành: {flight.DepartureTime?.ToString("dd/MM/yyyy HH:mm")}", 
-                "Đặt vé", 
-                MessageBoxButtons.OK, 
-                MessageBoxIcon.Information);
+            // Chuyển sang trang Thông tin khách hàng trong phần Đặt vé
+            OpenBookingWithData(bookingRequest);
+        }
+
+        private void OpenBookingWithData(DTO.Booking.BookingRequestDTO bookingRequest)
+        {
+            // User/Staff đã có quyền nhấn nút "Đặt vé" nên không cần kiểm tra lại
+            var ticketControl = new GUI.Features.Ticket.TicketControl();
+            ticketControl.LoadBookingData(bookingRequest);
             
-            OpenBookingSearch();
+            mainContentPanel.Controls.Clear();
+            mainContentPanel.Controls.Add(ticketControl);
+            ticketControl.Dock = DockStyle.Fill;
         }
 
         private void OpenFareRules() {
