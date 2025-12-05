@@ -1,3 +1,5 @@
+DROP DATABASE IF EXISTS `FlightTicketManagement`;
+
 CREATE DATABASE IF NOT EXISTS `FlightTicketManagement`
   DEFAULT CHARACTER SET utf8mb4
   DEFAULT COLLATE utf8mb4_0900_ai_ci;
@@ -21,7 +23,7 @@ CREATE TABLE roles (
     role_name               VARCHAR(100) NOT NULL -- 'NGƯỜI DÙNG', 'NHÂN VIÊN', 'QUẢN TRỊ VIÊN'
 );
 
--- 3. Gán vai trò cho tài khoản (N-N) -- PK tổng hợp là đủ
+-- 3. Gán vai trò cho tài khoản (N-N)
 CREATE TABLE account_role (
     account_id INT NOT NULL,
     role_id    INT NOT NULL,
@@ -30,7 +32,7 @@ CREATE TABLE account_role (
     FOREIGN KEY (role_id) REFERENCES roles(role_id) ON DELETE CASCADE
 );
 
--- 4. Quyền (permission) - map thẳng vào menu/submenu
+-- 4. Quyền
 CREATE TABLE permissions (
     permission_id INT AUTO_INCREMENT PRIMARY KEY,
     permission_code     VARCHAR(100) NOT NULL UNIQUE,    -- ví dụ: 'FLIGHT.MANAGE','FARE_RULES.MANAGE','PAYMENT.POS'
@@ -46,7 +48,7 @@ CREATE TABLE role_permissions (
     FOREIGN KEY (permission_id) REFERENCES permissions(permission_id) ON DELETE CASCADE
 );
 
--- 4. Hãng hàng không
+-- 5. Hãng hàng không
 CREATE TABLE Airlines (
     airline_id INT AUTO_INCREMENT PRIMARY KEY,
     airline_code VARCHAR(10) UNIQUE NOT NULL,
@@ -54,7 +56,7 @@ CREATE TABLE Airlines (
     country VARCHAR(100)
 );
 
--- 5. Sân bay
+-- 6. Sân bay
 CREATE TABLE Airports (
     airport_id INT AUTO_INCREMENT PRIMARY KEY,
     airport_code VARCHAR(10) UNIQUE NOT NULL,
@@ -63,7 +65,7 @@ CREATE TABLE Airports (
     country VARCHAR(100)
 );
 
--- 6. Máy bay
+-- 7. Máy bay
 CREATE TABLE Aircrafts (
     aircraft_id INT AUTO_INCREMENT PRIMARY KEY,
     airline_id INT,
@@ -73,7 +75,7 @@ CREATE TABLE Aircrafts (
     FOREIGN KEY (airline_id) REFERENCES Airlines(airline_id)
 );
 
--- 7. Tuyến bay
+-- 8. Tuyến bay
 CREATE TABLE Routes (
     route_id INT AUTO_INCREMENT PRIMARY KEY,
     departure_place_id INT,
@@ -84,7 +86,7 @@ CREATE TABLE Routes (
     FOREIGN KEY (arrival_place_id) REFERENCES Airports(airport_id)
 );
 
--- 8. Chuyến bay
+-- 9. Chuyến bay
 CREATE TABLE Flights (
     flight_id INT AUTO_INCREMENT PRIMARY KEY,
     flight_number VARCHAR(20) NOT NULL,
@@ -92,18 +94,19 @@ CREATE TABLE Flights (
     route_id INT,
     departure_time DATETIME,
     arrival_time DATETIME,
-    `status` ENUM('SCHEDULED','DELAYED','CANCELLED','COMPLETED') DEFAULT 'SCHEDULED',
+    `status` ENUM('SCHEDULED','DELAYED','CANCELLED','COMPLETED') NOT NULL DEFAULT 'SCHEDULED',
     FOREIGN KEY (aircraft_id) REFERENCES Aircrafts(aircraft_id),
     FOREIGN KEY (route_id) REFERENCES Routes(route_id)
 );
 
--- 9. Hạng ghế
+-- 10. Hạng ghế
 CREATE TABLE Cabin_Classes (
     class_id INT AUTO_INCREMENT PRIMARY KEY,
-    class_name VARCHAR(50) NOT NULL
+    class_name VARCHAR(50) NOT NULL,
+    `description` VARCHAR(255)
 );
 
--- 10. Ghế ngồi trên máy bay (chỉ định danh ghế, không lưu trạng thái)
+-- 11. Ghế ngồi trên máy bay
 CREATE TABLE Seats (
     seat_id INT AUTO_INCREMENT PRIMARY KEY,
     aircraft_id INT,
@@ -113,7 +116,7 @@ CREATE TABLE Seats (
     FOREIGN KEY (class_id) REFERENCES Cabin_Classes(class_id)
 );
 
--- 11. Ghế cho từng chuyến bay (trạng thái quản lý theo chuyến)
+-- 12. Ghế cho từng chuyến bay (trạng thái quản lý theo chuyến)
 CREATE TABLE Flight_Seats (
     flight_seat_id INT AUTO_INCREMENT PRIMARY KEY,
     flight_id INT,
@@ -124,7 +127,7 @@ CREATE TABLE Flight_Seats (
     FOREIGN KEY (seat_id) REFERENCES Seats(seat_id)
 );
 
--- 12. Quy tắc giá vé (Fare Rules, tách logic định giá)
+-- 13. Quy tắc giá vé
 CREATE TABLE Fare_Rules (
     rule_id INT AUTO_INCREMENT PRIMARY KEY,
     route_id INT,
@@ -139,18 +142,18 @@ CREATE TABLE Fare_Rules (
     FOREIGN KEY (class_id) REFERENCES Cabin_Classes(class_id)
 );
 
--- 13. Đặt chỗ
+-- 14. Đặt chỗ
 CREATE TABLE Bookings (
     booking_id INT AUTO_INCREMENT PRIMARY KEY,
     account_id INT,
     booking_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    trip_type ENUM('ONE_WAY','ROUND_TRIP') NOT NULL DEFAULT 'ONE_WAY',
+    trip_type ENUM('ONE_WAY','MULTI_WAY', 'ROUND_TRIP') NOT NULL DEFAULT 'ONE_WAY',
     `status` ENUM('PENDING','CONFIRMED','CANCELLED','REFUNDED') DEFAULT 'PENDING',
     total_amount DECIMAL(12,2),
     FOREIGN KEY (account_id) REFERENCES Accounts(account_id)
 );
 
--- 14. Hồ sơ hành khách (Profile lâu dài)
+-- 15. Hồ sơ hành khách (Profile lâu dài)
 CREATE TABLE Passenger_Profiles (
     profile_id INT AUTO_INCREMENT PRIMARY KEY,
     account_id INT,
@@ -162,7 +165,7 @@ CREATE TABLE Passenger_Profiles (
     FOREIGN KEY (account_id) REFERENCES Accounts(account_id)
 );
 
--- 15. Hành khách trong từng booking
+-- 16. Hành khách trong từng booking
 CREATE TABLE Booking_Passengers (
     booking_passenger_id INT AUTO_INCREMENT PRIMARY KEY,
     booking_id INT,
@@ -171,7 +174,7 @@ CREATE TABLE Booking_Passengers (
     FOREIGN KEY (profile_id) REFERENCES Passenger_Profiles(profile_id)
 );
 
--- 16. Vé
+-- 17. Vé
 CREATE TABLE Tickets (
     ticket_id INT AUTO_INCREMENT PRIMARY KEY,
     ticket_passenger_id INT,
@@ -185,7 +188,7 @@ CREATE TABLE Tickets (
     FOREIGN KEY (flight_seat_id) REFERENCES Flight_Seats(flight_seat_id)
 );
 
--- 17. Lịch sử trạng thái vé
+-- 18. Lịch sử trạng thái vé
 CREATE TABLE Ticket_History (
     history_id INT AUTO_INCREMENT PRIMARY KEY,
     ticket_id INT,
@@ -195,18 +198,18 @@ CREATE TABLE Ticket_History (
     FOREIGN KEY (ticket_id) REFERENCES Tickets(ticket_id)
 );
 
--- 18. Thanh toán
+-- 19. Thanh toán
 CREATE TABLE Payments (
     payment_id INT AUTO_INCREMENT PRIMARY KEY,
     booking_id INT,
     amount DECIMAL(12,2),
     payment_method ENUM('CREDIT_CARD','BANK_TRANSFER','E_WALLET','CASH'),
     payment_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    status ENUM('SUCCESS','FAILED','PENDING') DEFAULT 'PENDING',
+    `status` ENUM('SUCCESS','FAILED','PENDING') DEFAULT 'PENDING',
     FOREIGN KEY (booking_id) REFERENCES Bookings(booking_id)
 );
 
--- 19. Hành lý
+-- 20. Hành lý
 CREATE TABLE Baggage (
     baggage_id INT AUTO_INCREMENT PRIMARY KEY,
     ticket_id INT NOT NULL,                       -- Liên kết với vé
@@ -224,7 +227,7 @@ CREATE TABLE Baggage (
     FOREIGN KEY (flight_id) REFERENCES Flights(flight_id)
 );
 
--- 20. Lịch sử trạng thái hành lý
+-- 21. Lịch sử trạng thái hành lý
 CREATE TABLE Baggage_History (
     history_id INT AUTO_INCREMENT PRIMARY KEY,
     baggage_id INT NOT NULL,
@@ -233,3 +236,50 @@ CREATE TABLE Baggage_History (
     changed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (baggage_id) REFERENCES Baggage(baggage_id)
 );
+
+-- 22. Hành lý xách tay
+CREATE TABLE carryon_baggage (
+	carryon_id INT AUTO_INCREMENT PRIMARY KEY,
+	weight_kg INT NOT NULL,
+	class_id INT NOT NULL,
+	size_limit VARCHAR(50),
+	`description` VARCHAR(255),
+	is_default TINYINT(1) DEFAULT 1,
+	FOREIGN KEY (class_id) REFERENCES Cabin_Classes(class_id)
+);
+
+-- 23. Kiểm tra hành lý
+CREATE TABLE checked_baggage (
+	checked_id INT AUTO_INCREMENT PRIMARY KEY,
+	weight_kg INT NOT NULL,
+	price DECIMAL(10,2) NOT NULL,
+	`description` VARCHAR(255)
+);
+
+-- 24. Quốc gia
+CREATE TABLE national (
+	national_id INT AUTO_INCREMENT PRIMARY KEY,
+	country_name VARCHAR(100) NOT NULL UNIQUE,
+	country_code CHAR(2) NOT NULL UNIQUE,
+	phone_code VARCHAR(5)
+);
+
+-- 25. Vé - Hành lý
+CREATE TABLE ticket_baggage (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	ticket_id INT NOT NULL,
+	baggage_type ENUM('carry_on','checked') NOT NULL,
+	carryon_id INT NULL,
+	checked_id INT NULL,
+	quantity INT DEFAULT 1,
+	note VARCHAR(255),
+	FOREIGN KEY (ticket_id) REFERENCES Tickets(ticket_id) ON DELETE CASCADE,
+	FOREIGN KEY (carryon_id) REFERENCES carryon_baggage(carryon_id),
+	FOREIGN KEY (checked_id) REFERENCES checked_baggage(checked_id),
+	CONSTRAINT chk_baggage_valid CHECK (
+      (baggage_type = 'carry_on' AND carryon_id IS NOT NULL AND checked_id IS NULL)
+      OR
+      (baggage_type = 'checked' AND checked_id IS NOT NULL AND carryon_id IS NULL)
+	)
+);
+
