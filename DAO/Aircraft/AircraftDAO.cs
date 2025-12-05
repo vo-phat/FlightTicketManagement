@@ -13,7 +13,9 @@ namespace DAO.Aircraft
         {
             List<AircraftDTO> aircrafts = new List<AircraftDTO>();
 
-            string query = "SELECT aircraft_id, airline_id, model, manufacturer, capacity FROM aircrafts";
+            string query = @"SELECT aircraft_id, airline_id, model, manufacturer, capacity 
+                            FROM aircrafts 
+                            ORDER BY aircraft_id";
 
             try
             {
@@ -28,7 +30,7 @@ namespace DAO.Aircraft
                         {
                             var aircraft = new AircraftDTO(
                                 reader.GetInt32("aircraft_id"),
-                                reader.GetInt32("airline_id"),
+                                reader["airline_id"] == DBNull.Value ? (int?)null : reader.GetInt32("airline_id"),
                                 reader["model"] == DBNull.Value ? null : reader.GetString("model"),
                                 reader["manufacturer"] == DBNull.Value ? null : reader.GetString("manufacturer"),
                                 reader["capacity"] == DBNull.Value ? (int?)null : reader.GetInt32("capacity")
@@ -61,7 +63,7 @@ namespace DAO.Aircraft
 
                     using (var command = new MySqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("@airline_id", aircraft.AirlineId);
+                        command.Parameters.AddWithValue("@airline_id", (object)aircraft.AirlineId ?? DBNull.Value);
                         command.Parameters.AddWithValue("@model", (object)aircraft.Model ?? DBNull.Value);
                         command.Parameters.AddWithValue("@manufacturer", (object)aircraft.Manufacturer ?? DBNull.Value);
                         command.Parameters.AddWithValue("@capacity", (object)aircraft.Capacity ?? DBNull.Value);
@@ -96,7 +98,7 @@ namespace DAO.Aircraft
 
                     using (var command = new MySqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("@airline_id", aircraft.AirlineId);
+                        command.Parameters.AddWithValue("@airline_id", (object)aircraft.AirlineId ?? DBNull.Value);
                         command.Parameters.AddWithValue("@model", (object)aircraft.Model ?? DBNull.Value);
                         command.Parameters.AddWithValue("@manufacturer", (object)aircraft.Manufacturer ?? DBNull.Value);
                         command.Parameters.AddWithValue("@capacity", (object)aircraft.Capacity ?? DBNull.Value);
@@ -141,14 +143,15 @@ namespace DAO.Aircraft
         }
         #endregion
 
-        #region Tìm kiếm máy bay (theo model, manufacturer hoặc capacity)
+        #region Tìm kiếm máy bay Vietnam Airlines (theo registration, model, manufacturer)
         public List<AircraftDTO> SearchAircrafts(string keyword)
         {
             List<AircraftDTO> results = new List<AircraftDTO>();
 
             string query = @"SELECT aircraft_id, airline_id, model, manufacturer, capacity
                              FROM aircrafts
-                             WHERE model LIKE @kw OR manufacturer LIKE @kw OR capacity LIKE @kw";
+                             WHERE model LIKE @kw OR manufacturer LIKE @kw
+                             ORDER BY aircraft_id";
 
             try
             {
@@ -166,7 +169,7 @@ namespace DAO.Aircraft
                             {
                                 var aircraft = new AircraftDTO(
                                     reader.GetInt32("aircraft_id"),
-                                    reader.GetInt32("airline_id"),
+                                    reader["airline_id"] == DBNull.Value ? (int?)null : reader.GetInt32("airline_id"),
                                     reader["model"] == DBNull.Value ? null : reader.GetString("model"),
                                     reader["manufacturer"] == DBNull.Value ? null : reader.GetString("manufacturer"),
                                     reader["capacity"] == DBNull.Value ? (int?)null : reader.GetInt32("capacity")

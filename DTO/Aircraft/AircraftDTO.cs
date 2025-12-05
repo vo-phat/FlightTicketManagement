@@ -2,14 +2,17 @@
 
 namespace DTO.Aircraft
 {
+    /// <summary>
+    /// DTO cho máy bay - Updated theo database mới (2025)
+    /// </summary>
     public class AircraftDTO
     {
         #region Private Fields
         private int _aircraftId;
-        private int _airlineId;
-        private string _model;           // nullable in DB, but keep string (allow null via setter)
-        private string _manufacturer;    // nullable in DB, but keep string (allow null via setter)
-        private int? _capacity;          // capacity may be NULL in DB -> use nullable int
+        private int? _airlineId;            // foreign key to Airlines table
+        private string _model;              // nullable in DB, but keep string (allow null via setter)
+        private string _manufacturer;       // nullable in DB, but keep string (allow null via setter)
+        private int? _capacity;             // capacity may be NULL in DB -> use nullable int
         #endregion
 
         #region Public Properties
@@ -24,12 +27,15 @@ namespace DTO.Aircraft
             }
         }
 
-        public int AirlineId
+        /// <summary>
+        /// ID của hãng hàng không (foreign key to Airlines)
+        /// </summary>
+        public int? AirlineId
         {
             get => _airlineId;
             set
             {
-                if (value <= 0)
+                if (value.HasValue && value.Value <= 0)
                     throw new ArgumentException("Airline ID phải lớn hơn 0");
                 _airlineId = value;
             }
@@ -67,6 +73,22 @@ namespace DTO.Aircraft
                 _capacity = value;
             }
         }
+
+        /// <summary>
+        /// Text hiển thị: Boeing 787-9 (274 ghế) - Airline ID: 1
+        /// </summary>
+        public string DisplayText
+        {
+            get
+            {
+                string text = !string.IsNullOrEmpty(_model) ? _model : "Unknown Model";
+                if (_capacity.HasValue)
+                    text += $" ({_capacity} ghế)";
+                if (_airlineId.HasValue)
+                    text += $" - Airline #{_airlineId}";
+                return text;
+            }
+        }
         #endregion
 
         #region Constructors
@@ -75,7 +97,7 @@ namespace DTO.Aircraft
         /// <summary>
         /// Constructor để insert (không có id)
         /// </summary>
-        public AircraftDTO(int airlineId, string model, string manufacturer, int? capacity)
+        public AircraftDTO(int? airlineId, string model, string manufacturer, int? capacity)
         {
             AirlineId = airlineId;
             Model = model;
@@ -86,7 +108,7 @@ namespace DTO.Aircraft
         /// <summary>
         /// Constructor đầy đủ (có id)
         /// </summary>
-        public AircraftDTO(int aircraftId, int airlineId, string model, string manufacturer, int? capacity)
+        public AircraftDTO(int aircraftId, int? airlineId, string model, string manufacturer, int? capacity)
         {
             AircraftId = aircraftId;
             AirlineId = airlineId;
@@ -100,12 +122,6 @@ namespace DTO.Aircraft
         public bool IsValid(out string errorMessage)
         {
             errorMessage = string.Empty;
-
-            if (_airlineId <= 0)
-            {
-                errorMessage = "Phải chỉ định hãng (AirlineId)";
-                return false;
-            }
 
             if (!string.IsNullOrEmpty(_model) && _model.Length > 100)
             {
@@ -125,6 +141,12 @@ namespace DTO.Aircraft
                 return false;
             }
 
+            if (_airlineId.HasValue && _airlineId.Value <= 0)
+            {
+                errorMessage = "Airline ID phải lớn hơn 0";
+                return false;
+            }
+
             return true;
         }
         #endregion
@@ -132,10 +154,11 @@ namespace DTO.Aircraft
         #region Overrides
         public override string ToString()
         {
-            var namePart = !string.IsNullOrEmpty(_model) ? _model : "(unknown model)";
+            var modelPart = !string.IsNullOrEmpty(_model) ? _model : "(unknown model)";
             var manufPart = !string.IsNullOrEmpty(_manufacturer) ? $" by {_manufacturer}" : "";
-            var capPart = _capacity.HasValue ? $", Capacity: {_capacity.Value}" : "";
-            return $"{namePart}{manufPart}{capPart}";
+            var capPart = _capacity.HasValue ? $", {_capacity.Value} seats" : "";
+            var airlinePart = _airlineId.HasValue ? $" [Airline ID: {_airlineId}]" : "";
+            return $"Aircraft: {modelPart}{manufPart}{capPart}{airlinePart}";
         }
 
         public override bool Equals(object obj)
