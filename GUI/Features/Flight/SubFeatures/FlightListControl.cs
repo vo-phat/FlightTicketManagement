@@ -16,13 +16,14 @@ namespace GUI.Features.Flight.SubFeatures
     public class FlightListControl : UserControl
     {
         private readonly FlightBUS _bus = FlightBUS.Instance;
-        private DataGridView table;
-        private UnderlinedTextField txtFlightNumber;
-        private UnderlinedComboBox cbDepartureAirport;
-        private UnderlinedComboBox cbArrivalAirport;
-        private UnderlinedComboBox cbStatus;
-        private DateTimePickerCustom dtpDeparture;
-        private Button btnSearch, btnClear;
+        private DataGridView table = null!;
+        private UnderlinedTextField txtFlightNumber = null!;
+        private UnderlinedComboBox cbDepartureAirport = null!;
+        private UnderlinedComboBox cbArrivalAirport = null!;
+        private UnderlinedComboBox cbStatus = null!;
+        private DateTimePickerCustom dtpDeparture = null!;
+        private Button btnSearch = null!;
+        private Button btnClear = null!;
         private const string ACTION_COL = "Actions";
         private const string TXT_VIEW = "Xem";
         private const string TXT_BOOK = "Đặt vé";
@@ -38,6 +39,7 @@ namespace GUI.Features.Flight.SubFeatures
         public event Action? DataChanged;
 
         private List<FlightWithDetailsDTO> _allFlights = new List<FlightWithDetailsDTO>();
+        private List<DTO.Booking.BookingRequestDTO> _confirmedBookings = new List<DTO.Booking.BookingRequestDTO>();
 
         public FlightListControl()
         {
@@ -83,6 +85,9 @@ namespace GUI.Features.Flight.SubFeatures
                 InheritParentBackColor = true,
                 LineThickness = 1
             };
+            
+            // Realtime search when user types
+            txtFlightNumber.TextChanged += TxtFlightNumber_TextChanged;
 
             cbDepartureAirport = new UnderlinedComboBox("Sân bay đi", Array.Empty<string>())
             {
@@ -216,6 +221,17 @@ namespace GUI.Features.Flight.SubFeatures
                 MessageBox.Show($"Lỗi khi tải dữ liệu combobox: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+        
+
+        
+        private void TxtFlightNumber_TextChanged(object? sender, EventArgs e)
+        {
+            // Auto-refresh when user types (debounce could be added for performance)
+            if (txtFlightNumber.Text.Length >= 2 || string.IsNullOrWhiteSpace(txtFlightNumber.Text))
+            {
+                RefreshList();
+            }
+        }
 
         public void RefreshList()
         {
@@ -226,24 +242,28 @@ namespace GUI.Features.Flight.SubFeatures
                 // Apply filters
                 var filtered = _allFlights.AsEnumerable();
 
-                // Filter by flight number
+                // Filter by flight number - optimized search
                 if (!string.IsNullOrWhiteSpace(txtFlightNumber.Text))
                 {
-                    var searchText = txtFlightNumber.Text.Trim().ToUpper();
-                    filtered = filtered.Where(f => f.FlightNumber.Contains(searchText));
+                    var searchText = txtFlightNumber.Text?.Trim().ToUpperInvariant().Replace(" ", "").Replace("-", "") ?? "";
+                    filtered = filtered.Where(f => 
+                    {
+                        var flightNum = (f.FlightNumber ?? "").ToUpperInvariant().Replace(" ", "").Replace("-", "");
+                        return flightNum.Contains(searchText) || flightNum.StartsWith(searchText);
+                    });
                 }
 
                 // Filter by departure airport
                 if (cbDepartureAirport.SelectedIndex > 0)
                 {
-                    var selectedAirport = cbDepartureAirport.SelectedItem.ToString().Split('-')[0].Trim();
+                    var selectedAirport = cbDepartureAirport.SelectedItem?.ToString()?.Split('-')[0].Trim() ?? "";
                     filtered = filtered.Where(f => f.DepartureAirportCode == selectedAirport);
                 }
 
                 // Filter by arrival airport
                 if (cbArrivalAirport.SelectedIndex > 0)
                 {
-                    var selectedAirport = cbArrivalAirport.SelectedItem.ToString().Split('-')[0].Trim();
+                    var selectedAirport = cbArrivalAirport.SelectedItem?.ToString()?.Split('-')[0].Trim() ?? "";
                     filtered = filtered.Where(f => f.ArrivalAirportCode == selectedAirport);
                 }
 
@@ -353,7 +373,7 @@ namespace GUI.Features.Flight.SubFeatures
             };
         }
 
-        private void Table_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        private void Table_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
         {
             if (table.Columns[e.ColumnIndex].Name == "Status" && e.Value != null)
             {
@@ -403,7 +423,7 @@ namespace GUI.Features.Flight.SubFeatures
             }
         }
 
-        private void Table_CellMouseMove(object sender, DataGridViewCellMouseEventArgs e)
+        private void Table_CellMouseMove(object? sender, DataGridViewCellMouseEventArgs e)
         {
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
             
@@ -520,7 +540,7 @@ namespace GUI.Features.Flight.SubFeatures
             }
         }
 
-        private void Table_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
+        private void Table_CellMouseLeave(object? sender, DataGridViewCellEventArgs e)
         {
             if (_hoveredRow != -1)
             {
@@ -535,7 +555,7 @@ namespace GUI.Features.Flight.SubFeatures
             }
         }
 
-        private void Table_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void Table_CellClick(object? sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
 
@@ -655,6 +675,9 @@ namespace GUI.Features.Flight.SubFeatures
                     // Chuyển sang trang Thông tin khách hàng với thông tin đặt vé
                     if (dialog.BookingRequest != null)
                     {
+                        // Lưu thông tin booking đã xác nhận
+                        _confirmedBookings.Add(dialog.BookingRequest);
+                        
                         NavigateToBookingRequested?.Invoke(dialog.BookingRequest);
                     }
                 }
@@ -683,6 +706,22 @@ namespace GUI.Features.Flight.SubFeatures
                     MessageBox.Show(message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+        }
+
+        /// <summary>
+        /// Lấy danh sách các booking đã xác nhận
+        /// </summary>
+        public List<DTO.Booking.BookingRequestDTO> ConfirmedBooking()
+        {
+            return new List<DTO.Booking.BookingRequestDTO>(_confirmedBookings);
+        }
+
+        /// <summary>
+        /// Xóa danh sách booking đã xác nhận
+        /// </summary>
+        public void ClearConfirmedBookings()
+        {
+            _confirmedBookings.Clear();
         }
     }
 }

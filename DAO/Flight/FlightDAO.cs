@@ -1399,5 +1399,52 @@ namespace DAO.Flight
             return SearchFlightsAdvanced(criteria);
         }
         #endregion
+
+        #region Cabin Class Statistics
+        /// <summary>
+        /// Lấy thống kê theo hạng vé trong khoảng thời gian
+        /// </summary>
+        public DataTable GetCabinClassStatistics(DateTime fromDate, DateTime toDate)
+        {
+            string query = @"
+                SELECT 
+                    cc.class_name AS cabin_class_name,
+                    COUNT(DISTINCT t.ticket_id) AS total_tickets,
+                    COALESCE(SUM(CASE WHEN p.status = 'SUCCESS' THEN p.amount ELSE 0 END), 0) AS total_revenue,
+                    ROUND(
+                        (COUNT(DISTINCT CASE WHEN fs.seat_status = 'BOOKED' THEN fs.flight_seat_id END) * 100.0) / 
+                        NULLIF(COUNT(DISTINCT fs.flight_seat_id), 0),
+                        1
+                    ) AS booking_rate
+                FROM Cabin_Classes cc
+                LEFT JOIN Seats s ON cc.class_id = s.class_id
+                LEFT JOIN Flight_Seats fs ON s.seat_id = fs.seat_id
+                LEFT JOIN Flights f ON fs.flight_id = f.flight_id
+                LEFT JOIN Tickets t ON fs.flight_seat_id = t.flight_seat_id
+                LEFT JOIN Booking_Passengers bp ON t.ticket_passenger_id = bp.booking_passenger_id
+                LEFT JOIN Bookings b ON bp.booking_id = b.booking_id
+                LEFT JOIN Payments p ON b.booking_id = p.booking_id
+                WHERE f.departure_time >= @fromDate 
+                AND f.departure_time <= @toDate
+                AND f.is_deleted = 0
+                GROUP BY cc.class_id, cc.class_name
+                ORDER BY total_revenue DESC";
+
+            var parameters = new Dictionary<string, object>
+            {
+                { "@fromDate", fromDate },
+                { "@toDate", toDate }
+            };
+
+            try
+            {
+                return ExecuteQuery(query, parameters);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi lấy thống kê hạng vé: {ex.Message}", ex);
+            }
+        }
+        #endregion
     }
 }

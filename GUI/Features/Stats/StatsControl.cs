@@ -10,34 +10,39 @@ using GUI.Components.Buttons;
 
 namespace GUI.Features.Stats {
     public class StatsControl : UserControl {
-        private TableLayoutPanel mainPanel;
-        private Panel headerPanel;
-        private Label lblTitle;
-        private DateTimePicker dtpFromDate;
-        private DateTimePicker dtpToDate;
-        private Button btnRefresh;
+        private TableLayoutPanel mainPanel = null!;
+        private Panel headerPanel = null!;
+        private Label lblTitle = null!;
+        private DateTimePicker dtpFromDate = null!;
+        private DateTimePicker dtpToDate = null!;
+        private Button btnRefresh = null!;
         
         // Flight Stats
-        private Panel flightStatsPanel;
-        private Label lblFlightStatsTitle;
-        private Label lblTotalFlights;
-        private Label lblScheduledFlights;
-        private Label lblDelayedFlights;
-        private Label lblCancelledFlights;
-        private Label lblCompletedFlights;
+        private Panel flightStatsPanel = null!;
+        private Label lblFlightStatsTitle = null!;
+        private Label lblTotalFlights = null!;
+        private Label lblScheduledFlights = null!;
+        private Label lblDelayedFlights = null!;
+        private Label lblCancelledFlights = null!;
+        private Label lblCompletedFlights = null!;
         
         // Payment Stats
-        private Panel paymentStatsPanel;
-        private Label lblPaymentStatsTitle;
-        private Label lblTotalRevenue;
-        private Label lblPendingPayments;
-        private Label lblSuccessfulPayments;
-        private Label lblFailedPayments;
+        private Panel paymentStatsPanel = null!;
+        private Label lblPaymentStatsTitle = null!;
+        private Label lblTotalRevenue = null!;
+        private Label lblPendingPayments = null!;
+        private Label lblSuccessfulPayments = null!;
+        private Label lblFailedPayments = null!;
         
         // Monthly Report
-        private Panel monthlyReportPanel;
-        private Label lblMonthlyReportTitle;
-        private DataGridView dgvMonthlyReport;
+        private Panel monthlyReportPanel = null!;
+        private Label lblMonthlyReportTitle = null!;
+        private DataGridView dgvMonthlyReport = null!;
+        
+        // Cabin Class Statistics
+        private Panel cabinClassStatsPanel = null!;
+        private Label lblCabinClassStatsTitle = null!;
+        private DataGridView dgvCabinClassStats = null!;
 
         private readonly FlightBUS _flightBUS;
         private readonly PaymentBUS _paymentBUS;
@@ -55,15 +60,17 @@ namespace GUI.Features.Stats {
             // Main panel
             mainPanel = new TableLayoutPanel {
                 Dock = DockStyle.Fill,
-                ColumnCount = 1,
+                ColumnCount = 2,
                 RowCount = 4,
                 BackColor = Color.FromArgb(232, 240, 252),
                 Padding = new Padding(20)
             };
+            mainPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F)); // Left column
+            mainPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F)); // Right column
             mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 100F)); // Header
             mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 200F)); // Flight stats
             mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 200F)); // Payment stats
-            mainPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));  // Monthly report
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));  // Monthly report & cabin stats
 
             // Header panel
             InitializeHeader();
@@ -76,11 +83,21 @@ namespace GUI.Features.Stats {
             
             // Monthly report panel
             InitializeMonthlyReportPanel();
+            
+            // Cabin class statistics panel
+            InitializeCabinClassStatsPanel();
 
+            mainPanel.SetColumnSpan(headerPanel, 2); // Header spans both columns
             mainPanel.Controls.Add(headerPanel, 0, 0);
+            
+            mainPanel.SetColumnSpan(flightStatsPanel, 2); // Flight stats spans both columns
             mainPanel.Controls.Add(flightStatsPanel, 0, 1);
+            
+            mainPanel.SetColumnSpan(paymentStatsPanel, 2); // Payment stats spans both columns
             mainPanel.Controls.Add(paymentStatsPanel, 0, 2);
+            
             mainPanel.Controls.Add(monthlyReportPanel, 0, 3);
+            mainPanel.Controls.Add(cabinClassStatsPanel, 1, 3);
 
             this.Controls.Add(mainPanel);
             this.ResumeLayout(false);
@@ -211,12 +228,13 @@ namespace GUI.Features.Stats {
 
             dgvMonthlyReport = new DataGridView {
                 Location = new Point(20, 50),
-                Width = 800,
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                Width = 650,
                 Height = 250,
                 AllowUserToAddRows = false,
                 AllowUserToDeleteRows = false,
                 ReadOnly = true,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells,
                 SelectionMode = DataGridViewSelectionMode.FullRowSelect,
                 BackgroundColor = Color.White,
                 BorderStyle = BorderStyle.None,
@@ -237,6 +255,51 @@ namespace GUI.Features.Stats {
             monthlyReportPanel.Controls.AddRange(new Control[] { lblMonthlyReportTitle, dgvMonthlyReport });
         }
 
+        private void InitializeCabinClassStatsPanel() {
+            cabinClassStatsPanel = new Panel {
+                Dock = DockStyle.Fill,
+                BackColor = Color.White,
+                Padding = new Padding(20),
+                Margin = new Padding(10, 10, 0, 0)
+            };
+
+            lblCabinClassStatsTitle = new Label {
+                Text = "🎫 THỐNG KÊ THEO HẠNG VÉ",
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 92, 175),
+                AutoSize = true,
+                Location = new Point(20, 15)
+            };
+
+            dgvCabinClassStats = new DataGridView {
+                Location = new Point(20, 50),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                Width = 650,
+                Height = 250,
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                ReadOnly = true,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                BackgroundColor = Color.White,
+                BorderStyle = BorderStyle.None,
+                ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle {
+                    BackColor = Color.FromArgb(0, 92, 175),
+                    ForeColor = Color.White,
+                    Font = new Font("Segoe UI", 10, FontStyle.Bold)
+                }
+            };
+
+            // Add columns
+            dgvCabinClassStats.Columns.Add("CabinClass", "Hạng vé");
+            dgvCabinClassStats.Columns.Add("TotalTickets", "Số vé đã bán");
+            dgvCabinClassStats.Columns.Add("Revenue", "Doanh thu (VNĐ)");
+            dgvCabinClassStats.Columns.Add("BookingRate", "Tỷ lệ đặt (%)");
+            dgvCabinClassStats.Columns.Add("AvgPrice", "Giá TB (VNĐ)");
+
+            cabinClassStatsPanel.Controls.AddRange(new Control[] { lblCabinClassStatsTitle, dgvCabinClassStats });
+        }
+
         private Label CreateStatLabel(string text, Point location, Color foreColor) {
             return new Label {
                 Text = text,
@@ -247,7 +310,7 @@ namespace GUI.Features.Stats {
             };
         }
 
-        private void BtnRefresh_Click(object sender, EventArgs e) {
+        private void BtnRefresh_Click(object? sender, EventArgs e) {
             LoadStatistics();
         }
 
@@ -264,6 +327,9 @@ namespace GUI.Features.Stats {
 
                 // Load monthly report
                 LoadMonthlyReport(fromDate, toDate);
+                
+                // Load cabin class statistics
+                LoadCabinClassStatistics(fromDate, toDate);
             }
             catch (Exception ex) {
                 MessageBox.Show($"Lỗi khi tải thống kê: {ex.Message}", "Lỗi", 
@@ -312,7 +378,7 @@ namespace GUI.Features.Stats {
 
                 if (monthlyReport != null && monthlyReport.Rows.Count > 0) {
                     foreach (System.Data.DataRow row in monthlyReport.Rows) {
-                        string monthYear = row["month_year"].ToString();
+                        string monthYear = row["month_year"]?.ToString() ?? "";
                         int totalFlights = Convert.ToInt32(row["total_flights"]);
                         int completedFlights = Convert.ToInt32(row["completed_flights"]);
                         decimal totalRevenue = Convert.ToDecimal(row["total_revenue"]);
@@ -332,6 +398,39 @@ namespace GUI.Features.Stats {
             }
             catch (Exception ex) {
                 MessageBox.Show($"Lỗi khi tải báo cáo tháng: {ex.Message}", "Lỗi", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void LoadCabinClassStatistics(DateTime fromDate, DateTime toDate) {
+            try {
+                dgvCabinClassStats.Rows.Clear();
+
+                // Get cabin class statistics from database
+                var cabinStats = DAO.Flight.FlightDAO.Instance.GetCabinClassStatistics(fromDate, toDate);
+
+                if (cabinStats != null && cabinStats.Rows.Count > 0) {
+                    foreach (System.Data.DataRow row in cabinStats.Rows) {
+                        string cabinClassName = row["cabin_class_name"]?.ToString() ?? "";
+                        int totalTickets = Convert.ToInt32(row["total_tickets"]);
+                        decimal revenue = Convert.ToDecimal(row["total_revenue"]);
+                        decimal bookingRate = Convert.ToDecimal(row["booking_rate"]);
+                        decimal avgPrice = totalTickets > 0 ? revenue / totalTickets : 0;
+
+                        dgvCabinClassStats.Rows.Add(
+                            cabinClassName,
+                            totalTickets,
+                            revenue.ToString("N0"),
+                            bookingRate.ToString("F1"),
+                            avgPrice.ToString("N0")
+                        );
+                    }
+                } else {
+                    dgvCabinClassStats.Rows.Add("Không có dữ liệu", "-", "-", "-", "-");
+                }
+            }
+            catch (Exception ex) {
+                MessageBox.Show($"Lỗi khi tải thống kê hạng vé: {ex.Message}", "Lỗi", 
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }

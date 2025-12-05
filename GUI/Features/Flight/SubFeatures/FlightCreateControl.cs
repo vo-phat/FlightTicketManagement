@@ -33,28 +33,28 @@ namespace GUI.Features.Flight.SubFeatures
         private Dictionary<int, string> _airportCodes = new Dictionary<int, string>();
 
         // UI Components - Section A: Thông tin chung
-        private Label lblTitle;
-        private UnderlinedTextField txtFlightNumber;
-        private UnderlinedComboBox cbAircraft;
-        private UnderlinedComboBox cbRoute;
-        private DateTimePicker dtpDepartureTime;
-        private DateTimePicker dtpArrivalTime;
-        private Label lblDuration;
-        private Label lblDurationValue;
-        private NumericUpDown nudBasePrice;
-        private RichTextBox rtbNote;
+        private Label lblTitle = null!;
+        private UnderlinedTextField txtFlightNumber = null!;
+        private UnderlinedComboBox cbAircraft = null!;
+        private UnderlinedComboBox cbRoute = null!;
+        private DateTimePicker dtpDepartureTime = null!;
+        private DateTimePicker dtpArrivalTime = null!;
+        private Label lblDuration = null!;
+        private Label lblDurationValue = null!;
+        private NumericUpDown nudBasePrice = null!;
+        private RichTextBox rtbNote = null!;
 
         // Section B: Trạng thái
-        private Label lblCurrentStatus;
-        private Label lblCurrentStatusValue;
-        private UnderlinedComboBox cbNewStatus;
-        private Label lblStatusWarning;
+        private Label lblCurrentStatus = null!;
+        private Label lblCurrentStatusValue = null!;
+        private UnderlinedComboBox cbNewStatus = null!;
+        private Label lblStatusWarning = null!;
 
         // Section C: Hành động
-        private PrimaryButton btnSave;
-        private SecondaryButton btnCancel;
-        private SecondaryButton btnReset;
-        private Label lblPriceWarning;
+        private PrimaryButton btnSave = null!;
+        private SecondaryButton btnCancel = null!;
+        private SecondaryButton btnReset = null!;
+        private Label lblPriceWarning = null!;
 
         private List<AircraftDTO> _aircraftList;
         private List<RouteDTO> _routeList;
@@ -517,7 +517,7 @@ namespace GUI.Features.Flight.SubFeatures
             }
         }
 
-        private void DtpTime_ValueChanged(object sender, EventArgs e)
+        private void DtpTime_ValueChanged(object? sender, EventArgs e)
         {
             UpdateDuration();
         }
@@ -847,7 +847,7 @@ namespace GUI.Features.Flight.SubFeatures
             return result == DialogResult.Yes;
         }
 
-        private void BtnCancel_Click(object sender, EventArgs e)
+        private void BtnCancel_Click(object? sender, EventArgs e)
         {
             var result = MessageBox.Show("Bạn có chắc chắn muốn hủy bỏ?", "Xác nhận", 
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question);
