@@ -1,4 +1,5 @@
-﻿using GUI.Components.Buttons;
+﻿using BUS.Auth;
+using GUI.Components.Buttons;
 using GUI.Components.Inputs;
 using GUI.Features.Auth;
 using GUI.MainApp;
@@ -6,6 +7,7 @@ using GUI.Properties;
 
 namespace GUI.Features.Auth {
     public class LoginForm : AuthBaseForm {
+        private readonly AuthService _authService = new AuthService();
         public LoginForm() : base("Đăng nhập") {
             BuildUI();
         }
@@ -45,27 +47,31 @@ namespace GUI.Features.Auth {
                 Location = new Point(tfPassword.Left, rowLinks.Bottom + 14)
             };
             CenterX(btnLogin);
-            btnLogin.Click += (s, e) => {
-                string email = tfUser.Text.Trim();
-                string password = tfPassword.Text.Trim();
 
-                if (email == "admin" && password == "12345") {
-                    var mainForm = new MainForm();
+            btnLogin.Click += (s, e) => {
+                try {
+                    string email = tfUser.Text.Trim();
+                    string password = tfPassword.Text.Trim();
+
+                    var account = _authService.Login(email, password);
+
+                    UserSession.SetAccount(account);
+
+                    var mainForm = new MainForm(UserSession.CurrentAppRole);
                     mainForm.StartPosition = FormStartPosition.CenterScreen;
                     mainForm.Show();
 
-                    // Ẩn hoặc đóng form đăng nhập
-                    this.DialogResult = DialogResult.OK;
-                    this.Close();
-                } else {
-                    MessageBox.Show("Tài khoản hoặc mật khẩu không chính xác!", "Đăng nhập thất bại",
-                                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    this.Hide();
+                    mainForm.FormClosed += (_, __) => this.Close();
+                } catch (Exception ex) {
+                    MessageBox.Show(ex.Message, "Đăng nhập thất bại",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             };
+
             content.Controls.Add(btnLogin);
             this.AcceptButton = btnLogin;
 
-            // Link “Đăng ký” (căn phải theo nút cho gọn – hoặc theo tfPass nếu bạn muốn)
             var rowToRegister = CreateRightAlignedLinkRow(
                 btnLogin,
                 "Bạn chưa có tài khoản? Đăng ký ngay",

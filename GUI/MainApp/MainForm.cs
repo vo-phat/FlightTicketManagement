@@ -1,5 +1,4 @@
 using GUI.Components.Link;
-using GUI.Features.Account;
 using GUI.Features.Aircraft;
 using GUI.Features.Airline;
 using GUI.Features.Airport;
@@ -16,12 +15,15 @@ using GUI.Features.Ticket;
 using GUI.Features.Payments;
 using GUI.Features.Setting;
 using GUI.Properties;
+using DTO.Auth;
+using BUS.Auth;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace GUI.MainApp {
-    public enum AppRole { 
-        User, Staff, Admin 
-    }
-
     public enum NavKey {
         Home, Flights, BookingsTickets, Baggage, Catalogs,
         Payments, Customers, Notifications, Reports, System, MyProfile
@@ -47,11 +49,20 @@ namespace GUI.MainApp {
         private AppRole _role;
         private NavKey _active = NavKey.Home;
 
-        public MainForm() : this(AppRole.Admin) { } // mặc định user
+        // ===== Permission =======================================================
+        private readonly RolePermissionService _permService = new();
+        private HashSet<string> _perms = new(StringComparer.OrdinalIgnoreCase);
+
+        public MainForm() : this(AppRole.Admin) { } // mặc định admin
+
         public MainForm(AppRole role) {
             _role = role;
             InitializeComponent();
             BuildNavbarShell();
+
+            // 🔥 Nạp quyền của account hiện tại
+            ReloadPermissions();
+
             RenderNavbar();
             BuildMainContent();
             ActivateTab(NavKey.Home);
@@ -63,6 +74,18 @@ namespace GUI.MainApp {
             StartPosition = FormStartPosition.CenterScreen;
             BackColor = Color.White;
         }
+
+        // ===== Permission helper ================================================
+        private void ReloadPermissions() {
+            try {
+                var codes = _permService.GetEffectivePermissionCodesOfAccount(UserSession.CurrentAccountId);
+                _perms = codes ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            } catch {
+                _perms = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            }
+        }
+
+        private bool HasPerm(string code) => _perms.Contains(code);
 
         // ===== Navbar (khung) ===================================================
         private void BuildNavbarShell() {
@@ -99,97 +122,140 @@ namespace GUI.MainApp {
         // ===== Đặc tả menu (ẩn/hiện theo quyền) =================================
         private List<NavItem> BuildSpec() {
             return new List<NavItem> {
-                //new() {
-                //    Key = NavKey.Home, Text = "🏠 Trang chủ",
-                //    IsVisible = r => true,
-                //    OnClick = () => LoadControl(new Label {
-                //        Text = "Bảng điều khiển",
-                //        Dock = DockStyle.Fill,
-                //        TextAlign = ContentAlignment.MiddleCenter,
-                //        Font = new Font("Segoe UI", 18, FontStyle.Bold)
-                //    })
-                //},
+                new() {
+                    Key = NavKey.Home,
+                    Text = "🏠 Trang chủ",
+                    IsVisible = r => true,
+                    OnClick = () => {
+                        mainContentPanel.Controls.Clear();
+
+                        if (!mainContentPanel.Controls.Contains(defaultPicture))
+                            mainContentPanel.Controls.Add(defaultPicture);
+
+                        defaultPicture.Visible = true;
+                        defaultPicture.BringToFront();
+
+                        ActivateTab(NavKey.Home);
+                    }
+                },
+
                 new() {
                     Key = NavKey.Flights, Text = "✈️ Chuyến bay",
-                    IsVisible = r => true,
+                    // Chỉ hiển thị menu nếu có ít nhất 1 trong 2 quyền
+                    IsVisible = r => HasPerm(Perm.Flights_Read) || HasPerm(Perm.Flights_Create),
                     SubItems = {
-                        ("Quản lý chuyến bay", r => true,
-                            () => LoadControl(new FlightControl())),
-                        ("Quy tắc giá vé", r => r == AppRole.Admin,
+                        ("Quản lý chuyến bay",
+                            r => HasPerm(Perm.Flights_Read) || HasPerm(Perm.Flights_Create),
+                            () => OpenFlightManagement()),
+                        ("Quy tắc giá vé",
+                            r => HasPerm(Perm.FareRules_Manage),
                             () => OpenFareRules())
                     }
                 },
+
                 new() {
                     Key = NavKey.BookingsTickets, Text = "🎟 Đặt chỗ & Vé",
-                    IsVisible = r => true,
+                    IsVisible = r =>
+                        HasPerm(Perm.Tickets_CreateSearch) ||
+                        HasPerm(Perm.Tickets_Mine) ||
+                        HasPerm(Perm.Tickets_Operate) ||
+                        HasPerm(Perm.Tickets_History),
                     SubItems = {
-                        ("Tạo/Tìm đặt chỗ", r => true, () => OpenBookingSearch()),
-                        ("Đặt chỗ của tôi", r => r == AppRole.User, () => OpenMyBookings()),
+                        ("Tạo/Tìm đặt chỗ",
+                            r => HasPerm(Perm.Tickets_CreateSearch),
+                            () => OpenBookingSearch()),
+                        ("Đặt chỗ của tôi",
+                            r => HasPerm(Perm.Tickets_Mine),
+                            () => OpenMyBookings()),
                         ("Quản lý vé (check-in/đổi trạng thái)",
-                            r => r is AppRole.Staff or AppRole.Admin, () => OpenTicketOps()),
-                        ("Lịch sử vé", r => r == AppRole.Admin, () => OpenTicketHistory())
+                            r => HasPerm(Perm.Tickets_Operate),
+                            () => OpenTicketOps()),
+                        ("Lịch sử vé",
+                            r => HasPerm(Perm.Tickets_History),
+                            () => OpenTicketHistory())
                     }
                 },
+
                 new() {
                     Key = NavKey.Baggage, Text = "🧳 Hành lý",
-                    IsVisible = r => r is AppRole.Staff or AppRole.Admin,
+                    IsVisible = r =>
+                        HasPerm(Perm.Baggage_Checkin) ||
+                        HasPerm(Perm.Baggage_Track) ||
+                        HasPerm(Perm.Baggage_Report),
                     SubItems = {
                         ("Check-in hành lý / gán tag",
-                            r => r is AppRole.Staff or AppRole.Admin, () => OpenBaggageCheckin()),
+                            r => HasPerm(Perm.Baggage_Checkin),
+                            () => OpenBaggageCheckin()),
                         ("Theo dõi trạng thái",
-                            r => r is AppRole.Staff or AppRole.Admin, () => OpenBaggageTracking()),
-                        ("Báo cáo thất lạc", r => r == AppRole.Admin, () => OpenBaggageReports())
+                            r => HasPerm(Perm.Baggage_Track),
+                            () => OpenBaggageTracking()),
+                        ("Báo cáo thất lạc",
+                            r => HasPerm(Perm.Baggage_Report),
+                            () => OpenBaggageReports())
                     }
                 },
+
                 new() {
                     Key = NavKey.Catalogs, Text = "📚 Danh mục",
-                    IsVisible = r => r == AppRole.Admin,
+                    IsVisible = r =>
+                        HasPerm(Perm.Catalogs_Airlines) ||
+                        HasPerm(Perm.Catalogs_Aircrafts) ||
+                        HasPerm(Perm.Catalogs_Airports) ||
+                        HasPerm(Perm.Catalogs_Routes) ||
+                        HasPerm(Perm.Catalogs_CabinClasses) ||
+                        HasPerm(Perm.Catalogs_Seats),
                     SubItems = {
-                        ("Hãng hàng không", r => r == AppRole.Admin, () => OpenAirlines()),
-                        ("Máy bay", r => r == AppRole.Admin, () => OpenAircrafts()),
-                        ("Sân bay", r => r == AppRole.Admin,
+                        ("Hãng hàng không",
+                            r => HasPerm(Perm.Catalogs_Airlines),
+                            () => OpenAirlines()),
+                        ("Máy bay",
+                            r => HasPerm(Perm.Catalogs_Aircrafts),
+                            () => OpenAircrafts()),
+                        ("Sân bay",
+                            r => HasPerm(Perm.Catalogs_Airports),
                             () => LoadControl(new AirportControl())),
-                        ("Tuyến bay", r => r == AppRole.Admin, () => OpenRoutes()),
-                        ("Hạng vé", r => r == AppRole.Admin, () => OpenCabinClasses()),
-                        ("Ghế máy bay", r => r == AppRole.Admin, () => OpenSeats())
+                        ("Tuyến bay",
+                            r => HasPerm(Perm.Catalogs_Routes),
+                            () => OpenRoutes()),
+                        ("Hạng vé",
+                            r => HasPerm(Perm.Catalogs_CabinClasses),
+                            () => OpenCabinClasses()),
+                        ("Ghế máy bay",
+                            r => HasPerm(Perm.Catalogs_Seats),
+                            () => OpenSeats())
                     }
                 },
+
                 new() {
                     Key = NavKey.Payments, Text = "💳 Thanh toán",
-                    IsVisible = r => r is AppRole.Staff or AppRole.Admin,
+                    IsVisible = r => HasPerm(Perm.Payments_Pos),
                     SubItems = {
-                        ("POS / Giao dịch", r => r is AppRole.Staff or AppRole.Admin, () => OpenPayments())
+                        ("POS / Giao dịch",
+                            r => HasPerm(Perm.Payments_Pos),
+                            () => OpenPayments())
                     }
                 },
-                //new() {
-                //    Key = NavKey.Customers, Text = "👤 Khách hàng",
-                //    IsVisible = r => true,
-                //    SubItems = {
-                //        ("Hồ sơ hành khách", r => true, () => OpenPassengerProfiles()),
-                //        ("Tài khoản & Quyền", r => r == AppRole.Admin, () => LoadControl(new AccountControl()))
-                //    }
-                //},
-                //new() {
-                //    Key = NavKey.Notifications, Text = "🔔 Thông báo",
-                //    IsVisible = r => true,
-                //    OnClick = () => OpenNotifications()
-                //},
+
                 new() {
                     Key = NavKey.Reports, Text = "📈 Báo cáo",
-                    IsVisible = r => r is AppRole.Staff or AppRole.Admin,
+                    IsVisible = r => HasPerm(Perm.Reports_View),
                     OnClick = () => LoadControl(new StatsControl())
                 },
+
                 new() {
                     Key = NavKey.MyProfile, Text = "🙍 Hồ sơ của tôi",
                     IsVisible = r => true,
-                    OnClick = () => ShowControl("MyProfile", () => new MyProfileControl(1)) // truyền vào account_id từ database
+                    OnClick = () => ShowControl("MyProfile",
+                        () => new MyProfileControl(UserSession.CurrentAccountId))
                 },
+
                 new() {
                     Key = NavKey.System, Text = "⚙️ Hệ thống",
-                    IsVisible = r => r == AppRole.Admin,
+                    IsVisible = r => HasPerm(Perm.Accounts_Manage) || HasPerm(Perm.System_Roles),
                     SubItems = {
-                        ("Vai trò & phân quyền", r => r == AppRole.Admin, () => OpenRoles()),
-                        //("Cấu hình ứng dụng", r => r == AppRole.Admin, () => LoadControl(new SettingsControl()))
+                        ("Quản lý quyền và Tài khoản",
+                            r => HasPerm(Perm.Accounts_Manage) || HasPerm(Perm.System_Roles),
+                            () => OpenRoles())
                     }
                 },
             };
@@ -205,7 +271,6 @@ namespace GUI.MainApp {
             for (int i = 0; i < spec.Count; i++) {
                 var item = spec[i];
 
-                // Tạo Link
                 var link = new NavLink(item.Text) {
                     IsActive = (item.Key == _active),
                     Margin = new Padding(6, 4, 6, 0)
@@ -234,18 +299,13 @@ namespace GUI.MainApp {
                     }
 
                     if (menu.Items.Count > 0) {
-                        link.DropMenu = menu; // cơ chế dropdown giữ nguyên
+                        link.DropMenu = menu;
                     } else if (item.OnClick != null) {
                         link.Click += (_, __) => { ActivateTab(item.Key); item.OnClick(); };
                     }
                 } else if (item.OnClick != null) {
                     link.Click += (_, __) => { ActivateTab(item.Key); item.OnClick(); };
                 }
-                if (item.OnClick != null)
-                {
-                    link.Click += (_, __) => { ActivateTab(item.Key); item.OnClick(); };
-                }
-
 
                 navFlow.Controls.Add(link);
 
@@ -259,8 +319,8 @@ namespace GUI.MainApp {
                 }
             }
 
-        navFlow.ResumeLayout();
-    }
+            navFlow.ResumeLayout();
+        }
 
         private void ActivateTab(NavKey key) {
             _active = key;
@@ -305,7 +365,6 @@ namespace GUI.MainApp {
         }
 
         private void Logo_Click(object? sender, EventArgs e) {
-            // về Trang chủ
             mainContentPanel.Controls.Clear();
             if (!mainContentPanel.Controls.Contains(defaultPicture))
                 mainContentPanel.Controls.Add(defaultPicture);
@@ -314,11 +373,10 @@ namespace GUI.MainApp {
             ActivateTab(NavKey.Home);
         }
 
-        // ===== Các hành động mở màn hình thực tế / stub tạm ======================
-        private void OpenCreateFlight() {
-            // Có thể mở form tạo hoặc load view tạo ở FlightControl
-            ShowControl("Flight", () => new FlightControl());
-            // TODO: chuyển tab nội bộ sang "Tạo chuyến bay" nếu cần
+        // ===== Các hành động mở màn hình thực tế ================================
+        private void OpenFlightManagement() {
+            // Truyền delegate HasPerm xuống FlightControl
+            ShowControl("Flight", () => new FlightControl(code => HasPerm(code)));
         }
 
         private void OpenFareRules() {
@@ -383,14 +441,6 @@ namespace GUI.MainApp {
             ShowControl("Payments", () => new PaymentsControl());
         }
 
-        //private void OpenPassengerProfiles() {
-        //    MessageBox.Show("Hồ sơ hành khách.", "Passenger Profiles");
-        //}
-
-        //private void OpenNotifications() {
-        //    MessageBox.Show("Thông báo (lọc theo account_id với User).", "Notifications");
-        //}
-
         private void OpenRoles() {
             LoadControl(new RolePermissionControl());
         }
@@ -398,6 +448,7 @@ namespace GUI.MainApp {
         // ===== Public: đổi quyền runtime (nếu cần) ===============================
         public void SetRole(AppRole role) {
             _role = role;
+            ReloadPermissions();     // nếu đổi role -> load lại perm cho account hiện tại (hoặc account khác)
             ActivateTab(NavKey.Home);
         }
     }

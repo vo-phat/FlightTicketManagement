@@ -9,18 +9,15 @@ using GUI.Components.Inputs;
 using BUS.Seat;
 using DTO.Seat;
 
-namespace GUI.Features.Seat.SubFeatures
-{
+namespace GUI.Features.Seat.SubFeatures {
     // DTO tạm thời cho ComboBox (chứa cả tên và ID)
-    public class ComboboxItem
-    {
+    public class ComboboxItem {
         public string Name { get; set; }
         public int Id { get; set; }
         public override string ToString() => Name;
     }
 
-    public class SeatCreateControl : UserControl
-    {
+    public class SeatCreateControl : UserControl {
         private readonly SeatBUS _seatBUS;
         private SeatDTO? _seatToEdit;
 
@@ -37,22 +34,19 @@ namespace GUI.Features.Seat.SubFeatures
         public event Action SeatCreated;
         public event Action EditCancelled;
 
-        public SeatCreateControl()
-        {
+        public SeatCreateControl() {
             _seatBUS = new SeatBUS();
             InitializeComponent();
             LoadComboboxData();
             SetCreateMode();
         }
 
-        private void InitializeComponent()
-        {
+        private void InitializeComponent() {
             SuspendLayout();
             Dock = DockStyle.Fill;
             BackColor = Color.FromArgb(232, 240, 252);
 
-            lblTitle = new Label
-            {
+            lblTitle = new Label {
                 Text = "➕ Tạo ghế",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
@@ -60,8 +54,7 @@ namespace GUI.Features.Seat.SubFeatures
                 Dock = DockStyle.Top
             };
 
-            form = new TableLayoutPanel
-            {
+            form = new TableLayoutPanel {
                 Dock = DockStyle.None,
                 Anchor = AnchorStyles.Top | AnchorStyles.None,
                 AutoSize = true,
@@ -82,8 +75,7 @@ namespace GUI.Features.Seat.SubFeatures
             form.Controls.Add(new Label { Text = "Số ghế", AutoSize = true, Margin = new Padding(0, 8, 8, 8) }, 0, 2);
             form.Controls.Add(txtSeat, 1, 2);
 
-            var actions = new FlowLayoutPanel
-            {
+            var actions = new FlowLayoutPanel {
                 Dock = DockStyle.None,
                 Anchor = AnchorStyles.Top | AnchorStyles.None,
                 AutoSize = true,
@@ -113,13 +105,11 @@ namespace GUI.Features.Seat.SubFeatures
             root.Controls.Add(actions, 1, 2);
 
             // thiết lập DisplayMember / ValueMember
-            if (cbAircraft.InnerCombo is ComboBox rawCbAircraft)
-            {
+            if (cbAircraft.InnerCombo is ComboBox rawCbAircraft) {
                 rawCbAircraft.DisplayMember = "Name";
                 rawCbAircraft.ValueMember = "Id";
             }
-            if (cbClass.InnerCombo is ComboBox rawCbClass)
-            {
+            if (cbClass.InnerCombo is ComboBox rawCbClass) {
                 rawCbClass.DisplayMember = "Name";
                 rawCbClass.ValueMember = "Id";
             }
@@ -128,17 +118,14 @@ namespace GUI.Features.Seat.SubFeatures
             ResumeLayout(false);
         }
 
-        private void Reset_Click(object? sender, EventArgs e)
-        {
+        private void Reset_Click(object? sender, EventArgs e) {
             EditCancelled?.Invoke();
             SetCreateMode();
         }
 
         // 🔹 Đổi thành public để SeatControl có thể gọi được
-        public void LoadComboboxData()
-        {
-            try
-            {
+        public void LoadComboboxData() {
+            try {
                 var allSeats = _seatBUS.GetAllSeatsWithDetails();
 
                 _aircraftItems = allSeats
@@ -160,30 +147,25 @@ namespace GUI.Features.Seat.SubFeatures
 
                 if (cbClass.InnerCombo is ComboBox rawCbClass)
                     rawCbClass.DataSource = _classItems;
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 MessageBox.Show("Không thể tải dữ liệu máy bay và hạng ghế: " + ex.Message,
                     "Lỗi tải dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        public void SetCreateMode()
-        {
+        public void SetCreateMode() {
             _seatToEdit = null;
             lblTitle.Text = "➕ Tạo ghế";
             txtSeat.Text = "";
 
-            if(cbAircraft.InnerCombo is ComboBox rawCbAircraft)
-{
+            if (cbAircraft.InnerCombo is ComboBox rawCbAircraft) {
                 if (rawCbAircraft.DataSource != null)
                     rawCbAircraft.SelectedIndex = -1; // an toàn cho data-bound combobox
                 else
                     rawCbAircraft.SelectedItem = null; // an toàn khi không có DataSource
             }
 
-            if (cbClass.InnerCombo is ComboBox rawCbClass)
-            {
+            if (cbClass.InnerCombo is ComboBox rawCbClass) {
                 if (rawCbClass.DataSource != null)
                     rawCbClass.SelectedIndex = -1;
                 else
@@ -193,19 +175,16 @@ namespace GUI.Features.Seat.SubFeatures
             btnReset.Text = "✖ Hủy";
         }
 
-        public void LoadSeatForEdit(int seatId)
-        {
+        public void LoadSeatForEdit(int seatId) {
             if (_aircraftItems == null || _aircraftItems.Count == 0 ||
-                _classItems == null || _classItems.Count == 0)
-            {
+                _classItems == null || _classItems.Count == 0) {
                 LoadComboboxData();
             }
 
             var freshSeatData = _seatBUS.GetAllSeatsWithDetails()
                 .FirstOrDefault(s => s.SeatId == seatId);
 
-            if (freshSeatData == null)
-            {
+            if (freshSeatData == null) {
                 MessageBox.Show("Không tìm thấy ghế để sửa");
                 return;
             }
@@ -223,8 +202,7 @@ namespace GUI.Features.Seat.SubFeatures
             btnReset.Text = "✖ Hủy";
         }
 
-        private void Save_Click(object? sender, EventArgs e)
-        {
+        private void Save_Click(object? sender, EventArgs e) {
             var rawCbAircraft = cbAircraft.InnerCombo as ComboBox;
             var rawCbClass = cbClass.InnerCombo as ComboBox;
 
@@ -236,19 +214,16 @@ namespace GUI.Features.Seat.SubFeatures
             int? classId = rawCbClass?.SelectedValue as int? ??
                            (rawCbClass?.SelectedItem as ComboboxItem)?.Id;
 
-            if (aircraftId == null || aircraftId <= 0)
-            {
+            if (aircraftId == null || aircraftId <= 0) {
                 MessageBox.Show("Vui lòng chọn Máy bay hợp lệ.", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            if (classId == null || classId <= 0)
-            {
+            if (classId == null || classId <= 0) {
                 MessageBox.Show("Vui lòng chọn Hạng ghế hợp lệ.", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            if (!Regex.IsMatch(seatNumber, @"^[1-9]\d*[A-F]$"))
-            {
+            if (!Regex.IsMatch(seatNumber, @"^[1-9]\d*[A-F]$")) {
                 MessageBox.Show("Số ghế không hợp lệ. Ví dụ: 12A.", "Lỗi định dạng", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
@@ -260,8 +235,7 @@ namespace GUI.Features.Seat.SubFeatures
                 classId: classId.Value
             );
 
-            try
-            {
+            try {
                 bool success;
                 string message;
                 string action = isEditing ? "Cập nhật" : "Thêm mới";
@@ -271,8 +245,7 @@ namespace GUI.Features.Seat.SubFeatures
                 else
                     success = _seatBUS.AddSeat(seatToProcess, out message);
 
-                if (success)
-                {
+                if (success) {
                     MessageBox.Show($"{action} ghế thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                     if (isEditing)
@@ -281,14 +254,10 @@ namespace GUI.Features.Seat.SubFeatures
                         SeatCreated?.Invoke();
 
                     SetCreateMode();
-                }
-                else
-                {
+                } else {
                     MessageBox.Show($"Không thể {action} ghế. Chi tiết: " + message, "Thất bại", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 MessageBox.Show("Lỗi hệ thống khi lưu ghế: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }

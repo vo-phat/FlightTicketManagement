@@ -6,14 +6,18 @@ using System.Windows.Forms;
 using GUI.Components.Buttons;
 using GUI.Components.Inputs;
 using GUI.Components.Tables;
+using BUS.Auth;
+using DTO.Permissions;
 
 namespace GUI.Features.Setting.SubFeatures {
-    internal class AssignByRoleControl : UserControl {
+    public class AssignByRoleControl : UserControl {
+        private readonly RolePermissionService _service = new RolePermissionService();
+
         // Lọc module
         private UnderlinedComboBox cboModule;
 
         // Ma trận
-        private TableCustom table;               // dùng TableCustom thay cho DataGridView
+        private TableCustom table;
         private FlowLayoutPanel selectAllRow;
 
         // Hành động
@@ -26,7 +30,9 @@ namespace GUI.Features.Setting.SubFeatures {
         private Dictionary<int, HashSet<int>> _roleToPermIds = new(); // roleId -> set(permissionId)
         private bool _suspendReload = false;
 
-        public AssignByRoleControl() { InitializeComponent(); }
+        public AssignByRoleControl() { 
+            InitializeComponent(); 
+        }
 
         private void InitializeComponent() {
             Dock = DockStyle.Fill;
@@ -72,7 +78,7 @@ namespace GUI.Features.Setting.SubFeatures {
                 Margin = new Padding(24, 12, 24, 4),
                 AllowUserToAddRows = false,
                 AllowUserToDeleteRows = false,
-                ReadOnly = false,               // cần tương tác checkbox
+                ReadOnly = false,
                 RowHeadersVisible = false,
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
                 BackgroundColor = Color.White,
@@ -127,22 +133,19 @@ namespace GUI.Features.Setting.SubFeatures {
         private void LoadData() {
             _suspendReload = true;
 
-            _allPerms = PermissionRepository.GetAllPermissions();
-            _roles = PermissionRepository.GetAllRoles();
+            _allPerms = _service.GetAllPermissions();
+            _roles = _service.GetAllRoles();
 
-            // Rebuild module list
             var groups = _allPerms.Select(p => p.Group ?? "Misc").Distinct().OrderBy(x => x).ToList();
             cboModule.Items.Clear();
             cboModule.Items.Add("(Tất cả)");
             foreach (var g in groups) cboModule.Items.Add(g);
             cboModule.SelectedIndex = 0;
 
-            // Load mapping role -> permissions
             _roleToPermIds.Clear();
             foreach (var r in _roles)
-                _roleToPermIds[r.RoleId] = PermissionRepository.GetPermissionIdsOfRole(r.RoleId);
+                _roleToPermIds[r.RoleId] = _service.GetPermissionIdsOfRole(r.RoleId);
 
-            // Build UI matrix
             BuildTableColumns();
             BuildSelectAllRow();
 
@@ -270,7 +273,7 @@ namespace GUI.Features.Setting.SubFeatures {
         private void SaveAllRoles() {
             foreach (var role in _roles) {
                 var set = _roleToPermIds.TryGetValue(role.RoleId, out var s) ? s : new HashSet<int>();
-                PermissionRepository.SavePermissionsForRole(role.RoleId, set);
+                _service.SavePermissionsForRole(role.RoleId, set);
             }
             MessageBox.Show("Đã lưu ma trận quyền cho tất cả vai trò.", "Phân quyền", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
