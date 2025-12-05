@@ -116,16 +116,16 @@ INSERT INTO `Airports` (`airport_code`, `airport_name`, `city`, `country`) VALUE
 
 -- 7. Máy bay
 INSERT INTO `Aircrafts` (`airline_id`, `model`, `manufacturer`, `capacity`) VALUES
-(1, 'Airbus A350-900', 'Airbus', 305),
-(1, 'Boeing 787-10', 'Boeing', 318),
-(2, 'Airbus A321neo', 'Airbus', 244),
-(2, 'Airbus A320neo', 'Airbus', 188),
-(3, 'Embraer E195-E2', 'Embraer', 132),
-(3, 'Boeing 787-9 Dreamliner', 'Boeing', 296),
-(4, 'Boeing 737 MAX 8', 'Boeing', 178),
-(4, 'Airbus A321XLR', 'Airbus', 220),
-(5, 'Airbus A380-800', 'Airbus', 525),
-(5, 'Boeing 777-200ER', 'Boeing', 315);
+(1, 'Airbus A350-900', 'Airbus', 16),
+(1, 'Boeing 787-10', 'Boeing', 16),
+(2, 'Airbus A321neo', 'Airbus', 16),
+(2, 'Airbus A320neo', 'Airbus', 16),
+(3, 'Embraer E195-E2', 'Embraer', 16),
+(3, 'Boeing 787-9 Dreamliner', 'Boeing', 16),
+(4, 'Boeing 737 MAX 8', 'Boeing', 16),
+(4, 'Airbus A321XLR', 'Airbus', 16),
+(5, 'Airbus A380-800', 'Airbus', 16),
+(5, 'Boeing 777-200ER', 'Boeing', 16);
 
 -- 8. Tuyến bay
 INSERT INTO `Routes` (`departure_place_id`, `arrival_place_id`, `distance_km`, `duration_minutes`) VALUES 
