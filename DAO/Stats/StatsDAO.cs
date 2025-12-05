@@ -102,25 +102,28 @@ namespace DAO.Stats
         }
 
         /// <summary>
-        /// Lấy Top N theo account/khách hàng có doanh thu cao nhất (vì chưa có dữ liệu tickets đầy đủ)
+        /// Lấy Top N tuyến bay có doanh thu cao nhất
         /// </summary>
         public DataTable GetRevenueByRoute(int year, int topN = 5)
         {
-            // Query theo account_id vì dữ liệu payments chưa liên kết đến flights qua tickets
             string query = @"
                 SELECT 
-                    CONCAT('Khách hàng #', a.account_id, ' (', a.email, ')') AS TuyenBay,
+                    CONCAT(dep.airport_code, ' → ', arr.airport_code, ' (', dep.city, ' - ', arr.city, ')') AS TuyenBay,
                     SUM(p.amount) AS DoanhThu,
-                    COUNT(p.payment_id) AS SoChuyenBay
+                    COUNT(DISTINCT f.flight_id) AS SoChuyenBay
                 FROM Payments p
                 JOIN Bookings b ON p.booking_id = b.booking_id
-                JOIN Accounts a ON b.account_id = a.account_id
+                JOIN Tickets t ON b.booking_id = t.booking_id
+                JOIN Flights f ON t.flight_id = f.flight_id
+                JOIN Routes r ON f.route_id = r.route_id
+                JOIN Airports dep ON r.departure_place_id = dep.airport_id
+                JOIN Airports arr ON r.arrival_place_id = arr.airport_id
                 WHERE 
                     p.status = 'SUCCESS'
                     AND b.status = 'CONFIRMED'
                     AND YEAR(p.payment_date) = @year
                 GROUP BY 
-                    a.account_id, a.email
+                    r.route_id, dep.airport_code, arr.airport_code, dep.city, arr.city
                 ORDER BY 
                     DoanhThu DESC
                 LIMIT @limit";

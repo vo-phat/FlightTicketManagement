@@ -79,23 +79,99 @@ namespace BUS.Flight
 
         public bool CreateFlight(FlightDTO flight, out string message)
         {
+            return CreateFlight(flight, out message, out _);
+        }
+
+        public bool CreateFlight(FlightDTO flight, out string message, out List<string> warnings)
+        {
             message = string.Empty;
+            warnings = new List<string>();
+
             try
             {
-                // Validate
+                // 1. Basic validation (DTO level)
                 if (!flight.IsValid(out string validationError))
                 {
                     message = validationError;
                     return false;
                 }
 
-                // Kiểm tra trùng số hiệu chuyến bay cùng ngày
-                if (_flightDAO.IsFlightNumberExists(flight.FlightNumber, flight.DepartureTime.Value))
+                // 2. Business validation using FlightValidationHelper
+                // Note: Airport validation is handled by Route entity
+                if (!flight.DepartureTime.HasValue || !flight.ArrivalTime.HasValue)
                 {
-                    message = $"Số hiệu chuyến bay '{flight.FlightNumber}' đã tồn tại vào ngày {flight.DepartureTime.Value:dd/MM/yyyy}";
+                    message = "Thời gian khởi hành và đến không được để trống";
                     return false;
                 }
 
+                // Validate flight code format
+                if (!FlightValidationHelper.IsValidFlightCode(flight.FlightNumber, out string codeError))
+                {
+                    message = codeError;
+                    return false;
+                }
+
+                // Validate departure time
+                if (!FlightValidationHelper.IsValidDepartureTime(flight.DepartureTime.Value, out string depError))
+                {
+                    message = depError;
+                    return false;
+                }
+
+                // Validate arrival time
+                if (!FlightValidationHelper.IsValidArrivalTime(flight.DepartureTime.Value, flight.ArrivalTime.Value, out string arrError))
+                {
+                    message = arrError;
+                    return false;
+                }
+
+                // Validate base price
+                if (!FlightValidationHelper.IsValidBasePrice(flight.BasePrice, out string priceError, out string? priceWarning))
+                {
+                    message = priceError;
+                    return false;
+                }
+                
+                if (!string.IsNullOrEmpty(priceWarning))
+                {
+                    warnings.Add(priceWarning);
+                }
+
+
+
+                // 3. Check duplicate flight number
+                if (_flightDAO.IsFlightNumberExists(flight.FlightNumber))
+                {
+                    message = $"Mã chuyến bay '{flight.FlightNumber}' đã tồn tại trong hệ thống";
+                    return false;
+                }
+
+                // 4. Check aircraft time conflict
+                if (!flight.DepartureTime.HasValue || !flight.ArrivalTime.HasValue)
+                {
+                    message = "Thời gian khởi hành và đến không được để trống";
+                    return false;
+                }
+
+                if (_flightDAO.HasAircraftTimeConflict(flight.AircraftId, flight.DepartureTime.Value, flight.ArrivalTime.Value))
+                {
+                    var conflictFlights = _flightDAO.GetConflictingFlights(
+                        flight.AircraftId, 
+                        flight.DepartureTime.Value, 
+                        flight.ArrivalTime.Value
+                    );
+
+                    if (conflictFlights.Any())
+                    {
+                        var conflictInfo = string.Join(", ", conflictFlights.Select(f => 
+                            $"{f.FlightNumber} ({f.DepartureTime:HH:mm}-{f.ArrivalTime:HH:mm})"
+                        ));
+                        message = $"Máy bay đã được sử dụng cho các chuyến bay khác: {conflictInfo}";
+                        return false;
+                    }
+                }
+
+                // 5. Insert to database
                 long newId = _flightDAO.Insert(flight);
                 if (newId > 0)
                 {
@@ -115,23 +191,100 @@ namespace BUS.Flight
 
         public bool UpdateFlight(FlightDTO flight, out string message)
         {
+            return UpdateFlight(flight, out message, out _);
+        }
+
+        public bool UpdateFlight(FlightDTO flight, out string message, out List<string> warnings)
+        {
             message = string.Empty;
+            warnings = new List<string>();
+
             try
             {
-                // Validate
+                // 1. Basic validation
                 if (!flight.IsValid(out string validationError))
                 {
                     message = validationError;
                     return false;
                 }
 
-                // Kiểm tra trùng số hiệu (trừ chính nó)
-                if (_flightDAO.IsFlightNumberExists(flight.FlightNumber, flight.DepartureTime.Value, flight.FlightId))
+                // 2. Business validation
+                if (!flight.DepartureTime.HasValue || !flight.ArrivalTime.HasValue)
                 {
-                    message = $"Số hiệu chuyến bay '{flight.FlightNumber}' đã tồn tại vào ngày {flight.DepartureTime.Value:dd/MM/yyyy}";
+                    message = "Thời gian khởi hành và đến không được để trống";
                     return false;
                 }
 
+                // Validate flight code
+                if (!FlightValidationHelper.IsValidFlightCode(flight.FlightNumber, out string codeError))
+                {
+                    message = codeError;
+                    return false;
+                }
+
+                // Validate times
+                if (!FlightValidationHelper.IsValidDepartureTime(flight.DepartureTime.Value, out string depError))
+                {
+                    message = depError;
+                    return false;
+                }
+
+                if (!FlightValidationHelper.IsValidArrivalTime(flight.DepartureTime.Value, flight.ArrivalTime.Value, out string arrError))
+                {
+                    message = arrError;
+                    return false;
+                }
+
+                // Validate price
+                if (!FlightValidationHelper.IsValidBasePrice(flight.BasePrice, out string priceError, out string? priceWarning))
+                {
+                    message = priceError;
+                    return false;
+                }
+                
+                if (!string.IsNullOrEmpty(priceWarning))
+                {
+                    warnings.Add(priceWarning);
+                }
+
+                // 3. Check duplicate (exclude current flight)
+                if (_flightDAO.IsFlightNumberExists(flight.FlightNumber, flight.FlightId))
+                {
+                    message = $"Mã chuyến bay '{flight.FlightNumber}' đã tồn tại trong hệ thống";
+                    return false;
+                }
+
+                // 4. Check aircraft conflict (exclude current flight)
+                if (!flight.DepartureTime.HasValue || !flight.ArrivalTime.HasValue)
+                {
+                    message = "Thời gian khởi hành và đến không được để trống";
+                    return false;
+                }
+
+                if (_flightDAO.HasAircraftTimeConflict(
+                    flight.AircraftId, 
+                    flight.DepartureTime.Value, 
+                    flight.ArrivalTime.Value, 
+                    flight.FlightId))
+                {
+                    var conflictFlights = _flightDAO.GetConflictingFlights(
+                        flight.AircraftId,
+                        flight.DepartureTime.Value,
+                        flight.ArrivalTime.Value,
+                        flight.FlightId
+                    );
+
+                    if (conflictFlights.Any())
+                    {
+                        var conflictInfo = string.Join(", ", conflictFlights.Select(f =>
+                            $"{f.FlightNumber} ({f.DepartureTime:HH:mm}-{f.ArrivalTime:HH:mm})"
+                        ));
+                        message = $"Máy bay đã được sử dụng cho các chuyến bay khác: {conflictInfo}";
+                        return false;
+                    }
+                }
+
+                // 5. Update database
                 bool result = _flightDAO.Update(flight);
                 if (result)
                 {
@@ -160,7 +313,8 @@ namespace BUS.Flight
                     return false;
                 }
 
-                bool result = _flightDAO.Delete(flightId);
+                // Soft delete
+                bool result = _flightDAO.SoftDelete(flightId);
                 if (result)
                 {
                     message = "Xóa chuyến bay thành công!";

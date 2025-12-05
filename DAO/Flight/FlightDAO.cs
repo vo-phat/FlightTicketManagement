@@ -39,6 +39,8 @@ namespace DAO.Flight
                 routeId: GetInt32(reader, "route_id"),
                 departureTime: GetDateTime(reader, "departure_time"),
                 arrivalTime: GetDateTime(reader, "arrival_time"),
+                basePrice: GetDecimal(reader, "base_price") ?? 0m,
+                note: GetString(reader, "note"),
                 status: FlightStatusExtensions.Parse(GetString(reader, "status"))
                 );
         }
@@ -53,6 +55,8 @@ namespace DAO.Flight
                 RouteId = GetInt32(reader, "route_id"),
                 DepartureTime = GetDateTime(reader, "departure_time"),
                 ArrivalTime = GetDateTime(reader, "arrival_time"),
+                BasePrice = GetDecimal(reader, "base_price") ?? 0m,
+                Note = GetString(reader, "note"),
                 Status = FlightStatusExtensions.Parse(GetString(reader, "status")),
                 
                 // Airport information
@@ -84,6 +88,8 @@ namespace DAO.Flight
                     route_id,
                     departure_time,
                     arrival_time,
+                    base_price,
+                    note,
                     status
                 FROM Flights
                 ORDER BY departure_time DESC";
@@ -115,6 +121,8 @@ namespace DAO.Flight
                     f.route_id,
                     f.departure_time,
                     f.arrival_time,
+                    f.base_price,
+                    f.note,
                     f.status,
                     
                     -- Departure Airport
@@ -137,8 +145,9 @@ namespace DAO.Flight
                 INNER JOIN Airports dep_airport ON r.departure_place_id = dep_airport.airport_id
                 INNER JOIN Airports arr_airport ON r.arrival_place_id = arr_airport.airport_id
                 LEFT JOIN Flight_Seats fs ON f.flight_id = fs.flight_id
+                WHERE f.is_deleted = FALSE
                 GROUP BY f.flight_id, f.flight_number, f.aircraft_id, f.route_id, 
-                         f.departure_time, f.arrival_time, f.status,
+                         f.departure_time, f.arrival_time, f.base_price, f.note, f.status,
                          dep_airport.airport_id, dep_airport.airport_code, 
                          dep_airport.airport_name, dep_airport.city,
                          arr_airport.airport_id, arr_airport.airport_code, 
@@ -170,9 +179,11 @@ namespace DAO.Flight
                     route_id,
                     departure_time,
                     arrival_time,
+                    base_price,
+                    note,
                     status
                 FROM Flights
-                WHERE flight_id = @flightId";
+                WHERE flight_id = @flightId AND is_deleted = FALSE";
 
             var parameters = new Dictionary<string, object>
             {
@@ -211,6 +222,8 @@ namespace DAO.Flight
                     route_id,
                     departure_time,
                     arrival_time,
+                    base_price,
+                    note,
                     status
                 ) VALUES (
                     @flightNumber,
@@ -218,6 +231,8 @@ namespace DAO.Flight
                     @routeId,
                     @departureTime,
                     @arrivalTime,
+                    @basePrice,
+                    @note,
                     @status
                 )";
 
@@ -228,6 +243,8 @@ namespace DAO.Flight
                 { "@routeId", flight.RouteId },
                 { "@departureTime", flight.DepartureTime },
                 { "@arrivalTime", flight.ArrivalTime },
+                { "@basePrice", flight.BasePrice },
+                { "@note", (object?)flight.Note ?? DBNull.Value },
                 { "@status", flight.Status.ToString() }
             };
 
@@ -260,6 +277,8 @@ namespace DAO.Flight
                     route_id = @routeId,
                     departure_time = @departureTime,
                     arrival_time = @arrivalTime,
+                    base_price = @basePrice,
+                    note = @note,
                     status = @status
                 WHERE flight_id = @flightId";
             var parameters = new Dictionary<string, object>
@@ -270,6 +289,8 @@ namespace DAO.Flight
                 { "@routeId", flight.RouteId },
                 { "@departureTime", flight.DepartureTime },
                 { "@arrivalTime", flight.ArrivalTime },
+                { "@basePrice", flight.BasePrice },
+                { "@note", (object?)flight.Note ?? DBNull.Value },
                 { "@status", flight.Status.ToString() }
             };
             try
@@ -345,6 +366,171 @@ namespace DAO.Flight
             }
         }
         #endregion
+        
+        #region Business Validation Methods
+
+        /// <summary>
+        /// Kiểm tra xem flight_number đã tồn tại chưa (dùng cho validation khi tạo mới)
+        /// </summary>
+        public bool IsFlightNumberExists(string flightNumber, int? excludeFlightId = null)
+        {
+            string query = @"
+                SELECT COUNT(*) 
+                FROM Flights 
+                WHERE flight_number = @flightNumber";
+
+            var parameters = new Dictionary<string, object>
+            {
+                { "@flightNumber", flightNumber.Trim().ToUpper() }
+            };
+
+            // Nếu đang edit, loại trừ chính bản ghi đó
+            if (excludeFlightId.HasValue)
+            {
+                query += " AND flight_id != @excludeFlightId";
+                parameters.Add("@excludeFlightId", excludeFlightId.Value);
+            }
+
+            try
+            {
+                object result = ExecuteScalar(query, parameters);
+                return Convert.ToInt32(result) > 0;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi kiểm tra mã chuyến bay: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Kiểm tra xung đột thời gian máy bay (aircraft không được phục vụ 2 chuyến cùng lúc)
+        /// </summary>
+        public bool HasAircraftTimeConflict(int aircraftId, DateTime departureTime, DateTime arrivalTime, int? excludeFlightId = null)
+        {
+            string query = @"
+                SELECT COUNT(*) 
+                FROM Flights 
+                WHERE aircraft_id = @aircraftId
+                  AND status != 'CANCELLED'
+                  AND (
+                      -- Departure time của chuyến mới nằm trong khoảng chuyến cũ
+                      (@departureTime >= departure_time AND @departureTime < arrival_time)
+                      OR
+                      -- Arrival time của chuyến mới nằm trong khoảng chuyến cũ
+                      (@arrivalTime > departure_time AND @arrivalTime <= arrival_time)
+                      OR
+                      -- Chuyến mới bao trùm chuyến cũ
+                      (@departureTime <= departure_time AND @arrivalTime >= arrival_time)
+                  )";
+
+            var parameters = new Dictionary<string, object>
+            {
+                { "@aircraftId", aircraftId },
+                { "@departureTime", departureTime },
+                { "@arrivalTime", arrivalTime }
+            };
+
+            // Nếu đang edit, loại trừ chính bản ghi đó
+            if (excludeFlightId.HasValue)
+            {
+                query += " AND flight_id != @excludeFlightId";
+                parameters.Add("@excludeFlightId", excludeFlightId.Value);
+            }
+
+            try
+            {
+                object result = ExecuteScalar(query, parameters);
+                return Convert.ToInt32(result) > 0;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi kiểm tra xung đột thời gian máy bay: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách chuyến bay xung đột với máy bay trong khoảng thời gian
+        /// </summary>
+        public List<FlightDTO> GetConflictingFlights(int aircraftId, DateTime departureTime, DateTime arrivalTime, int? excludeFlightId = null)
+        {
+            List<FlightDTO> flights = new List<FlightDTO>();
+
+            string query = @"
+                SELECT 
+                    flight_id,
+                    flight_number,
+                    aircraft_id,
+                    route_id,
+                    departure_time,
+                    arrival_time,
+                    base_price,
+                    note,
+                    status
+                FROM Flights 
+                WHERE aircraft_id = @aircraftId
+                  AND status != 'CANCELLED'
+                  AND (
+                      (@departureTime >= departure_time AND @departureTime < arrival_time)
+                      OR
+                      (@arrivalTime > departure_time AND @arrivalTime <= arrival_time)
+                      OR
+                      (@departureTime <= departure_time AND @arrivalTime >= arrival_time)
+                  )";
+
+            var parameters = new Dictionary<string, object>
+            {
+                { "@aircraftId", aircraftId },
+                { "@departureTime", departureTime },
+                { "@arrivalTime", arrivalTime }
+            };
+
+            if (excludeFlightId.HasValue)
+            {
+                query += " AND flight_id != @excludeFlightId";
+                parameters.Add("@excludeFlightId", excludeFlightId.Value);
+            }
+
+            query += " ORDER BY departure_time";
+
+            try
+            {
+                ExecuteReader(query, reader =>
+                {
+                    flights.Add(MapReaderToDTO(reader));
+                }, parameters);
+
+                return flights;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi tìm chuyến bay xung đột: {ex.Message}", ex);
+            }
+        }
+
+        #endregion
+
+        #region Soft Delete
+        public bool SoftDelete(int flightId)
+        {
+            string query = @"UPDATE Flights SET is_deleted = TRUE WHERE flight_id = @flightId";
+            
+            var parameters = new Dictionary<string, object>
+            {
+                { "@flightId", flightId }
+            };
+
+            try
+            {
+                int rowsAffected = ExecuteNonQuery(query, parameters);
+                return rowsAffected > 0;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Đã xảy ra lỗi khi xóa chuyến bay: {ex.Message}", ex);
+            }
+        }
+        #endregion
+        
         #region Search & Filter Methods
         public List<FlightDTO> SearchByFlightNumber(string flightNumber)
         {
@@ -358,9 +544,11 @@ namespace DAO.Flight
                     route_id,
                     departure_time,
                     arrival_time,
+                    base_price,
+                    note,
                     status
                 FROM Flights
-                WHERE flight_number LIKE @flightNumber
+                WHERE flight_number LIKE @flightNumber AND is_deleted = FALSE
                 ORDER BY departure_time DESC";
 
             var parameters = new Dictionary<string, object>
@@ -394,9 +582,11 @@ namespace DAO.Flight
                     route_id,
                     departure_time,
                     arrival_time,
+                    base_price,
+                    note,
                     status
                 FROM Flights
-                WHERE status = @status
+                WHERE status = @status AND is_deleted = FALSE
                 ORDER BY departure_time DESC";
 
             var parameters = new Dictionary<string, object>
@@ -430,6 +620,8 @@ namespace DAO.Flight
                     route_id,
                     departure_time,
                     arrival_time,
+                    base_price,
+                    note,
                     status
                 FROM Flights
                 WHERE departure_time >= @fromDate AND departure_time <= @toDate

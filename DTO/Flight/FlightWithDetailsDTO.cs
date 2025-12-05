@@ -13,6 +13,8 @@ namespace DTO.Flight
         public int RouteId { get; set; }
         public DateTime? DepartureTime { get; set; }
         public DateTime? ArrivalTime { get; set; }
+        public decimal BasePrice { get; set; }
+        public string? Note { get; set; }
         public FlightStatus Status { get; set; }
 
         // Thông tin sân bay
@@ -28,7 +30,8 @@ namespace DTO.Flight
 
         // Thông tin máy bay (optional)
         public string AircraftModel { get; set; }
-        public string RegistrationNumber { get; set; }
+        public string AircraftManufacturer { get; set; }
+        public int? AircraftCapacity { get; set; }
 
         // Tính toán số ghế còn trống
         public int AvailableSeats { get; set; }

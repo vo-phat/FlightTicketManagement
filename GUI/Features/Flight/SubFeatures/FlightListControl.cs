@@ -1,825 +1,534 @@
-using System;
-using System.Drawing;
-using System.Windows.Forms;
-using System.Linq;
-using GUI.Components.Buttons;
-using GUI.Features.Flight;
-using GUI.Components.Inputs;
-using GUI.Components.Tables;
 using BUS.Flight;
 using DTO.Flight;
+using GUI.Components.Buttons;
+using GUI.Components.Inputs;
+using GUI.Components.Tables;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Windows.Forms;
 
-
-namespace GUI.Features.Flight.SubFeatures {
-    public class FlightListControl : UserControl {
-        // Action column constants
-        private const string ACTION_COL_NAME = "actions";
-        private const string TXT_VIEW = "Xem";
-        private const string TXT_EDIT = "Sửa";   // Admin/Staff
-        private const string TXT_DELETE = "Xóa";  // Admin/Staff
-        private const string TXT_BOOK = "Đặt vé";  // Customer
-        private const string SEP = " | ";
-        
-        // Permission check delegate
-        private Func<string, bool>? _hasPermission;
-        
-        // Event để notify khi user chọn xong hạng vé
-        public event Action<int, string>? BookingRequested; // (flightId, cabinClass)
-        
-        private TableCustom table;
-        private Panel headerPanel;
-        private Label lblTitle;
-        
-        // Search filters
-        private Panel searchCard;
+namespace GUI.Features.Flight.SubFeatures
+{
+    public class FlightListControl : UserControl
+    {
+        private readonly FlightBUS _bus = FlightBUS.Instance;
+        private DataGridView table;
         private UnderlinedTextField txtFlightNumber;
         private UnderlinedComboBox cbDepartureAirport;
         private UnderlinedComboBox cbArrivalAirport;
-        private DateTimePickerCustom dtpDepartureDate;
-        private DateTimePickerCustom dtpReturnDate;
-        private UnderlinedTextField txtAdults;
-        private UnderlinedTextField txtChildren;
-        private CheckBox chkRoundTrip;
-        private PrimaryButton btnSearch;
-        private SecondaryButton btnClear;
-        private SecondaryButton btnRefresh;
+        private UnderlinedComboBox cbStatus;
+        private DateTimePickerCustom dtpDeparture;
+        private Button btnSearch, btnClear;
+        private const string ACTION_COL = "Actions";
+        private const string TXT_VIEW = "Xem";
+        private const string TXT_EDIT = "Sửa";
+        private const string TXT_DEL = "Xóa";
+        private const string SEP = " | ";
+        private int _hoveredRow = -1;
+        private int _hoveredAction = -1; // 0=View, 1=Edit, 2=Delete
 
-        public FlightListControl() {
+        public event Action<FlightWithDetailsDTO>? ViewRequested;
+        public event Action<FlightWithDetailsDTO>? RequestEdit;
+        public event Action? DataChanged;
+
+        private List<FlightWithDetailsDTO> _allFlights = new List<FlightWithDetailsDTO>();
+
+        public FlightListControl()
+        {
             InitializeComponent();
-            LoadAirports();
-            LoadFlights();
+            LoadComboBoxData();
+            RefreshList();
         }
 
-        public FlightListControl(Func<string, bool> hasPermission) : this() {
-            _hasPermission = hasPermission;
-            
-            // Debug: Log permissions
-            Console.WriteLine($"[FlightListControl] Permission Check:");
-            Console.WriteLine($"  - accounts.manage: {_hasPermission?.Invoke("accounts.manage")}");
-            Console.WriteLine($"  - system.roles: {_hasPermission?.Invoke("system.roles")}");
-            Console.WriteLine($"  - flights.read: {_hasPermission?.Invoke("flights.read")}");
-            Console.WriteLine($"  - flights.create: {_hasPermission?.Invoke("flights.create")}");
-            Console.WriteLine($"  => IsAdmin: {IsAdmin()}");
-            Console.WriteLine($"  => IsStaff: {IsStaff()}");
-            Console.WriteLine($"  => IsCustomer: {IsCustomer()}");
-        }
-
-        // Admin: Có quyền flights.create VÀ các quyền quản trị khác (accounts.manage, system.roles)
-        private bool IsAdmin() {
-            return _hasPermission?.Invoke("accounts.manage") == true ||
-                   _hasPermission?.Invoke("system.roles") == true;
-        }
-
-        // Staff: Có quyền flights.read NHƯ NG KHÔNG phải Admin
-        private bool IsStaff() {
-            return _hasPermission?.Invoke("flights.read") == true && 
-                   !IsAdmin();
-        }
-
-        // Customer: Không có quyền flights.read
-        private bool IsCustomer() {
-            return !_hasPermission?.Invoke("flights.read") == true;
-        }
-
-        private void InitializeComponent() {
+        private void InitializeComponent()
+        {
             SuspendLayout();
-            
-            // Main container
-            BackColor = Color.FromArgb(240, 244, 248);
+            BackColor = Color.FromArgb(232, 240, 252);
             Dock = DockStyle.Fill;
-            Padding = new Padding(20);
             AutoScroll = true;
 
-            // Header
-            headerPanel = CreateHeader();
-            Controls.Add(headerPanel);
+            // === TIÊU ĐỀ ===
+            var lblTitle = new Label
+            {
+                Text = "✈️ Danh sách chuyến bay",
+                Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point),
+                ForeColor = Color.FromArgb(40, 55, 77),
+                AutoSize = true,
+                Dock = DockStyle.Top,
+                Padding = new Padding(24, 20, 0, 12)
+            };
 
-            // Search card
-            searchCard = CreateSearchCard();
-            Controls.Add(searchCard);
+            // === PANEL BỘ LỌC ===
+            var filterPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                Padding = new Padding(24, 8, 24, 8),
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = true,
+                BackColor = Color.FromArgb(250, 253, 255)
+            };
 
-            // Results table
-            table = CreateTable();
-            Controls.Add(table);
-            
-            // Debug: Log column headers visibility
-            Console.WriteLine($"Table ColumnHeadersVisible: {table.ColumnHeadersVisible}");
-            Console.WriteLine($"Table ColumnHeadersHeight: {table.ColumnHeadersHeight}");
-            Console.WriteLine($"Table Columns Count: {table.Columns.Count}");
+            // --- INPUTS TÙY CHỈNH ---
+            txtFlightNumber = new UnderlinedTextField("Số hiệu chuyến bay", "VN123")
+            {
+                Width = 180,
+                Margin = new Padding(6, 4, 6, 4),
+                InheritParentBackColor = true,
+                LineThickness = 1
+            };
+
+            cbDepartureAirport = new UnderlinedComboBox("Sân bay đi", Array.Empty<string>())
+            {
+                Width = 200,
+                Margin = new Padding(6, 4, 6, 4),
+            };
+
+            cbArrivalAirport = new UnderlinedComboBox("Sân bay đến", Array.Empty<string>())
+            {
+                Width = 200,
+                Margin = new Padding(6, 4, 6, 4),
+            };
+
+            cbStatus = new UnderlinedComboBox("Trạng thái", new string[] 
+            { 
+                "Tất cả", 
+                "Đã lên lịch", 
+                "Đang bay", 
+                "Đã hạ cánh", 
+                "Đã hủy", 
+                "Trì hoãn" 
+            })
+            {
+                Width = 160,
+                Margin = new Padding(6, 4, 6, 4),
+            };
+            cbStatus.SelectedIndex = 0;
+
+            dtpDeparture = new DateTimePickerCustom("Ngày khởi hành", "")
+            {
+                Width = 180,
+                Margin = new Padding(6, 4, 6, 4)
+            };
+
+            // --- BUTTONS TÙY CHỈNH ---
+            btnSearch = new PrimaryButton("🔍 Tìm kiếm")
+            {
+                Width = 100,
+                Height = 40,
+                Margin = new Padding(10, 6, 6, 6),
+            };
+
+            btnClear = new SecondaryButton("🔄 Làm mới")
+            {
+                Width = 100,
+                Height = 40,
+                Margin = new Padding(6),
+            };
+
+            btnSearch.Click += (s, e) => RefreshList();
+            btnClear.Click += (s, e) => ClearFilters();
+
+            filterPanel.Controls.AddRange(new Control[] 
+            { 
+                txtFlightNumber, 
+                cbDepartureAirport, 
+                cbArrivalAirport, 
+                cbStatus, 
+                dtpDeparture,
+                btnSearch, 
+                btnClear 
+            });
+
+            // === BẢNG DANH SÁCH TÙY CHỈNH ===
+            table = new TableCustom
+            {
+                Dock = DockStyle.Fill,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                ReadOnly = true,
+                AllowUserToAddRows = false,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                CornerRadius = 16,
+                BorderThickness = 2,
+                BorderColor = Color.FromArgb(200, 200, 200),
+            };
+
+            table.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "ID", DataPropertyName = "FlightId", Name = "FlightId", Visible = false });
+            table.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Số hiệu", DataPropertyName = "FlightNumber", Name = "FlightNumber", Width = 100 });
+            table.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Sân bay đi", DataPropertyName = "DepartureAirportDisplay", Name = "DepartureAirport", Width = 180 });
+            table.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Sân bay đến", DataPropertyName = "ArrivalAirportDisplay", Name = "ArrivalAirport", Width = 180 });
+            table.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Giờ khởi hành", DataPropertyName = "DepartureTime", Name = "DepartureTime", Width = 140 });
+            table.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Giờ đến", DataPropertyName = "ArrivalTime", Name = "ArrivalTime", Width = 140 });
+            table.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Ghi chú", DataPropertyName = "Note", Name = "Note", Width = 200 });
+            table.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Trạng thái", DataPropertyName = "Status", Name = "Status", Width = 120 });
+            table.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Ghế trống", DataPropertyName = "AvailableSeats", Name = "AvailableSeats", Width = 90 });
+            table.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = ACTION_COL, Name = ACTION_COL, Width = 150 });
+
+            table.CellFormatting += Table_CellFormatting;
+            table.CellClick += Table_CellClick;
+            table.CellMouseMove += Table_CellMouseMove;
+            table.CellMouseLeave += Table_CellMouseLeave;
+
+            // Wrap table in panel for margin
+            var tablePanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                Padding = new Padding(24, 12, 24, 24),
+                BackColor = Color.Transparent
+            };
+            tablePanel.Controls.Add(table);
+
+            Controls.Add(tablePanel);
+            Controls.Add(filterPanel);
+            Controls.Add(lblTitle);
 
             ResumeLayout(false);
+            PerformLayout();
         }
 
-        private Panel CreateHeader() {
-            var panel = new Panel {
-                Dock = DockStyle.Top,
-                Height = 60,
-                BackColor = Color.Transparent
-            };
-
-            lblTitle = new Label {
-                Text = "🔍 TÌM KIẾM CHUYẾN BAY",
-                Font = new Font("Segoe UI", 18, FontStyle.Bold),
-                ForeColor = Color.FromArgb(28, 48, 74),
-                AutoSize = true,
-                Location = new Point(0, 15)
-            };
-
-            panel.Controls.Add(lblTitle);
-            return panel;
-        }
-
-        private Panel CreateSearchCard() {
-            var card = new Panel {
-                Dock = DockStyle.Top,
-                Height = 280,
-                BackColor = Color.White,
-                Padding = new Padding(25)
-            };
-
-            // Add shadow effect
-            card.Paint += (s, e) => {
-                var rect = card.ClientRectangle;
-                rect.Inflate(-1, -1);
-                using (var pen = new Pen(Color.FromArgb(220, 225, 230), 2)) {
-                    e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                    e.Graphics.DrawRectangle(pen, rect);
-                }
-            };
-
-            var layout = new TableLayoutPanel {
-                Dock = DockStyle.Fill,
-                ColumnCount = 4,
-                RowCount = 3,
-                BackColor = Color.Transparent
-            };
-            
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 80F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 80F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
-
-            // Row 1: Flight Number and Airports
-            txtFlightNumber = new UnderlinedTextField {
-                LabelText = "🔢 Mã chuyến bay",
-                PlaceholderText = "VD: VN201",
-                Margin = new Padding(5),
-                Dock = DockStyle.Fill
-            };
-
-            cbDepartureAirport = new UnderlinedComboBox {
-                LabelText = "✈️ Nơi đi",
-                Margin = new Padding(5),
-                Dock = DockStyle.Fill
-            };
-
-            cbArrivalAirport = new UnderlinedComboBox {
-                LabelText = "🛬 Nơi đến",
-                Margin = new Padding(5),
-                Dock = DockStyle.Fill
-            };
-
-            dtpDepartureDate = new DateTimePickerCustom {
-                LabelText = "📅 Ngày đi",
-                Margin = new Padding(5),
-                Dock = DockStyle.Fill
-            };
-
-            var pnlRoundTrip = new Panel { Dock = DockStyle.Fill, Padding = new Padding(5) };
-            chkRoundTrip = new CheckBox {
-                Text = "Khứ hồi",
-                Font = new Font("Segoe UI", 11F),
-                ForeColor = Color.FromArgb(52, 73, 94),
-                AutoSize = true,
-                Location = new Point(10, 30),
-                Checked = false
-            };
-            chkRoundTrip.CheckedChanged += (s, e) => {
-                dtpReturnDate.Enabled = chkRoundTrip.Checked;
-                if (!chkRoundTrip.Checked) {
-                    dtpReturnDate.Value = DateTime.Now;
-                }
-            };
-            pnlRoundTrip.Controls.Add(chkRoundTrip);
-
-            // Row 2: Dates and Passengers
-            dtpReturnDate = new DateTimePickerCustom {
-                LabelText = "📅 Ngày về",
-                Margin = new Padding(5),
-                Dock = DockStyle.Fill,
-                Enabled = false
-            };
-
-            txtAdults = new UnderlinedTextField {
-                LabelText = "👤 Người lớn",
-                PlaceholderText = "Số lượng",
-                Margin = new Padding(5),
-                Dock = DockStyle.Fill
-            };
-            txtAdults.TextChanged += (s, e) => {
-                if (!string.IsNullOrEmpty(txtAdults.Text) && !int.TryParse(txtAdults.Text, out _)) {
-                    txtAdults.Text = string.Empty;
-                }
-            };
-
-            txtChildren = new UnderlinedTextField {
-                LabelText = "👶 Trẻ em",
-                PlaceholderText = "Số lượng",
-                Margin = new Padding(5),
-                Dock = DockStyle.Fill
-            };
-            txtChildren.TextChanged += (s, e) => {
-                if (!string.IsNullOrEmpty(txtChildren.Text) && !int.TryParse(txtChildren.Text, out _)) {
-                    txtChildren.Text = string.Empty;
-                }
-            };
-
-            // Row 3: Buttons
-            var btnPanel = new FlowLayoutPanel {
-                Dock = DockStyle.Fill,
-                FlowDirection = FlowDirection.LeftToRight,
-                Padding = new Padding(5, 10, 5, 5)
-            };
-
-            btnSearch = new PrimaryButton {
-                Text = "🔍 TÌM CHUYẾN BAY",
-                Width = 180,
-                Height = 42,
-                Margin = new Padding(5, 0, 10, 0)
-            };
-            btnSearch.Click += BtnSearch_Click;
-
-            btnClear = new SecondaryButton {
-                Text = "🔄 Xóa bộ lọc",
-                Width = 150,
-                Height = 42,
-                Margin = new Padding(0, 0, 10, 0)
-            };
-            btnClear.Click += BtnClear_Click;
-
-            btnRefresh = new SecondaryButton {
-                Text = "↻ Làm mới",
-                Width = 130,
-                Height = 42
-            };
-            btnRefresh.Click += (s, e) => LoadFlights();
-
-            btnPanel.Controls.Add(btnSearch);
-            btnPanel.Controls.Add(btnClear);
-            btnPanel.Controls.Add(btnRefresh);
-
-            // Add to layout
-            layout.Controls.Add(txtFlightNumber, 0, 0);
-            layout.Controls.Add(cbDepartureAirport, 1, 0);
-            layout.Controls.Add(cbArrivalAirport, 2, 0);
-            layout.Controls.Add(pnlRoundTrip, 3, 0);
-            
-            layout.Controls.Add(dtpDepartureDate, 0, 1);
-            layout.Controls.Add(dtpReturnDate, 1, 1);
-            layout.Controls.Add(txtAdults, 2, 1);
-            layout.Controls.Add(txtChildren, 3, 1);
-            
-            layout.SetColumnSpan(btnPanel, 4);
-            layout.Controls.Add(btnPanel, 0, 2);
-
-            card.Controls.Add(layout);
-            return card;
-        }
-
-        private TableCustom CreateTable() {
-            var tbl = new TableCustom {
-                Dock = DockStyle.Fill,
-                BackgroundColor = Color.White,
-                BorderColor = Color.FromArgb(220, 225, 230),
-                BorderThickness = 1,
-                CornerRadius = 12,
-                AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false,
-                ReadOnly = true,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                MultiSelect = false,
-                RowHeadersVisible = false,
-                ColumnHeadersVisible = true,
-                Margin = new Padding(0, 10, 0, 0),
-                EnableHeadersVisualStyles = false,
-                ColumnHeadersHeight = 45,
-                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing
-            };
-
-            // Style for column headers
-            tbl.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(240, 244, 248);
-            tbl.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(51, 65, 85);
-            tbl.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            tbl.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            tbl.ColumnHeadersDefaultCellStyle.Padding = new Padding(10, 0, 0, 0);
-
-            // Style for data rows - increase height
-            tbl.RowTemplate.Height = 50;
-            tbl.DefaultCellStyle.Padding = new Padding(5);
-            tbl.DefaultCellStyle.SelectionBackColor = Color.FromArgb(230, 240, 255);
-            tbl.DefaultCellStyle.SelectionForeColor = Color.FromArgb(28, 48, 74);
-
-            // Columns
-            tbl.Columns.Add(new DataGridViewTextBoxColumn {
-                Name = "flightNumber",
-                HeaderText = "Mã chuyến bay",
-                FillWeight = 100
-            });
-            tbl.Columns.Add(new DataGridViewTextBoxColumn {
-                Name = "departureAirport",
-                HeaderText = "Nơi đi",
-                FillWeight = 120
-            });
-            tbl.Columns.Add(new DataGridViewTextBoxColumn {
-                Name = "arrivalAirport",
-                HeaderText = "Nơi đến",
-                FillWeight = 120
-            });
-            tbl.Columns.Add(new DataGridViewTextBoxColumn {
-                Name = "departureTime",
-                HeaderText = "Giờ khởi hành",
-                FillWeight = 130
-            });
-            tbl.Columns.Add(new DataGridViewTextBoxColumn {
-                Name = "arrivalTime",
-                HeaderText = "Giờ đến",
-                FillWeight = 130
-            });
-            tbl.Columns.Add(new DataGridViewTextBoxColumn {
-                Name = "availableSeats",
-                HeaderText = "Ghế trống",
-                FillWeight = 80
-            });
-            tbl.Columns.Add(new DataGridViewTextBoxColumn {
-                Name = "status",
-                HeaderText = "Trạng thái",
-                FillWeight = 110
-            });
-            tbl.Columns.Add(new DataGridViewTextBoxColumn {
-                Name = "actions",
-                HeaderText = "Thao tác",
-                FillWeight = 150
-            });
-            tbl.Columns.Add(new DataGridViewTextBoxColumn {
-                Name = "flightId",
-                HeaderText = "ID",
-                Visible = false
-            });
-
-            tbl.CellPainting += Table_CellPainting;
-            tbl.CellMouseMove += Table_CellMouseMove;
-            tbl.CellMouseClick += Table_CellMouseClick;
-
-            return tbl;
-        }
-
-        private void LoadAirports() {
-            try {
-                var airportDAO = new DAO.Airport.AirportDAO();
-                var airports = airportDAO.GetAllAirports();
+        private void LoadComboBoxData()
+        {
+            try
+            {
+                // Load airports - using Airport BUS
+                var airportBus = new BUS.Airport.AirportBUS();
+                var airports = airportBus.GetAllAirports();
+                
+                var airportDisplayList = new List<string> { "Tất cả" };
+                airportDisplayList.AddRange(airports.Select(a => $"{a.AirportCode} - {a.AirportName}"));
 
                 cbDepartureAirport.Items.Clear();
-                cbArrivalAirport.Items.Clear();
-
-                cbDepartureAirport.Items.Add(new ComboBoxItem { Text = "-- Chọn sân bay --", Value = 0 });
-                cbArrivalAirport.Items.Add(new ComboBoxItem { Text = "-- Chọn sân bay --", Value = 0 });
-
-                foreach (var airport in airports) {
-                    var item = new ComboBoxItem {
-                        Text = $"{airport.AirportName} ({airport.AirportCode}) - {airport.City}",
-                        Value = airport.AirportId
-                    };
-                    cbDepartureAirport.Items.Add(item);
-                    cbArrivalAirport.Items.Add(item);
-                }
-
+                cbDepartureAirport.Items.AddRange(airportDisplayList.ToArray());
                 cbDepartureAirport.SelectedIndex = 0;
+
+                cbArrivalAirport.Items.Clear();
+                cbArrivalAirport.Items.AddRange(airportDisplayList.ToArray());
                 cbArrivalAirport.SelectedIndex = 0;
             }
-            catch (Exception ex) {
-                MessageBox.Show($"Lỗi load sân bay: {ex.Message}", "Lỗi", 
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi tải dữ liệu combobox: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        public void LoadFlights() {
-            try {
-                var flightBUS = FlightBUS.Instance;
-                var flights = flightBUS.GetAllFlightsWithDetails();
+        public void RefreshList()
+        {
+            try
+            {
+                _allFlights = _bus.GetAllFlightsWithDetails();
+                
+                // Apply filters
+                var filtered = _allFlights.AsEnumerable();
 
+                // Filter by flight number
+                if (!string.IsNullOrWhiteSpace(txtFlightNumber.Text))
+                {
+                    var searchText = txtFlightNumber.Text.Trim().ToUpper();
+                    filtered = filtered.Where(f => f.FlightNumber.Contains(searchText));
+                }
+
+                // Filter by departure airport
+                if (cbDepartureAirport.SelectedIndex > 0)
+                {
+                    var selectedAirport = cbDepartureAirport.SelectedItem.ToString().Split('-')[0].Trim();
+                    filtered = filtered.Where(f => f.DepartureAirportCode == selectedAirport);
+                }
+
+                // Filter by arrival airport
+                if (cbArrivalAirport.SelectedIndex > 0)
+                {
+                    var selectedAirport = cbArrivalAirport.SelectedItem.ToString().Split('-')[0].Trim();
+                    filtered = filtered.Where(f => f.ArrivalAirportCode == selectedAirport);
+                }
+
+                // Filter by status
+                if (cbStatus.SelectedIndex > 0)
+                {
+                    var statusText = cbStatus.SelectedItem.ToString();
+                    FlightStatus status;
+                    switch (statusText)
+                    {
+                        case "Đã lên lịch":
+                            status = FlightStatus.SCHEDULED;
+                            break;
+                        case "Đang bay":
+                            status = FlightStatus.SCHEDULED;
+                            break;
+                        case "Đã hạ cánh":
+                            status = FlightStatus.COMPLETED;
+                            break;
+                        case "Đã hủy":
+                            status = FlightStatus.CANCELLED;
+                            break;
+                        case "Trì hoãn":
+                            status = FlightStatus.DELAYED;
+                            break;
+                        default:
+                            status = FlightStatus.SCHEDULED;
+                            break;
+                    }
+                    filtered = filtered.Where(f => f.Status == status);
+                }
+
+                // Filter by departure date - skip for now as DateTimePickerCustom doesn't have Checked
+                if (false)
+                {
+                    var selectedDate = dtpDeparture.Value.Date;
+                    filtered = filtered.Where(f => f.DepartureTime.HasValue && 
+                                                   f.DepartureTime.Value.Date == selectedDate);
+                }
+
+                // Update table
                 table.Rows.Clear();
-
-                foreach (var flight in flights) {
-                    var row = new DataGridViewRow();
-                    row.CreateCells(table);
+                foreach (var flight in filtered.OrderByDescending(f => f.DepartureTime))
+                {
+                    int rowIdx = table.Rows.Add();
+                    var row = table.Rows[rowIdx];
                     
-                    row.Cells[0].Value = flight.FlightNumber;
-                    row.Cells[1].Value = flight.DepartureAirportDisplay; // SGN (TP. Hồ Chí Minh)
-                    row.Cells[2].Value = flight.ArrivalAirportDisplay;   // HAN (Hà Nội)
-                    row.Cells[3].Value = flight.DepartureTime?.ToString("dd/MM/yyyy HH:mm") ?? "N/A";
-                    row.Cells[4].Value = flight.ArrivalTime?.ToString("dd/MM/yyyy HH:mm") ?? "N/A";
-                    row.Cells[5].Value = flight.AvailableSeats.ToString();
-                    row.Cells[6].Value = flight.Status.GetDescription();
-                    row.Cells[7].Value = ""; // Actions column (custom painted)
-                    row.Cells[8].Value = flight.FlightId;
-
-                    table.Rows.Add(row);
+                    row.Cells["FlightId"].Value = flight.FlightId;
+                    row.Cells["FlightNumber"].Value = flight.FlightNumber;
+                    row.Cells["DepartureAirport"].Value = flight.DepartureAirportDisplay;
+                    row.Cells["ArrivalAirport"].Value = flight.ArrivalAirportDisplay;
+                    row.Cells["DepartureTime"].Value = flight.DepartureTime?.ToString("dd/MM/yyyy HH:mm");
+                    row.Cells["ArrivalTime"].Value = flight.ArrivalTime?.ToString("HH:mm");
+                    row.Cells["Status"].Value = GetStatusText(flight.Status);
+                    row.Cells["AvailableSeats"].Value = flight.AvailableSeats;
+                    row.Cells[ACTION_COL].Value = $"{TXT_VIEW}{SEP}{TXT_EDIT}{SEP}{TXT_DEL}";
+                    row.Tag = flight;
                 }
             }
-            catch (Exception ex) {
-                MessageBox.Show($"Lỗi load chuyến bay: {ex.Message}", "Lỗi",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi tải danh sách chuyến bay: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void BtnSearch_Click(object sender, EventArgs e) {
-            try {
-                // Search flights
-                var flightBUS = FlightBUS.Instance;
-                var allFlights = flightBUS.GetAllFlightsWithDetails();
-
-                // Filter by flight number if provided (prioritize this)
-                if (!string.IsNullOrWhiteSpace(txtFlightNumber.Text)) {
-                    allFlights = allFlights.Where(f => 
-                        f.FlightNumber?.Contains(txtFlightNumber.Text.Trim(), StringComparison.OrdinalIgnoreCase) == true
-                    ).ToList();
-                    
-                    // Display results immediately if searching by flight number only
-                    if (string.IsNullOrEmpty(cbDepartureAirport.Text) && string.IsNullOrEmpty(cbArrivalAirport.Text)) {
-                        DisplayFlightsWithDetails(allFlights);
-                        return;
-                    }
-                }
-
-                // Validate other fields only if provided
-                if (cbDepartureAirport.SelectedItem is ComboBoxItem depItem && (int)depItem.Value != 0) {
-                    if (cbArrivalAirport.SelectedItem is ComboBoxItem arrItem && (int)arrItem.Value != 0) {
-                        if ((int)depItem.Value == (int)arrItem.Value) {
-                            MessageBox.Show("Nơi đi và nơi đến không được trùng nhau!", "Thông báo",
-                                MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            return;
-                        }
-                    }
-                }
-
-                // Get passengers count
-                int adults = string.IsNullOrEmpty(txtAdults.Text) ? 1 : int.Parse(txtAdults.Text);
-                int children = string.IsNullOrEmpty(txtChildren.Text) ? 0 : int.Parse(txtChildren.Text);
-                int totalPassengers = adults + children;
-
-                if (totalPassengers <= 0 && !string.IsNullOrWhiteSpace(txtAdults.Text)) {
-                    MessageBox.Show("Số lượng hành khách phải lớn hơn 0!", "Thông báo",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                // Filter by flight number if provided
-                if (!string.IsNullOrWhiteSpace(txtFlightNumber.Text)) {
-                    allFlights = allFlights.Where(f => 
-                        f.FlightNumber?.Contains(txtFlightNumber.Text.Trim(), StringComparison.OrdinalIgnoreCase) == true
-                    ).ToList();
-                }
-
-                // Filter by date range
-                var departureDate = dtpDepartureDate.Value.Date;
-                DateTime? returnDate = chkRoundTrip.Checked ? dtpReturnDate.Value.Date : (DateTime?)null;
-
-                // Filter by route and date
-                var filteredFlights = allFlights.Where(f => 
-                    f.DepartureTime.HasValue && 
-                    f.DepartureTime.Value.Date >= departureDate &&
-                    f.Status == FlightStatus.SCHEDULED
-                ).ToList();
-
-                // Display results
-                DisplayFlightsWithDetails(filteredFlights);
-
-                if (table.Rows.Count == 0) {
-                    MessageBox.Show("Không tìm thấy chuyến bay phù hợp!", "Thông báo",
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-            }
-            catch (Exception ex) {
-                MessageBox.Show($"Lỗi tìm kiếm: {ex.Message}", "Lỗi",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void BtnClear_Click(object sender, EventArgs e) {
-            txtFlightNumber.Text = string.Empty;
+        private void ClearFilters()
+        {
+            txtFlightNumber.Text = "";
             cbDepartureAirport.SelectedIndex = 0;
             cbArrivalAirport.SelectedIndex = 0;
-            dtpDepartureDate.Value = DateTime.Now;
-            dtpReturnDate.Value = DateTime.Now;
-            txtAdults.Text = string.Empty;
-            txtChildren.Text = string.Empty;
-            chkRoundTrip.Checked = false;
-            LoadFlights();
+            cbStatus.SelectedIndex = 0;
+            RefreshList();
         }
 
-        private void DisplayFlights(List<FlightDTO> flights) {
-            table.Rows.Clear();
-            foreach (var flight in flights) {
-                var row = new DataGridViewRow();
-                row.CreateCells(table);
-                
-                row.Cells[0].Value = flight.FlightNumber;
-                row.Cells[1].Value = $"Airport {flight.RouteId}";
-                row.Cells[2].Value = $"Airport {flight.AircraftId}";
-                row.Cells[3].Value = flight.DepartureTime?.ToString("dd/MM/yyyy HH:mm") ?? "N/A";
-                row.Cells[4].Value = flight.ArrivalTime?.ToString("dd/MM/yyyy HH:mm") ?? "N/A";
-                row.Cells[5].Value = "Available";
-                row.Cells[6].Value = flight.Status.GetDescription();
-                row.Cells[7].Value = "";
-                row.Cells[8].Value = flight.FlightId;
+        private string GetStatusText(FlightStatus status)
+        {
+            return status switch
+            {
+                FlightStatus.SCHEDULED => "Đã lên lịch",
+                FlightStatus.COMPLETED => "Hoàn thành",
+                FlightStatus.CANCELLED => "Đã hủy",
+                FlightStatus.DELAYED => "Trì hoãn",
+                _ => "Không xác định"
+            };
+        }
 
-                table.Rows.Add(row);
+        private void Table_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (table.Columns[e.ColumnIndex].Name == "Status" && e.Value != null)
+            {
+                var statusText = e.Value.ToString();
+                var cell = table.Rows[e.RowIndex].Cells[e.ColumnIndex];
+                
+                switch (statusText)
+                {
+                    case "Đã lên lịch":
+                        cell.Style.BackColor = Color.LightBlue;
+                        cell.Style.ForeColor = Color.DarkBlue;
+                        break;
+                    case "Đang bay":
+                        cell.Style.BackColor = Color.LightGreen;
+                        cell.Style.ForeColor = Color.DarkGreen;
+                        break;
+                    case "Đã hạ cánh":
+                        cell.Style.BackColor = Color.LightGray;
+                        cell.Style.ForeColor = Color.Black;
+                        break;
+                    case "Đã hủy":
+                        cell.Style.BackColor = Color.LightCoral;
+                        cell.Style.ForeColor = Color.DarkRed;
+                        break;
+                    case "Trì hoãn":
+                        cell.Style.BackColor = Color.LightYellow;
+                        cell.Style.ForeColor = Color.DarkOrange;
+                        break;
+                }
+            }
+
+            // Format Note column - truncate if too long
+            if (table.Columns[e.ColumnIndex].Name == "Note" && e.Value != null)
+            {
+                var note = e.Value.ToString();
+                if (!string.IsNullOrEmpty(note) && note.Length > 50)
+                {
+                    e.Value = note.Substring(0, 47) + "...";
+                    e.FormattingApplied = true;
+                }
+            }
+
+            if (table.Columns[e.ColumnIndex].Name == ACTION_COL)
+            {
+                e.CellStyle.ForeColor = Color.Blue;
+                e.CellStyle.Font = new Font(e.CellStyle.Font, FontStyle.Underline);
             }
         }
 
-        private void DisplayFlightsWithDetails(List<FlightWithDetailsDTO> flights) {
-            table.Rows.Clear();
-            foreach (var flight in flights) {
-                var row = new DataGridViewRow();
-                row.CreateCells(table);
-                
-                row.Cells[0].Value = flight.FlightNumber;
-                row.Cells[1].Value = flight.DepartureAirportDisplay;
-                row.Cells[2].Value = flight.ArrivalAirportDisplay;
-                row.Cells[3].Value = flight.DepartureTime?.ToString("dd/MM/yyyy HH:mm") ?? "N/A";
-                row.Cells[4].Value = flight.ArrivalTime?.ToString("dd/MM/yyyy HH:mm") ?? "N/A";
-                row.Cells[5].Value = flight.AvailableSeats.ToString();
-                row.Cells[6].Value = flight.Status.GetDescription();
-                row.Cells[7].Value = "";
-                row.Cells[8].Value = flight.FlightId;
-
-                table.Rows.Add(row);
-            }
-        }
-
-        // === Helpers for Action column ===
-        private (Rectangle rcView, Rectangle rcAction1, Rectangle rcAction2) GetActionRects(Rectangle cellBounds, Font font) {
-            int padding = 6;
-            int x = cellBounds.Left + padding;
-            int y = cellBounds.Top + (cellBounds.Height - font.Height) / 2;
-
-            var flags = TextFormatFlags.NoPadding;
-            var szView = TextRenderer.MeasureText(TXT_VIEW, font, Size.Empty, flags);
-            var szSep = TextRenderer.MeasureText(SEP, font, Size.Empty, flags);
-
-            var rcView = new Rectangle(new Point(x, y), szView); 
-            x += szView.Width + szSep.Width;
-
-            Rectangle rcAction1, rcAction2;
-            
-            if (IsAdmin()) {
-                // Admin: Xem | Sửa | Xóa
-                var szEdit = TextRenderer.MeasureText(TXT_EDIT, font, Size.Empty, flags);
-                var szDelete = TextRenderer.MeasureText(TXT_DELETE, font, Size.Empty, flags);
-                
-                rcAction1 = new Rectangle(new Point(x, y), szEdit); 
-                x += szEdit.Width + szSep.Width;
-                rcAction2 = new Rectangle(new Point(x, y), szDelete);
-            } else if (IsStaff()) {
-                // Staff: Xem | Sửa | Đặt vé
-                var szEdit = TextRenderer.MeasureText(TXT_EDIT, font, Size.Empty, flags);
-                var szBook = TextRenderer.MeasureText(TXT_BOOK, font, Size.Empty, flags);
-                
-                rcAction1 = new Rectangle(new Point(x, y), szEdit); 
-                x += szEdit.Width + szSep.Width;
-                rcAction2 = new Rectangle(new Point(x, y), szBook);
-            } else {
-                // Customer: Xem | Đặt vé
-                var szBook = TextRenderer.MeasureText(TXT_BOOK, font, Size.Empty, flags);
-                rcAction1 = new Rectangle(new Point(x, y), szBook);
-                rcAction2 = Rectangle.Empty;
-            }
-
-            return (rcView, rcAction1, rcAction2);
-        }
-
-        private void Table_CellPainting(object? sender, DataGridViewCellPaintingEventArgs e) {
-            if (e.RowIndex < 0) return;
-            if (table.Columns[e.ColumnIndex].Name != ACTION_COL_NAME) return;
-
-            e.Handled = true;
-            e.Paint(e.ClipBounds, DataGridViewPaintParts.Background | DataGridViewPaintParts.Border);
-
-            var font = e.CellStyle.Font ?? table.Font;
-            var rects = GetActionRects(e.CellBounds, font);
-
-            Color link = Color.FromArgb(0, 92, 175);
-            Color sep = Color.FromArgb(120, 120, 120);
-            Color deleteColor = Color.FromArgb(220, 53, 69); // Red for delete
-            Color bookColor = Color.FromArgb(34, 197, 94); // Green for booking
-
-            // Xem (all roles)
-            TextRenderer.DrawText(e.Graphics, TXT_VIEW, font, rects.rcView.Location, link, TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(e.Graphics, SEP, font, new Point(rects.rcView.Right, rects.rcView.Top), sep, TextFormatFlags.NoPadding);
-
-            if (IsAdmin()) {
-                // Admin: Sửa | Xóa
-                TextRenderer.DrawText(e.Graphics, TXT_EDIT, font, rects.rcAction1.Location, link, TextFormatFlags.NoPadding);
-                TextRenderer.DrawText(e.Graphics, SEP, font, new Point(rects.rcAction1.Right, rects.rcAction1.Top), sep, TextFormatFlags.NoPadding);
-                TextRenderer.DrawText(e.Graphics, TXT_DELETE, font, rects.rcAction2.Location, deleteColor, TextFormatFlags.NoPadding);
-            } else if (IsStaff()) {
-                // Staff: Sửa | Đặt vé
-                TextRenderer.DrawText(e.Graphics, TXT_EDIT, font, rects.rcAction1.Location, link, TextFormatFlags.NoPadding);
-                TextRenderer.DrawText(e.Graphics, SEP, font, new Point(rects.rcAction1.Right, rects.rcAction1.Top), sep, TextFormatFlags.NoPadding);
-                TextRenderer.DrawText(e.Graphics, TXT_BOOK, font, rects.rcAction2.Location, bookColor, TextFormatFlags.NoPadding);
-            } else {
-                // Customer: Đặt vé
-                TextRenderer.DrawText(e.Graphics, TXT_BOOK, font, rects.rcAction1.Location, bookColor, TextFormatFlags.NoPadding);
-            }
-        }
-
-        private void Table_CellMouseMove(object? sender, DataGridViewCellMouseEventArgs e) {
-            if (e.RowIndex < 0 || e.ColumnIndex < 0) { table.Cursor = Cursors.Default; return; }
-            if (table.Columns[e.ColumnIndex].Name != ACTION_COL_NAME) { table.Cursor = Cursors.Default; return; }
-
-            var cellRect = table.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, false);
-            var font = table[e.ColumnIndex, e.RowIndex].InheritedStyle?.Font ?? table.Font;
-            var rects = GetActionRects(cellRect, font);
-
-            var p = new Point(e.Location.X + cellRect.Left, e.Location.Y + cellRect.Top);
-            bool over = rects.rcView.Contains(p) || 
-                       rects.rcAction1.Contains(p) || 
-                       (!rects.rcAction2.IsEmpty && rects.rcAction2.Contains(p));
-            table.Cursor = over ? Cursors.Hand : Cursors.Default;
-        }
-
-        private void Table_CellMouseClick(object? sender, DataGridViewCellMouseEventArgs e) {
+        private void Table_CellMouseMove(object sender, DataGridViewCellMouseEventArgs e)
+        {
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
-            if (table.Columns[e.ColumnIndex].Name != ACTION_COL_NAME) return;
+            
+            var colName = table.Columns[e.ColumnIndex].Name;
+            if (colName != ACTION_COL)
+            {
+                table.Cursor = Cursors.Default;
+                return;
+            }
 
-            var cellRect = table.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, false);
-            var font = table[e.ColumnIndex, e.RowIndex].InheritedStyle?.Font ?? table.Font;
-            var rects = GetActionRects(cellRect, font);
-            var p = new Point(e.Location.X + cellRect.Left, e.Location.Y + cellRect.Top);
+            var rect = table.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, true);
+            var mouseX = e.X;
+            
+            // Calculate button positions with padding
+            const int padding = 8;
+            var startX = padding;
+            
+            using (var g = table.CreateGraphics())
+            {
+                var viewSize = g.MeasureString(TXT_VIEW, table.Font);
+                var editSize = g.MeasureString(TXT_EDIT, table.Font);
+                var delSize = g.MeasureString(TXT_DEL, table.Font);
+                var sepSize = g.MeasureString(SEP, table.Font);
+                
+                var viewEnd = startX + viewSize.Width;
+                var editStart = viewEnd + sepSize.Width;
+                var editEnd = editStart + editSize.Width;
+                var delStart = editEnd + sepSize.Width;
+                var delEnd = delStart + delSize.Width;
+                
+                int newHoveredAction = -1;
+                
+                if (mouseX >= startX && mouseX <= viewEnd)
+                {
+                    newHoveredAction = 0; // View
+                }
+                else if (mouseX >= editStart && mouseX <= editEnd)
+                {
+                    newHoveredAction = 1; // Edit
+                }
+                else if (mouseX >= delStart && mouseX <= delEnd)
+                {
+                    newHoveredAction = 2; // Delete
+                }
+                
+                if (newHoveredAction != -1)
+                {
+                    table.Cursor = Cursors.Hand;
+                    if (_hoveredRow != e.RowIndex || _hoveredAction != newHoveredAction)
+                    {
+                        _hoveredRow = e.RowIndex;
+                        _hoveredAction = newHoveredAction;
+                        table.InvalidateRow(e.RowIndex);
+                    }
+                }
+                else
+                {
+                    table.Cursor = Cursors.Default;
+                    if (_hoveredRow == e.RowIndex)
+                    {
+                        _hoveredRow = -1;
+                        _hoveredAction = -1;
+                        table.InvalidateRow(e.RowIndex);
+                    }
+                }
+            }
+        }
+
+        private void Table_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
+        {
+            if (_hoveredRow != -1)
+            {
+                var oldRow = _hoveredRow;
+                _hoveredRow = -1;
+                _hoveredAction = -1;
+                table.Cursor = Cursors.Default;
+                if (oldRow >= 0 && oldRow < table.Rows.Count)
+                {
+                    table.InvalidateRow(oldRow);
+                }
+            }
+        }
+
+        private void Table_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+
+            var colName = table.Columns[e.ColumnIndex].Name;
+            if (colName != ACTION_COL) return;
 
             var row = table.Rows[e.RowIndex];
+            var flight = row.Tag as FlightWithDetailsDTO;
+            if (flight == null) return;
 
-            string flightId = row.Cells[8].Value?.ToString() ?? string.Empty;
-            string flightNumber = row.Cells[0].Value?.ToString() ?? "(n/a)";
-            string fromAirport = row.Cells[1].Value?.ToString() ?? "(n/a)";
-            string toAirport = row.Cells[2].Value?.ToString() ?? "(n/a)";
-            string departureTime = row.Cells[3].Value?.ToString() ?? "(n/a)";
-            string arrivalTime = row.Cells[4].Value?.ToString() ?? "(n/a)";
-            string seatAvailable = row.Cells[5].Value?.ToString() ?? "(n/a)";
-
-            if (rects.rcView.Contains(p)) {
-                // Xem chi tiết (all roles)
-                using (var frm = new FlightDetailForm(flightNumber, fromAirport, toAirport, departureTime, arrivalTime, seatAvailable)) {
-                    frm.StartPosition = FormStartPosition.CenterParent;
-                    frm.ShowDialog(FindForm());
-                }
-            } else if (rects.rcAction1.Contains(p)) {
-                if (IsAdmin() || IsStaff()) {
-                    // Admin/Staff: Sửa
-                    EditFlight(flightId);
-                } else {
-                    // Customer: Đặt vé
-                    BookFlight(flightId);
-                }
-            } else if (!rects.rcAction2.IsEmpty && rects.rcAction2.Contains(p)) {
-                if (IsAdmin()) {
-                    // Admin: Xóa
-                    DeleteFlight(flightId, flightNumber);
-                } else if (IsStaff()) {
-                    // Staff: Đặt vé
-                    BookFlight(flightId);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Sửa chuyến bay (Admin/Staff only)
-        /// </summary>
-        private void EditFlight(string flightId) {
-            if (string.IsNullOrEmpty(flightId)) return;
+            var rect = table.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, true);
+            var clickPoint = table.PointToClient(Cursor.Position);
+            var clickX = clickPoint.X - rect.X;
             
-            try {
-                var flight = FlightBUS.Instance.GetFlightById(int.Parse(flightId));
-                if (flight == null) {
-                    MessageBox.Show("Không tìm thấy chuyến bay!", "Lỗi", 
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
+            // Calculate button positions with padding
+            const int padding = 8;
+            var startX = padding;
+            
+            using (var g = table.CreateGraphics())
+            {
+                var viewSize = g.MeasureString(TXT_VIEW, table.Font);
+                var editSize = g.MeasureString(TXT_EDIT, table.Font);
+                var delSize = g.MeasureString(TXT_DEL, table.Font);
+                var sepSize = g.MeasureString(SEP, table.Font);
                 
-                // Open edit form or navigate to edit control
-                var parentForm = FindForm();
-                if (parentForm != null) {
-                    // Find FlightControl parent
-                    var flightControl = FindParentControl<FlightControl>(this);
-                    if (flightControl != null) {
-                        flightControl.ShowCreateForm(flight);
-                    }
+                var viewEnd = startX + viewSize.Width;
+                var editStart = viewEnd + sepSize.Width;
+                var editEnd = editStart + editSize.Width;
+                var delStart = editEnd + sepSize.Width;
+                var delEnd = delStart + delSize.Width;
+                
+                if (clickX >= startX && clickX <= viewEnd)
+                {
+                    ViewRequested?.Invoke(flight);
                 }
-            } catch (Exception ex) {
-                MessageBox.Show($"Lỗi khi mở form sửa: {ex.Message}", "Lỗi",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                else if (clickX >= editStart && clickX <= editEnd)
+                {
+                    RequestEdit?.Invoke(flight);
+                }
+                else if (clickX >= delStart && clickX <= delEnd)
+                {
+                    HandleDelete(flight);
+                }
             }
         }
 
-        /// <summary>
-        /// Xóa chuyến bay (Admin/Staff only)
-        /// </summary>
-        private void DeleteFlight(string flightId, string flightNumber) {
-            if (string.IsNullOrEmpty(flightId)) return;
-
+        private void HandleDelete(FlightWithDetailsDTO flight)
+        {
             var result = MessageBox.Show(
-                $"Bạn có chắc chắn muốn xóa chuyến bay {flightNumber}?\n\nThao tác này không thể hoàn tác!",
-                "Xác nhận xóa",
+                $"Bạn có chắc chắn muốn ẩn chuyến bay {flight.FlightNumber}?\n" +
+                $"Chuyến bay sẽ không còn hiển thị trong danh sách.",
+                "Xác nhận ẩn chuyến bay",
                 MessageBoxButtons.YesNo,
-                MessageBoxIcon.Warning);
+                MessageBoxIcon.Question);
 
-            if (result != DialogResult.Yes) return;
-
-            try {
-                var success = FlightBUS.Instance.DeleteFlight(int.Parse(flightId), out string message);
-                if (success) {
-                    MessageBox.Show("Xóa chuyến bay thành công!", "Thành công",
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    LoadFlights(); // Reload table
-                } else {
-                    MessageBox.Show($"Không thể xóa chuyến bay:\n{message}", "Lỗi",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (result == DialogResult.Yes)
+            {
+                if (_bus.DeleteFlight(flight.FlightId, out string message))
+                {
+                    MessageBox.Show(message, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    RefreshList();
+                    DataChanged?.Invoke();
                 }
-            } catch (Exception ex) {
-                MessageBox.Show($"Lỗi khi xóa: {ex.Message}", "Lỗi",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        /// <summary>
-        /// Mở form chọn hạng vé cho chuyến bay (Customer only)
-        /// NOTE: Sau khi user xác nhận, sử dụng event BookingRequested để nhận:
-        /// - int flightId: ID chuyến bay
-        /// - string cabinClass: Hạng vé ("Economy" hoặc "Business")
-        /// Sau đó chuyển user sang trang Đặt vé với dữ liệu này.
-        /// </summary>
-        private void BookFlight(string flightId) {
-            if (string.IsNullOrEmpty(flightId)) return;
-            
-            try {
-                var flight = FlightBUS.Instance.GetFlightById(int.Parse(flightId));
-                if (flight == null) {
-                    MessageBox.Show("Không tìm thấy chuyến bay!", "Lỗi", 
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
+                else
+                {
+                    MessageBox.Show(message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-                
-                // Mở form chọn hạng vé
-                using (var bookingForm = new BookingClassSelectionForm(flight)) {
-                    bookingForm.StartPosition = FormStartPosition.CenterParent;
-                    var result = bookingForm.ShowDialog(FindForm());
-                    
-                    if (result == DialogResult.OK) {
-                        // User đã xác nhận đặt vé
-                        int selectedFlightId = bookingForm.SelectedFlightId;
-                        string selectedCabinClass = bookingForm.SelectedCabinClass;
-                        
-                        // Raise event để MainForm hoặc parent control xử lý
-                        BookingRequested?.Invoke(selectedFlightId, selectedCabinClass);
-                    }
-                }
-            } catch (Exception ex) {
-                MessageBox.Show($"Lỗi khi đặt vé: {ex.Message}", "Lỗi",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
-
-        private T? FindParentControl<T>(Control child) where T : Control {
-            var parent = child.Parent;
-            while (parent != null) {
-                if (parent is T result) return result;
-                parent = parent.Parent;
-            }
-            return null;
-        }
-
-        private class ComboBoxItem {
-            public string Text { get; set; } = string.Empty;
-            public object Value { get; set; } = 0;
-            public override string ToString() => Text;
-        }
-    }
-
-    // Popup form bọc FlightDetailControl + nạp dữ liệu
-    internal class FlightDetailForm : Form {
-        public FlightDetailForm(string flightNumber, string fromAirport, string toAirport, string departureTime, string arrivalTime, string seatAvailable) {
-            Text = $"Chi tiết chuyến bay {flightNumber}";
-            Size = new Size(900, 600);
-            BackColor = Color.White;
-
-            var detail = new FlightDetailControl { Dock = DockStyle.Fill };
-            detail.LoadFlightInfo(flightNumber, fromAirport, toAirport, departureTime, arrivalTime, seatAvailable);
-
-            Controls.Add(detail);
         }
     }
 }

@@ -1,168 +1,389 @@
+using System;
 using System.Drawing;
 using System.Windows.Forms;
+using DTO.Flight;
 
-namespace GUI.Features.Flight.SubFeatures {
-    public class FlightDetailControl : UserControl {
-        private TableLayoutPanel main;        // root giống FlightListControl
-        private Label lblTitle;
-        private Panel card;                   // khung trắng
-        private TableLayoutPanel grid;        // bảng 2 cột key/value như bản đầu
+namespace GUI.Features.Flight.SubFeatures
+{
+    public class FlightDetailControl : UserControl
+    {
+        public event EventHandler? CloseRequested;
+        private FlightWithDetailsDTO _currentFlight;
+        private Label vFlightNumber, vAircraftModel, vAircraftManufacturer;
+        private Label vDepartureAirport, vArrivalAirport;
+        private Label vDepartureTime, vArrivalTime, vDuration;
+        private Label vStatus, vAvailableSeats;
+        private Label vRouteInfo;
+        private Label vNote;
 
-        // giữ field để set nhanh; đồng thời gán Name để bạn vẫn Controls["..."] được
-        private Label valueFlightId, valueDeparturePlace, valueArrivalPlace,
-                      valueDepartureTime, valueArrivalTime, valueSeatAvailable;
-
-        public FlightDetailControl() {
+        public FlightDetailControl()
+        {
             InitializeComponent();
-            BuildLayout();
         }
 
-        private void InitializeComponent() {
+        private void InitializeComponent()
+        {
             SuspendLayout();
-            // 
-            // FlightDetailControl
-            // 
             BackColor = Color.FromArgb(232, 240, 252);
-            Name = "FlightDetailControl";
-            Size = new Size(1460, 430);
+            Dock = DockStyle.Fill;
+            
+            BuildLayout();
             ResumeLayout(false);
         }
 
-        private static Label Key(string text) => new Label {
+        private static Label CreateKeyLabel(string text) => new Label
+        {
             Text = text,
             AutoSize = true,
-            Font = new Font("Segoe UI", 10f, FontStyle.Bold),
-            Margin = new Padding(0, 6, 12, 6)
+            Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+            ForeColor = Color.FromArgb(60, 60, 60),
+            Margin = new Padding(0, 8, 12, 8)
         };
 
-        private static Label Val(string name) => new Label {
+        private static Label CreateValueLabel(string name) => new Label
+        {
             Name = name,
-            Text = "",
+            Text = "-",
             AutoSize = true,
-            Font = new Font("Segoe UI", 10f, FontStyle.Regular),
-            Margin = new Padding(0, 6, 0, 6)
+            Font = new Font("Segoe UI", 11f),
+            ForeColor = Color.FromArgb(40, 40, 40),
+            Margin = new Padding(0, 8, 0, 8)
         };
 
-        private void BuildLayout() {
-            // ===== Title =====
-            lblTitle = new Label {
-                Text = "🧾 Chi tiết chuyến bay",
+        private void BuildLayout()
+        {
+            // Title
+            var title = new Label
+            {
+                Text = "✈️ Chi tiết chuyến bay",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
-                ForeColor = Color.Black,
-                Padding = new Padding(24, 20, 24, 0),
+                ForeColor = Color.FromArgb(40, 55, 77),
+                Padding = new Padding(24, 20, 24, 12),
                 Dock = DockStyle.Top
             };
 
-            // ===== Card trắng chứa grid 2 cột =====
-            // ===== Card trắng chứa grid 2 cột =====
-            card = new Panel {
+            // Main card
+            var card = new Panel
+            {
                 BackColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                Padding = new Padding(16),
+                Padding = new Padding(24),
                 Margin = new Padding(24, 8, 24, 24),
-                Dock = DockStyle.Fill
+                Dock = DockStyle.Fill,
+                AutoScroll = true
             };
 
-            // Hàng tiêu đề nhỏ trong card
-            var secTitle = new Label {
-                Text = "Thông tin chuyến bay",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 12, FontStyle.Bold),
-                Margin = new Padding(0, 0, 0, 16),
-                Dock = DockStyle.Top
-            };
-
-            // Bảng grid
-            grid = new TableLayoutPanel {
+            // Info grid
+            var grid = new TableLayoutPanel
+            {
                 Dock = DockStyle.Top,
                 AutoSize = true,
-                ColumnCount = 2
+                ColumnCount = 2,
+                Padding = new Padding(0, 0, 0, 16)
             };
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 200));
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
-            // ✅ Thêm tiêu đề trước, grid sau
+            int row = 0;
+
+            // Flight Information Section
+            var sectionFlight = new Label
+            {
+                Text = "📋 THÔNG TIN CHUYẾN BAY",
+                AutoSize = true,
+                Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 92, 175),
+                Margin = new Padding(0, 0, 0, 12),
+                Dock = DockStyle.Top
+            };
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(sectionFlight, 0, row);
+            grid.SetColumnSpan(sectionFlight, 2);
+            row++;
+
+            // Flight Number
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(CreateKeyLabel("Số hiệu chuyến bay:"), 0, row);
+            vFlightNumber = CreateValueLabel("vFlightNumber");
+            vFlightNumber.Font = new Font("Segoe UI", 14f, FontStyle.Bold);
+            vFlightNumber.ForeColor = Color.FromArgb(0, 92, 175);
+            grid.Controls.Add(vFlightNumber, 1, row++);
+
+            // Status
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(CreateKeyLabel("Trạng thái:"), 0, row);
+            vStatus = CreateValueLabel("vStatus");
+            grid.Controls.Add(vStatus, 1, row++);
+
+            // Route Section
+            var separator1 = new Panel { Height = 2, BackColor = Color.FromArgb(220, 220, 220), Margin = new Padding(0, 16, 0, 16), Dock = DockStyle.Top };
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(separator1, 0, row);
+            grid.SetColumnSpan(separator1, 2);
+            row++;
+
+            var sectionRoute = new Label
+            {
+                Text = "🌍 TUYẾN BAY",
+                AutoSize = true,
+                Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 92, 175),
+                Margin = new Padding(0, 0, 0, 12),
+                Dock = DockStyle.Top
+            };
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(sectionRoute, 0, row);
+            grid.SetColumnSpan(sectionRoute, 2);
+            row++;
+
+            // Departure Airport
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(CreateKeyLabel("Sân bay đi:"), 0, row);
+            vDepartureAirport = CreateValueLabel("vDepartureAirport");
+            vDepartureAirport.Font = new Font("Segoe UI", 11f, FontStyle.Bold);
+            grid.Controls.Add(vDepartureAirport, 1, row++);
+
+            // Arrival Airport
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(CreateKeyLabel("Sân bay đến:"), 0, row);
+            vArrivalAirport = CreateValueLabel("vArrivalAirport");
+            vArrivalAirport.Font = new Font("Segoe UI", 11f, FontStyle.Bold);
+            grid.Controls.Add(vArrivalAirport, 1, row++);
+
+            // Route Info
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(CreateKeyLabel("Mã tuyến:"), 0, row);
+            vRouteInfo = CreateValueLabel("vRouteInfo");
+            grid.Controls.Add(vRouteInfo, 1, row++);
+
+            // Schedule Section
+            var separator2 = new Panel { Height = 2, BackColor = Color.FromArgb(220, 220, 220), Margin = new Padding(0, 16, 0, 16), Dock = DockStyle.Top };
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(separator2, 0, row);
+            grid.SetColumnSpan(separator2, 2);
+            row++;
+
+            var sectionSchedule = new Label
+            {
+                Text = "🕐 LỊCH TRÌNH",
+                AutoSize = true,
+                Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 92, 175),
+                Margin = new Padding(0, 0, 0, 12),
+                Dock = DockStyle.Top
+            };
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(sectionSchedule, 0, row);
+            grid.SetColumnSpan(sectionSchedule, 2);
+            row++;
+
+            // Departure Time
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(CreateKeyLabel("Giờ khởi hành:"), 0, row);
+            vDepartureTime = CreateValueLabel("vDepartureTime");
+            vDepartureTime.Font = new Font("Segoe UI", 11f, FontStyle.Bold);
+            vDepartureTime.ForeColor = Color.FromArgb(46, 125, 50);
+            grid.Controls.Add(vDepartureTime, 1, row++);
+
+            // Arrival Time
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(CreateKeyLabel("Giờ đến dự kiến:"), 0, row);
+            vArrivalTime = CreateValueLabel("vArrivalTime");
+            vArrivalTime.Font = new Font("Segoe UI", 11f, FontStyle.Bold);
+            vArrivalTime.ForeColor = Color.FromArgb(211, 47, 47);
+            grid.Controls.Add(vArrivalTime, 1, row++);
+
+            // Duration
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(CreateKeyLabel("Thời gian bay:"), 0, row);
+            vDuration = CreateValueLabel("vDuration");
+            grid.Controls.Add(vDuration, 1, row++);
+
+            // Aircraft Section
+            var separator3 = new Panel { Height = 2, BackColor = Color.FromArgb(220, 220, 220), Margin = new Padding(0, 16, 0, 16), Dock = DockStyle.Top };
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(separator3, 0, row);
+            grid.SetColumnSpan(separator3, 2);
+            row++;
+
+            var sectionAircraft = new Label
+            {
+                Text = "✈️ THÔNG TIN MÁY BAY",
+                AutoSize = true,
+                Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 92, 175),
+                Margin = new Padding(0, 0, 0, 12),
+                Dock = DockStyle.Top
+            };
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(sectionAircraft, 0, row);
+            grid.SetColumnSpan(sectionAircraft, 2);
+            row++;
+
+            // Aircraft Model
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(CreateKeyLabel("Model máy bay:"), 0, row);
+            vAircraftModel = CreateValueLabel("vAircraftModel");
+            grid.Controls.Add(vAircraftModel, 1, row++);
+
+            // Aircraft Manufacturer
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(CreateKeyLabel("Nhà sản xuất:"), 0, row);
+            vAircraftManufacturer = CreateValueLabel("vAircraftManufacturer");
+            grid.Controls.Add(vAircraftManufacturer, 1, row++);
+
+            // Available Seats
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(CreateKeyLabel("Số ghế còn trống:"), 0, row);
+            vAvailableSeats = CreateValueLabel("vAvailableSeats");
+            vAvailableSeats.Font = new Font("Segoe UI", 12f, FontStyle.Bold);
+            vAvailableSeats.ForeColor = Color.FromArgb(46, 125, 50);
+            grid.Controls.Add(vAvailableSeats, 1, row++);
+
+            // Notes Section
+            var separator4 = new Panel { Height = 2, BackColor = Color.FromArgb(220, 220, 220), Margin = new Padding(0, 16, 0, 16), Dock = DockStyle.Top };
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(separator4, 0, row);
+            grid.SetColumnSpan(separator4, 2);
+            row++;
+
+            var sectionNotes = new Label
+            {
+                Text = "📝 GHI CHÚ",
+                AutoSize = true,
+                Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 92, 175),
+                Margin = new Padding(0, 0, 0, 12),
+                Dock = DockStyle.Top
+            };
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(sectionNotes, 0, row);
+            grid.SetColumnSpan(sectionNotes, 2);
+            row++;
+
+            // Note
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(CreateKeyLabel("Ghi chú:"), 0, row);
+            vNote = CreateValueLabel("vNote");
+            vNote.MaximumSize = new Size(500, 0);
+            vNote.AutoSize = true;
+            grid.Controls.Add(vNote, 1, row++);
+
             card.Controls.Add(grid);
-            card.Controls.Add(secTitle);
 
-            // ===== Các dòng (đúng thứ tự & index, KHÔNG trùng như trước) =====
-            // 1
-            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            grid.Controls.Add(Key("Mã chuyến bay:"), 0, 0);
-            valueFlightId = Val("valueFlightId");
-            grid.Controls.Add(valueFlightId, 1, 0);
-
-            // 2
-            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            grid.Controls.Add(Key("Nơi cất cánh:"), 0, 1);
-            valueDeparturePlace = Val("valueDeparturePlace");
-            grid.Controls.Add(valueDeparturePlace, 1, 1);
-
-            // 3
-            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            grid.Controls.Add(Key("Nơi hạ cánh:"), 0, 2);
-            valueArrivalPlace = Val("valueArrivalPlace");
-            grid.Controls.Add(valueArrivalPlace, 1, 2);
-
-            // 4
-            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            grid.Controls.Add(Key("Giờ cất cánh:"), 0, 3);
-            valueDepartureTime = Val("valueDepartureTime");
-            grid.Controls.Add(valueDepartureTime, 1, 3);
-
-            // 5  (⚠️ fix: KHÔNG còn trùng row 4)
-            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            grid.Controls.Add(Key("Giờ hạ cánh:"), 0, 4);
-            valueArrivalTime = Val("valueArrivalTime");
-            grid.Controls.Add(valueArrivalTime, 1, 4);
-
-            // 6
-            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            grid.Controls.Add(Key("Số ghế trống:"), 0, 5);
-            valueSeatAvailable = Val("valueSeatAvailable");
-            grid.Controls.Add(valueSeatAvailable, 1, 5);
-
-            card.Controls.Add(grid);
-            grid.BringToFront();
-
-            // ===== Bottom actions (nút Đóng giống list) =====
-            var bottom = new FlowLayoutPanel {
+            // Bottom buttons
+            var bottom = new FlowLayoutPanel
+            {
                 Dock = DockStyle.Bottom,
                 FlowDirection = FlowDirection.RightToLeft,
                 AutoSize = true,
-                Padding = new Padding(0, 12, 12, 12)
+                Padding = new Padding(0, 12, 0, 0)
             };
-            var btnClose = new Button { Text = "Đóng", AutoSize = true };
-            btnClose.Click += (_, __) => FindForm()?.Close();
+
+            var btnClose = new Button
+            {
+                Text = "← Quay lại",
+                AutoSize = true,
+                Font = new Font("Segoe UI", 10f),
+                BackColor = Color.FromArgb(200, 200, 200),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Padding = new Padding(16, 8, 16, 8),
+                Cursor = Cursors.Hand
+            };
+            btnClose.FlatAppearance.BorderSize = 0;
+            btnClose.Click += (_, __) => CloseRequested?.Invoke(this, EventArgs.Empty);
             bottom.Controls.Add(btnClose);
+
             card.Controls.Add(bottom);
 
-            // ===== Main =====
-            main = new TableLayoutPanel {
+            // Main layout
+            var main = new TableLayoutPanel
+            {
                 Dock = DockStyle.Fill,
-                BackColor = Color.Transparent,
                 ColumnCount = 1,
                 RowCount = 2
             };
             main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             main.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-
-            main.Controls.Add(lblTitle, 0, 0);
+            main.Controls.Add(title, 0, 0);
             main.Controls.Add(card, 0, 1);
 
-            Controls.Clear();
             Controls.Add(main);
         }
 
-        public void LoadFlightInfo(string flightNumber, string departurePlace, string arrivalPlace,
-                                   string departureTime, string arrivalTime, string seatAvailable) {
-            valueFlightId.Text = flightNumber ?? "";
-            valueDeparturePlace.Text = departurePlace ?? "";
-            valueArrivalPlace.Text = arrivalPlace ?? "";
-            valueDepartureTime.Text = departureTime ?? "";
-            valueArrivalTime.Text = arrivalTime ?? "";
-            valueSeatAvailable.Text = seatAvailable ?? "";
+        public void LoadFlight(FlightWithDetailsDTO flight)
+        {
+            if (flight == null) return;
+
+            _currentFlight = flight;
+
+            // Flight info
+            vFlightNumber.Text = flight.FlightNumber ?? "-";
+            vStatus.Text = GetStatusText(flight.Status);
+            UpdateStatusColor(flight.Status);
+
+            // Route info
+            vDepartureAirport.Text = flight.DepartureAirportDisplay ?? "-";
+            vArrivalAirport.Text = flight.ArrivalAirportDisplay ?? "-";
+            vRouteInfo.Text = $"Route ID: {flight.RouteId}";
+
+            // Schedule
+            vDepartureTime.Text = flight.DepartureTime?.ToString("dd/MM/yyyy HH:mm") ?? "-";
+            vArrivalTime.Text = flight.ArrivalTime?.ToString("dd/MM/yyyy HH:mm") ?? "-";
+            
+            var duration = flight.GetFlightDuration();
+            if (duration.HasValue)
+            {
+                vDuration.Text = $"{duration.Value.Hours} giờ {duration.Value.Minutes} phút";
+            }
+            else
+            {
+                vDuration.Text = "-";
+            }
+
+            // Aircraft info
+            vAircraftModel.Text = !string.IsNullOrEmpty(flight.AircraftModel) ? flight.AircraftModel : "-";
+            vAircraftManufacturer.Text = !string.IsNullOrEmpty(flight.AircraftManufacturer) ? flight.AircraftManufacturer : "-";
+            vAvailableSeats.Text = flight.AvailableSeats.ToString();
+
+            // Note
+            vNote.Text = !string.IsNullOrWhiteSpace(flight.Note) ? flight.Note : "(Không có ghi chú)";
+        }
+
+        private string GetStatusText(FlightStatus status)
+        {
+            return status switch
+            {
+                FlightStatus.SCHEDULED => "Đã lên lịch",
+                FlightStatus.COMPLETED => "Hoàn thành",
+                FlightStatus.CANCELLED => "Đã hủy",
+                FlightStatus.DELAYED => "Trì hoãn",
+                _ => "Không xác định"
+            };
+        }
+
+        private void UpdateStatusColor(FlightStatus status)
+        {
+            switch (status)
+            {
+                case FlightStatus.SCHEDULED:
+                    vStatus.ForeColor = Color.FromArgb(25, 118, 210);
+                    vStatus.Font = new Font("Segoe UI", 11f, FontStyle.Bold);
+                    break;
+                case FlightStatus.COMPLETED:
+                    vStatus.ForeColor = Color.FromArgb(76, 175, 80);
+                    vStatus.Font = new Font("Segoe UI", 11f, FontStyle.Bold);
+                    break;
+                case FlightStatus.CANCELLED:
+                    vStatus.ForeColor = Color.FromArgb(211, 47, 47);
+                    vStatus.Font = new Font("Segoe UI", 11f, FontStyle.Bold);
+                    break;
+                case FlightStatus.DELAYED:
+                    vStatus.ForeColor = Color.FromArgb(255, 152, 0);
+                    vStatus.Font = new Font("Segoe UI", 11f, FontStyle.Bold);
+                    break;
+            }
         }
     }
 }

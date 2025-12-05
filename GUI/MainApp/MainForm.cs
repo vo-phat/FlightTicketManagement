@@ -463,31 +463,8 @@ namespace GUI.MainApp {
 
         // ===== Các hành động mở màn hình thực tế ================================
         private void OpenFlightManagement() {
-            // Truyền delegate HasPerm xuống FlightControl
-            ShowControl("Flight", () => {
-                var flightControl = new FlightControl(code => HasPerm(code));
-                // Subscribe vào event khi user chọn chuyến bay và hạng vé
-                flightControl.ListControl.BookingRequested += OnFlightBookingRequested;
-                return flightControl;
-            });
-        }
-
-        /// <summary>
-        /// Xử lý khi user đã chọn xong chuyến bay và hạng vé từ FlightListControl
-        /// NOTE: Nhận dữ liệu từ BookingRequested event:
-        /// - flightId: ID chuyến bay đã chọn
-        /// - cabinClass: Hạng vé đã chọn ("Economy" hoặc "Business")
-        /// </summary>
-        private void OnFlightBookingRequested(int flightId, string cabinClass) {
-            Console.WriteLine($"[MainForm] Booking requested - Flight ID: {flightId}, Cabin: {cabinClass}");
-            
-            // Mở TicketControl và load thông tin đặt vé
-            var ticketControl = new TicketControl();
-            
-            // TODO: Implement LoadBookingInfo method in TicketControl
-            // ticketControl.LoadBookingInfo(flightId, cabinClass);
-            
-            LoadControl(ticketControl);
+            // Load FlightControl without parameters
+            ShowControl("Flight", () => new GUI.Features.Flight.FlightControl());
             ActivateTab(NavKey.BookingsTickets);
         }
 

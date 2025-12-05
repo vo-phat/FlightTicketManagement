@@ -84,12 +84,12 @@ namespace GUI.Features.Aircraft.SubFeatures
         public void LoadAircraft(AircraftDTO dto)
         {
             if (dto == null) return;
-            vRegNum.Text = dto.RegistrationNumber ?? "N/A";
+            vRegNum.Text = dto.AirlineId.HasValue ? dto.AirlineId.Value.ToString() : "N/A";
             vModel.Text = dto.Model ?? "N/A";
             vManu.Text = dto.Manufacturer ?? "N/A";
             vCap.Text = dto.Capacity.HasValue ? dto.Capacity.Value.ToString() : "N/A";
-            vYear.Text = dto.ManufactureYear.HasValue ? dto.ManufactureYear.Value.ToString() : "N/A";
-            vStatus.Text = dto.Status ?? "N/A";
+            vYear.Text = "N/A"; // Không còn ManufactureYear
+            vStatus.Text = "N/A"; // Không còn Status
         }
 
         private void AircraftDetailControl_Load(object sender, EventArgs e)

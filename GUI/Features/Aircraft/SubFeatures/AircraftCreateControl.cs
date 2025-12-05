@@ -135,12 +135,10 @@ namespace GUI.Features.Aircraft.SubFeatures
                 foreach (var a in list)
                 {
                     _table.Rows.Add(
-                        a.RegistrationNumber ?? "N/A",
+                        a.AirlineId?.ToString() ?? "N/A",
                         a.Model ?? "N/A",
                         a.Manufacturer ?? "N/A",
-                        a.Capacity?.ToString() ?? "N/A",
-                        a.ManufactureYear?.ToString() ?? "N/A",
-                        a.Status ?? "N/A"
+                        a.Capacity?.ToString() ?? "N/A"
                     );
                 }
             }
@@ -195,9 +193,13 @@ namespace GUI.Features.Aircraft.SubFeatures
                 string message;
                 bool ok;
 
+                int? airlineId = null;
+                if (!string.IsNullOrWhiteSpace(regNum) && int.TryParse(regNum, out int aid))
+                    airlineId = aid;
+
                 if (_editingId == 0)
                 {
-                    dto = new AircraftDTO(regNum, model, manufacturer, capacity, year, status);
+                    dto = new AircraftDTO(airlineId, model, manufacturer, capacity);
                     ok = _bus.AddAircraft(dto, out message);
                     if (ok)
                     {
@@ -211,7 +213,7 @@ namespace GUI.Features.Aircraft.SubFeatures
                 }
                 else
                 {
-                    dto = new AircraftDTO(_editingId, regNum, model, manufacturer, capacity, year, status);
+                    dto = new AircraftDTO(_editingId, airlineId, model, manufacturer, capacity);
                     ok = _bus.UpdateAircraft(dto, out message);
                     if (ok)
                     {
@@ -251,12 +253,12 @@ namespace GUI.Features.Aircraft.SubFeatures
             }
 
             _editingId = dto.AircraftId;
-            _txtRegNum.Text = dto.RegistrationNumber ?? "";
+            _txtRegNum.Text = dto.AirlineId?.ToString() ?? ""; // AirlineId thay vì RegistrationNumber
             _txtModel.Text = dto.Model ?? "";
             _txtManu.Text = dto.Manufacturer ?? "";
             _txtCap.Text = dto.Capacity?.ToString() ?? "";
-            _txtYear.Text = dto.ManufactureYear?.ToString() ?? "";
-            _cbStatus.InnerComboBox.SelectedItem = dto.Status ?? "Active";
+            _txtYear.Text = ""; // Không còn ManufactureYear
+            _cbStatus.InnerComboBox.SelectedItem = "Active"; // Không còn Status field
             _btnSave.Text = $"✍️ Cập nhật #{dto.AircraftId}";
         }
     }

@@ -3,19 +3,16 @@
 namespace DTO.Aircraft
 {
     /// <summary>
-    /// DTO cho máy bay Vietnam Airlines
-    /// Đã loại bỏ AirlineId vì project chỉ quản lý Vietnam Airlines
+    /// DTO cho máy bay - Updated theo database mới (2025)
     /// </summary>
     public class AircraftDTO
     {
         #region Private Fields
         private int _aircraftId;
-        private string _registrationNumber;  // VN-A###, VN-B###
-        private string _model;               // nullable in DB, but keep string (allow null via setter)
-        private string _manufacturer;        // nullable in DB, but keep string (allow null via setter)
-        private int? _capacity;              // capacity may be NULL in DB -> use nullable int
-        private int? _manufactureYear;       // năm sản xuất
-        private string _status;              // ACTIVE, MAINTENANCE, RETIRED
+        private int? _airlineId;            // foreign key to Airlines table
+        private string _model;              // nullable in DB, but keep string (allow null via setter)
+        private string _manufacturer;       // nullable in DB, but keep string (allow null via setter)
+        private int? _capacity;             // capacity may be NULL in DB -> use nullable int
         #endregion
 
         #region Public Properties
@@ -31,12 +28,17 @@ namespace DTO.Aircraft
         }
 
         /// <summary>
-        /// Số hiệu đăng ký máy bay (VN-A###, VN-B###)
+        /// ID của hãng hàng không (foreign key to Airlines)
         /// </summary>
-        public string RegistrationNumber
+        public int? AirlineId
         {
-            get => _registrationNumber;
-            set => _registrationNumber = string.IsNullOrWhiteSpace(value) ? null : value.Trim().ToUpper();
+            get => _airlineId;
+            set
+            {
+                if (value.HasValue && value.Value <= 0)
+                    throw new ArgumentException("Airline ID phải lớn hơn 0");
+                _airlineId = value;
+            }
         }
 
         /// <summary>
@@ -73,65 +75,46 @@ namespace DTO.Aircraft
         }
 
         /// <summary>
-        /// Năm sản xuất máy bay
+        /// Text hiển thị: Boeing 787-9 (274 ghế) - Airline ID: 1
         /// </summary>
-        public int? ManufactureYear
+        public string DisplayText
         {
-            get => _manufactureYear;
-            set
+            get
             {
-                if (value.HasValue && (value.Value < 1900 || value.Value > DateTime.Now.Year + 2))
-                    throw new ArgumentException("Năm sản xuất không hợp lệ");
-                _manufactureYear = value;
+                string text = !string.IsNullOrEmpty(_model) ? _model : "Unknown Model";
+                if (_capacity.HasValue)
+                    text += $" ({_capacity} ghế)";
+                if (_airlineId.HasValue)
+                    text += $" - Airline #{_airlineId}";
+                return text;
             }
         }
-
-        /// <summary>
-        /// Trạng thái máy bay: ACTIVE, MAINTENANCE, RETIRED
-        /// </summary>
-        public string Status
-        {
-            get => _status ?? "ACTIVE";
-            set => _status = string.IsNullOrWhiteSpace(value) ? "ACTIVE" : value.Trim().ToUpper();
-        }
-
-        /// <summary>
-        /// Text hiển thị: VN-A801 - Boeing 787-9 (274 ghế)
-        /// </summary>
-        public string DisplayText => $"{RegistrationNumber} - {Model}" + 
-                                     (Capacity.HasValue ? $" ({Capacity} ghế)" : "");
         #endregion
 
         #region Constructors
         public AircraftDTO() { }
 
         /// <summary>
-        /// Constructor để insert (không có id) - Vietnam Airlines
+        /// Constructor để insert (không có id)
         /// </summary>
-        public AircraftDTO(string registrationNumber, string model, string manufacturer, int? capacity, 
-                          int? manufactureYear = null, string status = "ACTIVE")
+        public AircraftDTO(int? airlineId, string model, string manufacturer, int? capacity)
         {
-            RegistrationNumber = registrationNumber;
+            AirlineId = airlineId;
             Model = model;
             Manufacturer = manufacturer;
             Capacity = capacity;
-            ManufactureYear = manufactureYear;
-            Status = status;
         }
 
         /// <summary>
-        /// Constructor đầy đủ (có id) - Vietnam Airlines
+        /// Constructor đầy đủ (có id)
         /// </summary>
-        public AircraftDTO(int aircraftId, string registrationNumber, string model, string manufacturer, 
-                          int? capacity, int? manufactureYear = null, string status = "ACTIVE")
+        public AircraftDTO(int aircraftId, int? airlineId, string model, string manufacturer, int? capacity)
         {
             AircraftId = aircraftId;
-            RegistrationNumber = registrationNumber;
+            AirlineId = airlineId;
             Model = model;
             Manufacturer = manufacturer;
             Capacity = capacity;
-            ManufactureYear = manufactureYear;
-            Status = status;
         }
         #endregion
 
@@ -139,18 +122,6 @@ namespace DTO.Aircraft
         public bool IsValid(out string errorMessage)
         {
             errorMessage = string.Empty;
-
-            if (string.IsNullOrWhiteSpace(_registrationNumber))
-            {
-                errorMessage = "Số hiệu đăng ký không được để trống";
-                return false;
-            }
-
-            if (!_registrationNumber.StartsWith("VN-"))
-            {
-                errorMessage = "Số hiệu đăng ký phải bắt đầu bằng 'VN-' (Vietnam Airlines)";
-                return false;
-            }
 
             if (!string.IsNullOrEmpty(_model) && _model.Length > 100)
             {
@@ -170,16 +141,9 @@ namespace DTO.Aircraft
                 return false;
             }
 
-            if (_manufactureYear.HasValue && (_manufactureYear.Value < 1900 || _manufactureYear.Value > DateTime.Now.Year + 2))
+            if (_airlineId.HasValue && _airlineId.Value <= 0)
             {
-                errorMessage = "Năm sản xuất không hợp lệ";
-                return false;
-            }
-
-            var validStatuses = new[] { "ACTIVE", "MAINTENANCE", "RETIRED" };
-            if (!string.IsNullOrEmpty(_status) && !validStatuses.Contains(_status.ToUpper()))
-            {
-                errorMessage = "Status phải là ACTIVE, MAINTENANCE hoặc RETIRED";
+                errorMessage = "Airline ID phải lớn hơn 0";
                 return false;
             }
 
@@ -190,13 +154,11 @@ namespace DTO.Aircraft
         #region Overrides
         public override string ToString()
         {
-            var regPart = !string.IsNullOrEmpty(_registrationNumber) ? _registrationNumber : "N/A";
             var modelPart = !string.IsNullOrEmpty(_model) ? _model : "(unknown model)";
             var manufPart = !string.IsNullOrEmpty(_manufacturer) ? $" by {_manufacturer}" : "";
             var capPart = _capacity.HasValue ? $", {_capacity.Value} seats" : "";
-            var yearPart = _manufactureYear.HasValue ? $", Year: {_manufactureYear.Value}" : "";
-            var statusPart = !string.IsNullOrEmpty(_status) ? $" [{_status}]" : "";
-            return $"Vietnam Airlines - {regPart}: {modelPart}{manufPart}{capPart}{yearPart}{statusPart}";
+            var airlinePart = _airlineId.HasValue ? $" [Airline ID: {_airlineId}]" : "";
+            return $"Aircraft: {modelPart}{manufPart}{capPart}{airlinePart}";
         }
 
         public override bool Equals(object obj)
@@ -218,12 +180,10 @@ namespace DTO.Aircraft
         {
             return new AircraftDTO(
                 _aircraftId,
-                _registrationNumber,
+                _airlineId,
                 _model,
                 _manufacturer,
-                _capacity,
-                _manufactureYear,
-                _status
+                _capacity
             );
         }
         #endregion
