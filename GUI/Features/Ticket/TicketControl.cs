@@ -76,9 +76,10 @@ namespace GUI.Features.Ticket
         }
         private void TicketOpsControl_OnOpenBaggageManager(int ticketId)
         {
+            MessageBox.Show($"Mở quản lý hành lý cho vé có ID: {ticketId}");
             var frm = new FrmTicketBaggageManager(ticketId);
-            frm.Dock = DockStyle.Fill;
 
+            frm.Dock = DockStyle.Fill;
             pnlTicketOps.Controls.Clear();
             pnlTicketOps.Controls.Add(frm);
             frm.BringToFront();
