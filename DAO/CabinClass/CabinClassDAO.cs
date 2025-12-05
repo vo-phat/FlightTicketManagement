@@ -12,7 +12,7 @@ namespace DAO.CabinClass
         public List<CabinClassDTO> GetAllCabinClasses()
         {
             List<CabinClassDTO> classes = new List<CabinClassDTO>();
-            string query = "SELECT class_id, class_name, description FROM cabin_classes";
+            string query = "SELECT class_id, class_name, description FROM cabin_classes ORDER BY class_id";
 
             try
             {
@@ -57,10 +57,10 @@ namespace DAO.CabinClass
                     using (var command = new MySqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@name", cabinClass.ClassName);
-                        command.Parameters.AddWithValue("@desc", (object)cabinClass.Description ?? DBNull.Value);
+                        command.Parameters.AddWithValue("@desc", cabinClass.Description ?? (object)DBNull.Value);
 
-                        int rows = command.ExecuteNonQuery();
-                        return rows > 0;
+                        int rowsAffected = command.ExecuteNonQuery();
+                        return rowsAffected > 0;
                     }
                 }
             }
@@ -74,9 +74,8 @@ namespace DAO.CabinClass
         #region Cập nhật thông tin hạng ghế
         public bool UpdateCabinClass(CabinClassDTO cabinClass)
         {
-            string query = @"UPDATE cabin_classes
-                             SET class_name = @name,
-                                 description = @desc
+            string query = @"UPDATE cabin_classes 
+                             SET class_name = @name, description = @desc
                              WHERE class_id = @id";
 
             try
@@ -86,12 +85,12 @@ namespace DAO.CabinClass
                     connection.Open();
                     using (var command = new MySqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("@name", cabinClass.ClassName);
-                        command.Parameters.AddWithValue("@desc", (object)cabinClass.Description ?? DBNull.Value);
                         command.Parameters.AddWithValue("@id", cabinClass.ClassId);
+                        command.Parameters.AddWithValue("@name", cabinClass.ClassName);
+                        command.Parameters.AddWithValue("@desc", cabinClass.Description ?? (object)DBNull.Value);
 
-                        int rows = command.ExecuteNonQuery();
-                        return rows > 0;
+                        int rowsAffected = command.ExecuteNonQuery();
+                        return rowsAffected > 0;
                     }
                 }
             }
@@ -102,7 +101,7 @@ namespace DAO.CabinClass
         }
         #endregion
 
-        #region Xóa hạng ghế theo ID
+        #region Xóa hạng ghế
         public bool DeleteCabinClass(int classId)
         {
             string query = "DELETE FROM cabin_classes WHERE class_id = @id";
@@ -116,8 +115,8 @@ namespace DAO.CabinClass
                     {
                         command.Parameters.AddWithValue("@id", classId);
 
-                        int rows = command.ExecuteNonQuery();
-                        return rows > 0;
+                        int rowsAffected = command.ExecuteNonQuery();
+                        return rowsAffected > 0;
                     }
                 }
             }
@@ -128,13 +127,14 @@ namespace DAO.CabinClass
         }
         #endregion
 
-        #region Tìm kiếm hạng ghế theo tên
+        #region Tìm kiếm hạng ghế
         public List<CabinClassDTO> SearchCabinClasses(string keyword)
         {
-            List<CabinClassDTO> results = new List<CabinClassDTO>();
+            List<CabinClassDTO> classes = new List<CabinClassDTO>();
             string query = @"SELECT class_id, class_name, description 
-                             FROM cabin_classes
-                             WHERE class_name LIKE @kw OR description LIKE @kw";
+                           FROM cabin_classes 
+                           WHERE class_name LIKE @keyword OR description LIKE @keyword
+                           ORDER BY class_id";
 
             try
             {
@@ -143,7 +143,8 @@ namespace DAO.CabinClass
                     connection.Open();
                     using (var command = new MySqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("@kw", "%" + keyword + "%");
+                        command.Parameters.AddWithValue("@keyword", "%" + keyword + "%");
+                        
                         using (var reader = command.ExecuteReader())
                         {
                             while (reader.Read())
@@ -153,7 +154,7 @@ namespace DAO.CabinClass
                                     reader.GetString("class_name"),
                                     reader["description"] == DBNull.Value ? null : reader.GetString("description")
                                 );
-                                results.Add(cabinClass);
+                                classes.Add(cabinClass);
                             }
                         }
                     }
@@ -164,7 +165,7 @@ namespace DAO.CabinClass
                 throw new Exception("Lỗi khi tìm kiếm hạng ghế: " + ex.Message, ex);
             }
 
-            return results;
+            return classes;
         }
         #endregion
     }

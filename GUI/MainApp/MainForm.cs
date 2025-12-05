@@ -1,6 +1,6 @@
 using GUI.Components.Link;
 using GUI.Features.Aircraft;
-using GUI.Features.Airline;
+// ĐÃ XÓA: using GUI.Features.Airline; - Không còn quản lý Airlines
 using GUI.Features.Airport;
 using GUI.Features.Auth;
 using GUI.Features.Baggage;
@@ -16,6 +16,7 @@ using GUI.Features.Stats;
 using GUI.Features.Ticket;
 using GUI.Properties;
 using DTO.Auth;
+using DTO.Booking;
 using BUS.Auth;
 using System;
 using System.Collections.Generic;
@@ -53,7 +54,7 @@ namespace GUI.MainApp {
         private readonly RolePermissionService _permService = new();
         private HashSet<string> _perms = new(StringComparer.OrdinalIgnoreCase);
 
-        public MainForm() : this(AppRole.Admin) { } // mặc định admin
+        public MainForm() : this(AppRole.User) { } // mặc định User (khách hàng)
 
         public MainForm(AppRole role) {
             _role = role;
@@ -80,8 +81,72 @@ namespace GUI.MainApp {
             try {
                 var codes = _permService.GetEffectivePermissionCodesOfAccount(UserSession.CurrentAccountId);
                 _perms = codes ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            } catch {
-                _perms = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            } catch (Exception ex) {
+                // Fallback: Nếu không connect được database, cấp quyền theo role
+                Console.WriteLine($"[MainForm] Không thể load permissions: {ex.Message}");
+                
+                if (_role == AppRole.User) {
+                    // QUYỀN CHO KHÁCH HÀNG (USER)
+                    Console.WriteLine("[MainForm] Chế độ Demo - Quyền Khách hàng: Xem và đặt vé");
+                    _perms = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+                        // Quyền cơ bản: Xem chuyến bay
+                        "flights.read",
+                        
+                        // Quyền đặt vé
+                        "tickets.read",
+                        "tickets.create",
+                        "tickets.create_search",  // Tạo/Tìm đặt chỗ
+                        "tickets.mine",           // Xem vé của mình
+                        "tickets.history",        // Lịch sử vé
+                        
+                        // Quyền xem danh mục (để hiển thị thông tin)
+                        "airports.read",
+                        "airlines.read",
+                        "cabins.read",
+                        
+                        // Quyền hành lý
+                        "baggage.checkin",
+                        "baggage.track",
+                        "baggage.report",
+                        
+                        // Quyền thanh toán (cho khách đặt vé)
+                        "payments.pos",
+                        
+                        // Thông báo và profile
+                        "notifications.read",
+                        "customers.profiles"
+                    };
+                } else if (_role == AppRole.Staff) {
+                    // QUYỀN CHO NHÂN VIÊN
+                    Console.WriteLine("[MainForm] Chế độ Demo - Quyền Nhân viên");
+                    _perms = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+                        "flights.read", "flights.create", "flights.update",
+                        "tickets.read", "tickets.create", "tickets.update",
+                        "tickets.create_search", "tickets.mine", "tickets.operate", "tickets.history",
+                        "airports.read", "airlines.read", "aircraft.read",
+                        "routes.read", "seats.read", "cabins.read",
+                        "payments.pos",
+                        "baggage.checkin", "baggage.track", "baggage.report",
+                        "notifications.read", "customers.profiles", "reports.view"
+                    };
+                } else {
+                    // QUYỀN CHO ADMIN (đầy đủ)
+                    Console.WriteLine("[MainForm] Chế độ Demo - Quyền Admin: Toàn quyền");
+                    _perms = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+                        "flights.read", "flights.create", "flights.update", "flights.delete",
+                        "tickets.read", "tickets.create", "tickets.update",
+                        "tickets.create_search", "tickets.mine", "tickets.operate", "tickets.history",
+                        "airports.read", "airlines.read", "aircraft.read",
+                        "routes.read", "seats.read", "cabins.read",
+                        "catalogs.airports", "catalogs.airlines", "catalogs.aircrafts",
+                        "catalogs.routes", "catalogs.cabin_classes", "catalogs.seats",
+                        "payments.pos",
+                        "baggage.checkin", "baggage.track", "baggage.report",
+                        "notifications.read", "customers.profiles",
+                        "reports.view", "fare_rules.manage",
+                        "accounts.manage", "system.roles"
+                    };
+                }
             }
         }
 
@@ -198,17 +263,18 @@ namespace GUI.MainApp {
                 new() {
                     Key = NavKey.Catalogs, Text = "📚 Danh mục",
                     IsVisible = r =>
-                        HasPerm(Perm.Catalogs_Airlines) ||
+                        // Ẩn Catalogs_Airlines vì chỉ quản lý Vietnam Airlines
                         HasPerm(Perm.Catalogs_Aircrafts) ||
                         HasPerm(Perm.Catalogs_Airports) ||
                         HasPerm(Perm.Catalogs_Routes) ||
                         HasPerm(Perm.Catalogs_CabinClasses) ||
                         HasPerm(Perm.Catalogs_Seats),
                     SubItems = {
-                        ("Hãng hàng không",
-                            r => HasPerm(Perm.Catalogs_Airlines),
-                            () => OpenAirlines()),
-                        ("Máy bay",
+                        // ĐÃ ẨN: Hãng hàng không (chỉ quản lý Vietnam Airlines)
+                        // ("Hãng hàng không",
+                        //     r => HasPerm(Perm.Catalogs_Airlines),
+                        //     () => OpenAirlines()),
+                        ("Máy bay Vietnam Airlines",
                             r => HasPerm(Perm.Catalogs_Aircrafts),
                             () => OpenAircrafts()),
                         ("Sân bay",
@@ -343,6 +409,28 @@ namespace GUI.MainApp {
                 BackColor = Color.White
             };
             mainContentPanel.Controls.Add(defaultPicture);
+
+            // Thêm nút lớn để truy cập danh sách chuyến bay
+            var btnFindFlights = new Button {
+                Text = "🔍 TÌM CHUYẾN BAY",
+                Font = new Font("Segoe UI", 20, FontStyle.Bold),
+                Size = new Size(400, 80),
+                BackColor = Color.FromArgb(46, 125, 50),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            btnFindFlights.FlatAppearance.BorderSize = 0;
+            btnFindFlights.Location = new Point(
+                (mainContentPanel.Width - btnFindFlights.Width) / 2,
+                mainContentPanel.Height - 150
+            );
+            btnFindFlights.Anchor = AnchorStyles.Bottom;
+            btnFindFlights.Click += (s, e) => {
+                OpenFlightManagement();
+            };
+            mainContentPanel.Controls.Add(btnFindFlights);
+            btnFindFlights.BringToFront();
         }
 
         // Load UC vào mainContentPanel (ghi nhớ theo key)
@@ -375,8 +463,9 @@ namespace GUI.MainApp {
 
         // ===== Các hành động mở màn hình thực tế ================================
         private void OpenFlightManagement() {
-            // Truyền delegate HasPerm xuống FlightControl
-            ShowControl("Flight", () => new FlightControl(code => HasPerm(code)));
+            // Load FlightControl without parameters
+            ShowControl("Flight", () => new GUI.Features.Flight.FlightControl());
+            ActivateTab(NavKey.BookingsTickets);
         }
 
         private void OpenFareRules() {
@@ -433,9 +522,7 @@ namespace GUI.MainApp {
             LoadControl(control);
         }
 
-        private void OpenAirlines() {
-            ShowControl("Airlines", () => new AirlineControl());
-        }
+        // ĐÃ XÓA: OpenAirlines() - Không còn cần quản lý Airlines
 
         private void OpenAircrafts() {
             ShowControl("Aircrafts", () => new AircraftControl());

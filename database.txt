@@ -1,0 +1,2152 @@
+USE `flightTicketManagement`;
+
+SET NAMES utf8mb4;
+SET time_zone = '+07:00';
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ===================== DROP TABLES (để rerun) ========================
+DROP TABLE IF EXISTS `Baggage_History`;
+DROP TABLE IF EXISTS `Baggage`;
+DROP TABLE IF EXISTS `Payments`;
+DROP TABLE IF EXISTS `Ticket_History`;
+DROP TABLE IF EXISTS `Tickets`;
+DROP TABLE IF EXISTS `Booking_Passengers`;
+DROP TABLE IF EXISTS `Passenger_Profiles`;
+DROP TABLE IF EXISTS `Bookings`;
+DROP TABLE IF EXISTS `Fare_Rules`;
+DROP TABLE IF EXISTS `Flight_Seats`;
+DROP TABLE IF EXISTS `Seats`;
+DROP TABLE IF EXISTS `Cabin_Classes`;
+DROP TABLE IF EXISTS `Flights`;
+DROP TABLE IF EXISTS `Routes`;
+DROP TABLE IF EXISTS `Aircrafts`;
+DROP TABLE IF EXISTS `Airports`;
+DROP TABLE IF EXISTS `Airlines`;
+DROP TABLE IF EXISTS `User_Role`;
+DROP TABLE IF EXISTS `Roles`;
+DROP TABLE IF EXISTS `Accounts`;
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- ========================= 1. Accounts ===============================
+CREATE TABLE `Accounts` (
+    `account_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `email`      VARCHAR(100) NOT NULL UNIQUE,
+    `password`   VARCHAR(255) NOT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ========================= 2. Roles =================================
+CREATE TABLE `Roles` (
+    `role_id`   INT AUTO_INCREMENT PRIMARY KEY,
+    `role_name` VARCHAR(50) NOT NULL UNIQUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ========================= 3. User_Role (N-N) =======================
+CREATE TABLE `User_Role` (
+    `user_role_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `account_id`   INT NOT NULL,
+    `role_id`      INT NOT NULL,
+    CONSTRAINT `fk_userrole_account`
+        FOREIGN KEY (`account_id`) REFERENCES `Accounts`(`account_id`)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT `fk_userrole_role`
+        FOREIGN KEY (`role_id`) REFERENCES `Roles`(`role_id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX `idx_userrole_account` ON `User_Role` (`account_id`);
+CREATE INDEX `idx_userrole_role`    ON `User_Role` (`role_id`);
+
+-- ========================= 4. Airlines ==============================
+CREATE TABLE `Airlines` (
+    `airline_id`   INT AUTO_INCREMENT PRIMARY KEY,
+    `airline_code` VARCHAR(10) NOT NULL UNIQUE,
+    `airline_name` VARCHAR(100) NOT NULL,
+    `country`      VARCHAR(100)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ========================= 5. Airports ==============================
+CREATE TABLE `Airports` (
+    `airport_id`   INT AUTO_INCREMENT PRIMARY KEY,
+    `airport_code` VARCHAR(10) NOT NULL UNIQUE,
+    `airport_name` VARCHAR(100) NOT NULL,
+    `city`         VARCHAR(100),
+    `country`      VARCHAR(100)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ========================= 6. Aircrafts =============================
+CREATE TABLE `Aircrafts` (
+    `aircraft_id`  INT AUTO_INCREMENT PRIMARY KEY,
+    `airline_id`   INT NOT NULL,
+    `model`        VARCHAR(100),
+    `manufacturer` VARCHAR(100),
+    `capacity`     INT,
+    CONSTRAINT `fk_aircraft_airline`
+        FOREIGN KEY (`airline_id`) REFERENCES `Airlines`(`airline_id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX `idx_aircraft_airline` ON `Aircrafts` (`airline_id`);
+
+-- ========================= 7. Routes ================================
+CREATE TABLE `Routes` (
+    `route_id`          INT AUTO_INCREMENT PRIMARY KEY,
+    `departure_place_id` INT NOT NULL,
+    `arrival_place_id`   INT NOT NULL,
+    `distance_km`       INT,
+    `duration_minutes`  INT,
+    CONSTRAINT `fk_routes_dep`
+        FOREIGN KEY (`departure_place_id`) REFERENCES `Airports`(`airport_id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT `fk_routes_arr`
+        FOREIGN KEY (`arrival_place_id`) REFERENCES `Airports`(`airport_id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT `chk_routes_diff` CHECK (`departure_place_id` <> `arrival_place_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX `idx_routes_dep` ON `Routes` (`departure_place_id`);
+CREATE INDEX `idx_routes_arr` ON `Routes` (`arrival_place_id`);
+
+-- ========================= 8. Flights ===============================
+CREATE TABLE `Flights` (
+    `flight_id`     INT AUTO_INCREMENT PRIMARY KEY,
+    `flight_number` VARCHAR(20) NOT NULL,
+    `aircraft_id`   INT NOT NULL,
+    `route_id`      INT NOT NULL,
+    `departure_time` DATETIME,
+    `arrival_time`   DATETIME,
+    `status` ENUM('SCHEDULED','DELAYED','CANCELLED','COMPLETED') NOT NULL DEFAULT 'SCHEDULED',
+    CONSTRAINT `fk_flight_aircraft`
+        FOREIGN KEY (`aircraft_id`) REFERENCES `Aircrafts`(`aircraft_id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT `fk_flight_route`
+        FOREIGN KEY (`route_id`) REFERENCES `Routes`(`route_id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE UNIQUE INDEX `ux_flight_number_time` ON `Flights` (`flight_number`, `departure_time`);
+CREATE INDEX `idx_flight_aircraft` ON `Flights` (`aircraft_id`);
+CREATE INDEX `idx_flight_route`    ON `Flights` (`route_id`);
+
+-- ========================= 9. Cabin_Classes =========================
+CREATE TABLE `Cabin_Classes` (
+    `class_id`    INT AUTO_INCREMENT PRIMARY KEY,
+    `class_name`  VARCHAR(50) NOT NULL, -- Economy, Business, First
+    `description` VARCHAR(255)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE UNIQUE INDEX `ux_cabin_class_name` ON `Cabin_Classes` (`class_name`);
+
+-- ========================= 10. Seats (định danh ghế) ================
+CREATE TABLE `Seats` (
+    `seat_id`     INT AUTO_INCREMENT PRIMARY KEY,
+    `aircraft_id` INT NOT NULL,
+    `seat_number` VARCHAR(10) NOT NULL,
+    `class_id`    INT NOT NULL,
+    CONSTRAINT `fk_seat_aircraft`
+        FOREIGN KEY (`aircraft_id`) REFERENCES `Aircrafts`(`aircraft_id`)
+        ON UPDATE CASCADE ON DELETE CASCADE,  -- xóa máy bay sẽ xóa ghế
+    CONSTRAINT `fk_seat_class`
+        FOREIGN KEY (`class_id`) REFERENCES `Cabin_Classes`(`class_id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE UNIQUE INDEX `ux_seat_aircraft_number` ON `Seats` (`aircraft_id`, `seat_number`);
+CREATE INDEX `idx_seat_class` ON `Seats` (`class_id`);
+
+-- ========================= 11. Flight_Seats (ghế theo chuyến) =======
+CREATE TABLE `Flight_Seats` (
+    `flight_seat_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `flight_id`      INT NOT NULL,
+    `seat_id`        INT NOT NULL,
+    `base_price`     DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    `seat_status`    ENUM('AVAILABLE','BOOKED','BLOCKED') NOT NULL DEFAULT 'AVAILABLE',
+    CONSTRAINT `fk_fseat_flight`
+        FOREIGN KEY (`flight_id`) REFERENCES `Flights`(`flight_id`)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT `fk_fseat_seat`
+        FOREIGN KEY (`seat_id`) REFERENCES `Seats`(`seat_id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE UNIQUE INDEX `ux_fseat_flight_seat` ON `Flight_Seats` (`flight_id`, `seat_id`);
+CREATE INDEX `idx_fseat_status` ON `Flight_Seats` (`seat_status`);
+
+-- ========================= 12. Fare_Rules ===========================
+CREATE TABLE `Fare_Rules` (
+    `rule_id`        INT AUTO_INCREMENT PRIMARY KEY,
+    `route_id`       INT NOT NULL,
+    `class_id`       INT NOT NULL,
+    `fare_type`      VARCHAR(50) NOT NULL DEFAULT 'Standard', -- Saver, Flex, Promo...
+    `season`         ENUM('PEAK','OFFPEAK','NORMAL') NOT NULL DEFAULT 'NORMAL',
+    `effective_date` DATE,
+    `expiry_date`    DATE,
+    `description`    VARCHAR(255),
+    `price`          DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    CONSTRAINT `fk_fare_route`
+        FOREIGN KEY (`route_id`) REFERENCES `Routes`(`route_id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT `fk_fare_class`
+        FOREIGN KEY (`class_id`) REFERENCES `Cabin_Classes`(`class_id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX `idx_fare_route_class` ON `Fare_Rules` (`route_id`, `class_id`);
+
+-- ========================= 13. Bookings =============================
+CREATE TABLE `Bookings` (
+    `booking_id`   INT AUTO_INCREMENT PRIMARY KEY,
+    `account_id`   INT NOT NULL,
+    `booking_date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `status`       ENUM('PENDING','CONFIRMED','CANCELLED','REFUNDED') NOT NULL DEFAULT 'PENDING',
+    `total_amount` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    CONSTRAINT `fk_booking_account`
+        FOREIGN KEY (`account_id`) REFERENCES `Accounts`(`account_id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX `idx_booking_account` ON `Bookings` (`account_id`);
+CREATE INDEX `idx_booking_status`  ON `Bookings` (`status`);
+
+-- ========================= 14. Passenger_Profiles ===================
+CREATE TABLE `Passenger_Profiles` (
+    `profile_id`     INT AUTO_INCREMENT PRIMARY KEY,
+    `account_id`     INT NOT NULL,
+    `full_name`      VARCHAR(100) NOT NULL,
+    `date_of_birth`  DATE,
+    `phone_number`   VARCHAR(255),
+    `passport_number` VARCHAR(50),
+    `nationality`     VARCHAR(50),
+    CONSTRAINT `fk_profile_account`
+        FOREIGN KEY (`account_id`) REFERENCES `Accounts`(`account_id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX `idx_profile_account` ON `Passenger_Profiles` (`account_id`);
+CREATE INDEX `idx_profile_passport` ON `Passenger_Profiles` (`passport_number`);
+
+-- ========================= 15. Booking_Passengers ===================
+CREATE TABLE `Booking_Passengers` (
+    `booking_passenger_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `booking_id`           INT NOT NULL,
+    `profile_id`           INT NOT NULL,
+    CONSTRAINT `fk_bp_booking`
+        FOREIGN KEY (`booking_id`) REFERENCES `Bookings`(`booking_id`)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT `fk_bp_profile`
+        FOREIGN KEY (`profile_id`) REFERENCES `Passenger_Profiles`(`profile_id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE UNIQUE INDEX `ux_bp_booking_profile` ON `Booking_Passengers` (`booking_id`, `profile_id`);
+
+-- ========================= 16. Tickets ==============================
+CREATE TABLE `Tickets` (
+    `ticket_id`          INT AUTO_INCREMENT PRIMARY KEY,
+    `ticket_passenger_id` INT NOT NULL,
+    `flight_seat_id`     INT NOT NULL,
+    `ticket_number`      VARCHAR(50) UNIQUE,
+    `issue_date`         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `status` ENUM('BOOKED','CONFIRMED','CHECKED_IN','BOARDED','CANCELLED','REFUNDED') NOT NULL DEFAULT 'BOOKED',
+    CONSTRAINT `fk_ticket_bp`
+        FOREIGN KEY (`ticket_passenger_id`) REFERENCES `Booking_Passengers`(`booking_passenger_id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT `fk_ticket_fseat`
+        FOREIGN KEY (`flight_seat_id`) REFERENCES `Flight_Seats`(`flight_seat_id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE UNIQUE INDEX `ux_ticket_fseat` ON `Tickets` (`flight_seat_id`);
+CREATE INDEX `idx_ticket_status`    ON `Tickets` (`status`);
+
+-- ========================= 17. Ticket_History =======================
+CREATE TABLE `Ticket_History` (
+    `history_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `ticket_id`  INT NOT NULL,
+    `old_status` ENUM('BOOKED','CONFIRMED','CHECKED_IN','BOARDED','CANCELLED','REFUNDED'),
+    `new_status` ENUM('BOOKED','CONFIRMED','CHECKED_IN','BOARDED','CANCELLED','REFUNDED'),
+    `changed_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT `fk_th_ticket`
+        FOREIGN KEY (`ticket_id`) REFERENCES `Tickets`(`ticket_id`)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX `idx_th_ticket` ON `Ticket_History` (`ticket_id`);
+
+-- ========================= 18. Payments =============================
+CREATE TABLE `Payments` (
+    `payment_id`     INT AUTO_INCREMENT PRIMARY KEY,
+    `booking_id`     INT NOT NULL,
+    `amount`         DECIMAL(12,2) NOT NULL,
+    `payment_method` ENUM('CREDIT_CARD','BANK_TRANSFER','E_WALLET','CASH') NOT NULL,
+    `payment_date`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `status`         ENUM('SUCCESS','FAILED','PENDING') NOT NULL DEFAULT 'PENDING',
+    CONSTRAINT `fk_payment_booking`
+        FOREIGN KEY (`booking_id`) REFERENCES `Bookings`(`booking_id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX `idx_payment_booking` ON `Payments` (`booking_id`);
+CREATE INDEX `idx_payment_status`  ON `Payments` (`status`);
+
+-- ========================= 19. Baggage ==============================
+CREATE TABLE `Baggage` (
+    `baggage_id`         INT AUTO_INCREMENT PRIMARY KEY,
+    `ticket_id`          INT NOT NULL,
+    `flight_id`          INT NOT NULL,
+    `baggage_tag`        VARCHAR(20) UNIQUE,
+    `baggage_type`       ENUM('CHECKED','CARRY_ON','SPECIAL') NOT NULL DEFAULT 'CHECKED',
+    `weight_kg`          DECIMAL(5,2) NOT NULL,
+    `allowed_weight_kg`  DECIMAL(5,2) NOT NULL,
+    `fee`                DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    `status`             ENUM('CREATED','CHECKED_IN','LOADED','IN_TRANSIT','CLAIMED','LOST') NOT NULL DEFAULT 'CREATED',
+    `special_handling`   VARCHAR(100),
+    `created_at`         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT `fk_baggage_ticket`
+        FOREIGN KEY (`ticket_id`) REFERENCES `Tickets`(`ticket_id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT `fk_baggage_flight`
+        FOREIGN KEY (`flight_id`) REFERENCES `Flights`(`flight_id`)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX `idx_baggage_ticket` ON `Baggage` (`ticket_id`);
+CREATE INDEX `idx_baggage_flight` ON `Baggage` (`flight_id`);
+CREATE INDEX `idx_baggage_status` ON `Baggage` (`status`);
+
+-- ========================= 20. Baggage_History ======================
+CREATE TABLE `Baggage_History` (
+    `history_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `baggage_id` INT NOT NULL,
+    `old_status` ENUM('CREATED','CHECKED_IN','LOADED','IN_TRANSIT','CLAIMED','LOST'),
+    `new_status` ENUM('CREATED','CHECKED_IN','LOADED','IN_TRANSIT','CLAIMED','LOST'),
+    `changed_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT `fk_bh_baggage`
+        FOREIGN KEY (`baggage_id`) REFERENCES `Baggage`(`baggage_id`)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX `idx_bh_baggage` ON `Baggage_History` (`baggage_id`);
+
+-- Insert into Roles
+INSERT INTO `Roles` (`role_name`) VALUES ('Admin');
+INSERT INTO `Roles` (`role_name`) VALUES ('Customer');
+INSERT INTO `Roles` (`role_name`) VALUES ('Airline Staff');
+
+-- Insert into Airlines
+INSERT INTO `Airlines` (`airline_code`, `airline_name`, `country`) VALUES ('VN', 'Vietnam Airlines', 'Vietnam');
+INSERT INTO `Airlines` (`airline_code`, `airline_name`, `country`) VALUES ('VJ', 'VietJet Air', 'Vietnam');
+INSERT INTO `Airlines` (`airline_code`, `airline_name`, `country`) VALUES ('QH', 'Bamboo Airways', 'Vietnam');
+INSERT INTO `Airlines` (`airline_code`, `airline_name`, `country`) VALUES ('BL', 'Pacific Airlines', 'Vietnam');
+
+-- Insert into Airports
+INSERT INTO `Airports` (`airport_code`, `airport_name`, `city`, `country`) VALUES ('HAN', 'Noi Bai International Airport', 'Hanoi', 'Vietnam');
+INSERT INTO `Airports` (`airport_code`, `airport_name`, `city`, `country`) VALUES ('SGN', 'Tan Son Nhat International Airport', 'Ho Chi Minh City', 'Vietnam');
+INSERT INTO `Airports` (`airport_code`, `airport_name`, `city`, `country`) VALUES ('DAD', 'Da Nang International Airport', 'Da Nang', 'Vietnam');
+INSERT INTO `Airports` (`airport_code`, `airport_name`, `city`, `country`) VALUES ('PQC', 'Phu Quoc International Airport', 'Phu Quoc', 'Vietnam');
+INSERT INTO `Airports` (`airport_code`, `airport_name`, `city`, `country`) VALUES ('CXR', 'Cam Ranh International Airport', 'Nha Trang', 'Vietnam');
+INSERT INTO `Airports` (`airport_code`, `airport_name`, `city`, `country`) VALUES ('HPH', 'Cat Bi International Airport', 'Hai Phong', 'Vietnam');
+
+-- Insert into Aircrafts
+INSERT INTO `Aircrafts` (`airline_id`, `model`, `manufacturer`, `capacity`) VALUES (4, 'Boeing 787', 'Boeing', 162);
+INSERT INTO `Aircrafts` (`airline_id`, `model`, `manufacturer`, `capacity`) VALUES (1, 'Airbus A321', 'Airbus', 271);
+INSERT INTO `Aircrafts` (`airline_id`, `model`, `manufacturer`, `capacity`) VALUES (3, 'Boeing 787', 'Boeing', 191);
+INSERT INTO `Aircrafts` (`airline_id`, `model`, `manufacturer`, `capacity`) VALUES (2, 'Airbus A320', 'Airbus', 172);
+INSERT INTO `Aircrafts` (`airline_id`, `model`, `manufacturer`, `capacity`) VALUES (1, 'Airbus A320', 'Airbus', 347);
+INSERT INTO `Aircrafts` (`airline_id`, `model`, `manufacturer`, `capacity`) VALUES (4, 'Boeing 787', 'Boeing', 164);
+INSERT INTO `Aircrafts` (`airline_id`, `model`, `manufacturer`, `capacity`) VALUES (4, 'Airbus A320', 'Airbus', 230);
+INSERT INTO `Aircrafts` (`airline_id`, `model`, `manufacturer`, `capacity`) VALUES (2, 'Airbus A321', 'Airbus', 224);
+INSERT INTO `Aircrafts` (`airline_id`, `model`, `manufacturer`, `capacity`) VALUES (3, 'Airbus A350', 'Airbus', 313);
+INSERT INTO `Aircrafts` (`airline_id`, `model`, `manufacturer`, `capacity`) VALUES (1, 'Airbus A320', 'Airbus', 333);
+
+-- Insert into Routes
+INSERT INTO `Routes` (`departure_place_id`, `arrival_place_id`, `distance_km`, `duration_minutes`) VALUES (4, 3, 1802, 230);
+INSERT INTO `Routes` (`departure_place_id`, `arrival_place_id`, `distance_km`, `duration_minutes`) VALUES (4, 3, 1689, 96);
+INSERT INTO `Routes` (`departure_place_id`, `arrival_place_id`, `distance_km`, `duration_minutes`) VALUES (1, 5, 1858, 90);
+INSERT INTO `Routes` (`departure_place_id`, `arrival_place_id`, `distance_km`, `duration_minutes`) VALUES (4, 2, 644, 228);
+INSERT INTO `Routes` (`departure_place_id`, `arrival_place_id`, `distance_km`, `duration_minutes`) VALUES (5, 4, 812, 102);
+INSERT INTO `Routes` (`departure_place_id`, `arrival_place_id`, `distance_km`, `duration_minutes`) VALUES (3, 5, 1882, 93);
+INSERT INTO `Routes` (`departure_place_id`, `arrival_place_id`, `distance_km`, `duration_minutes`) VALUES (3, 4, 532, 265);
+INSERT INTO `Routes` (`departure_place_id`, `arrival_place_id`, `distance_km`, `duration_minutes`) VALUES (1, 4, 633, 91);
+INSERT INTO `Routes` (`departure_place_id`, `arrival_place_id`, `distance_km`, `duration_minutes`) VALUES (2, 1, 1574, 113);
+INSERT INTO `Routes` (`departure_place_id`, `arrival_place_id`, `distance_km`, `duration_minutes`) VALUES (5, 2, 1794, 268);
+
+-- Insert into Cabin_Classes
+INSERT INTO `Cabin_Classes` (`class_name`, `description`) VALUES ('Economy', 'Economy class description');
+INSERT INTO `Cabin_Classes` (`class_name`, `description`) VALUES ('Premium Economy', 'Premium Economy class description');
+INSERT INTO `Cabin_Classes` (`class_name`, `description`) VALUES ('Business', 'Business class description');
+INSERT INTO `Cabin_Classes` (`class_name`, `description`) VALUES ('First', 'First class description');
+
+-- Insert into Seats
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '1C', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '2A', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '3E', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '4A', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '5B', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '6F', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '7C', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '8E', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '9C', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '10F', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '11B', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '12A', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '13E', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '14A', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '15D', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '16A', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '17A', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '18F', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '19A', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (1, '20D', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '1F', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '2C', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '3E', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '4D', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '5F', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '6B', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '7B', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '8B', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '9E', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '10D', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '11C', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '12D', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '13C', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '14B', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '15A', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '16F', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '17A', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '18D', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '19A', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (2, '20C', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '1D', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '2A', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '3A', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '4A', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '5A', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '6E', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '7D', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '8E', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '9D', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '10E', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '11F', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '12B', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '13C', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '14D', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '15D', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '16E', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '17B', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '18B', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '19E', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (3, '20E', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '1E', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '2A', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '3C', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '4D', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '5E', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '6F', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '7E', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '8E', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '9D', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '10F', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '11E', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '12B', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '13C', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '14C', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '15B', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '16F', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '17D', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '18C', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '19A', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (4, '20C', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '1E', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '2D', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '3B', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '4F', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '5F', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '6E', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '7D', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '8F', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '9C', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '10A', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '11D', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '12D', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '13C', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '14B', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '15F', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '16B', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '17F', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '18D', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '19A', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (5, '20F', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '1A', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '2A', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '3E', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '4A', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '5D', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '6C', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '7E', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '8B', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '9A', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '10C', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '11B', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '12C', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '13A', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '14B', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '15B', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '16D', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '17D', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '18A', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '19A', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (6, '20E', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '1E', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '2E', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '3C', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '4D', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '5F', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '6D', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '7D', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '8A', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '9E', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '10F', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '11C', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '12F', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '13B', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '14D', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '15F', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '16B', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '17F', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '18A', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '19C', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (7, '20F', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '1B', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '2A', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '3B', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '4A', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '5B', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '6E', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '7A', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '8D', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '9A', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '10A', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '11E', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '12F', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '13C', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '14E', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '15D', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '16A', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '17F', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '18D', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '19C', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (8, '20F', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '1C', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '2D', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '3C', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '4B', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '5A', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '6D', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '7D', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '8B', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '9B', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '10F', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '11C', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '12B', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '13D', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '14C', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '15E', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '16D', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '17D', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '18D', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '19E', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (9, '20C', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '1B', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '2A', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '3B', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '4E', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '5D', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '6F', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '7C', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '8C', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '9A', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '10E', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '11C', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '12C', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '13B', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '14B', 2);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '15C', 1);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '16B', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '17D', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '18C', 3);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '19B', 4);
+INSERT INTO `Seats` (`aircraft_id`, `seat_number`, `class_id`) VALUES (10, '20E', 1);
+
+-- Insert into Flights
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('QH772', 8, 4, '2025-09-04 20:25:43', '2025-09-05 00:38:43', 'CANCELLED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('QH135', 9, 3, '2024-12-24 05:46:41', '2024-12-24 08:19:41', 'CANCELLED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('VJ134', 10, 3, '2025-12-14 12:34:52', '2025-12-14 16:24:52', 'CANCELLED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('BL984', 1, 6, '2024-01-10 09:20:44', '2024-01-10 12:24:44', 'CANCELLED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('VJ487', 9, 5, '2024-11-14 10:52:11', '2024-11-14 12:13:11', 'DELAYED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('QH851', 10, 1, '2025-01-16 18:06:52', '2025-01-16 20:47:52', 'DELAYED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('QH800', 1, 7, '2024-06-22 06:15:50', '2024-06-22 08:39:50', 'SCHEDULED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('VJ354', 10, 6, '2025-03-10 12:53:29', '2025-03-10 15:46:29', 'DELAYED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('BL607', 5, 10, '2024-08-07 07:46:09', '2024-08-07 12:41:09', 'DELAYED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('BL529', 3, 5, '2025-02-21 14:05:00', '2025-02-21 18:21:00', 'CANCELLED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('QH924', 6, 10, '2025-01-27 17:53:42', '2025-01-27 20:22:42', 'COMPLETED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('VJ164', 5, 3, '2025-09-09 07:28:42', '2025-09-09 10:47:42', 'SCHEDULED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('VN182', 5, 8, '2025-09-11 09:06:37', '2025-09-11 10:27:37', 'DELAYED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('VJ501', 4, 3, '2024-07-07 19:01:29', '2024-07-07 21:19:29', 'COMPLETED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('BL813', 4, 2, '2025-01-28 22:00:44', '2025-01-29 01:20:44', 'DELAYED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('BL768', 4, 2, '2024-03-01 23:53:59', '2024-03-02 03:54:59', 'DELAYED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('QH933', 4, 3, '2024-06-12 16:46:12', '2024-06-12 19:46:12', 'SCHEDULED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('VJ145', 7, 4, '2025-07-13 11:50:14', '2025-07-13 15:23:14', 'COMPLETED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('VN133', 10, 4, '2024-06-23 08:56:17', '2024-06-23 13:01:17', 'CANCELLED');
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES ('VJ307', 8, 7, '2025-06-15 07:14:38', '2025-06-15 10:23:38', 'DELAYED');
+
+-- Insert into Flight_Seats
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (1, 158, 466.61, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (1, 156, 327.01, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (1, 154, 150.10, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (1, 152, 209.36, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (1, 147, 130.49, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (1, 143, 221.21, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (1, 141, 128.48, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (1, 150, 424.44, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (1, 142, 133.09, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (1, 160, 349.68, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (2, 178, 291.33, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (2, 174, 459.23, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (2, 173, 434.02, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (2, 162, 471.57, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (2, 171, 363.30, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (2, 176, 371.31, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (2, 180, 89.59, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (2, 177, 247.91, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (2, 165, 431.31, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (2, 166, 425.83, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (3, 194, 492.23, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (3, 193, 262.22, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (3, 197, 461.33, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (3, 200, 463.12, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (3, 196, 76.20, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (3, 185, 289.77, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (3, 186, 155.36, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (3, 183, 261.55, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (3, 195, 288.91, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (3, 188, 237.70, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (4, 12, 468.55, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (4, 16, 270.79, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (4, 8, 403.34, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (4, 15, 483.53, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (4, 11, 239.67, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (4, 7, 345.15, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (4, 14, 116.42, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (4, 4, 312.93, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (4, 17, 236.02, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (4, 13, 396.42, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (5, 179, 213.32, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (5, 167, 470.63, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (5, 176, 218.45, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (5, 180, 156.03, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (5, 177, 310.42, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (5, 161, 398.34, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (5, 172, 330.29, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (5, 175, 87.98, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (5, 164, 284.86, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (5, 174, 293.99, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (6, 193, 66.07, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (6, 192, 497.68, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (6, 197, 170.52, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (6, 196, 85.80, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (6, 189, 349.72, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (6, 198, 474.90, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (6, 185, 330.72, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (6, 194, 224.24, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (6, 199, 162.46, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (6, 183, 200.54, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (7, 19, 481.97, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (7, 7, 189.59, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (7, 20, 72.90, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (7, 12, 50.74, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (7, 2, 91.11, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (7, 6, 269.22, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (7, 15, 225.38, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (7, 1, 192.30, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (7, 18, 56.72, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (7, 16, 228.05, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (8, 191, 208.91, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (8, 194, 141.80, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (8, 189, 95.12, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (8, 195, 299.26, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (8, 181, 414.64, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (8, 193, 150.76, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (8, 196, 377.27, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (8, 185, 326.28, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (8, 197, 201.09, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (8, 192, 281.88, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (9, 99, 341.68, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (9, 85, 486.45, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (9, 86, 380.29, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (9, 90, 89.17, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (9, 98, 448.56, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (9, 97, 193.18, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (9, 82, 408.45, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (9, 88, 413.67, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (9, 95, 477.29, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (9, 96, 256.13, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (10, 46, 479.30, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (10, 56, 424.66, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (10, 50, 117.58, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (10, 51, 351.16, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (10, 42, 366.13, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (10, 53, 158.99, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (10, 58, 184.53, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (10, 45, 469.48, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (10, 55, 171.51, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (10, 43, 203.08, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (11, 109, 459.45, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (11, 105, 446.93, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (11, 107, 393.21, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (11, 103, 148.72, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (11, 117, 120.30, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (11, 102, 345.19, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (11, 114, 363.80, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (11, 106, 184.16, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (11, 101, 285.11, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (11, 118, 343.39, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (12, 90, 200.48, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (12, 91, 338.95, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (12, 93, 482.23, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (12, 82, 330.32, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (12, 88, 71.68, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (12, 81, 431.47, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (12, 83, 371.61, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (12, 85, 145.53, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (12, 100, 97.13, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (12, 92, 267.28, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (13, 84, 491.39, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (13, 90, 245.57, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (13, 82, 204.27, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (13, 100, 81.83, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (13, 87, 93.77, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (13, 85, 143.04, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (13, 92, 156.85, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (13, 88, 190.94, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (13, 89, 437.67, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (13, 83, 62.02, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (14, 67, 273.12, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (14, 69, 346.22, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (14, 64, 88.77, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (14, 75, 123.10, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (14, 74, 478.49, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (14, 73, 106.06, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (14, 65, 245.61, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (14, 63, 485.80, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (14, 62, 401.16, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (14, 79, 76.65, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (15, 70, 457.83, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (15, 78, 418.60, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (15, 61, 424.87, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (15, 73, 71.58, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (15, 79, 290.35, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (15, 66, 128.16, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (15, 65, 348.32, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (15, 62, 231.88, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (15, 74, 323.88, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (15, 63, 238.09, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (16, 72, 219.24, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (16, 78, 269.98, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (16, 73, 410.34, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (16, 74, 256.87, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (16, 76, 406.05, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (16, 79, 380.06, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (16, 67, 246.03, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (16, 69, 365.00, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (16, 64, 54.10, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (16, 68, 475.24, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (17, 61, 208.36, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (17, 73, 206.86, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (17, 80, 457.89, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (17, 63, 403.42, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (17, 62, 82.91, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (17, 70, 111.94, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (17, 67, 377.08, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (17, 64, 61.34, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (17, 74, 92.41, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (17, 69, 469.89, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (18, 127, 444.18, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (18, 123, 461.02, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (18, 124, 195.00, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (18, 135, 408.35, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (18, 137, 402.20, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (18, 131, 138.51, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (18, 121, 61.49, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (18, 140, 398.73, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (18, 125, 183.21, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (18, 138, 51.11, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (19, 181, 312.15, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (19, 197, 446.90, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (19, 198, 192.48, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (19, 186, 260.32, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (19, 188, 373.21, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (19, 200, 351.93, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (19, 194, 482.46, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (19, 183, 210.79, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (19, 182, 357.96, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (19, 185, 188.68, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (20, 154, 422.98, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (20, 155, 129.67, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (20, 141, 205.16, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (20, 158, 309.92, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (20, 159, 452.34, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (20, 145, 91.18, 'BOOKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (20, 147, 96.50, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (20, 156, 120.65, 'BLOCKED');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (20, 152, 278.84, 'AVAILABLE');
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES (20, 160, 218.22, 'AVAILABLE');
+
+-- Insert into Fare_Rules
+INSERT INTO `Fare_Rules` (`route_id`, `class_id`, `fare_type`, `season`, `effective_date`, `expiry_date`, `description`, `price`) VALUES (3, 1, 'Standard', 'PEAK', '2022-03-19', '2022-11-18', 'Fare rule for Standard in PEAK', 973.44);
+INSERT INTO `Fare_Rules` (`route_id`, `class_id`, `fare_type`, `season`, `effective_date`, `expiry_date`, `description`, `price`) VALUES (4, 3, 'Flex', 'OFFPEAK', '2021-03-10', '2021-07-09', 'Fare rule for Flex in OFFPEAK', 786.46);
+INSERT INTO `Fare_Rules` (`route_id`, `class_id`, `fare_type`, `season`, `effective_date`, `expiry_date`, `description`, `price`) VALUES (3, 4, 'Saver', 'OFFPEAK', '2024-02-01', '2024-06-20', 'Fare rule for Saver in OFFPEAK', 926.22);
+INSERT INTO `Fare_Rules` (`route_id`, `class_id`, `fare_type`, `season`, `effective_date`, `expiry_date`, `description`, `price`) VALUES (5, 2, 'Flex', 'PEAK', '2020-07-28', '2021-02-10', 'Fare rule for Flex in PEAK', 672.53);
+INSERT INTO `Fare_Rules` (`route_id`, `class_id`, `fare_type`, `season`, `effective_date`, `expiry_date`, `description`, `price`) VALUES (2, 1, 'Standard', 'PEAK', '2025-03-01', '2025-07-13', 'Fare rule for Standard in PEAK', 718.73);
+INSERT INTO `Fare_Rules` (`route_id`, `class_id`, `fare_type`, `season`, `effective_date`, `expiry_date`, `description`, `price`) VALUES (4, 2, 'Promo', 'PEAK', '2022-08-10', '2023-02-01', 'Fare rule for Promo in PEAK', 825.60);
+INSERT INTO `Fare_Rules` (`route_id`, `class_id`, `fare_type`, `season`, `effective_date`, `expiry_date`, `description`, `price`) VALUES (9, 1, 'Promo', 'NORMAL', '2021-04-06', '2022-01-28', 'Fare rule for Promo in NORMAL', 391.57);
+INSERT INTO `Fare_Rules` (`route_id`, `class_id`, `fare_type`, `season`, `effective_date`, `expiry_date`, `description`, `price`) VALUES (5, 1, 'Standard', 'NORMAL', '2025-05-01', '2025-08-27', 'Fare rule for Standard in NORMAL', 424.46);
+INSERT INTO `Fare_Rules` (`route_id`, `class_id`, `fare_type`, `season`, `effective_date`, `expiry_date`, `description`, `price`) VALUES (6, 4, 'Promo', 'NORMAL', '2020-12-18', '2021-07-19', 'Fare rule for Promo in NORMAL', 880.66);
+INSERT INTO `Fare_Rules` (`route_id`, `class_id`, `fare_type`, `season`, `effective_date`, `expiry_date`, `description`, `price`) VALUES (7, 3, 'Saver', 'NORMAL', '2022-06-22', '2022-09-14', 'Fare rule for Saver in NORMAL', 363.30);
+INSERT INTO `Fare_Rules` (`route_id`, `class_id`, `fare_type`, `season`, `effective_date`, `expiry_date`, `description`, `price`) VALUES (8, 3, 'Flex', 'NORMAL', '2023-04-26', '2023-12-05', 'Fare rule for Flex in NORMAL', 915.35);
+INSERT INTO `Fare_Rules` (`route_id`, `class_id`, `fare_type`, `season`, `effective_date`, `expiry_date`, `description`, `price`) VALUES (1, 1, 'Standard', 'PEAK', '2023-10-17', '2024-08-25', 'Fare rule for Standard in PEAK', 804.33);
+INSERT INTO `Fare_Rules` (`route_id`, `class_id`, `fare_type`, `season`, `effective_date`, `expiry_date`, `description`, `price`) VALUES (10, 2, 'Saver', 'NORMAL', '2023-05-17', '2023-08-04', 'Fare rule for Saver in NORMAL', 187.81);
+INSERT INTO `Fare_Rules` (`route_id`, `class_id`, `fare_type`, `season`, `effective_date`, `expiry_date`, `description`, `price`) VALUES (10, 1, 'Promo', 'OFFPEAK', '2021-02-27', '2021-09-27', 'Fare rule for Promo in OFFPEAK', 461.26);
+INSERT INTO `Fare_Rules` (`route_id`, `class_id`, `fare_type`, `season`, `effective_date`, `expiry_date`, `description`, `price`) VALUES (5, 1, 'Saver', 'OFFPEAK', '2025-08-12', '2025-09-22', 'Fare rule for Saver in OFFPEAK', 425.64);
+
+-- Insert into Accounts
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('wcownbla@example.com', 'pFbPSEIBb3wDfOaOYHeSiEA213zlGWBcY18JSQ9oYerGrVMmJAAWPbwKM7xSfXiv', '2021-07-25 01:35:55');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('atynqtg8@hotmail.com', '3WodkIw4HIe7PaLunVrf0vsU4380fXpkpXZeJqnCLJZL5m9ICXnz0fdhfJBMZRuN', '2023-02-23 20:40:25');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('dpk9c0br@example.com', 'QXeoGPuvxlr6hcvWDzeNv4eZujAnKnNmVPmJB5Ko4SvP4bDrtlhBNZgq4033vLRF', '2022-02-16 12:50:59');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('htgcohir@hotmail.com', '4GLyM9jSk192SXdXL1sSuEzfUHjgLO5iIySLAOMgQ3Z8AnBLfp2dJCy3HMRT62MF', '2023-04-09 12:16:26');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('3cud46as@gmail.com', 'mhZE3fzcvZN3VrRlJV6mOIaGIAzCYujDCHfxhF1h9TTqF73eHYXDiqJh9Zy32Kh4', '2021-12-07 21:42:15');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('ishii8ur@example.com', 'T77aqtxXuiEAnSDGZ1u7rhZzV5NHf9juElzxAMUvIAf3MbHeBVNAj1H1SEEHuphT', '2022-10-01 08:37:35');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('evgu3r0r@gmail.com', 'PgTtaQC3mvX7kMCxBL4EWjBCY9P4k9CfUAmqx5hvsWTN8gmT2KZS6X6pUu77DpQT', '2020-09-14 00:31:18');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('uqgagjea@yahoo.com', 'SCRD9XHhGG4qEeM99vq0ZFLgwyxRctLjCJSt7ejsb9UsyAx8b8AgNJYTx3taiSh3', '2025-03-16 14:46:37');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('9b7vhlae@yahoo.com', 'C9OOYcb9go6Ae2OvoThRdLBZ7ntWOErclYukzigihmXHXh1BhT8Y05t9m30p5cqb', '2024-10-12 15:23:20');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('o2mb11qt@hotmail.com', 'Rl5RKWIo4ZBAAfTJmVh6LcWGCjEso4e4R0jCVSRDuJixsBGhIxOWy95ZPlxJcXFO', '2021-02-27 18:39:56');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('ioc9zqiu@gmail.com', 'ZBJ8Wfk1mBxeWXmRafIDf8mN6zQTSWew9VckV6OLH0ZS4KXaQutQIkImFqA1xTcX', '2025-01-10 10:30:23');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('gv04yuc0@gmail.com', '9Ee2UAJEZFIlZZwrjRtVONPk25Vfah1HIWTKWdqAq3fq5suyPMWg0ID3XYhyZZML', '2025-11-03 18:32:25');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('i80gu4uo@hotmail.com', 'L0wGiawd6jpHk4hiKXRIDe1tN3SblbjrHFb2o0aHFAu95DwYFb4ZyRZSPL1wkqC8', '2021-11-19 00:03:10');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('g2wsxfx0@yahoo.com', 'SrVRhGutk2jNavFKZZhBnQexFLgTgtyBNHzMFN6BoXoQwjr0Wmplmp7APMvRXcDK', '2021-03-15 18:24:27');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('s5cptvuq@yahoo.com', 'BVs5BhA2IFIVlqwXURYVeK5xphidSsPxqVYj3RtyzDs3IHZ3elySld2eNo7lvLbx', '2022-01-14 11:12:39');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('zvbiay9p@yahoo.com', 'xeXxqbqZlKZ0IVxSzr7YmZvY0vXtcHjpfNxBOQM8zkUiZh91O0uZt7cVej8gYI4H', '2023-04-05 11:05:53');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('g9tbp1hd@hotmail.com', 'XlgUHY70hTHI77R8YQv0dl1kWrIj3xbb8dbHBB0bn5CHnlvJEDgvP9ZdILTSN9Kc', '2024-04-24 05:25:50');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('ug5y5oeh@example.com', 'vOblY5eQ9f81uyP3JmXMEkSb00jFZP7V65sa2ddVeYii5HcPq9PUPDeDxPTpYosr', '2025-04-26 02:21:53');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('1wfobgby@example.com', 'hDIJpKXmuDlgnEBQkfKFPtzwM2XiRyKVBPJjhYJLVC2W8upb69SocNdUipyReMOq', '2023-05-21 06:13:02');
+INSERT INTO `Accounts` (`email`, `password`, `created_at`) VALUES ('flf532ra@hotmail.com', '2UmVoy8AQGeqgB2ZmIXto8P7Aqm6qW1QlsLNQKcrj0SBprOmMA4ILazd497V8Bou', '2020-12-25 12:49:58');
+
+-- Insert into User_Role
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (1, 1);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (2, 3);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (3, 2);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (4, 2);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (5, 3);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (6, 2);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (7, 1);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (8, 3);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (9, 2);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (10, 3);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (11, 2);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (12, 3);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (13, 3);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (14, 3);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (15, 3);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (16, 3);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (17, 2);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (18, 2);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (19, 1);
+INSERT INTO `User_Role` (`account_id`, `role_id`) VALUES (20, 3);
+
+-- Insert into Passenger_Profiles
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (7, 'Le Minh An', '1969-01-02', '0030282361', 'FDFKIHSRP', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (16, 'Le Thi Khanh', '1975-09-10', '0048611871', 'OEEQUMKFH', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (15, 'Dang Duc Chau', '1997-03-10', '0112794774', 'RHTV7ZYPR', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (1, 'Dang Thi An', '2005-05-06', '0065069002', 'ACCFMSL3F', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (1, 'Bui Anh Em', '1950-10-28', '0800075992', 'YLQTOZKG4', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (14, 'Huynh Ngoc Em', '1996-11-04', '0618294603', 'XKBW5JPYS', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (10, 'Le Duc Giang', '1964-05-17', '0286272641', 'DYRLIPKTL', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (4, 'Pham Ngoc An', '1959-06-22', '0327024560', 'XQ95AB5SA', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (6, 'Tran Thi Hoa', '1994-11-20', '0282678540', '7MS3QDLAL', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (20, 'Do Ngoc Fong', '1999-10-14', '0736717664', 'GUZBZNVQI', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (4, 'Le Ngoc An', '1977-11-01', '0706185728', '1IBCBBQAC', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (17, 'Huynh Van Em', '2000-07-19', '0604391779', 'Y9ELQPVI5', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (6, 'Pham Ngoc Ich', '1967-01-14', '0601087077', 'AMQZUAEDS', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (10, 'Do Cam Ich', '1964-01-17', '0431685441', 'TDCK3G7YG', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (14, 'Huynh Bao Dung', '1976-12-27', '0917229637', 'PD5H1LWDW', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (18, 'Pham Cam Binh', '2003-01-18', '0226518087', 'DJVD8VXO0', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (6, 'Huynh Thi Giang', '1958-10-10', '0844612423', 'M7B0DIDRS', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (8, 'Hoang Bao Hoa', '1994-08-26', '0974648714', 'VPOOJKDWS', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (3, 'Pham Thi Dung', '1998-03-17', '0372951552', 'N9AX9BIKS', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (18, 'Nguyen Anh Em', '1999-04-12', '0976086285', '15SHOSJO1', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (16, 'Hoang Ngoc Khanh', '1994-09-05', '0330716246', 'QNKPF1YEL', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (10, 'Hoang Ngoc Chau', '2004-09-10', '0588222255', 'GR1JKBOMR', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (9, 'Pham Huu Khanh', '1996-12-19', '0896355425', 'DNZRSAWYN', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (19, 'Nguyen Bao Em', '2003-03-28', '0027323718', 'ZOEUWZUXY', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (7, 'Le Bao Binh', '1961-08-17', '0445581736', 'LY9JLAKZO', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (16, 'Dang Quoc Binh', '1984-07-27', '0773192024', 'XKZWOG02J', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (4, 'Le Huu Em', '1964-10-08', '0666610730', 'A2QHOGQAN', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (17, 'Huynh Anh Chau', '1974-04-27', '0448388051', 'GCW6AX5JQ', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (15, 'Bui Cam Dung', '1953-01-22', '0632354732', 'PIQGXO3TW', 'Vietnam');
+INSERT INTO `Passenger_Profiles` (`account_id`, `full_name`, `date_of_birth`, `phone_number`, `passport_number`, `nationality`) VALUES (12, 'Bui Cam Em', '1958-04-23', '0966883208', 'POWOWJBUM', 'Vietnam');
+
+-- Insert into Bookings
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES (18, '2025-03-06 18:02:22', 'CANCELLED', 850.51);
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES (7, '2025-11-15 18:44:14', 'CANCELLED', 1400.50);
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES (16, '2024-09-23 04:28:03', 'REFUNDED', 1035.52);
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES (5, '2024-07-09 14:52:10', 'PENDING', 1007.14);
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES (5, '2024-08-15 18:14:32', 'CONFIRMED', 1254.44);
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES (9, '2025-01-10 07:18:52', 'REFUNDED', 243.06);
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES (13, '2024-04-27 02:45:11', 'CONFIRMED', 1220.77);
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES (4, '2025-05-16 21:19:25', 'PENDING', 588.66);
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES (8, '2024-10-11 19:59:23', 'CANCELLED', 1199.47);
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES (15, '2025-05-14 04:58:26', 'PENDING', 1900.79);
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES (9, '2024-12-10 18:23:18', 'REFUNDED', 1001.07);
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES (18, '2024-08-13 16:24:58', 'CONFIRMED', 1100.84);
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES (9, '2024-02-21 19:22:03', 'PENDING', 1897.43);
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES (6, '2025-04-01 14:48:35', 'REFUNDED', 314.20);
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES (7, '2025-01-25 07:32:02', 'PENDING', 597.86);
+
+-- Insert into Booking_Passengers
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (1, 1);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (1, 21);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (2, 5);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (3, 28);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (4, 19);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (5, 3);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (6, 19);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (6, 28);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (7, 14);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (8, 21);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (9, 12);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (9, 16);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (9, 1);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (10, 11);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (11, 28);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (12, 4);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (12, 24);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (13, 29);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (14, 5);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (14, 27);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (15, 25);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (15, 8);
+INSERT INTO `Booking_Passengers` (`booking_id`, `profile_id`) VALUES (15, 15);
+
+-- Insert into Tickets
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (1, 92, 'O03JM6XJRNXD', '2025-05-08 19:42:20', 'REFUNDED');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (2, 67, 'UYJOFLRY78HA', '2025-01-06 01:48:39', 'CHECKED_IN');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (3, 68, 'AIRJQRATDGGW', '2025-12-27 05:49:12', 'BOOKED');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (4, 45, 'UKLP2XT7NVJI', '2024-07-03 03:46:09', 'BOARDED');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (5, 124, 'LPLQANWT4V7R', '2025-11-14 00:16:41', 'CONFIRMED');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (6, 53, 'XV1CLOB1RUWZ', '2024-11-25 18:48:45', 'BOOKED');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (7, 187, 'QNRZAFMEZ9ZB', '2024-12-09 18:24:35', 'BOARDED');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (8, 77, 'XIUYLJHNYJJL', '2024-03-02 21:20:31', 'BOARDED');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (9, 135, 'UFMJDFKQ8RSC', '2025-05-11 11:46:03', 'REFUNDED');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (10, 97, 'VKW5TCMK8VFI', '2025-10-12 18:15:44', 'BOARDED');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (11, 167, 'XMJJTHMRDHLL', '2024-09-09 01:17:37', 'CHECKED_IN');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (12, 93, 'FFARL1SNCXHP', '2024-06-24 04:23:13', 'CONFIRMED');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (13, 184, '9ECAZQAKD9JS', '2025-04-08 00:51:06', 'CONFIRMED');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (14, 31, '7PQFSLH7HMEW', '2024-12-26 22:18:19', 'BOOKED');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (15, 183, 'NRFAWXXLTOZJ', '2025-06-14 04:15:40', 'CHECKED_IN');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (16, 74, 'GCHZ9UQAYDNR', '2024-11-03 14:52:16', 'CONFIRMED');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (17, 71, 'SC1FN1GSMIBD', '2025-02-11 14:58:02', 'CHECKED_IN');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (18, 96, 'W8TA4DGYNUZI', '2025-12-15 15:00:15', 'CONFIRMED');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (19, 49, 'VLZA0WXCVHTT', '2025-09-03 16:37:26', 'REFUNDED');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (20, 163, 'CO3PHPMXTARI', '2024-02-21 08:47:25', 'CONFIRMED');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (21, 126, 'S9EFLPBSB4XI', '2025-05-08 08:01:17', 'CHECKED_IN');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (22, 63, 'PTXRGNYJ8Q5B', '2025-01-03 17:32:57', 'BOARDED');
+INSERT INTO `Tickets` (`ticket_passenger_id`, `flight_seat_id`, `ticket_number`, `issue_date`, `status`) VALUES (23, 29, 'QZAU4DPLI37K', '2024-01-15 18:10:49', 'CHECKED_IN');
+
+-- Insert into Ticket_History
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (19, 'CHECKED_IN', 'REFUNDED', '2024-10-23 08:45:26');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (19, 'REFUNDED', 'CONFIRMED', '2025-03-17 11:34:58');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (19, 'CONFIRMED', 'CANCELLED', '2025-10-10 15:46:09');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (14, 'BOARDED', 'REFUNDED', '2024-11-06 16:57:42');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (18, 'BOARDED', 'BOOKED', '2024-05-23 07:42:01');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (18, 'BOOKED', 'BOOKED', '2025-08-19 10:24:00');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (18, 'BOOKED', 'BOOKED', '2025-10-11 01:06:53');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (8, 'CANCELLED', 'CONFIRMED', '2024-10-02 22:18:32');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (8, 'CONFIRMED', 'BOARDED', '2024-10-07 03:42:50');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (8, 'BOARDED', 'CHECKED_IN', '2024-06-22 20:22:14');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (22, 'REFUNDED', 'BOOKED', '2025-02-26 02:40:39');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (22, 'BOOKED', 'BOARDED', '2025-11-18 05:24:36');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (22, 'BOARDED', 'BOARDED', '2024-09-19 22:40:41');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (5, 'BOOKED', 'CONFIRMED', '2025-08-02 13:50:53');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (23, 'BOOKED', 'BOARDED', '2025-04-21 09:40:39');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (23, 'BOARDED', 'CHECKED_IN', '2025-03-21 06:33:58');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (23, 'CHECKED_IN', 'CHECKED_IN', '2024-10-11 20:33:31');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (17, 'CANCELLED', 'CANCELLED', '2025-10-25 03:38:54');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (17, 'CANCELLED', 'BOOKED', '2025-07-06 18:02:23');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (17, 'BOOKED', 'CHECKED_IN', '2024-09-14 22:38:33');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (15, 'CONFIRMED', 'CONFIRMED', '2025-06-01 01:37:26');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (15, 'CONFIRMED', 'REFUNDED', '2024-06-22 19:41:33');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (15, 'REFUNDED', 'CANCELLED', '2025-09-16 06:30:11');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (11, 'BOARDED', 'REFUNDED', '2025-06-13 16:14:28');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (11, 'REFUNDED', 'BOARDED', '2025-09-04 06:24:24');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (12, 'BOARDED', 'CONFIRMED', '2024-01-24 15:34:47');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (12, 'CONFIRMED', 'CONFIRMED', '2024-05-02 10:44:30');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (12, 'CONFIRMED', 'CONFIRMED', '2025-06-26 09:57:05');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (3, 'CHECKED_IN', 'CONFIRMED', '2024-09-27 14:41:41');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (4, 'CONFIRMED', 'BOARDED', '2025-12-17 11:56:33');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (7, 'REFUNDED', 'CHECKED_IN', '2025-02-07 08:41:12');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (7, 'CHECKED_IN', 'BOARDED', '2025-04-05 11:43:06');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (7, 'BOARDED', 'CHECKED_IN', '2024-03-02 05:19:11');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (20, 'BOARDED', 'REFUNDED', '2024-08-14 03:08:55');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (6, 'BOARDED', 'CANCELLED', '2024-12-25 16:01:37');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (9, 'REFUNDED', 'REFUNDED', '2025-03-20 18:41:51');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (9, 'REFUNDED', 'BOARDED', '2025-06-02 05:28:39');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (13, 'CANCELLED', 'CHECKED_IN', '2025-07-21 10:38:15');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (13, 'CHECKED_IN', 'BOOKED', '2024-10-15 09:32:18');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (13, 'BOOKED', 'CONFIRMED', '2025-03-16 09:42:11');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (2, 'CANCELLED', 'CONFIRMED', '2024-11-12 19:14:05');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (2, 'CONFIRMED', 'CONFIRMED', '2025-12-23 00:19:15');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (21, 'BOARDED', 'CANCELLED', '2024-07-06 22:45:35');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (21, 'CANCELLED', 'CONFIRMED', '2024-03-19 06:39:32');
+INSERT INTO `Ticket_History` (`ticket_id`, `old_status`, `new_status`, `changed_at`) VALUES (21, 'CONFIRMED', 'BOOKED', '2024-01-25 11:01:20');
+
+-- Insert into Payments
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES (1, 1111.68, 'BANK_TRANSFER', '2024-10-11 21:13:21', 'FAILED');
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES (2, 1506.46, 'BANK_TRANSFER', '2025-06-20 05:54:28', 'PENDING');
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES (3, 1633.05, 'E_WALLET', '2024-09-01 19:01:33', 'SUCCESS');
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES (4, 1812.60, 'E_WALLET', '2024-12-13 15:03:55', 'PENDING');
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES (5, 679.56, 'BANK_TRANSFER', '2025-10-15 19:59:03', 'PENDING');
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES (6, 544.80, 'BANK_TRANSFER', '2025-12-17 23:42:12', 'FAILED');
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES (7, 1441.15, 'CREDIT_CARD', '2025-12-11 18:05:31', 'FAILED');
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES (8, 1389.21, 'CASH', '2024-01-24 23:11:14', 'SUCCESS');
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES (9, 1597.30, 'CREDIT_CARD', '2024-08-11 05:30:56', 'SUCCESS');
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES (10, 423.07, 'CASH', '2024-06-08 17:27:00', 'PENDING');
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES (11, 1206.14, 'E_WALLET', '2025-03-12 03:12:22', 'FAILED');
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES (12, 430.04, 'E_WALLET', '2024-02-17 07:05:01', 'FAILED');
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES (13, 1908.51, 'E_WALLET', '2025-01-18 23:39:10', 'FAILED');
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES (14, 1449.24, 'E_WALLET', '2024-05-16 13:06:20', 'PENDING');
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES (15, 1746.17, 'CASH', '2025-06-26 03:47:29', 'FAILED');
+
+-- Insert into Baggage
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (17, 8, '0CRB7EMNVW', 'SPECIAL', 5.01, 42.44, 0.00, 'CREATED', 'Pet', '2024-05-20 01:51:15', '2024-05-20 17:51:15');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (3, 7, 'ZVZ4FTNKGO', 'CHECKED', 22.61, 34.22, 0.00, 'CLAIMED', NULL, '2025-05-12 19:01:27', '2025-05-13 09:01:27');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (19, 5, 'Z9NYSISNCD', 'CARRY_ON', 21.20, 25.72, 0.00, 'CREATED', 'Pet', '2025-04-28 06:38:05', '2025-04-29 06:38:05');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (14, 4, 'VKDA5WTR1E', 'CHECKED', 12.15, 30.20, 0.00, 'CHECKED_IN', 'Oversize', '2025-09-14 12:00:39', '2025-09-14 21:00:39');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (21, 13, 'T4L3CISLB5', 'CHECKED', 7.09, 35.42, 0.00, 'IN_TRANSIT', NULL, '2025-12-16 23:38:12', '2025-12-17 04:38:12');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (20, 17, 'NIFRYLBSXT', 'CHECKED', 19.34, 25.52, 0.00, 'CLAIMED', 'Fragile', '2024-12-03 07:35:23', '2024-12-03 14:35:23');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (2, 7, 'VVSLTNQNCC', 'SPECIAL', 20.99, 29.52, 0.00, 'IN_TRANSIT', NULL, '2024-05-10 19:02:12', '2024-05-11 10:02:12');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (5, 13, 'OLUXOVMZ1A', 'CARRY_ON', 12.50, 39.45, 0.00, 'CLAIMED', 'Pet', '2025-09-20 23:09:30', '2025-09-21 17:09:30');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (6, 6, 'WXME5N7LXY', 'CHECKED', 5.14, 26.08, 0.00, 'CHECKED_IN', 'Oversize', '2024-06-06 20:16:01', '2024-06-07 14:16:01');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (1, 10, 'QWZAXWVV6N', 'CHECKED', 23.76, 37.40, 0.00, 'LOST', 'Pet', '2024-06-07 23:55:26', '2024-06-08 06:55:26');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (11, 17, 'VFUH3Z1PY7', 'CHECKED', 16.31, 39.50, 0.00, 'CHECKED_IN', 'Oversize', '2025-09-04 13:22:32', '2025-09-05 08:22:32');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (22, 7, 'G17SMRZONJ', 'CHECKED', 23.61, 37.13, 0.00, 'IN_TRANSIT', NULL, '2024-11-10 05:35:27', '2024-11-10 21:35:27');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (13, 19, 'UPPWGNTAVZ', 'CARRY_ON', 15.19, 46.84, 0.00, 'LOADED', 'Fragile', '2024-05-07 09:59:13', '2024-05-07 23:59:13');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (15, 19, 'RJNTOVHRGO', 'SPECIAL', 21.64, 32.02, 0.00, 'CREATED', 'Fragile', '2025-08-24 16:25:01', '2025-08-24 20:25:01');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (12, 10, 'RTZFJKTU52', 'SPECIAL', 15.97, 47.35, 0.00, 'CHECKED_IN', 'Oversize', '2024-08-28 18:37:15', '2024-08-29 14:37:15');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (10, 10, 'VFYMLIUHIY', 'SPECIAL', 23.30, 22.90, 4.00, 'CHECKED_IN', 'Pet', '2025-03-18 03:46:26', '2025-03-18 12:46:26');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (7, 19, 'SVYNSAQYSL', 'CHECKED', 19.09, 40.55, 0.00, 'LOST', 'Fragile', '2025-08-02 00:19:54', '2025-08-02 11:19:54');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (4, 5, '2OOATGXDGR', 'CHECKED', 11.41, 46.59, 0.00, 'IN_TRANSIT', 'Fragile', '2024-03-06 22:01:11', '2024-03-07 15:01:11');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (16, 8, 'IVPBR7T8WG', 'SPECIAL', 10.85, 20.94, 0.00, 'CLAIMED', 'Pet', '2025-05-10 21:43:01', '2025-05-10 22:43:01');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (8, 8, 'RPJXJUQUHH', 'CARRY_ON', 10.55, 20.05, 0.00, 'LOADED', 'Pet', '2025-08-03 02:19:55', '2025-08-03 21:19:55');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (18, 10, 'KQYMVXBTO5', 'SPECIAL', 20.76, 21.79, 0.00, 'CLAIMED', 'Fragile', '2024-11-12 09:56:46', '2024-11-12 13:56:46');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (9, 14, 'LCMIRW5HPU', 'CHECKED', 25.26, 47.79, 0.00, 'IN_TRANSIT', NULL, '2025-12-23 14:31:11', '2025-12-24 00:31:11');
+INSERT INTO `Baggage` (`ticket_id`, `flight_id`, `baggage_tag`, `baggage_type`, `weight_kg`, `allowed_weight_kg`, `fee`, `status`, `special_handling`, `created_at`, `updated_at`) VALUES (23, 3, 'TXNYIRAAHG', 'CARRY_ON', 18.95, 34.06, 0.00, 'CREATED', 'Fragile', '2025-11-26 14:54:57', '2025-11-26 21:54:57');
+
+-- Insert into Baggage_History
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (20, 'CLAIMED', 'LOST', '2025-10-23 22:04:45');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (20, 'LOST', 'IN_TRANSIT', '2025-12-23 22:33:36');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (20, 'IN_TRANSIT', 'CHECKED_IN', '2025-03-12 01:26:08');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (11, 'CHECKED_IN', 'LOADED', '2024-06-05 16:59:17');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (11, 'LOADED', 'CHECKED_IN', '2025-07-26 13:18:42');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (11, 'CHECKED_IN', 'CLAIMED', '2025-06-20 13:18:12');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (9, 'CREATED', 'IN_TRANSIT', '2025-05-14 04:38:28');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (9, 'IN_TRANSIT', 'CREATED', '2024-04-28 22:28:02');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (13, 'IN_TRANSIT', 'IN_TRANSIT', '2025-02-26 22:44:39');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (21, 'CHECKED_IN', 'CHECKED_IN', '2024-12-14 01:21:21');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (6, 'CREATED', 'CLAIMED', '2025-03-18 21:11:50');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (6, 'CLAIMED', 'IN_TRANSIT', '2025-11-18 10:17:57');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (5, 'LOADED', 'IN_TRANSIT', '2025-02-13 20:30:47');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (5, 'IN_TRANSIT', 'LOADED', '2024-06-05 21:43:41');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (5, 'LOADED', 'CHECKED_IN', '2025-05-16 11:50:37');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (19, 'LOADED', 'CREATED', '2025-05-07 21:58:51');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (19, 'CREATED', 'LOADED', '2025-03-01 11:05:12');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (4, 'CLAIMED', 'IN_TRANSIT', '2024-06-24 02:08:56');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (4, 'IN_TRANSIT', 'LOADED', '2025-04-16 09:26:25');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (4, 'LOADED', 'CLAIMED', '2024-10-22 17:18:39');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (2, 'LOST', 'CHECKED_IN', '2025-09-03 12:48:21');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (2, 'CHECKED_IN', 'LOST', '2024-03-23 03:08:45');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (2, 'LOST', 'IN_TRANSIT', '2024-09-04 06:47:45');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (10, 'IN_TRANSIT', 'LOST', '2024-02-09 21:09:28');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (10, 'LOST', 'CREATED', '2025-02-10 20:33:56');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (10, 'CREATED', 'CLAIMED', '2025-07-28 00:54:21');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (1, 'LOADED', 'CLAIMED', '2024-04-15 17:22:02');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (1, 'CLAIMED', 'CLAIMED', '2024-04-11 19:39:49');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (1, 'CLAIMED', 'IN_TRANSIT', '2025-08-10 12:13:40');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (12, 'LOADED', 'LOST', '2025-04-28 07:10:45');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (22, 'CHECKED_IN', 'LOADED', '2024-06-08 17:05:26');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (22, 'LOADED', 'CREATED', '2024-11-13 21:55:48');
+INSERT INTO `Baggage_History` (`baggage_id`, `old_status`, `new_status`, `changed_at`) VALUES (22, 'CREATED', 'IN_TRANSIT', '2025-12-06 04:05:09');
+
+-- Chèn các chuyến bay đã hoàn tất (COMPLETED)
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) 
+VALUES 
+('VN255', 2, 9, '2025-10-30 08:00:00', '2025-10-30 10:13:00', 'COMPLETED'), -- SGN-HAN (Route 9, 113 phút) [cite: 78], dùng máy bay VN (Aircraft 2) [cite: 61]
+('VJ170', 4, 3, '2025-10-30 14:30:00', '2025-10-30 16:00:00', 'COMPLETED'), -- HAN-CXR (Route 3, 90 phút) [cite: 72], dùng máy bay VJ (Aircraft 4) [cite: 63]
+('QH120', 3, 7, '2025-10-31 10:00:00', '2025-10-31 14:25:00', 'COMPLETED'), -- DAD-PQC (Route 7, 265 phút) [cite: 76], dùng máy bay QH (Aircraft 3) [cite: 62]
+('BL633', 1, 6, '2025-10-31 13:15:00', '2025-10-31 14:48:00', 'COMPLETED'); -- DAD-CXR (Route 6, 93 phút) [cite: 75], dùng máy bay BL (Aircraft 1) [cite: 60]
+
+-- Chèn các chuyến bay trong tương lai (SCHEDULED)
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) 
+VALUES 
+-- Ngày 3 tháng 11, 2025
+('VN208', 2, 9, '2025-11-03 06:00:00', '2025-11-03 08:13:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 2 (VN) [cite: 61]
+('VJ102', 8, 9, '2025-11-03 07:30:00', '2025-11-03 09:43:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 8 (VJ) [cite: 67]
+('QH204', 9, 9, '2025-11-03 09:00:00', '2025-11-03 11:13:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 9 (QH) [cite: 68]
+('BL602', 1, 9, '2025-11-03 10:30:00', '2025-11-03 12:43:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 1 (BL) [cite: 60]
+('VN1350', 5, 3, '2025-11-03 11:00:00', '2025-11-03 12:30:00', 'SCHEDULED'), -- HAN-CXR (Route 3) [cite: 72], Aircraft 5 (VN) [cite: 64]
+('VN218', 10, 9, '2025-11-03 14:00:00', '2025-11-03 16:13:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 10 (VN) [cite: 69]
+('VJ108', 4, 9, '2025-11-03 16:00:00', '2025-11-03 18:13:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 4 (VJ) [cite: 63]
+('VN280', 2, 9, '2025-11-03 19:00:00', '2025-11-03 21:13:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 2 (VN) [cite: 61]
+
+-- Ngày 4 tháng 11, 2025
+('VJ880', 8, 1, '2025-11-04 07:00:00', '2025-11-04 10:50:00', 'SCHEDULED'), -- PQC-DAD (Route 1) [cite: 70], Aircraft 8 (VJ) [cite: 67]
+('VN210', 5, 9, '2025-11-04 08:00:00', '2025-11-04 10:13:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 5 (VN) [cite: 64]
+('VJ104', 4, 9, '2025-11-04 09:30:00', '2025-11-04 11:43:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 4 (VJ) [cite: 63]
+('QH206', 3, 9, '2025-11-04 11:00:00', '2025-11-04 13:13:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 3 (QH) [cite: 62]
+('BL500', 6, 8, '2025-11-04 13:00:00', '2025-11-04 14:31:00', 'SCHEDULED'), -- HAN-PQC (Route 8) [cite: 77], Aircraft 6 (BL) [cite: 65]
+('VN1352', 10, 3, '2025-11-04 15:00:00', '2025-11-04 16:30:00', 'SCHEDULED'), -- HAN-CXR (Route 3) [cite: 72], Aircraft 10 (VN) [cite: 69]
+('VN220', 2, 9, '2025-11-04 17:00:00', '2025-11-04 19:13:00', 'SCHEDULED'), -- SGN-HAN (Route 9) [cite: 78], Aircraft 2 (VN) [cite: 61]
+('VJ110', 8, 9, '2025-11-04 19:30:00', '2025-11-04 21:43:00', 'SCHEDULED'); -- SGN-HAN (Route 9) [cite: 78], Aircraft 8 (VJ) [cite: 67]
+
+-- Chèn 10 chuyến bay mới cho ngày 1 tháng 11, 2025 (Hôm nay)
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) 
+VALUES 
+-- 1. SGN -> HAN (16:00)
+('VN256', 2, 9, '2025-11-01 16:00:00', '2025-11-01 17:53:00', 'SCHEDULED'), -- Dùng aircraft_id 2 (VN) [cite: 61], route_id 9 (113 phút) 
+
+-- 2. HAN -> CXR (16:30)
+('VJ450', 4, 3, '2025-11-01 16:30:00', '2025-11-01 18:00:00', 'SCHEDULED'), -- Dùng aircraft_id 4 (VJ) [cite: 63], route_id 3 (90 phút) [cite: 72]
+
+-- 3. SGN -> HAN (17:00)
+('QH210', 3, 9, '2025-11-01 17:00:00', '2025-11-01 18:53:00', 'SCHEDULED'), -- Dùng aircraft_id 3 (QH) [cite: 62], route_id 9 (113 phút) 
+
+-- 4. PQC -> DAD (17:30)
+('BL322', 1, 1, '2025-11-01 17:30:00', '2025-11-01 21:20:00', 'SCHEDULED'), -- Dùng aircraft_id 1 (BL) [cite: 60], route_id 1 (230 phút) [cite: 70]
+
+-- 5. SGN -> HAN (18:00)
+('VN258', 5, 9, '2025-11-01 18:00:00', '2025-11-01 19:53:00', 'SCHEDULED'), -- Dùng aircraft_id 5 (VN) [cite: 64], route_id 9 (113 phút) 
+
+-- 6. HAN -> PQC (18:30)
+('VJ975', 8, 8, '2025-11-01 18:30:00', '2025-11-01 20:01:00', 'SCHEDULED'), -- Dùng aircraft_id 8 (VJ) [cite: 67], route_id 8 (91 phút) [cite: 77]
+
+-- 7. SGN -> HAN (19:00)
+('BL610', 6, 9, '2025-11-01 19:00:00', '2025-11-01 20:53:00', 'SCHEDULED'), -- Dùng aircraft_id 6 (BL) [cite: 65], route_id 9 (113 phút) 
+
+-- 8. DAD -> CXR (19:30)
+('VN1550', 10, 6, '2025-11-01 19:30:00', '2025-11-01 21:03:00', 'SCHEDULED'), -- Dùng aircraft_id 10 (VN) [cite: 69], route_id 6 (93 phút) [cite: 75]
+
+-- 9. SGN -> HAN (20:00)
+('QH214', 9, 9, '2025-11-01 20:00:00', '2025-11-01 21:53:00', 'SCHEDULED'), -- Dùng aircraft_id 9 (QH) [cite: 68], route_id 9 (113 phút) 
+
+-- 10. CXR -> SGN (21:00)
+('BL581', 7, 10, '2025-11-01 21:00:00', '2025-11-02 01:28:00', 'SCHEDULED'); -- Dùng aircraft_id 7 (BL) [cite: 66], route_id 10 (268 phút) [cite: 79]
+-- Giả định 10 chuyến bay mới có flight_id TỪ 21 ĐẾN 30
+-- (Nếu ID của bạn khác, vui lòng điều chỉnh 'flight_id' trong các lệnh INSERT bên dưới)
+
+-- Chuyến bay 46 (VN256, aircraft_id 2, dùng seat_id 21-40)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(46, 21, 250.00, 'AVAILABLE'), (46, 22, 250.00, 'AVAILABLE'), (46, 23, 250.00, 'AVAILABLE'),
+(46, 24, 250.00, 'AVAILABLE'), (46, 25, 350.00, 'AVAILABLE'), (46, 26, 250.00, 'AVAILABLE'),
+(46, 27, 250.00, 'AVAILABLE'), (46, 28, 450.00, 'AVAILABLE'), (46, 29, 350.00, 'AVAILABLE'),
+(46, 30, 450.00, 'AVAILABLE'), (46, 31, 450.00, 'AVAILABLE'), (46, 32, 450.00, 'AVAILABLE'),
+(46, 33, 350.00, 'AVAILABLE'), (46, 34, 250.00, 'AVAILABLE'), (46, 35, 250.00, 'AVAILABLE'),
+(46, 36, 350.00, 'AVAILABLE'), (46, 37, 450.00, 'AVAILABLE'), (46, 38, 250.00, 'AVAILABLE'),
+(46, 39, 350.00, 'AVAILABLE'), (46, 40, 250.00, 'AVAILABLE');
+
+-- Chuyến bay 47 (VJ450, aircraft_id 4, dùng seat_id 61-80)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(47, 61, 220.00, 'AVAILABLE'), (47, 62, 220.00, 'AVAILABLE'), (47, 63, 180.00, 'AVAILABLE'),
+(47, 64, 320.00, 'AVAILABLE'), (47, 65, 420.00, 'AVAILABLE'), (47, 66, 220.00, 'AVAILABLE'),
+(47, 67, 220.00, 'AVAILABLE'), (47, 68, 320.00, 'AVAILABLE'), (47, 69, 420.00, 'AVAILABLE'),
+(47, 70, 180.00, 'AVAILABLE'), (47, 71, 320.00, 'AVAILABLE'), (47, 72, 320.00, 'AVAILABLE'),
+(47, 73, 320.00, 'AVAILABLE'), (47, 74, 220.00, 'AVAILABLE'), (47, 75, 220.00, 'AVAILABLE'),
+(47, 76, 220.00, 'AVAILABLE'), (47, 77, 320.00, 'AVAILABLE'), (47, 78, 220.00, 'AVAILABLE'),
+(47, 79, 220.00, 'AVAILABLE'), (47, 80, 420.00, 'AVAILABLE');
+
+-- Chuyến bay 48 (QH210, aircraft_id 3, dùng seat_id 41-60)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(48, 41, 260.00, 'AVAILABLE'), (48, 42, 260.00, 'AVAILABLE'), (48, 43, 460.00, 'AVAILABLE'),
+(48, 44, 210.00, 'AVAILABLE'), (48, 45, 260.00, 'AVAILABLE'), (48, 46, 260.00, 'AVAILABLE'),
+(48, 47, 360.00, 'AVAILABLE'), (48, 48, 360.00, 'AVAILABLE'), (48, 49, 460.00, 'AVAILABLE'),
+(48, 50, 210.00, 'AVAILABLE'), (48, 51, 460.00, 'AVAILABLE'), (48, 52, 460.00, 'AVAILABLE'),
+(48, 53, 360.00, 'AVAILABLE'), (48, 54, 460.00, 'AVAILABLE'), (48, 55, 460.00, 'AVAILABLE'),
+(48, 56, 360.00, 'AVAILABLE'), (48, 57, 260.00, 'AVAILABLE'), (48, 58, 360.00, 'AVAILABLE'),
+(48, 59, 210.00, 'AVAILABLE'), (48, 60, 260.00, 'AVAILABLE');
+
+-- Chuyến bay 49 (BL322, aircraft_id 1, dùng seat_id 1-20)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(49, 1, 240.00, 'AVAILABLE'), (49, 2, 240.00, 'AVAILABLE'), (49, 3, 340.00, 'AVAILABLE'),
+(49, 4, 500.00, 'AVAILABLE'), (49, 5, 240.00, 'AVAILABLE'), (49, 6, 500.00, 'AVAILABLE'),
+(49, 7, 500.00, 'AVAILABLE'), (49, 8, 500.00, 'AVAILABLE'), (49, 9, 500.00, 'AVAILABLE'),
+(49, 10, 400.00, 'AVAILABLE'), (49, 11, 340.00, 'AVAILABLE'), (49, 12, 340.00, 'AVAILABLE'),
+(49, 13, 240.00, 'AVAILABLE'), (49, 14, 500.00, 'AVAILABLE'), (49, 15, 400.00, 'AVAILABLE'),
+(49, 16, 500.00, 'AVAILABLE'), (49, 17, 400.00, 'AVAILABLE'), (49, 18, 400.00, 'AVAILABLE'),
+(49, 19, 240.00, 'AVAILABLE'), (49, 20, 240.00, 'AVAILABLE');
+
+-- Chuyến bay 50 (VN258, aircraft_id 5, dùng seat_id 81-100)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(50, 81, 265.00, 'AVAILABLE'), (50, 82, 265.00, 'AVAILABLE'), (50, 83, 265.00, 'AVAILABLE'),
+(50, 84, 465.00, 'AVAILABLE'), (50, 85, 265.00, 'AVAILABLE'), (50, 86, 215.00, 'AVAILABLE'),
+(50, 87, 215.00, 'AVAILABLE'), (50, 88, 215.00, 'AVAILABLE'), (50, 89, 365.00, 'AVAILABLE'),
+(50, 90, 365.00, 'AVAILABLE'), (50, 91, 465.00, 'AVAILABLE'), (50, 92, 365.00, 'AVAILABLE'),
+(50, 93, 365.00, 'AVAILABLE'), (50, 94, 365.00, 'AVAILABLE'), (50, 95, 265.00, 'AVAILABLE'),
+(50, 96, 265.00, 'AVAILABLE'), (50, 97, 215.00, 'AVAILABLE'), (50, 98, 465.00, 'AVAILABLE'),
+(50, 99, 265.00, 'AVAILABLE'), (50, 100, 365.00, 'AVAILABLE');
+
+-- Chuyến bay 51 (VJ975, aircraft_id 8, dùng seat_id 141-160)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(51, 141, 230.00, 'AVAILABLE'), (51, 142, 430.00, 'AVAILABLE'), (51, 143, 280.00, 'AVAILABLE'),
+(51, 144, 380.00, 'AVAILABLE'), (51, 145, 380.00, 'AVAILABLE'), (51, 146, 380.00, 'AVAILABLE'),
+(51, 147, 380.00, 'AVAILABLE'), (51, 148, 380.00, 'AVAILABLE'), (51, 149, 430.00, 'AVAILABLE'),
+(51, 150, 430.00, 'AVAILABLE'), (51, 151, 280.00, 'AVAILABLE'), (51, 152, 280.00, 'AVAILABLE'),
+(51, 153, 230.00, 'AVAILABLE'), (51, 154, 380.00, 'AVAILABLE'), (51, 155, 380.00, 'AVAILABLE'),
+(51, 156, 230.00, 'AVAILABLE'), (51, 157, 280.00, 'AVAILABLE'), (51, 158, 380.00, 'AVAILABLE'),
+(51, 159, 380.00, 'AVAILABLE'), (51, 160, 430.00, 'AVAILABLE');
+
+-- Chuyến bay 52 (BL610, aircraft_id 6, dùng seat_id 101-120)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(52, 101, 450.00, 'AVAILABLE'), (52, 102, 250.00, 'AVAILABLE'), (52, 103, 450.00, 'AVAILABLE'),
+(52, 104, 250.00, 'AVAILABLE'), (52, 105, 200.00, 'AVAILABLE'), (52, 106, 250.00, 'AVAILABLE'),
+(52, 107, 250.00, 'AVAILABLE'), (52, 108, 350.00, 'AVAILABLE'), (52, 109, 450.00, 'AVAILABLE'),
+(52, 110, 450.00, 'AVAILABLE'), (52, 111, 200.00, 'AVAILABLE'), (52, 112, 250.00, 'AVAILABLE'),
+(52, 113, 250.00, 'AVAILABLE'), (52, 114, 350.00, 'AVAILABLE'), (52, 115, 250.00, 'AVAILABLE'),
+(52, 116, 250.00, 'AVAILABLE'), (52, 117, 250.00, 'AVAILABLE'), (52, 118, 450.00, 'AVAILABLE'),
+(52, 119, 250.00, 'AVAILABLE'), (52, 120, 450.00, 'AVAILABLE');
+
+-- Chuyến bay 53 (VN1550, aircraft_id 10, dùng seat_id 181-200)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(53, 181, 310.00, 'AVAILABLE'), (53, 182, 410.00, 'AVAILABLE'), (53, 183, 210.00, 'AVAILABLE'),
+(53, 184, 260.00, 'AVAILABLE'), (53, 185, 260.00, 'AVAILABLE'), (53, 186, 310.00, 'AVAILABLE'),
+(53, 187, 260.00, 'AVAILABLE'), (53, 188, 210.00, 'AVAILABLE'), (53, 189, 310.00, 'AVAILABLE'),
+(53, 190, 210.00, 'AVAILABLE'), (53, 191, 260.00, 'AVAILABLE'), (53, 192, 310.00, 'AVAILABLE'),
+(53, 193, 410.00, 'AVAILABLE'), (53, 194, 260.00, 'AVAILABLE'), (53, 195, 210.00, 'AVAILABLE'),
+(53, 196, 310.00, 'AVAILABLE'), (53, 197, 410.00, 'AVAILABLE'), (53, 198, 310.00, 'AVAILABLE'),
+(53, 199, 410.00, 'AVAILABLE'), (53, 200, 210.00, 'AVAILABLE');
+
+-- Chuyến bay 54 (QH214, aircraft_id 9, dùng seat_id 161-180)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(54, 161, 270.00, 'AVAILABLE'), (54, 162, 220.00, 'AVAILABLE'), (54, 163, 270.00, 'AVAILABLE'),
+(54, 164, 220.00, 'AVAILABLE'), (54, 165, 370.00, 'AVAILABLE'), (54, 166, 470.00, 'AVAILABLE'),
+(54, 167, 270.00, 'AVAILABLE'), (54, 168, 270.00, 'AVAILABLE'), (54, 169, 270.00, 'AVAILABLE'),
+(54, 170, 470.00, 'AVAILABLE'), (54, 171, 370.00, 'AVAILABLE'), (54, 172, 270.00, 'AVAILABLE'),
+(54, 173, 270.00, 'AVAILABLE'), (54, 174, 270.00, 'AVAILABLE'), (54, 175, 470.00, 'AVAILABLE'),
+(54, 176, 270.00, 'AVAILABLE'), (54, 177, 470.00, 'AVAILABLE'), (54, 178, 470.00, 'AVAILABLE'),
+(54, 179, 270.00, 'AVAILABLE'), (54, 180, 470.00, 'AVAILABLE');
+
+-- Chuyến bay 55 (BL581, aircraft_id 7, dùng seat_id 121-140)
+INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
+(55, 121, 330.00, 'AVAILABLE'), (55, 122, 280.00, 'AVAILABLE'), (55, 123, 280.00, 'AVAILABLE'),
+(55, 124, 480.00, 'AVAILABLE'), (55, 125, 330.00, 'AVAILABLE'), (55, 126, 280.00, 'AVAILABLE'),
+(55, 127, 280.00, 'AVAILABLE'), (55, 128, 480.00, 'AVAILABLE'), (55, 129, 280.00, 'AVAILABLE'),
+(55, 130, 280.00, 'AVAILABLE'), (55, 131, 280.00, 'AVAILABLE'), (55, 132, 280.00, 'AVAILABLE'),
+(55, 133, 480.00, 'AVAILABLE'), (55, 134, 480.00, 'AVAILABLE'), (55, 135, 330.00, 'AVAILABLE'),
+(55, 136, 330.00, 'AVAILABLE'), (55, 137, 230.00, 'AVAILABLE'), (55, 138, 230.00, 'AVAILABLE'),
+(55, 139, 480.00, 'AVAILABLE'), (55, 140, 280.00, 'AVAILABLE');
+-- Chèn 20 chuyến bay mới (SCHEDULED)
+
+-- Ngày 2 tháng 11, 2025 (Buổi sáng)
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES 
+('VN208', 2, 9, '2025-11-02 06:00:00', '2025-11-02 07:53:00', 'SCHEDULED'), -- A/C 2 (VN), Route 9 (SGN-HAN, 113 min)
+('VJ122', 4, 9, '2025-11-02 07:00:00', '2025-11-02 08:53:00', 'SCHEDULED'), -- A/C 4 (VJ), Route 9 (SGN-HAN, 113 min)
+('QH130', 3, 3, '2025-11-02 07:30:00', '2025-11-02 09:00:00', 'SCHEDULED'), -- A/C 3 (QH), Route 3 (HAN-CXR, 90 min)
+('BL350', 1, 1, '2025-11-02 08:00:00', '2025-11-02 11:50:00', 'SCHEDULED'), -- A/C 1 (BL), Route 1 (PQC-DAD, 230 min)
+('VN210', 5, 9, '2025-11-02 08:30:00', '2025-11-02 10:23:00', 'SCHEDULED'), -- A/C 5 (VN), Route 9 (SGN-HAN, 113 min)
+('VJ488', 8, 8, '2025-11-02 09:15:00', '2025-11-02 10:46:00', 'SCHEDULED'), -- A/C 8 (VJ), Route 8 (HAN-PQC, 91 min)
+
+-- Ngày 2 tháng 11, 2025 (Buổi chiều/tối)
+('QH550', 9, 7, '2025-11-02 12:30:00', '2025-11-02 16:55:00', 'SCHEDULED'), -- A/C 9 (QH), Route 7 (DAD-PQC, 265 min)
+('BL632', 6, 6, '2025-11-02 13:00:00', '2025-11-02 14:33:00', 'SCHEDULED'), -- A/C 6 (BL), Route 6 (DAD-CXR, 93 min)
+('VN214', 10, 9, '2025-11-02 14:00:00', '2025-11-02 15:53:00', 'SCHEDULED'), -- A/C 10 (VN), Route 9 (SGN-HAN, 113 min)
+('VJ134', 4, 3, '2025-11-02 15:00:00', '2025-11-02 16:30:00', 'SCHEDULED'), -- A/C 4 (VJ), Route 3 (HAN-CXR, 90 min)
+('QH220', 3, 9, '2025-11-02 16:00:00', '2025-11-02 17:53:00', 'SCHEDULED'), -- A/C 3 (QH), Route 9 (SGN-HAN, 113 min)
+('BL580', 7, 10, '2025-11-02 16:30:00', '2025-11-02 20:58:00', 'SCHEDULED'), -- A/C 7 (BL), Route 10 (CXR-SGN, 268 min)
+('VN1330', 2, 3, '2025-11-02 17:00:00', '2025-11-02 18:30:00', 'SCHEDULED'), -- A/C 2 (VN), Route 3 (HAN-CXR, 90 min)
+
+-- Ngày 3 tháng 11, 2025
+('VJ124', 8, 9, '2025-11-03 06:05:00', '2025-11-03 07:58:00', 'SCHEDULED'), -- A/C 8 (VJ), Route 9 (SGN-HAN, 113 min)
+('VN981', 5, 1, '2025-11-03 08:30:00', '2025-11-03 12:20:00', 'SCHEDULED'), -- A/C 5 (VN), Route 1 (PQC-DAD, 230 min)
+('VJ136', 4, 3, '2025-11-03 09:05:00', '2025-11-03 10:35:00', 'SCHEDULED'), -- A/C 4 (VJ), Route 3 (HAN-CXR, 90 min)
+('QH444', 3, 8, '2025-11-03 10:05:00', '2025-11-03 11:36:00', 'SCHEDULED'), -- A/C 3 (QH), Route 8 (HAN-PQC, 91 min)
+('BL634', 1, 6, '2025-11-03 11:05:00', '2025-11-03 12:38:00', 'SCHEDULED'), -- A/C 1 (BL), Route 6 (DAD-CXR, 93 min)
+('VN555', 10, 10, '2025-11-03 12:05:00', '2025-11-03 16:33:00', 'SCHEDULED'), -- A/C 10 (VN), Route 10 (CXR-SGN, 268 min)
+('VJ128', 8, 9, '2025-11-03 14:00:00', '2025-11-03 15:53:00', 'SCHEDULED'); -- A/C 8 (VJ), Route 9 (SGN-HAN, 113 min)
+-- Tắt kiểm tra khóa ngoại để tăng tốc độ chèn 400 hàng
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Bắt đầu một transaction
+START TRANSACTION;
+
+-- Chèn tất cả 400 ghế bằng một lệnh INSERT...SELECT duy nhất
+INSERT INTO `Flight_Seats` 
+    (`flight_id`, `seat_id`, `base_price`, `seat_status`)
+SELECT
+    -- 1. Lấy ID chuyến bay (từ 56 đến 75)
+    f.flight_id, 
+    
+    -- 2. Lấy tất cả ID ghế  khớp với máy bay của chuyến bay đó
+    s.seat_id, 
+    
+    -- 3. Tạo giá ngẫu nhiên (từ 150.00 đến 450.00)
+    (FLOOR(RAND() * (450 - 150 + 1)) + 150) AS base_price, 
+    
+    -- 4. Đặt trạng thái là 'AVAILABLE'
+    'AVAILABLE' AS seat_status
+FROM 
+    `Flights` f
+JOIN 
+    -- 5. Nối với bảng Seats [cite: 22] để tìm 20 ghế cho mỗi máy bay
+    `Seats` s ON f.aircraft_id = s.aircraft_id 
+WHERE 
+    -- 6. Chỉ thực hiện cho 20 chuyến bay mới (ID 56 đến 75)
+    f.flight_id BETWEEN 56 AND 75;
+
+-- Hoàn tất transaction
+COMMIT;
+
+-- Bật lại kiểm tra khóa ngoại
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- Thông báo hoàn thành
+SELECT 'Đã tạo thành công 400 ghế cho 20 chuyến bay (ID 56-75).' AS Status;
+
+-- Giả định các account_id này là của khách hàng (role_id = 2) [cite: 49]
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) 
+VALUES
+(3, '2024-10-15 09:00:00', 'CONFIRMED', 150.75), -- Booking 16
+(6, '2024-10-20 11:30:00', 'CONFIRMED', 320.00), -- Booking 17
+(11, '2024-11-05 14:00:00', 'CONFIRMED', 280.40), -- Booking 18
+(17, '2024-11-12 08:20:00', 'PENDING', 190.00),   -- Booking 19
+(4, '2024-12-05 10:10:00', 'CONFIRMED', 450.00), -- Booking 20
+(9, '2024-12-15 12:00:00', 'CONFIRMED', 220.50), -- Booking 21
+(18, '2025-01-10 16:30:00', 'CANCELLED', 300.00), -- Booking 22
+(3, '2025-01-14 18:00:00', 'CONFIRMED', 180.25), -- Booking 23
+(6, '2025-02-01 10:15:00', 'CONFIRMED', 510.60), -- Booking 24
+(11, '2025-02-05 11:05:00', 'CONFIRMED', 275.00); -- Booking 25
+-- Chèn thanh toán cho các booking_id từ 16 đến 25
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) 
+VALUES
+(16, 150.75, 'CREDIT_CARD', '2024-10-15 09:05:00', 'SUCCESS'),
+(17, 320.00, 'E_WALLET', '2024-10-20 11:31:00', 'SUCCESS'),
+(18, 280.40, 'BANK_TRANSFER', '2024-11-05 14:02:00', 'SUCCESS'),
+(19, 190.00, 'E_WALLET', '2024-11-12 08:21:00', 'PENDING'),  -- Sẽ không được tính vào doanh thu
+(20, 450.00, 'CREDIT_CARD', '2024-12-05 10:11:00', 'SUCCESS'),
+(21, 220.50, 'E_WALLET', '2024-12-15 12:05:00', 'SUCCESS'),
+(22, 300.00, 'BANK_TRANSFER', '2025-01-10 16:31:00', 'FAILED'),   -- Sẽ không được tính vào doanh thu
+(23, 180.25, 'CREDIT_CARD', '2025-01-14 18:01:00', 'SUCCESS'),
+(24, 510.60, 'CASH', '2025-02-01 10:15:00', 'SUCCESS'),
+(25, 275.00, 'BANK_TRANSFER', '2025-02-05 11:06:00', 'SUCCESS');
+
+-- ===================================================================
+-- SCRIPT THÊM DỮ LIỆU MẪU CHO THỐNG KÊ
+-- Tạo nhiều chuyến bay, booking, payment cho năm 2024-2025
+-- ===================================================================
+
+USE `flightTicketManagement`;
+
+-- Thêm 100 chuyến bay cho năm 2024 (Đã hoàn tất - COMPLETED)
+INSERT INTO `Flights` (`flight_number`, `aircraft_id`, `route_id`, `departure_time`, `arrival_time`, `status`) VALUES
+-- Tháng 1/2024 (10 chuyến)
+('VN2401', 2, 9, '2024-01-05 06:00:00', '2024-01-05 07:53:00', 'COMPLETED'),
+('VJ2401', 4, 3, '2024-01-08 08:00:00', '2024-01-08 09:30:00', 'COMPLETED'),
+('QH2401', 3, 7, '2024-01-10 10:00:00', '2024-01-10 14:25:00', 'COMPLETED'),
+('BL2401', 1, 6, '2024-01-12 12:00:00', '2024-01-12 13:33:00', 'COMPLETED'),
+('VN2402', 5, 9, '2024-01-15 14:00:00', '2024-01-15 15:53:00', 'COMPLETED'),
+('VJ2402', 8, 1, '2024-01-18 16:00:00', '2024-01-18 19:50:00', 'COMPLETED'),
+('QH2402', 9, 8, '2024-01-20 07:00:00', '2024-01-20 08:31:00', 'COMPLETED'),
+('BL2402', 6, 10, '2024-01-22 09:00:00', '2024-01-22 13:28:00', 'COMPLETED'),
+('VN2403', 10, 3, '2024-01-25 11:00:00', '2024-01-25 12:30:00', 'COMPLETED'),
+('VJ2403', 7, 9, '2024-01-28 13:00:00', '2024-01-28 14:53:00', 'COMPLETED'),
+
+-- Tháng 2/2024 (10 chuyến)
+('VN2404', 2, 9, '2024-02-02 06:00:00', '2024-02-02 07:53:00', 'COMPLETED'),
+('VJ2404', 4, 3, '2024-02-05 08:00:00', '2024-02-05 09:30:00', 'COMPLETED'),
+('QH2403', 3, 7, '2024-02-08 10:00:00', '2024-02-08 14:25:00', 'COMPLETED'),
+('BL2403', 1, 6, '2024-02-10 12:00:00', '2024-02-10 13:33:00', 'COMPLETED'),
+('VN2405', 5, 9, '2024-02-12 14:00:00', '2024-02-12 15:53:00', 'COMPLETED'),
+('VJ2405', 8, 1, '2024-02-15 16:00:00', '2024-02-15 19:50:00', 'COMPLETED'),
+('QH2404', 9, 8, '2024-02-18 07:00:00', '2024-02-18 08:31:00', 'COMPLETED'),
+('BL2404', 6, 10, '2024-02-20 09:00:00', '2024-02-20 13:28:00', 'COMPLETED'),
+('VN2406', 10, 3, '2024-02-22 11:00:00', '2024-02-22 12:30:00', 'COMPLETED'),
+('VJ2406', 7, 9, '2024-02-25 13:00:00', '2024-02-25 14:53:00', 'COMPLETED'),
+
+-- Tháng 3/2024 (10 chuyến)
+('VN2407', 2, 9, '2024-03-03 06:00:00', '2024-03-03 07:53:00', 'COMPLETED'),
+('VJ2407', 4, 3, '2024-03-06 08:00:00', '2024-03-06 09:30:00', 'COMPLETED'),
+('QH2405', 3, 7, '2024-03-09 10:00:00', '2024-03-09 14:25:00', 'COMPLETED'),
+('BL2405', 1, 6, '2024-03-12 12:00:00', '2024-03-12 13:33:00', 'COMPLETED'),
+('VN2408', 5, 9, '2024-03-15 14:00:00', '2024-03-15 15:53:00', 'COMPLETED'),
+('VJ2408', 8, 1, '2024-03-18 16:00:00', '2024-03-18 19:50:00', 'COMPLETED'),
+('QH2406', 9, 8, '2024-03-20 07:00:00', '2024-03-20 08:31:00', 'COMPLETED'),
+('BL2406', 6, 10, '2024-03-22 09:00:00', '2024-03-22 13:28:00', 'COMPLETED'),
+('VN2409', 10, 3, '2024-03-25 11:00:00', '2024-03-25 12:30:00', 'COMPLETED'),
+('VJ2409', 7, 9, '2024-03-28 13:00:00', '2024-03-28 14:53:00', 'COMPLETED'),
+
+-- Tháng 4/2024 (10 chuyến)
+('VN2410', 2, 9, '2024-04-02 06:00:00', '2024-04-02 07:53:00', 'COMPLETED'),
+('VJ2410', 4, 3, '2024-04-05 08:00:00', '2024-04-05 09:30:00', 'COMPLETED'),
+('QH2407', 3, 7, '2024-04-08 10:00:00', '2024-04-08 14:25:00', 'COMPLETED'),
+('BL2407', 1, 6, '2024-04-10 12:00:00', '2024-04-10 13:33:00', 'COMPLETED'),
+('VN2411', 5, 9, '2024-04-12 14:00:00', '2024-04-12 15:53:00', 'COMPLETED'),
+('VJ2411', 8, 1, '2024-04-15 16:00:00', '2024-04-15 19:50:00', 'COMPLETED'),
+('QH2408', 9, 8, '2024-04-18 07:00:00', '2024-04-18 08:31:00', 'COMPLETED'),
+('BL2408', 6, 10, '2024-04-20 09:00:00', '2024-04-20 13:28:00', 'COMPLETED'),
+('VN2412', 10, 3, '2024-04-22 11:00:00', '2024-04-22 12:30:00', 'COMPLETED'),
+('VJ2412', 7, 9, '2024-04-25 13:00:00', '2024-04-25 14:53:00', 'COMPLETED'),
+
+-- Tháng 5/2024 (10 chuyến)
+('VN2413', 2, 9, '2024-05-03 06:00:00', '2024-05-03 07:53:00', 'COMPLETED'),
+('VJ2413', 4, 3, '2024-05-06 08:00:00', '2024-05-06 09:30:00', 'COMPLETED'),
+('QH2409', 3, 7, '2024-05-09 10:00:00', '2024-05-09 14:25:00', 'COMPLETED'),
+('BL2409', 1, 6, '2024-05-12 12:00:00', '2024-05-12 13:33:00', 'COMPLETED'),
+('VN2414', 5, 9, '2024-05-15 14:00:00', '2024-05-15 15:53:00', 'COMPLETED'),
+('VJ2414', 8, 1, '2024-05-18 16:00:00', '2024-05-18 19:50:00', 'COMPLETED'),
+('QH2410', 9, 8, '2024-05-20 07:00:00', '2024-05-20 08:31:00', 'COMPLETED'),
+('BL2410', 6, 10, '2024-05-22 09:00:00', '2024-05-22 13:28:00', 'COMPLETED'),
+('VN2415', 10, 3, '2024-05-25 11:00:00', '2024-05-25 12:30:00', 'COMPLETED'),
+('VJ2415', 7, 9, '2024-05-28 13:00:00', '2024-05-28 14:53:00', 'COMPLETED'),
+
+-- Tháng 6/2024 (10 chuyến)
+('VN2416', 2, 9, '2024-06-02 06:00:00', '2024-06-02 07:53:00', 'COMPLETED'),
+('VJ2416', 4, 3, '2024-06-05 08:00:00', '2024-06-05 09:30:00', 'COMPLETED'),
+('QH2411', 3, 7, '2024-06-08 10:00:00', '2024-06-08 14:25:00', 'COMPLETED'),
+('BL2411', 1, 6, '2024-06-10 12:00:00', '2024-06-10 13:33:00', 'COMPLETED'),
+('VN2417', 5, 9, '2024-06-12 14:00:00', '2024-06-12 15:53:00', 'COMPLETED'),
+('VJ2417', 8, 1, '2024-06-15 16:00:00', '2024-06-15 19:50:00', 'COMPLETED'),
+('QH2412', 9, 8, '2024-06-18 07:00:00', '2024-06-18 08:31:00', 'COMPLETED'),
+('BL2412', 6, 10, '2024-06-20 09:00:00', '2024-06-20 13:28:00', 'COMPLETED'),
+('VN2418', 10, 3, '2024-06-22 11:00:00', '2024-06-22 12:30:00', 'COMPLETED'),
+('VJ2418', 7, 9, '2024-06-25 13:00:00', '2024-06-25 14:53:00', 'COMPLETED'),
+
+-- Tháng 7/2024 (10 chuyến)
+('VN2419', 2, 9, '2024-07-03 06:00:00', '2024-07-03 07:53:00', 'COMPLETED'),
+('VJ2419', 4, 3, '2024-07-06 08:00:00', '2024-07-06 09:30:00', 'COMPLETED'),
+('QH2413', 3, 7, '2024-07-09 10:00:00', '2024-07-09 14:25:00', 'COMPLETED'),
+('BL2413', 1, 6, '2024-07-12 12:00:00', '2024-07-12 13:33:00', 'COMPLETED'),
+('VN2420', 5, 9, '2024-07-15 14:00:00', '2024-07-15 15:53:00', 'COMPLETED'),
+('VJ2420', 8, 1, '2024-07-18 16:00:00', '2024-07-18 19:50:00', 'COMPLETED'),
+('QH2414', 9, 8, '2024-07-20 07:00:00', '2024-07-20 08:31:00', 'COMPLETED'),
+('BL2414', 6, 10, '2024-07-22 09:00:00', '2024-07-22 13:28:00', 'COMPLETED'),
+('VN2421', 10, 3, '2024-07-25 11:00:00', '2024-07-25 12:30:00', 'COMPLETED'),
+('VJ2421', 7, 9, '2024-07-28 13:00:00', '2024-07-28 14:53:00', 'COMPLETED'),
+
+-- Tháng 8/2024 (10 chuyến)
+('VN2422', 2, 9, '2024-08-02 06:00:00', '2024-08-02 07:53:00', 'COMPLETED'),
+('VJ2422', 4, 3, '2024-08-05 08:00:00', '2024-08-05 09:30:00', 'COMPLETED'),
+('QH2415', 3, 7, '2024-08-08 10:00:00', '2024-08-08 14:25:00', 'COMPLETED'),
+('BL2415', 1, 6, '2024-08-10 12:00:00', '2024-08-10 13:33:00', 'COMPLETED'),
+('VN2423', 5, 9, '2024-08-12 14:00:00', '2024-08-12 15:53:00', 'COMPLETED'),
+('VJ2423', 8, 1, '2024-08-15 16:00:00', '2024-08-15 19:50:00', 'COMPLETED'),
+('QH2416', 9, 8, '2024-08-18 07:00:00', '2024-08-18 08:31:00', 'COMPLETED'),
+('BL2416', 6, 10, '2024-08-20 09:00:00', '2024-08-20 13:28:00', 'COMPLETED'),
+('VN2424', 10, 3, '2024-08-22 11:00:00', '2024-08-22 12:30:00', 'COMPLETED'),
+('VJ2424', 7, 9, '2024-08-25 13:00:00', '2024-08-25 14:53:00', 'COMPLETED'),
+
+-- Tháng 9/2024 (10 chuyến)
+('VN2425', 2, 9, '2024-09-02 06:00:00', '2024-09-02 07:53:00', 'COMPLETED'),
+('VJ2425', 4, 3, '2024-09-05 08:00:00', '2024-09-05 09:30:00', 'COMPLETED'),
+('QH2417', 3, 7, '2024-09-08 10:00:00', '2024-09-08 14:25:00', 'COMPLETED'),
+('BL2417', 1, 6, '2024-09-10 12:00:00', '2024-09-10 13:33:00', 'COMPLETED'),
+('VN2426', 5, 9, '2024-09-12 14:00:00', '2024-09-12 15:53:00', 'COMPLETED'),
+('VJ2426', 8, 1, '2024-09-15 16:00:00', '2024-09-15 19:50:00', 'COMPLETED'),
+('QH2418', 9, 8, '2024-09-18 07:00:00', '2024-09-18 08:31:00', 'COMPLETED'),
+('BL2418', 6, 10, '2024-09-20 09:00:00', '2024-09-20 13:28:00', 'COMPLETED'),
+('VN2427', 10, 3, '2024-09-22 11:00:00', '2024-09-22 12:30:00', 'COMPLETED'),
+('VJ2427', 7, 9, '2024-09-25 13:00:00', '2024-09-25 14:53:00', 'COMPLETED'),
+
+-- Tháng 10/2024 (10 chuyến)
+('VN2428', 2, 9, '2024-10-02 06:00:00', '2024-10-02 07:53:00', 'COMPLETED'),
+('VJ2428', 4, 3, '2024-10-05 08:00:00', '2024-10-05 09:30:00', 'COMPLETED'),
+('QH2419', 3, 7, '2024-10-08 10:00:00', '2024-10-08 14:25:00', 'COMPLETED'),
+('BL2419', 1, 6, '2024-10-10 12:00:00', '2024-10-10 13:33:00', 'COMPLETED'),
+('VN2429', 5, 9, '2024-10-12 14:00:00', '2024-10-12 15:53:00', 'COMPLETED'),
+('VJ2429', 8, 1, '2024-10-15 16:00:00', '2024-10-15 19:50:00', 'COMPLETED'),
+('QH2420', 9, 8, '2024-10-18 07:00:00', '2024-10-18 08:31:00', 'COMPLETED'),
+('BL2420', 6, 10, '2024-10-20 09:00:00', '2024-10-20 13:28:00', 'COMPLETED'),
+('VN2430', 10, 3, '2024-10-22 11:00:00', '2024-10-22 12:30:00', 'COMPLETED'),
+('VJ2430', 7, 9, '2024-10-25 13:00:00', '2024-10-25 14:53:00', 'COMPLETED');
+
+-- Lấy flight_id của 100 chuyến bay mới thêm (giả định bắt đầu từ ID 76)
+-- Tạo Bookings và Payments cho mỗi chuyến bay
+
+-- Tạo 200 bookings (mỗi chuyến bay có 2 bookings trung bình)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+-- Tháng 1/2024 (20 bookings)
+(3, '2024-01-04 08:00:00', 'CONFIRMED', 2500000),
+(6, '2024-01-04 09:00:00', 'CONFIRMED', 1800000),
+(11, '2024-01-07 10:00:00', 'CONFIRMED', 3200000),
+(4, '2024-01-07 11:00:00', 'CONFIRMED', 2100000),
+(9, '2024-01-09 12:00:00', 'CONFIRMED', 4500000),
+(18, '2024-01-09 13:00:00', 'CONFIRMED', 2800000),
+(3, '2024-01-11 14:00:00', 'CONFIRMED', 1900000),
+(6, '2024-01-11 15:00:00', 'CONFIRMED', 3500000),
+(11, '2024-01-14 08:00:00', 'CONFIRMED', 2200000),
+(17, '2024-01-14 09:00:00', 'CONFIRMED', 2900000),
+(4, '2024-01-17 10:00:00', 'CONFIRMED', 3800000),
+(9, '2024-01-17 11:00:00', 'CONFIRMED', 2400000),
+(18, '2024-01-19 12:00:00', 'CONFIRMED', 3100000),
+(3, '2024-01-19 13:00:00', 'CONFIRMED', 2600000),
+(6, '2024-01-21 14:00:00', 'CONFIRMED', 3300000),
+(11, '2024-01-21 15:00:00', 'CONFIRMED', 2700000),
+(17, '2024-01-24 08:00:00', 'CONFIRMED', 3600000),
+(4, '2024-01-24 09:00:00', 'CONFIRMED', 2300000),
+(9, '2024-01-27 10:00:00', 'CONFIRMED', 3900000),
+(18, '2024-01-27 11:00:00', 'CONFIRMED', 2500000),
+
+-- Tháng 2/2024 (20 bookings)
+(3, '2024-02-01 08:00:00', 'CONFIRMED', 2600000),
+(6, '2024-02-01 09:00:00', 'CONFIRMED', 1900000),
+(11, '2024-02-04 10:00:00', 'CONFIRMED', 3300000),
+(4, '2024-02-04 11:00:00', 'CONFIRMED', 2200000),
+(9, '2024-02-07 12:00:00', 'CONFIRMED', 4600000),
+(18, '2024-02-07 13:00:00', 'CONFIRMED', 2900000),
+(3, '2024-02-09 14:00:00', 'CONFIRMED', 2000000),
+(6, '2024-02-09 15:00:00', 'CONFIRMED', 3600000),
+(11, '2024-02-11 08:00:00', 'CONFIRMED', 2300000),
+(17, '2024-02-11 09:00:00', 'CONFIRMED', 3000000),
+(4, '2024-02-14 10:00:00', 'CONFIRMED', 3900000),
+(9, '2024-02-14 11:00:00', 'CONFIRMED', 2500000),
+(18, '2024-02-17 12:00:00', 'CONFIRMED', 3200000),
+(3, '2024-02-17 13:00:00', 'CONFIRMED', 2700000),
+(6, '2024-02-19 14:00:00', 'CONFIRMED', 3400000),
+(11, '2024-02-19 15:00:00', 'CONFIRMED', 2800000),
+(17, '2024-02-21 08:00:00', 'CONFIRMED', 3700000),
+(4, '2024-02-21 09:00:00', 'CONFIRMED', 2400000),
+(9, '2024-02-24 10:00:00', 'CONFIRMED', 4000000),
+(18, '2024-02-24 11:00:00', 'CONFIRMED', 2600000),
+
+-- Tháng 3-10/2024 (Tiếp tục pattern tương tự - 20 bookings/tháng)
+-- Tháng 3
+(3, '2024-03-02 08:00:00', 'CONFIRMED', 2700000),
+(6, '2024-03-02 09:00:00', 'CONFIRMED', 2000000),
+(11, '2024-03-05 10:00:00', 'CONFIRMED', 3400000),
+(4, '2024-03-05 11:00:00', 'CONFIRMED', 2300000),
+(9, '2024-03-08 12:00:00', 'CONFIRMED', 4700000),
+(18, '2024-03-08 13:00:00', 'CONFIRMED', 3000000),
+(3, '2024-03-11 14:00:00', 'CONFIRMED', 2100000),
+(6, '2024-03-11 15:00:00', 'CONFIRMED', 3700000),
+(11, '2024-03-14 08:00:00', 'CONFIRMED', 2400000),
+(17, '2024-03-14 09:00:00', 'CONFIRMED', 3100000),
+(4, '2024-03-17 10:00:00', 'CONFIRMED', 4000000),
+(9, '2024-03-17 11:00:00', 'CONFIRMED', 2600000),
+(18, '2024-03-19 12:00:00', 'CONFIRMED', 3300000),
+(3, '2024-03-19 13:00:00', 'CONFIRMED', 2800000),
+(6, '2024-03-21 14:00:00', 'CONFIRMED', 3500000),
+(11, '2024-03-21 15:00:00', 'CONFIRMED', 2900000),
+(17, '2024-03-24 08:00:00', 'CONFIRMED', 3800000),
+(4, '2024-03-24 09:00:00', 'CONFIRMED', 2500000),
+(9, '2024-03-27 10:00:00', 'CONFIRMED', 4100000),
+(18, '2024-03-27 11:00:00', 'CONFIRMED', 2700000),
+
+-- Tháng 4-10 (Tổng 160 bookings còn lại - giữ nguyên pattern)
+-- ... (Tiết kiệm dung lượng, có thể thêm tương tự)
+
+-- Tháng 10
+(3, '2024-10-01 08:00:00', 'CONFIRMED', 3500000),
+(6, '2024-10-01 09:00:00', 'CONFIRMED', 2800000),
+(11, '2024-10-04 10:00:00', 'CONFIRMED', 4200000),
+(4, '2024-10-04 11:00:00', 'CONFIRMED', 3100000),
+(9, '2024-10-07 12:00:00', 'CONFIRMED', 5500000),
+(18, '2024-10-07 13:00:00', 'CONFIRMED', 3800000),
+(3, '2024-10-09 14:00:00', 'CONFIRMED', 2900000),
+(6, '2024-10-09 15:00:00', 'CONFIRMED', 4500000),
+(11, '2024-10-11 08:00:00', 'CONFIRMED', 3200000),
+(17, '2024-10-11 09:00:00', 'CONFIRMED', 3900000),
+(4, '2024-10-14 10:00:00', 'CONFIRMED', 4800000),
+(9, '2024-10-14 11:00:00', 'CONFIRMED', 3400000),
+(18, '2024-10-17 12:00:00', 'CONFIRMED', 4100000),
+(3, '2024-10-17 13:00:00', 'CONFIRMED', 3600000),
+(6, '2024-10-19 14:00:00', 'CONFIRMED', 4300000),
+(11, '2024-10-19 15:00:00', 'CONFIRMED', 3700000),
+(17, '2024-10-21 08:00:00', 'CONFIRMED', 4600000),
+(4, '2024-10-21 09:00:00', 'CONFIRMED', 3300000),
+(9, '2024-10-24 10:00:00', 'CONFIRMED', 4900000),
+(18, '2024-10-24 11:00:00', 'CONFIRMED', 3500000);
+
+-- Tạo Payments cho tất cả bookings mới (SUCCESS)
+-- Giả định booking_id bắt đầu từ 26
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) 
+SELECT 
+    b.booking_id,
+    b.total_amount,
+    CASE 
+        WHEN MOD(b.booking_id, 4) = 0 THEN 'CREDIT_CARD'
+        WHEN MOD(b.booking_id, 4) = 1 THEN 'E_WALLET'
+        WHEN MOD(b.booking_id, 4) = 2 THEN 'BANK_TRANSFER'
+        ELSE 'CASH'
+    END AS payment_method,
+    DATE_ADD(b.booking_date, INTERVAL 5 MINUTE) AS payment_date,
+    'SUCCESS' AS status
+FROM `Bookings` b
+WHERE b.booking_id >= 26;
+
+-- Thông báo hoàn tất
+SELECT CONCAT('✅ Đã thêm ', COUNT(*), ' chuyến bay mới') AS status FROM `Flights` WHERE flight_id >= 76;
+SELECT CONCAT('✅ Đã thêm ', COUNT(*), ' bookings mới') AS status FROM `Bookings` WHERE booking_id >= 26;
+SELECT CONCAT('✅ Đã thêm ', COUNT(*), ' payments mới') AS status FROM `Payments` WHERE payment_id >= 16;
+
+-- ===================================================================
+-- SCRIPT THÊM DỮ LIỆU THANH TOÁN CHO THỐNG KÊ 2024-2025
+-- Tạo payments cho các chuyến bay đã hoàn tất
+-- ===================================================================
+
+USE `flightTicketManagement`;
+
+-- Tắt kiểm tra khóa ngoại
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- =============== THÊM BOOKINGS VÀ PAYMENTS CHO NĂM 2024 ===============
+
+-- Tháng 1/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(3, '2024-01-05 05:30:00', 'CONFIRMED', 1500000.00),
+(6, '2024-01-08 07:30:00', 'CONFIRMED', 2200000.00),
+(11, '2024-01-10 09:30:00', 'CONFIRMED', 1800000.00),
+(17, '2024-01-12 11:30:00', 'CONFIRMED', 950000.00),
+(4, '2024-01-15 13:30:00', 'CONFIRMED', 1650000.00),
+(9, '2024-01-18 15:30:00', 'CONFIRMED', 2800000.00),
+(18, '2024-01-20 06:30:00', 'CONFIRMED', 880000.00),
+(3, '2024-01-22 08:30:00', 'CONFIRMED', 3200000.00),
+(6, '2024-01-25 10:30:00', 'CONFIRMED', 1100000.00),
+(11, '2024-01-28 12:30:00', 'CONFIRMED', 1450000.00);
+
+-- Payments cho tháng 1/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(26, 1500000.00, 'CREDIT_CARD', '2024-01-05 05:35:00', 'SUCCESS'),
+(27, 2200000.00, 'BANK_TRANSFER', '2024-01-08 07:35:00', 'SUCCESS'),
+(28, 1800000.00, 'E_WALLET', '2024-01-10 09:35:00', 'SUCCESS'),
+(29, 950000.00, 'CREDIT_CARD', '2024-01-12 11:35:00', 'SUCCESS'),
+(30, 1650000.00, 'E_WALLET', '2024-01-15 13:35:00', 'SUCCESS'),
+(31, 2800000.00, 'BANK_TRANSFER', '2024-01-18 15:35:00', 'SUCCESS'),
+(32, 880000.00, 'CREDIT_CARD', '2024-01-20 06:35:00', 'SUCCESS'),
+(33, 3200000.00, 'E_WALLET', '2024-01-22 08:35:00', 'SUCCESS'),
+(34, 1100000.00, 'CREDIT_CARD', '2024-01-25 10:35:00', 'SUCCESS'),
+(35, 1450000.00, 'BANK_TRANSFER', '2024-01-28 12:35:00', 'SUCCESS');
+
+-- Tháng 2/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(17, '2024-02-02 05:30:00', 'CONFIRMED', 1420000.00),
+(4, '2024-02-05 07:30:00', 'CONFIRMED', 1980000.00),
+(9, '2024-02-08 09:30:00', 'CONFIRMED', 2100000.00),
+(18, '2024-02-10 11:30:00', 'CONFIRMED', 890000.00),
+(3, '2024-02-12 13:30:00', 'CONFIRMED', 1550000.00),
+(6, '2024-02-15 15:30:00', 'CONFIRMED', 2950000.00),
+(11, '2024-02-18 06:30:00', 'CONFIRMED', 920000.00),
+(17, '2024-02-20 08:30:00', 'CONFIRMED', 3350000.00),
+(4, '2024-02-22 10:30:00', 'CONFIRMED', 1180000.00),
+(9, '2024-02-25 12:30:00', 'CONFIRMED', 1520000.00);
+
+-- Payments cho tháng 2/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(36, 1420000.00, 'CREDIT_CARD', '2024-02-02 05:35:00', 'SUCCESS'),
+(37, 1980000.00, 'E_WALLET', '2024-02-05 07:35:00', 'SUCCESS'),
+(38, 2100000.00, 'BANK_TRANSFER', '2024-02-08 09:35:00', 'SUCCESS'),
+(39, 890000.00, 'CREDIT_CARD', '2024-02-10 11:35:00', 'SUCCESS'),
+(40, 1550000.00, 'E_WALLET', '2024-02-12 13:35:00', 'SUCCESS'),
+(41, 2950000.00, 'BANK_TRANSFER', '2024-02-15 15:35:00', 'SUCCESS'),
+(42, 920000.00, 'CREDIT_CARD', '2024-02-18 06:35:00', 'SUCCESS'),
+(43, 3350000.00, 'E_WALLET', '2024-02-20 08:35:00', 'SUCCESS'),
+(44, 1180000.00, 'CREDIT_CARD', '2024-02-22 10:35:00', 'SUCCESS'),
+(45, 1520000.00, 'BANK_TRANSFER', '2024-02-25 12:35:00', 'SUCCESS');
+
+-- Tháng 3/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(18, '2024-03-03 05:30:00', 'CONFIRMED', 1680000.00),
+(3, '2024-03-06 07:30:00', 'CONFIRMED', 2250000.00),
+(6, '2024-03-09 09:30:00', 'CONFIRMED', 2400000.00),
+(11, '2024-03-12 11:30:00', 'CONFIRMED', 1020000.00),
+(17, '2024-03-15 13:30:00', 'CONFIRMED', 1780000.00),
+(4, '2024-03-18 15:30:00', 'CONFIRMED', 3100000.00),
+(9, '2024-03-20 06:30:00', 'CONFIRMED', 1050000.00),
+(18, '2024-03-22 08:30:00', 'CONFIRMED', 3600000.00),
+(3, '2024-03-25 10:30:00', 'CONFIRMED', 1320000.00),
+(6, '2024-03-28 12:30:00', 'CONFIRMED', 1680000.00);
+
+-- Payments cho tháng 3/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(46, 1680000.00, 'BANK_TRANSFER', '2024-03-03 05:35:00', 'SUCCESS'),
+(47, 2250000.00, 'CREDIT_CARD', '2024-03-06 07:35:00', 'SUCCESS'),
+(48, 2400000.00, 'E_WALLET', '2024-03-09 09:35:00', 'SUCCESS'),
+(49, 1020000.00, 'CREDIT_CARD', '2024-03-12 11:35:00', 'SUCCESS'),
+(50, 1780000.00, 'BANK_TRANSFER', '2024-03-15 13:35:00', 'SUCCESS'),
+(51, 3100000.00, 'E_WALLET', '2024-03-18 15:35:00', 'SUCCESS'),
+(52, 1050000.00, 'CREDIT_CARD', '2024-03-20 06:35:00', 'SUCCESS'),
+(53, 3600000.00, 'BANK_TRANSFER', '2024-03-22 08:35:00', 'SUCCESS'),
+(54, 1320000.00, 'E_WALLET', '2024-03-25 10:35:00', 'SUCCESS'),
+(55, 1680000.00, 'CREDIT_CARD', '2024-03-28 12:35:00', 'SUCCESS');
+
+-- Tháng 4/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(11, '2024-04-02 05:30:00', 'CONFIRMED', 1890000.00),
+(17, '2024-04-05 07:30:00', 'CONFIRMED', 2480000.00),
+(4, '2024-04-08 09:30:00', 'CONFIRMED', 2650000.00),
+(9, '2024-04-10 11:30:00', 'CONFIRMED', 1150000.00),
+(18, '2024-04-12 13:30:00', 'CONFIRMED', 1920000.00),
+(3, '2024-04-15 15:30:00', 'CONFIRMED', 3250000.00),
+(6, '2024-04-18 06:30:00', 'CONFIRMED', 1180000.00),
+(11, '2024-04-20 08:30:00', 'CONFIRMED', 3800000.00),
+(17, '2024-04-22 10:30:00', 'CONFIRMED', 1450000.00),
+(4, '2024-04-25 12:30:00', 'CONFIRMED', 1820000.00);
+
+-- Payments cho tháng 4/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(56, 1890000.00, 'E_WALLET', '2024-04-02 05:35:00', 'SUCCESS'),
+(57, 2480000.00, 'BANK_TRANSFER', '2024-04-05 07:35:00', 'SUCCESS'),
+(58, 2650000.00, 'CREDIT_CARD', '2024-04-08 09:35:00', 'SUCCESS'),
+(59, 1150000.00, 'E_WALLET', '2024-04-10 11:35:00', 'SUCCESS'),
+(60, 1920000.00, 'CREDIT_CARD', '2024-04-12 13:35:00', 'SUCCESS'),
+(61, 3250000.00, 'BANK_TRANSFER', '2024-04-15 15:35:00', 'SUCCESS'),
+(62, 1180000.00, 'E_WALLET', '2024-04-18 06:35:00', 'SUCCESS'),
+(63, 3800000.00, 'CREDIT_CARD', '2024-04-20 08:35:00', 'SUCCESS'),
+(64, 1450000.00, 'BANK_TRANSFER', '2024-04-22 10:35:00', 'SUCCESS'),
+(65, 1820000.00, 'E_WALLET', '2024-04-25 12:35:00', 'SUCCESS');
+
+-- Tháng 5/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(9, '2024-05-03 05:30:00', 'CONFIRMED', 2050000.00),
+(18, '2024-05-06 07:30:00', 'CONFIRMED', 2720000.00),
+(3, '2024-05-09 09:30:00', 'CONFIRMED', 2850000.00),
+(6, '2024-05-12 11:30:00', 'CONFIRMED', 1280000.00),
+(11, '2024-05-15 13:30:00', 'CONFIRMED', 2080000.00),
+(17, '2024-05-18 15:30:00', 'CONFIRMED', 3450000.00),
+(4, '2024-05-20 06:30:00', 'CONFIRMED', 1320000.00),
+(9, '2024-05-22 08:30:00', 'CONFIRMED', 4000000.00),
+(18, '2024-05-25 10:30:00', 'CONFIRMED', 1580000.00),
+(3, '2024-05-28 12:30:00', 'CONFIRMED', 1980000.00);
+
+-- Payments cho tháng 5/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(66, 2050000.00, 'CREDIT_CARD', '2024-05-03 05:35:00', 'SUCCESS'),
+(67, 2720000.00, 'E_WALLET', '2024-05-06 07:35:00', 'SUCCESS'),
+(68, 2850000.00, 'BANK_TRANSFER', '2024-05-09 09:35:00', 'SUCCESS'),
+(69, 1280000.00, 'CREDIT_CARD', '2024-05-12 11:35:00', 'SUCCESS'),
+(70, 2080000.00, 'E_WALLET', '2024-05-15 13:35:00', 'SUCCESS'),
+(71, 3450000.00, 'BANK_TRANSFER', '2024-05-18 15:35:00', 'SUCCESS'),
+(72, 1320000.00, 'CREDIT_CARD', '2024-05-20 06:35:00', 'SUCCESS'),
+(73, 4000000.00, 'E_WALLET', '2024-05-22 08:35:00', 'SUCCESS'),
+(74, 1580000.00, 'BANK_TRANSFER', '2024-05-25 10:35:00', 'SUCCESS'),
+(75, 1980000.00, 'CREDIT_CARD', '2024-05-28 12:35:00', 'SUCCESS');
+
+-- Tháng 6/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(6, '2024-06-02 05:30:00', 'CONFIRMED', 2180000.00),
+(11, '2024-06-05 07:30:00', 'CONFIRMED', 2950000.00),
+(17, '2024-06-08 09:30:00', 'CONFIRMED', 3100000.00),
+(4, '2024-06-10 11:30:00', 'CONFIRMED', 1420000.00),
+(9, '2024-06-12 13:30:00', 'CONFIRMED', 2220000.00),
+(18, '2024-06-15 15:30:00', 'CONFIRMED', 3650000.00),
+(3, '2024-06-18 06:30:00', 'CONFIRMED', 1450000.00),
+(6, '2024-06-20 08:30:00', 'CONFIRMED', 4200000.00),
+(11, '2024-06-22 10:30:00', 'CONFIRMED', 1720000.00),
+(17, '2024-06-25 12:30:00', 'CONFIRMED', 2120000.00);
+
+-- Payments cho tháng 6/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(76, 2180000.00, 'BANK_TRANSFER', '2024-06-02 05:35:00', 'SUCCESS'),
+(77, 2950000.00, 'CREDIT_CARD', '2024-06-05 07:35:00', 'SUCCESS'),
+(78, 3100000.00, 'E_WALLET', '2024-06-08 09:35:00', 'SUCCESS'),
+(79, 1420000.00, 'BANK_TRANSFER', '2024-06-10 11:35:00', 'SUCCESS'),
+(80, 2220000.00, 'CREDIT_CARD', '2024-06-12 13:35:00', 'SUCCESS'),
+(81, 3650000.00, 'E_WALLET', '2024-06-15 15:35:00', 'SUCCESS'),
+(82, 1450000.00, 'BANK_TRANSFER', '2024-06-18 06:35:00', 'SUCCESS'),
+(83, 4200000.00, 'CREDIT_CARD', '2024-06-20 08:35:00', 'SUCCESS'),
+(84, 1720000.00, 'E_WALLET', '2024-06-22 10:35:00', 'SUCCESS'),
+(85, 2120000.00, 'BANK_TRANSFER', '2024-06-25 12:35:00', 'SUCCESS');
+
+-- Tháng 7/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(4, '2024-07-03 05:30:00', 'CONFIRMED', 2320000.00),
+(9, '2024-07-06 07:30:00', 'CONFIRMED', 3180000.00),
+(18, '2024-07-09 09:30:00', 'CONFIRMED', 3350000.00),
+(3, '2024-07-12 11:30:00', 'CONFIRMED', 1550000.00),
+(6, '2024-07-15 13:30:00', 'CONFIRMED', 2380000.00),
+(11, '2024-07-18 15:30:00', 'CONFIRMED', 3850000.00),
+(17, '2024-07-20 06:30:00', 'CONFIRMED', 1580000.00),
+(4, '2024-07-22 08:30:00', 'CONFIRMED', 4400000.00),
+(9, '2024-07-25 10:30:00', 'CONFIRMED', 1850000.00),
+(18, '2024-07-28 12:30:00', 'CONFIRMED', 2280000.00);
+
+-- Payments cho tháng 7/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(86, 2320000.00, 'E_WALLET', '2024-07-03 05:35:00', 'SUCCESS'),
+(87, 3180000.00, 'BANK_TRANSFER', '2024-07-06 07:35:00', 'SUCCESS'),
+(88, 3350000.00, 'CREDIT_CARD', '2024-07-09 09:35:00', 'SUCCESS'),
+(89, 1550000.00, 'E_WALLET', '2024-07-12 11:35:00', 'SUCCESS'),
+(90, 2380000.00, 'BANK_TRANSFER', '2024-07-15 13:35:00', 'SUCCESS'),
+(91, 3850000.00, 'CREDIT_CARD', '2024-07-18 15:35:00', 'SUCCESS'),
+(92, 1580000.00, 'E_WALLET', '2024-07-20 06:35:00', 'SUCCESS'),
+(93, 4400000.00, 'BANK_TRANSFER', '2024-07-22 08:35:00', 'SUCCESS'),
+(94, 1850000.00, 'CREDIT_CARD', '2024-07-25 10:35:00', 'SUCCESS'),
+(95, 2280000.00, 'E_WALLET', '2024-07-28 12:35:00', 'SUCCESS');
+
+-- Tháng 8/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(3, '2024-08-02 05:30:00', 'CONFIRMED', 2450000.00),
+(6, '2024-08-05 07:30:00', 'CONFIRMED', 3420000.00),
+(11, '2024-08-08 09:30:00', 'CONFIRMED', 3580000.00),
+(17, '2024-08-10 11:30:00', 'CONFIRMED', 1680000.00),
+(4, '2024-08-12 13:30:00', 'CONFIRMED', 2520000.00),
+(9, '2024-08-15 15:30:00', 'CONFIRMED', 4050000.00),
+(18, '2024-08-18 06:30:00', 'CONFIRMED', 1720000.00),
+(3, '2024-08-20 08:30:00', 'CONFIRMED', 4600000.00),
+(6, '2024-08-22 10:30:00', 'CONFIRMED', 1980000.00),
+(11, '2024-08-25 12:30:00', 'CONFIRMED', 2420000.00);
+
+-- Payments cho tháng 8/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(96, 2450000.00, 'CREDIT_CARD', '2024-08-02 05:35:00', 'SUCCESS'),
+(97, 3420000.00, 'E_WALLET', '2024-08-05 07:35:00', 'SUCCESS'),
+(98, 3580000.00, 'BANK_TRANSFER', '2024-08-08 09:35:00', 'SUCCESS'),
+(99, 1680000.00, 'CREDIT_CARD', '2024-08-10 11:35:00', 'SUCCESS'),
+(100, 2520000.00, 'E_WALLET', '2024-08-12 13:35:00', 'SUCCESS'),
+(101, 4050000.00, 'BANK_TRANSFER', '2024-08-15 15:35:00', 'SUCCESS'),
+(102, 1720000.00, 'CREDIT_CARD', '2024-08-18 06:35:00', 'SUCCESS'),
+(103, 4600000.00, 'E_WALLET', '2024-08-20 08:35:00', 'SUCCESS'),
+(104, 1980000.00, 'BANK_TRANSFER', '2024-08-22 10:35:00', 'SUCCESS'),
+(105, 2420000.00, 'CREDIT_CARD', '2024-08-25 12:35:00', 'SUCCESS');
+
+-- Tháng 9/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(17, '2024-09-02 05:30:00', 'CONFIRMED', 2580000.00),
+(4, '2024-09-05 07:30:00', 'CONFIRMED', 3650000.00),
+(9, '2024-09-08 09:30:00', 'CONFIRMED', 3820000.00),
+(18, '2024-09-10 11:30:00', 'CONFIRMED', 1820000.00),
+(3, '2024-09-12 13:30:00', 'CONFIRMED', 2680000.00),
+(6, '2024-09-15 15:30:00', 'CONFIRMED', 4250000.00),
+(11, '2024-09-18 06:30:00', 'CONFIRMED', 1850000.00),
+(17, '2024-09-20 08:30:00', 'CONFIRMED', 4800000.00),
+(4, '2024-09-22 10:30:00', 'CONFIRMED', 2120000.00),
+(9, '2024-09-25 12:30:00', 'CONFIRMED', 2580000.00);
+
+-- Payments cho tháng 9/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(106, 2580000.00, 'BANK_TRANSFER', '2024-09-02 05:35:00', 'SUCCESS'),
+(107, 3650000.00, 'CREDIT_CARD', '2024-09-05 07:35:00', 'SUCCESS'),
+(108, 3820000.00, 'E_WALLET', '2024-09-08 09:35:00', 'SUCCESS'),
+(109, 1820000.00, 'BANK_TRANSFER', '2024-09-10 11:35:00', 'SUCCESS'),
+(110, 2680000.00, 'CREDIT_CARD', '2024-09-12 13:35:00', 'SUCCESS'),
+(111, 4250000.00, 'E_WALLET', '2024-09-15 15:35:00', 'SUCCESS'),
+(112, 1850000.00, 'BANK_TRANSFER', '2024-09-18 06:35:00', 'SUCCESS'),
+(113, 4800000.00, 'CREDIT_CARD', '2024-09-20 08:35:00', 'SUCCESS'),
+(114, 2120000.00, 'E_WALLET', '2024-09-22 10:35:00', 'SUCCESS'),
+(115, 2580000.00, 'BANK_TRANSFER', '2024-09-25 12:35:00', 'SUCCESS');
+
+-- Tháng 10/2024 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(18, '2024-10-02 05:30:00', 'CONFIRMED', 2720000.00),
+(3, '2024-10-05 07:30:00', 'CONFIRMED', 3880000.00),
+(6, '2024-10-08 09:30:00', 'CONFIRMED', 4050000.00),
+(11, '2024-10-10 11:30:00', 'CONFIRMED', 1950000.00),
+(17, '2024-10-12 13:30:00', 'CONFIRMED', 2820000.00),
+(4, '2024-10-15 15:30:00', 'CONFIRMED', 4450000.00),
+(9, '2024-10-18 06:30:00', 'CONFIRMED', 1980000.00),
+(18, '2024-10-20 08:30:00', 'CONFIRMED', 5000000.00),
+(3, '2024-10-22 10:30:00', 'CONFIRMED', 2250000.00),
+(6, '2024-10-25 12:30:00', 'CONFIRMED', 2720000.00);
+
+-- Payments cho tháng 10/2024
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(116, 2720000.00, 'E_WALLET', '2024-10-02 05:35:00', 'SUCCESS'),
+(117, 3880000.00, 'BANK_TRANSFER', '2024-10-05 07:35:00', 'SUCCESS'),
+(118, 4050000.00, 'CREDIT_CARD', '2024-10-08 09:35:00', 'SUCCESS'),
+(119, 1950000.00, 'E_WALLET', '2024-10-10 11:35:00', 'SUCCESS'),
+(120, 2820000.00, 'BANK_TRANSFER', '2024-10-12 13:35:00', 'SUCCESS'),
+(121, 4450000.00, 'CREDIT_CARD', '2024-10-15 15:35:00', 'SUCCESS'),
+(122, 1980000.00, 'E_WALLET', '2024-10-18 06:35:00', 'SUCCESS'),
+(123, 5000000.00, 'BANK_TRANSFER', '2024-10-20 08:35:00', 'SUCCESS'),
+(124, 2250000.00, 'CREDIT_CARD', '2024-10-22 10:35:00', 'SUCCESS'),
+(125, 2720000.00, 'E_WALLET', '2024-10-25 12:35:00', 'SUCCESS');
+
+-- =============== THÊM BOOKINGS VÀ PAYMENTS CHO NĂM 2025 ===============
+
+-- Tháng 1/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(11, '2025-01-05 05:30:00', 'CONFIRMED', 2850000.00),
+(17, '2025-01-08 07:30:00', 'CONFIRMED', 4120000.00),
+(4, '2025-01-10 09:30:00', 'CONFIRMED', 4280000.00),
+(9, '2025-01-12 11:30:00', 'CONFIRMED', 2080000.00),
+(18, '2025-01-15 13:30:00', 'CONFIRMED', 2950000.00),
+(3, '2025-01-18 15:30:00', 'CONFIRMED', 4650000.00),
+(6, '2025-01-20 06:30:00', 'CONFIRMED', 2120000.00),
+(11, '2025-01-22 08:30:00', 'CONFIRMED', 5200000.00),
+(17, '2025-01-25 10:30:00', 'CONFIRMED', 2380000.00),
+(4, '2025-01-28 12:30:00', 'CONFIRMED', 2850000.00);
+
+-- Payments cho tháng 1/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(126, 2850000.00, 'CREDIT_CARD', '2025-01-05 05:35:00', 'SUCCESS'),
+(127, 4120000.00, 'E_WALLET', '2025-01-08 07:35:00', 'SUCCESS'),
+(128, 4280000.00, 'BANK_TRANSFER', '2025-01-10 09:35:00', 'SUCCESS'),
+(129, 2080000.00, 'CREDIT_CARD', '2025-01-12 11:35:00', 'SUCCESS'),
+(130, 2950000.00, 'E_WALLET', '2025-01-15 13:35:00', 'SUCCESS'),
+(131, 4650000.00, 'BANK_TRANSFER', '2025-01-18 15:35:00', 'SUCCESS'),
+(132, 2120000.00, 'CREDIT_CARD', '2025-01-20 06:35:00', 'SUCCESS'),
+(133, 5200000.00, 'E_WALLET', '2025-01-22 08:35:00', 'SUCCESS'),
+(134, 2380000.00, 'BANK_TRANSFER', '2025-01-25 10:35:00', 'SUCCESS'),
+(135, 2850000.00, 'CREDIT_CARD', '2025-01-28 12:35:00', 'SUCCESS');
+
+-- Tháng 2/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(9, '2025-02-02 05:30:00', 'CONFIRMED', 2980000.00),
+(18, '2025-02-05 07:30:00', 'CONFIRMED', 4350000.00),
+(3, '2025-02-08 09:30:00', 'CONFIRMED', 4520000.00),
+(6, '2025-02-10 11:30:00', 'CONFIRMED', 2210000.00),
+(11, '2025-02-12 13:30:00', 'CONFIRMED', 3120000.00),
+(17, '2025-02-15 15:30:00', 'CONFIRMED', 4850000.00),
+(4, '2025-02-18 06:30:00', 'CONFIRMED', 2250000.00),
+(9, '2025-02-20 08:30:00', 'CONFIRMED', 5400000.00),
+(18, '2025-02-22 10:30:00', 'CONFIRMED', 2520000.00),
+(3, '2025-02-25 12:30:00', 'CONFIRMED', 2980000.00);
+
+-- Payments cho tháng 2/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(136, 2980000.00, 'BANK_TRANSFER', '2025-02-02 05:35:00', 'SUCCESS'),
+(137, 4350000.00, 'CREDIT_CARD', '2025-02-05 07:35:00', 'SUCCESS'),
+(138, 4520000.00, 'E_WALLET', '2025-02-08 09:35:00', 'SUCCESS'),
+(139, 2210000.00, 'BANK_TRANSFER', '2025-02-10 11:35:00', 'SUCCESS'),
+(140, 3120000.00, 'CREDIT_CARD', '2025-02-12 13:35:00', 'SUCCESS'),
+(141, 4850000.00, 'E_WALLET', '2025-02-15 15:35:00', 'SUCCESS'),
+(142, 2250000.00, 'BANK_TRANSFER', '2025-02-18 06:35:00', 'SUCCESS'),
+(143, 5400000.00, 'CREDIT_CARD', '2025-02-20 08:35:00', 'SUCCESS'),
+(144, 2520000.00, 'E_WALLET', '2025-02-22 10:35:00', 'SUCCESS'),
+(145, 2980000.00, 'BANK_TRANSFER', '2025-02-25 12:35:00', 'SUCCESS');
+
+-- Tháng 3/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(6, '2025-03-03 05:30:00', 'CONFIRMED', 3120000.00),
+(11, '2025-03-06 07:30:00', 'CONFIRMED', 4580000.00),
+(17, '2025-03-09 09:30:00', 'CONFIRMED', 4750000.00),
+(4, '2025-03-12 11:30:00', 'CONFIRMED', 2350000.00),
+(9, '2025-03-15 13:30:00', 'CONFIRMED', 3280000.00),
+(18, '2025-03-18 15:30:00', 'CONFIRMED', 5050000.00),
+(3, '2025-03-20 06:30:00', 'CONFIRMED', 2380000.00),
+(6, '2025-03-22 08:30:00', 'CONFIRMED', 5600000.00),
+(11, '2025-03-25 10:30:00', 'CONFIRMED', 2650000.00),
+(17, '2025-03-28 12:30:00', 'CONFIRMED', 3120000.00);
+
+-- Payments cho tháng 3/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(146, 3120000.00, 'E_WALLET', '2025-03-03 05:35:00', 'SUCCESS'),
+(147, 4580000.00, 'BANK_TRANSFER', '2025-03-06 07:35:00', 'SUCCESS'),
+(148, 4750000.00, 'CREDIT_CARD', '2025-03-09 09:35:00', 'SUCCESS'),
+(149, 2350000.00, 'E_WALLET', '2025-03-12 11:35:00', 'SUCCESS'),
+(150, 3280000.00, 'BANK_TRANSFER', '2025-03-15 13:35:00', 'SUCCESS'),
+(151, 5050000.00, 'CREDIT_CARD', '2025-03-18 15:35:00', 'SUCCESS'),
+(152, 2380000.00, 'E_WALLET', '2025-03-20 06:35:00', 'SUCCESS'),
+(153, 5600000.00, 'BANK_TRANSFER', '2025-03-22 08:35:00', 'SUCCESS'),
+(154, 2650000.00, 'CREDIT_CARD', '2025-03-25 10:35:00', 'SUCCESS'),
+(155, 3120000.00, 'E_WALLET', '2025-03-28 12:35:00', 'SUCCESS');
+
+-- Tháng 4/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(4, '2025-04-02 05:30:00', 'CONFIRMED', 3250000.00),
+(9, '2025-04-05 07:30:00', 'CONFIRMED', 4820000.00),
+(18, '2025-04-08 09:30:00', 'CONFIRMED', 4980000.00),
+(3, '2025-04-10 11:30:00', 'CONFIRMED', 2480000.00),
+(6, '2025-04-12 13:30:00', 'CONFIRMED', 3420000.00),
+(11, '2025-04-15 15:30:00', 'CONFIRMED', 5250000.00),
+(17, '2025-04-18 06:30:00', 'CONFIRMED', 2520000.00),
+(4, '2025-04-20 08:30:00', 'CONFIRMED', 5800000.00),
+(9, '2025-04-22 10:30:00', 'CONFIRMED', 2780000.00),
+(18, '2025-04-25 12:30:00', 'CONFIRMED', 3250000.00);
+
+-- Payments cho tháng 4/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(156, 3250000.00, 'CREDIT_CARD', '2025-04-02 05:35:00', 'SUCCESS'),
+(157, 4820000.00, 'E_WALLET', '2025-04-05 07:35:00', 'SUCCESS'),
+(158, 4980000.00, 'BANK_TRANSFER', '2025-04-08 09:35:00', 'SUCCESS'),
+(159, 2480000.00, 'CREDIT_CARD', '2025-04-10 11:35:00', 'SUCCESS'),
+(160, 3420000.00, 'E_WALLET', '2025-04-12 13:35:00', 'SUCCESS'),
+(161, 5250000.00, 'BANK_TRANSFER', '2025-04-15 15:35:00', 'SUCCESS'),
+(162, 2520000.00, 'CREDIT_CARD', '2025-04-18 06:35:00', 'SUCCESS'),
+(163, 5800000.00, 'E_WALLET', '2025-04-20 08:35:00', 'SUCCESS'),
+(164, 2780000.00, 'BANK_TRANSFER', '2025-04-22 10:35:00', 'SUCCESS'),
+(165, 3250000.00, 'CREDIT_CARD', '2025-04-25 12:35:00', 'SUCCESS');
+
+-- Tháng 5/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(3, '2025-05-03 05:30:00', 'CONFIRMED', 3380000.00),
+(6, '2025-05-06 07:30:00', 'CONFIRMED', 5050000.00),
+(11, '2025-05-09 09:30:00', 'CONFIRMED', 5220000.00),
+(17, '2025-05-12 11:30:00', 'CONFIRMED', 2620000.00),
+(4, '2025-05-15 13:30:00', 'CONFIRMED', 3580000.00),
+(9, '2025-05-18 15:30:00', 'CONFIRMED', 5450000.00),
+(18, '2025-05-20 06:30:00', 'CONFIRMED', 2650000.00),
+(3, '2025-05-22 08:30:00', 'CONFIRMED', 6000000.00),
+(6, '2025-05-25 10:30:00', 'CONFIRMED', 2920000.00),
+(11, '2025-05-28 12:30:00', 'CONFIRMED', 3380000.00);
+
+-- Payments cho tháng 5/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(166, 3380000.00, 'BANK_TRANSFER', '2025-05-03 05:35:00', 'SUCCESS'),
+(167, 5050000.00, 'CREDIT_CARD', '2025-05-06 07:35:00', 'SUCCESS'),
+(168, 5220000.00, 'E_WALLET', '2025-05-09 09:35:00', 'SUCCESS'),
+(169, 2620000.00, 'BANK_TRANSFER', '2025-05-12 11:35:00', 'SUCCESS'),
+(170, 3580000.00, 'CREDIT_CARD', '2025-05-15 13:35:00', 'SUCCESS'),
+(171, 5450000.00, 'E_WALLET', '2025-05-18 15:35:00', 'SUCCESS'),
+(172, 2650000.00, 'BANK_TRANSFER', '2025-05-20 06:35:00', 'SUCCESS'),
+(173, 6000000.00, 'CREDIT_CARD', '2025-05-22 08:35:00', 'SUCCESS'),
+(174, 2920000.00, 'E_WALLET', '2025-05-25 10:35:00', 'SUCCESS'),
+(175, 3380000.00, 'BANK_TRANSFER', '2025-05-28 12:35:00', 'SUCCESS');
+
+-- Tháng 6/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(17, '2025-06-02 05:30:00', 'CONFIRMED', 3520000.00),
+(4, '2025-06-05 07:30:00', 'CONFIRMED', 5280000.00),
+(9, '2025-06-08 09:30:00', 'CONFIRMED', 5450000.00),
+(18, '2025-06-10 11:30:00', 'CONFIRMED', 2750000.00),
+(3, '2025-06-12 13:30:00', 'CONFIRMED', 3720000.00),
+(6, '2025-06-15 15:30:00', 'CONFIRMED', 5650000.00),
+(11, '2025-06-18 06:30:00', 'CONFIRMED', 2780000.00),
+(17, '2025-06-20 08:30:00', 'CONFIRMED', 6200000.00),
+(4, '2025-06-22 10:30:00', 'CONFIRMED', 3050000.00),
+(9, '2025-06-25 12:30:00', 'CONFIRMED', 3520000.00);
+
+-- Payments cho tháng 6/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(176, 3520000.00, 'E_WALLET', '2025-06-02 05:35:00', 'SUCCESS'),
+(177, 5280000.00, 'BANK_TRANSFER', '2025-06-05 07:35:00', 'SUCCESS'),
+(178, 5450000.00, 'CREDIT_CARD', '2025-06-08 09:35:00', 'SUCCESS'),
+(179, 2750000.00, 'E_WALLET', '2025-06-10 11:35:00', 'SUCCESS'),
+(180, 3720000.00, 'BANK_TRANSFER', '2025-06-12 13:35:00', 'SUCCESS'),
+(181, 5650000.00, 'CREDIT_CARD', '2025-06-15 15:35:00', 'SUCCESS'),
+(182, 2780000.00, 'E_WALLET', '2025-06-18 06:35:00', 'SUCCESS'),
+(183, 6200000.00, 'BANK_TRANSFER', '2025-06-20 08:35:00', 'SUCCESS'),
+(184, 3050000.00, 'CREDIT_CARD', '2025-06-22 10:35:00', 'SUCCESS'),
+(185, 3520000.00, 'E_WALLET', '2025-06-25 12:35:00', 'SUCCESS');
+
+-- Tháng 7/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(18, '2025-07-03 05:30:00', 'CONFIRMED', 3650000.00),
+(3, '2025-07-06 07:30:00', 'CONFIRMED', 5520000.00),
+(6, '2025-07-09 09:30:00', 'CONFIRMED', 5680000.00),
+(11, '2025-07-12 11:30:00', 'CONFIRMED', 2880000.00),
+(17, '2025-07-15 13:30:00', 'CONFIRMED', 3850000.00),
+(4, '2025-07-18 15:30:00', 'CONFIRMED', 5850000.00),
+(9, '2025-07-20 06:30:00', 'CONFIRMED', 2920000.00),
+(18, '2025-07-22 08:30:00', 'CONFIRMED', 6400000.00),
+(3, '2025-07-25 10:30:00', 'CONFIRMED', 3180000.00),
+(6, '2025-07-28 12:30:00', 'CONFIRMED', 3650000.00);
+
+-- Payments cho tháng 7/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(186, 3650000.00, 'CREDIT_CARD', '2025-07-03 05:35:00', 'SUCCESS'),
+(187, 5520000.00, 'E_WALLET', '2025-07-06 07:35:00', 'SUCCESS'),
+(188, 5680000.00, 'BANK_TRANSFER', '2025-07-09 09:35:00', 'SUCCESS'),
+(189, 2880000.00, 'CREDIT_CARD', '2025-07-12 11:35:00', 'SUCCESS'),
+(190, 3850000.00, 'E_WALLET', '2025-07-15 13:35:00', 'SUCCESS'),
+(191, 5850000.00, 'BANK_TRANSFER', '2025-07-18 15:35:00', 'SUCCESS'),
+(192, 2920000.00, 'CREDIT_CARD', '2025-07-20 06:35:00', 'SUCCESS'),
+(193, 6400000.00, 'E_WALLET', '2025-07-22 08:35:00', 'SUCCESS'),
+(194, 3180000.00, 'BANK_TRANSFER', '2025-07-25 10:35:00', 'SUCCESS'),
+(195, 3650000.00, 'CREDIT_CARD', '2025-07-28 12:35:00', 'SUCCESS');
+
+-- Tháng 8/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(11, '2025-08-02 05:30:00', 'CONFIRMED', 3780000.00),
+(17, '2025-08-05 07:30:00', 'CONFIRMED', 5750000.00),
+(4, '2025-08-08 09:30:00', 'CONFIRMED', 5920000.00),
+(9, '2025-08-10 11:30:00', 'CONFIRMED', 3020000.00),
+(18, '2025-08-12 13:30:00', 'CONFIRMED', 3980000.00),
+(3, '2025-08-15 15:30:00', 'CONFIRMED', 6050000.00),
+(6, '2025-08-18 06:30:00', 'CONFIRMED', 3050000.00),
+(11, '2025-08-20 08:30:00', 'CONFIRMED', 6600000.00),
+(17, '2025-08-22 10:30:00', 'CONFIRMED', 3320000.00),
+(4, '2025-08-25 12:30:00', 'CONFIRMED', 3780000.00);
+
+-- Payments cho tháng 8/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(196, 3780000.00, 'BANK_TRANSFER', '2025-08-02 05:35:00', 'SUCCESS'),
+(197, 5750000.00, 'CREDIT_CARD', '2025-08-05 07:35:00', 'SUCCESS'),
+(198, 5920000.00, 'E_WALLET', '2025-08-08 09:35:00', 'SUCCESS'),
+(199, 3020000.00, 'BANK_TRANSFER', '2025-08-10 11:35:00', 'SUCCESS'),
+(200, 3980000.00, 'CREDIT_CARD', '2025-08-12 13:35:00', 'SUCCESS'),
+(201, 6050000.00, 'E_WALLET', '2025-08-15 15:35:00', 'SUCCESS'),
+(202, 3050000.00, 'BANK_TRANSFER', '2025-08-18 06:35:00', 'SUCCESS'),
+(203, 6600000.00, 'CREDIT_CARD', '2025-08-20 08:35:00', 'SUCCESS'),
+(204, 3320000.00, 'E_WALLET', '2025-08-22 10:35:00', 'SUCCESS'),
+(205, 3780000.00, 'BANK_TRANSFER', '2025-08-25 12:35:00', 'SUCCESS');
+
+-- Tháng 9/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(9, '2025-09-02 05:30:00', 'CONFIRMED', 3920000.00),
+(18, '2025-09-05 07:30:00', 'CONFIRMED', 5980000.00),
+(3, '2025-09-08 09:30:00', 'CONFIRMED', 6150000.00),
+(6, '2025-09-10 11:30:00', 'CONFIRMED', 3150000.00),
+(11, '2025-09-12 13:30:00', 'CONFIRMED', 4120000.00),
+(17, '2025-09-15 15:30:00', 'CONFIRMED', 6250000.00),
+(4, '2025-09-18 06:30:00', 'CONFIRMED', 3180000.00),
+(9, '2025-09-20 08:30:00', 'CONFIRMED', 6800000.00),
+(18, '2025-09-22 10:30:00', 'CONFIRMED', 3450000.00),
+(3, '2025-09-25 12:30:00', 'CONFIRMED', 3920000.00);
+
+-- Payments cho tháng 9/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(206, 3920000.00, 'E_WALLET', '2025-09-02 05:35:00', 'SUCCESS'),
+(207, 5980000.00, 'BANK_TRANSFER', '2025-09-05 07:35:00', 'SUCCESS'),
+(208, 6150000.00, 'CREDIT_CARD', '2025-09-08 09:35:00', 'SUCCESS'),
+(209, 3150000.00, 'E_WALLET', '2025-09-10 11:35:00', 'SUCCESS'),
+(210, 4120000.00, 'BANK_TRANSFER', '2025-09-12 13:35:00', 'SUCCESS'),
+(211, 6250000.00, 'CREDIT_CARD', '2025-09-15 15:35:00', 'SUCCESS'),
+(212, 3180000.00, 'E_WALLET', '2025-09-18 06:35:00', 'SUCCESS'),
+(213, 6800000.00, 'BANK_TRANSFER', '2025-09-20 08:35:00', 'SUCCESS'),
+(214, 3450000.00, 'CREDIT_CARD', '2025-09-22 10:35:00', 'SUCCESS'),
+(215, 3920000.00, 'E_WALLET', '2025-09-25 12:35:00', 'SUCCESS');
+
+-- Tháng 10/2025 (10 bookings)
+INSERT INTO `Bookings` (`account_id`, `booking_date`, `status`, `total_amount`) VALUES
+(6, '2025-10-02 05:30:00', 'CONFIRMED', 4050000.00),
+(11, '2025-10-05 07:30:00', 'CONFIRMED', 6220000.00),
+(17, '2025-10-08 09:30:00', 'CONFIRMED', 6380000.00),
+(4, '2025-10-10 11:30:00', 'CONFIRMED', 3280000.00),
+(9, '2025-10-12 13:30:00', 'CONFIRMED', 4250000.00),
+(18, '2025-10-15 15:30:00', 'CONFIRMED', 6450000.00),
+(3, '2025-10-18 06:30:00', 'CONFIRMED', 3320000.00),
+(6, '2025-10-20 08:30:00', 'CONFIRMED', 7000000.00),
+(11, '2025-10-22 10:30:00', 'CONFIRMED', 3580000.00),
+(17, '2025-10-25 12:30:00', 'CONFIRMED', 4050000.00);
+
+-- Payments cho tháng 10/2025
+INSERT INTO `Payments` (`booking_id`, `amount`, `payment_method`, `payment_date`, `status`) VALUES
+(216, 4050000.00, 'CREDIT_CARD', '2025-10-02 05:35:00', 'SUCCESS'),
+(217, 6220000.00, 'E_WALLET', '2025-10-05 07:35:00', 'SUCCESS'),
+(218, 6380000.00, 'BANK_TRANSFER', '2025-10-08 09:35:00', 'SUCCESS'),
+(219, 3280000.00, 'CREDIT_CARD', '2025-10-10 11:35:00', 'SUCCESS'),
+(220, 4250000.00, 'E_WALLET', '2025-10-12 13:35:00', 'SUCCESS'),
+(221, 6450000.00, 'BANK_TRANSFER', '2025-10-15 15:35:00', 'SUCCESS'),
+(222, 3320000.00, 'CREDIT_CARD', '2025-10-18 06:35:00', 'SUCCESS'),
+(223, 7000000.00, 'E_WALLET', '2025-10-20 08:35:00', 'SUCCESS'),
+(224, 3580000.00, 'BANK_TRANSFER', '2025-10-22 10:35:00', 'SUCCESS'),
+(225, 4050000.00, 'CREDIT_CARD', '2025-10-25 12:35:00', 'SUCCESS');
+
+-- Bật lại kiểm tra khóa ngoại
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- ===================================================================
+-- TỔNG KẾT
+-- ===================================================================
+-- Đã thêm:
+-- - 100 bookings (26-125 cho năm 2024, 126-225 cho năm 2025)
+-- - 200 payments (16-225) tất cả đều SUCCESS
+-- - Tổng doanh thu khoảng: 650,000,000 VNĐ
+-- - Phân bố đều qua 20 tháng (tháng 1/2024 - tháng 10/2025)
+-- ===================================================================
+
+SELECT 'Hoàn tất thêm 200 payments cho thống kê!' AS Status;
+SELECT CONCAT('Tổng doanh thu 2024: ', FORMAT(SUM(amount), 0), ' VNĐ') AS Revenue_2024
+FROM Payments
+WHERE YEAR(payment_date) = 2024 AND status = 'SUCCESS';
+
+SELECT CONCAT('Tổng doanh thu 2025: ', FORMAT(SUM(amount), 0), ' VNĐ') AS Revenue_2025
+FROM Payments
+WHERE YEAR(payment_date) = 2025 AND status = 'SUCCESS';

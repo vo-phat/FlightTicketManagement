@@ -322,5 +322,72 @@ namespace GUI.Features.Ticket.subTicket
         {
 
         }
+
+        /// <summary>
+        /// Load thông tin từ BookingSelectionDTO vào form để user tiếp tục đặt vé
+        /// </summary>
+        public void LoadFromSelection(DTO.Booking.BookingSelectionDTO selection)
+        {
+            if (selection == null) return;
+
+            Console.WriteLine($"[BookingSearchControl] Loading selection: {selection}");
+
+            try
+            {
+                // Hiển thị thông tin chuyến bay đã chọn
+                var message = new StringBuilder();
+                message.AppendLine("✈️ THÔNG TIN CHUYẾN BAY ĐÃ CHỌN");
+                message.AppendLine("═══════════════════════════════════");
+                message.AppendLine($"Chuyến bay: {selection.FlightNumber}");
+                message.AppendLine($"Từ: {selection.DepartureAirport}");
+                message.AppendLine($"Đến: {selection.ArrivalAirport}");
+                message.AppendLine($"Khởi hành: {selection.DepartureTime:dd/MM/yyyy HH:mm}");
+                message.AppendLine($"Đến: {selection.ArrivalTime:dd/MM/yyyy HH:mm}");
+                message.AppendLine();
+                message.AppendLine($"🎫 Hạng vé: {selection.CabinClassName}");
+                message.AppendLine($"💰 Giá vé: {selection.BasePrice:N0} VNĐ");
+                message.AppendLine();
+                message.AppendLine($"👥 Hành khách:");
+                message.AppendLine($"   - Người lớn: {selection.AdultCount}");
+                message.AppendLine($"   - Trẻ em: {selection.ChildrenCount}");
+                
+                if (selection.IsRoundTrip && selection.ReturnDate.HasValue)
+                {
+                    message.AppendLine();
+                    message.AppendLine($"🔄 Khứ hồi: {selection.ReturnDate:dd/MM/yyyy}");
+                }
+
+                message.AppendLine();
+                message.AppendLine("═══════════════════════════════════");
+                message.AppendLine("Vui lòng điền thông tin hành khách để hoàn tất đặt vé.");
+
+                MessageBox.Show(
+                    message.ToString(),
+                    "Xác nhận thông tin đặt vé",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+
+                // TODO: Tự động điền thông tin vào form passenger nếu có
+                // Ví dụ: txtAdultCount.Text = selection.AdultCount.ToString();
+                //        txtChildrenCount.Text = selection.ChildrenCount.ToString();
+                //        txtFlightNumber.Text = selection.FlightNumber;
+                //        txtCabinClass.Text = selection.CabinClassName;
+                //        txtPrice.Text = selection.BasePrice.ToString("N0");
+                
+                // Refresh grid nếu cần
+                // SetupAndLoadGrid();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[BookingSearchControl] Lỗi khi load selection: {ex.Message}");
+                MessageBox.Show(
+                    $"Không thể load thông tin đặt vé: {ex.Message}",
+                    "Lỗi",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+        }
     }
 }
