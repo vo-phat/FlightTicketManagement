@@ -1,4 +1,6 @@
+using BUS.Auth;
 using BUS.Flight;
+using DTO.Auth;
 using DTO.Flight;
 using GUI.Components.Buttons;
 using GUI.Components.Inputs;
@@ -23,13 +25,15 @@ namespace GUI.Features.Flight.SubFeatures
         private Button btnSearch, btnClear;
         private const string ACTION_COL = "Actions";
         private const string TXT_VIEW = "Xem";
+        private const string TXT_BOOK = "Đặt vé";
         private const string TXT_EDIT = "Sửa";
         private const string TXT_DEL = "Xóa";
         private const string SEP = " | ";
         private int _hoveredRow = -1;
-        private int _hoveredAction = -1; // 0=View, 1=Edit, 2=Delete
+        private int _hoveredAction = -1; // 0=View, 1=Book, 2=Edit, 3=Delete
 
         public event Action<FlightWithDetailsDTO>? ViewRequested;
+        public event Action<FlightWithDetailsDTO>? BookFlightRequested;
         public event Action<FlightWithDetailsDTO>? RequestEdit;
         public event Action? DataChanged;
 
@@ -295,7 +299,30 @@ namespace GUI.Features.Flight.SubFeatures
                     row.Cells["ArrivalTime"].Value = flight.ArrivalTime?.ToString("HH:mm");
                     row.Cells["Status"].Value = GetStatusText(flight.Status);
                     row.Cells["AvailableSeats"].Value = flight.AvailableSeats;
-                    row.Cells[ACTION_COL].Value = $"{TXT_VIEW}{SEP}{TXT_EDIT}{SEP}{TXT_DEL}";
+                    
+                    // Phân quyền actions theo role
+                    string actions = "";
+                    if (UserSession.CurrentAppRole == AppRole.User)
+                    {
+                        // User: Xem và Đặt vé (nếu chuyến bay đã lên lịch)
+                        actions = flight.Status == FlightStatus.SCHEDULED 
+                            ? $"{TXT_VIEW}{SEP}{TXT_BOOK}"
+                            : TXT_VIEW;
+                    }
+                    else if (UserSession.CurrentAppRole == AppRole.Staff)
+                    {
+                        // Staff: Xem, Đặt vé (nếu lên lịch), Sửa, Xóa
+                        actions = flight.Status == FlightStatus.SCHEDULED
+                            ? $"{TXT_VIEW}{SEP}{TXT_BOOK}{SEP}{TXT_EDIT}{SEP}{TXT_DEL}"
+                            : $"{TXT_VIEW}{SEP}{TXT_EDIT}{SEP}{TXT_DEL}";
+                    }
+                    else // Admin
+                    {
+                        // Admin: Xem, Sửa, Xóa (không đặt vé)
+                        actions = $"{TXT_VIEW}{SEP}{TXT_EDIT}{SEP}{TXT_DEL}";
+                    }
+                    
+                    row.Cells[ACTION_COL].Value = actions;
                     row.Tag = flight;
                 }
             }
@@ -397,29 +424,77 @@ namespace GUI.Features.Flight.SubFeatures
             using (var g = table.CreateGraphics())
             {
                 var viewSize = g.MeasureString(TXT_VIEW, table.Font);
+                var bookSize = g.MeasureString(TXT_BOOK, table.Font);
                 var editSize = g.MeasureString(TXT_EDIT, table.Font);
                 var delSize = g.MeasureString(TXT_DEL, table.Font);
                 var sepSize = g.MeasureString(SEP, table.Font);
                 
                 var viewEnd = startX + viewSize.Width;
-                var editStart = viewEnd + sepSize.Width;
-                var editEnd = editStart + editSize.Width;
-                var delStart = editEnd + sepSize.Width;
-                var delEnd = delStart + delSize.Width;
                 
                 int newHoveredAction = -1;
                 
-                if (mouseX >= startX && mouseX <= viewEnd)
+                if (UserSession.CurrentAppRole == AppRole.User)
                 {
-                    newHoveredAction = 0; // View
+                    // User: Xem | Đặt vé (nếu có)
+                    var bookStart = viewEnd + sepSize.Width;
+                    var bookEnd = bookStart + bookSize.Width;
+                    
+                    if (mouseX >= startX && mouseX <= viewEnd)
+                    {
+                        newHoveredAction = 0; // View
+                    }
+                    else if (mouseX >= bookStart && mouseX <= bookEnd)
+                    {
+                        newHoveredAction = 1; // Book
+                    }
                 }
-                else if (mouseX >= editStart && mouseX <= editEnd)
+                else if (UserSession.CurrentAppRole == AppRole.Staff)
                 {
-                    newHoveredAction = 1; // Edit
+                    // Staff: Xem | Đặt vé | Sửa | Xóa
+                    var bookStart = viewEnd + sepSize.Width;
+                    var bookEnd = bookStart + bookSize.Width;
+                    var editStart = bookEnd + sepSize.Width;
+                    var editEnd = editStart + editSize.Width;
+                    var delStart = editEnd + sepSize.Width;
+                    var delEnd = delStart + delSize.Width;
+                    
+                    if (mouseX >= startX && mouseX <= viewEnd)
+                    {
+                        newHoveredAction = 0; // View
+                    }
+                    else if (mouseX >= bookStart && mouseX <= bookEnd)
+                    {
+                        newHoveredAction = 1; // Book
+                    }
+                    else if (mouseX >= editStart && mouseX <= editEnd)
+                    {
+                        newHoveredAction = 2; // Edit
+                    }
+                    else if (mouseX >= delStart && mouseX <= delEnd)
+                    {
+                        newHoveredAction = 3; // Delete
+                    }
                 }
-                else if (mouseX >= delStart && mouseX <= delEnd)
+                else // Admin
                 {
-                    newHoveredAction = 2; // Delete
+                    // Admin: Xem | Sửa | Xóa
+                    var editStart = viewEnd + sepSize.Width;
+                    var editEnd = editStart + editSize.Width;
+                    var delStart = editEnd + sepSize.Width;
+                    var delEnd = delStart + delSize.Width;
+                    
+                    if (mouseX >= startX && mouseX <= viewEnd)
+                    {
+                        newHoveredAction = 0; // View
+                    }
+                    else if (mouseX >= editStart && mouseX <= editEnd)
+                    {
+                        newHoveredAction = 2; // Edit
+                    }
+                    else if (mouseX >= delStart && mouseX <= delEnd)
+                    {
+                        newHoveredAction = 3; // Delete
+                    }
                 }
                 
                 if (newHoveredAction != -1)
@@ -482,27 +557,103 @@ namespace GUI.Features.Flight.SubFeatures
             using (var g = table.CreateGraphics())
             {
                 var viewSize = g.MeasureString(TXT_VIEW, table.Font);
+                var bookSize = g.MeasureString(TXT_BOOK, table.Font);
                 var editSize = g.MeasureString(TXT_EDIT, table.Font);
                 var delSize = g.MeasureString(TXT_DEL, table.Font);
                 var sepSize = g.MeasureString(SEP, table.Font);
                 
                 var viewEnd = startX + viewSize.Width;
-                var editStart = viewEnd + sepSize.Width;
-                var editEnd = editStart + editSize.Width;
-                var delStart = editEnd + sepSize.Width;
-                var delEnd = delStart + delSize.Width;
                 
-                if (clickX >= startX && clickX <= viewEnd)
+                if (UserSession.CurrentAppRole == AppRole.User)
                 {
-                    ViewRequested?.Invoke(flight);
+                    // User: Xem | Đặt vé
+                    var bookStart = viewEnd + sepSize.Width;
+                    var bookEnd = bookStart + bookSize.Width;
+                    
+                    if (clickX >= startX && clickX <= viewEnd)
+                    {
+                        ViewRequested?.Invoke(flight);
+                    }
+                    else if (clickX >= bookStart && clickX <= bookEnd)
+                    {
+                        HandleBookFlight(flight);
+                    }
                 }
-                else if (clickX >= editStart && clickX <= editEnd)
+                else if (UserSession.CurrentAppRole == AppRole.Staff)
                 {
-                    RequestEdit?.Invoke(flight);
+                    // Staff: Xem | Đặt vé | Sửa | Xóa
+                    var bookStart = viewEnd + sepSize.Width;
+                    var bookEnd = bookStart + bookSize.Width;
+                    var editStart = bookEnd + sepSize.Width;
+                    var editEnd = editStart + editSize.Width;
+                    var delStart = editEnd + sepSize.Width;
+                    var delEnd = delStart + delSize.Width;
+                    
+                    if (clickX >= startX && clickX <= viewEnd)
+                    {
+                        ViewRequested?.Invoke(flight);
+                    }
+                    else if (clickX >= bookStart && clickX <= bookEnd)
+                    {
+                        HandleBookFlight(flight);
+                    }
+                    else if (clickX >= editStart && clickX <= editEnd)
+                    {
+                        RequestEdit?.Invoke(flight);
+                    }
+                    else if (clickX >= delStart && clickX <= delEnd)
+                    {
+                        HandleDelete(flight);
+                    }
                 }
-                else if (clickX >= delStart && clickX <= delEnd)
+                else // Admin
                 {
-                    HandleDelete(flight);
+                    // Admin: Xem | Sửa | Xóa
+                    var editStart = viewEnd + sepSize.Width;
+                    var editEnd = editStart + editSize.Width;
+                    var delStart = editEnd + sepSize.Width;
+                    var delEnd = delStart + delSize.Width;
+                    
+                    if (clickX >= startX && clickX <= viewEnd)
+                    {
+                        ViewRequested?.Invoke(flight);
+                    }
+                    else if (clickX >= editStart && clickX <= editEnd)
+                    {
+                        RequestEdit?.Invoke(flight);
+                    }
+                    else if (clickX >= delStart && clickX <= delEnd)
+                    {
+                        HandleDelete(flight);
+                    }
+                }
+            }
+        }
+
+        private void HandleBookFlight(FlightWithDetailsDTO flight)
+        {
+            // Kiểm tra chuyến bay có thể đặt không
+            if (flight.Status != FlightStatus.SCHEDULED)
+            {
+                MessageBox.Show("Chỉ có thể đặt vé cho chuyến bay đã lên lịch.", "Thông báo",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (flight.AvailableSeats <= 0)
+            {
+                MessageBox.Show("Chuyến bay này đã hết chỗ.", "Thông báo",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Hiển thị dialog chọn hạng vé
+            using (var dialog = new CabinClassSelectionDialog(flight))
+            {
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    // Sau khi chọn hạng vé xong, chuyển sang trang Đặt chỗ
+                    BookFlightRequested?.Invoke(flight);
                 }
             }
         }

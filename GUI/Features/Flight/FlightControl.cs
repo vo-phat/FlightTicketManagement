@@ -1,3 +1,5 @@
+using BUS.Auth;
+using DTO.Auth;
 using System.Drawing;
 using System.Windows.Forms;
 using GUI.Components.Buttons;
@@ -10,6 +12,8 @@ namespace GUI.Features.Flight
         private SubFeatures.FlightListControl list;
         private SubFeatures.FlightCreateControl create;
         private SubFeatures.FlightDetailControl detail;
+
+        public event Action<DTO.Flight.FlightWithDetailsDTO>? NavigateToBookingRequested;
 
         public FlightControl()
         {
@@ -34,7 +38,16 @@ namespace GUI.Features.Flight
                 Padding = new Padding(24, 12, 0, 0),
                 AutoSize = true
             };
-            top.Controls.AddRange(new Control[] { btnList, btnCreate });
+            
+            // Chỉ Admin mới thấy nút "Tạo chuyến bay"
+            if (UserSession.CurrentAppRole == AppRole.Admin)
+            {
+                top.Controls.AddRange(new Control[] { btnList, btnCreate });
+            }
+            else
+            {
+                top.Controls.Add(btnList);
+            }
 
             list = new SubFeatures.FlightListControl { Dock = DockStyle.Fill };
             create = new SubFeatures.FlightCreateControl { Dock = DockStyle.Fill };
@@ -42,7 +55,9 @@ namespace GUI.Features.Flight
 
             // Event handlers
             detail.CloseRequested += (_, __) => SwitchTab(0);
+            detail.BookFlightRequested += OnBookFlightRequested;
             list.ViewRequested += OnListViewRequested;
+            list.BookFlightRequested += OnBookFlightRequested;
             list.RequestEdit += OnListEditRequested;
             list.DataChanged += () => list.RefreshList();
             create.FlightSaved += (_, __) => { list.RefreshList(); SwitchTab(0); };
@@ -64,9 +79,23 @@ namespace GUI.Features.Flight
 
         private void OnListEditRequested(DTO.Flight.FlightWithDetailsDTO dto)
         {
+            // Chỉ Admin mới được sửa chuyến bay
+            if (UserSession.CurrentAppRole != AppRole.Admin)
+            {
+                MessageBox.Show("Bạn không có quyền sửa chuyến bay.", "Thông báo", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            
             // Switch to create tab and load for edit
             create.LoadForEdit(dto);
             SwitchTab(1);
+        }
+
+        private void OnBookFlightRequested(DTO.Flight.FlightWithDetailsDTO flight)
+        {
+            // Thông báo lên MainForm để chuyển sang trang Đặt chỗ
+            NavigateToBookingRequested?.Invoke(flight);
         }
 
         private void SwitchTabDetail(DTO.Flight.FlightWithDetailsDTO dto)

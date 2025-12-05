@@ -1,3 +1,5 @@
+using BUS.Auth;
+using DTO.Auth;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -8,7 +10,9 @@ namespace GUI.Features.Flight.SubFeatures
     public class FlightDetailControl : UserControl
     {
         public event EventHandler? CloseRequested;
+        public event Action<FlightWithDetailsDTO>? BookFlightRequested;
         private FlightWithDetailsDTO _currentFlight;
+        private Button btnBookFlight;
         private Label vFlightNumber, vAircraftModel, vAircraftManufacturer;
         private Label vDepartureAirport, vArrivalAirport;
         private Label vDepartureTime, vArrivalTime, vDuration;
@@ -295,6 +299,28 @@ namespace GUI.Features.Flight.SubFeatures
             btnClose.Click += (_, __) => CloseRequested?.Invoke(this, EventArgs.Empty);
             bottom.Controls.Add(btnClose);
 
+            // Nút "Đặt vé" - chỉ hiển thị cho User và Staff
+            btnBookFlight = new Button
+            {
+                Text = "🎫 Đặt vé",
+                AutoSize = true,
+                Font = new Font("Segoe UI", 10f, FontStyle.Bold),
+                BackColor = Color.FromArgb(46, 125, 50),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Padding = new Padding(16, 8, 16, 8),
+                Cursor = Cursors.Hand,
+                Margin = new Padding(8, 0, 0, 0)
+            };
+            btnBookFlight.FlatAppearance.BorderSize = 0;
+            btnBookFlight.Click += BtnBookFlight_Click;
+            
+            // Thêm nút vào bottom
+            bottom.Controls.Add(btnBookFlight);
+            
+            // Chỉ User và Staff mới thấy nút Đặt vé (Admin không thấy)
+            btnBookFlight.Visible = (UserSession.CurrentAppRole == AppRole.User || UserSession.CurrentAppRole == AppRole.Staff);
+
             card.Controls.Add(bottom);
 
             // Main layout
@@ -349,6 +375,68 @@ namespace GUI.Features.Flight.SubFeatures
 
             // Note
             vNote.Text = !string.IsNullOrWhiteSpace(flight.Note) ? flight.Note : "(Không có ghi chú)";
+            
+            // Cập nhật trạng thái nút "Đặt vé"
+            UpdateBookButtonState();
+        }
+
+        private void UpdateBookButtonState()
+        {
+            if (btnBookFlight == null || _currentFlight == null) return;
+
+            // Chỉ cho đặt vé với chuyến bay "Đã lên lịch"
+            bool canBook = _currentFlight.Status == FlightStatus.SCHEDULED && _currentFlight.AvailableSeats > 0;
+            
+            btnBookFlight.Enabled = canBook;
+            btnBookFlight.BackColor = canBook 
+                ? Color.FromArgb(46, 125, 50) 
+                : Color.FromArgb(189, 189, 189);
+            
+            if (!canBook)
+            {
+                if (_currentFlight.Status != FlightStatus.SCHEDULED)
+                {
+                    btnBookFlight.Text = "🚫 Không thể đặt";
+                }
+                else if (_currentFlight.AvailableSeats <= 0)
+                {
+                    btnBookFlight.Text = "😔 Hết chỗ";
+                }
+            }
+            else
+            {
+                btnBookFlight.Text = "🎫 Đặt vé";
+            }
+        }
+
+        private void BtnBookFlight_Click(object sender, EventArgs e)
+        {
+            if (_currentFlight == null) return;
+            
+            // Kiểm tra lại điều kiện
+            if (_currentFlight.Status != FlightStatus.SCHEDULED)
+            {
+                MessageBox.Show("Chỉ có thể đặt vé cho chuyến bay đã lên lịch.", "Thông báo", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (_currentFlight.AvailableSeats <= 0)
+            {
+                MessageBox.Show("Chuyến bay này đã hết chỗ.", "Thông báo", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Hiển thị dialog chọn hạng vé
+            using (var dialog = new CabinClassSelectionDialog(_currentFlight))
+            {
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    // Chuyển sang trang Tạo/Tìm đặt chỗ
+                    BookFlightRequested?.Invoke(_currentFlight);
+                }
+            }
         }
 
         private string GetStatusText(FlightStatus status)

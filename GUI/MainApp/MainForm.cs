@@ -43,6 +43,7 @@ namespace GUI.MainApp {
         private FlowLayoutPanel navFlow;
         private Panel mainContentPanel;
         private PictureBox defaultPicture;
+        private Button btnFindFlights; // Lưu reference để tái sử dụng
 
         // lưu UC theo key để giữ trạng thái (nếu cần)
         private readonly Dictionary<string, UserControl> controls = new();
@@ -89,7 +90,7 @@ namespace GUI.MainApp {
                     // QUYỀN CHO KHÁCH HÀNG (USER)
                     Console.WriteLine("[MainForm] Chế độ Demo - Quyền Khách hàng: Xem và đặt vé");
                     _perms = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
-                        // Quyền cơ bản: Xem chuyến bay
+                        // Quyền chuyến bay
                         "flights.read",
                         
                         // Quyền đặt vé
@@ -194,11 +195,16 @@ namespace GUI.MainApp {
                     OnClick = () => {
                         mainContentPanel.Controls.Clear();
 
+                        // Thêm lại hình nền
                         if (!mainContentPanel.Controls.Contains(defaultPicture))
                             mainContentPanel.Controls.Add(defaultPicture);
-
                         defaultPicture.Visible = true;
                         defaultPicture.BringToFront();
+
+                        // Thêm lại nút "Tìm chuyến bay"
+                        if (!mainContentPanel.Controls.Contains(btnFindFlights))
+                            mainContentPanel.Controls.Add(btnFindFlights);
+                        btnFindFlights.BringToFront();
 
                         ActivateTab(NavKey.Home);
                     }
@@ -410,8 +416,8 @@ namespace GUI.MainApp {
             };
             mainContentPanel.Controls.Add(defaultPicture);
 
-            // Thêm nút lớn để truy cập danh sách chuyến bay
-            var btnFindFlights = new Button {
+            // Tạo nút "Tìm chuyến bay" - lưu vào field để tái sử dụng
+            btnFindFlights = new Button {
                 Text = "🔍 TÌM CHUYẾN BAY",
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
                 Size = new Size(400, 80),
@@ -454,18 +460,44 @@ namespace GUI.MainApp {
 
         private void Logo_Click(object? sender, EventArgs e) {
             mainContentPanel.Controls.Clear();
+            
+            // Thêm lại hình nền
             if (!mainContentPanel.Controls.Contains(defaultPicture))
                 mainContentPanel.Controls.Add(defaultPicture);
             defaultPicture.Visible = true;
             defaultPicture.BringToFront();
+            
+            // Thêm lại nút "Tìm chuyến bay"
+            if (!mainContentPanel.Controls.Contains(btnFindFlights))
+                mainContentPanel.Controls.Add(btnFindFlights);
+            btnFindFlights.BringToFront();
+            
             ActivateTab(NavKey.Home);
         }
 
         // ===== Các hành động mở màn hình thực tế ================================
         private void OpenFlightManagement() {
-            // Load FlightControl without parameters
-            ShowControl("Flight", () => new GUI.Features.Flight.FlightControl());
-            ActivateTab(NavKey.BookingsTickets);
+            // Load FlightControl và đăng ký event
+            ShowControl("Flight", () => {
+                var control = new GUI.Features.Flight.FlightControl();
+                control.NavigateToBookingRequested += OnNavigateToBookingRequested;
+                return control;
+            });
+            ActivateTab(NavKey.Flights);
+        }
+
+        private void OnNavigateToBookingRequested(DTO.Flight.FlightWithDetailsDTO flight)
+        {
+            // Chuyển sang trang Tạo/Tìm đặt chỗ
+            MessageBox.Show(
+                $"Đang chuyển sang trang đặt vé cho chuyến bay {flight.FlightNumber}\n" +
+                $"{flight.DepartureAirportCode} → {flight.ArrivalAirportCode}\n" +
+                $"Khởi hành: {flight.DepartureTime?.ToString("dd/MM/yyyy HH:mm")}", 
+                "Đặt vé", 
+                MessageBoxButtons.OK, 
+                MessageBoxIcon.Information);
+            
+            OpenBookingSearch();
         }
 
         private void OpenFareRules() {
