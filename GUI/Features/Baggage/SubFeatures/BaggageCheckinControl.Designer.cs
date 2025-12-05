@@ -1,195 +1,149 @@
-﻿namespace GUI.Features.Baggage.SubFeatures
-{
-    partial class BaggageCheckinControl
-    {
-        /// <summary> 
-        /// Required designer variable.
-        /// </summary>
+﻿using System;
+using System.Drawing;
+using System.Windows.Forms;
+using GUI.Components.Inputs;
+using GUI.Components.Buttons;
+
+namespace GUI.Features.Baggage.SubFeatures {
+    partial class BaggageCheckinControl {
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary> 
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
+        protected override void Dispose(bool disposing) {
             if (disposing && (components != null))
-            {
                 components.Dispose();
-            }
             base.Dispose(disposing);
         }
 
         #region Component Designer generated code
 
-        /// <summary> 
-        /// Required method for Designer support - do not modify 
-        /// the contents of this method with the code editor.
-        /// </summary>
-        private void InitializeComponent()
-        {
+        private void InitializeComponent() {
+            components = new System.ComponentModel.Container();
+
             label1 = new Label();
-            txtNumTicketCheckin = new TextBox();
-            txtCodeCheckin = new TextBox();
-            txtSpecialHandlingCheckin = new TextBox();
-            txtActualWeightCheckin = new TextBox();
-            label2 = new Label();
-            label3 = new Label();
-            label4 = new Label();
-            label5 = new Label();
-            label6 = new Label();
-            label7 = new Label();
-            label8 = new Label();
-            label9 = new Label();
-            txtExtraFeeCheckin = new TextBox();
-            owedWeightCheckin = new TextBox();
-            txtBaggageTypeCheckin = new TextBox();
-            txtFlightCodeCheckin = new TextBox();
-            btnSaveAndPrintCheckin = new GUI.Components.Buttons.PrimaryButton();
+
+            txtNumTicketCheckin = new UnderlinedTextField("Số vé", "");
+            txtCodeCheckin = new UnderlinedTextField("Mã nhãn", "");
+            txtSpecialHandlingCheckin = new UnderlinedTextField("Xử lý đặc biệt", "");
+            txtActualWeightCheckin = new UnderlinedTextField("Cân nặng thực tế (Kg)", "");
+            txtExtraFeeCheckin = new UnderlinedTextField("Phí phát sinh", "");
+            owedWeightCheckin = new UnderlinedTextField("Định mức miễn cước (Kg)", "");
+            txtBaggageTypeCheckin = new UnderlinedTextField("Loại", "");
+            txtFlightCodeCheckin = new UnderlinedTextField("Mã chuyến bay", "");
+
+            btnSaveAndPrintCheckin = new PrimaryButton();
+
+            // layout local
+            var mainLayout = new TableLayoutPanel();
+            var titlePanel = new Panel();
+            var inputsLayout = new TableLayoutPanel();
+            var buttonRow = new FlowLayoutPanel();
+
             SuspendLayout();
-            // 
-            // label1
-            // 
+
+            // ===== Root control =====
+            AutoScaleDimensions = new SizeF(8F, 20F);
+            AutoScaleMode = AutoScaleMode.Font;
+            BackColor = Color.FromArgb(232, 240, 252);
+            Name = "BaggageCheckinControl";
+            Size = new Size(1063, 565);
+
+            // ===== Main layout (Title + Inputs + Buttons) =====
+            mainLayout.Dock = DockStyle.Fill;
+            mainLayout.ColumnCount = 1;
+            mainLayout.RowCount = 3;
+            mainLayout.Padding = new Padding(24, 8, 24, 24);
+            mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));   // title
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));   // inputs
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));   // buttons
+
+            Controls.Add(mainLayout);
+
+            // ===== Title panel =====
+            titlePanel.Dock = DockStyle.Top;
+            titlePanel.Height = 64;
+            titlePanel.Padding = new Padding(0, 8, 0, 8);
+            titlePanel.BackColor = Color.Transparent;
+
             label1.AutoSize = true;
-            label1.Location = new Point(70, 62);
-            label1.Name = "label1";
-            label1.Size = new Size(179, 20);
-            label1.TabIndex = 0;
-            label1.Text = "Gắn tag/ Check-in hành lý";
-            label1.Click += label1_Click;
-            // 
-            // txtNumTicketCheckin
-            // 
-            txtNumTicketCheckin.Location = new Point(103, 147);
-            txtNumTicketCheckin.Name = "txtNumTicketCheckin";
-            txtNumTicketCheckin.Size = new Size(125, 27);
-            txtNumTicketCheckin.TabIndex = 1;
-            // 
-            // txtCodeCheckin
-            // 
-            txtCodeCheckin.Location = new Point(103, 228);
-            txtCodeCheckin.Name = "txtCodeCheckin";
-            txtCodeCheckin.Size = new Size(125, 27);
-            txtCodeCheckin.TabIndex = 2;
-            // 
-            // txtSpecialHandlingCheckin
-            // 
-            txtSpecialHandlingCheckin.Location = new Point(103, 374);
-            txtSpecialHandlingCheckin.Name = "txtSpecialHandlingCheckin";
-            txtSpecialHandlingCheckin.Size = new Size(125, 27);
-            txtSpecialHandlingCheckin.TabIndex = 4;
-            // 
-            // txtActualWeightCheckin
-            // 
-            txtActualWeightCheckin.Location = new Point(103, 293);
-            txtActualWeightCheckin.Name = "txtActualWeightCheckin";
-            txtActualWeightCheckin.Size = new Size(125, 27);
-            txtActualWeightCheckin.TabIndex = 3;
-            // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.Location = new Point(49, 187);
-            label2.Name = "label2";
-            label2.Size = new Size(66, 20);
-            label2.TabIndex = 5;
-            label2.Text = "Mã nhãn";
-            label2.Click += label2_Click;
-            // 
-            // label3
-            // 
-            label3.AutoSize = true;
-            label3.Location = new Point(49, 115);
-            label3.Name = "label3";
-            label3.Size = new Size(45, 20);
-            label3.TabIndex = 6;
-            label3.Text = "Số vé";
-            // 
-            // label4
-            // 
-            label4.AutoSize = true;
-            label4.Location = new Point(49, 270);
-            label4.Name = "label4";
-            label4.Size = new Size(149, 20);
-            label4.TabIndex = 7;
-            label4.Text = "Cân nặng thực tế(Kg)";
-            // 
-            // label5
-            // 
-            label5.AutoSize = true;
-            label5.Location = new Point(49, 336);
-            label5.Name = "label5";
-            label5.Size = new Size(100, 20);
-            label5.TabIndex = 8;
-            label5.Text = "Xử lý đặc biệt";
-            // 
-            // label6
-            // 
-            label6.AutoSize = true;
-            label6.Location = new Point(510, 348);
-            label6.Name = "label6";
-            label6.Size = new Size(93, 20);
-            label6.TabIndex = 16;
-            label6.Text = "Phí phát sinh";
-            // 
-            // label7
-            // 
-            label7.AutoSize = true;
-            label7.Location = new Point(510, 282);
-            label7.Name = "label7";
-            label7.Size = new Size(174, 20);
-            label7.TabIndex = 15;
-            label7.Text = "Định mức miễn cước(Kg)";
-            label7.Click += label7_Click;
-            // 
-            // label8
-            // 
-            label8.AutoSize = true;
-            label8.Location = new Point(510, 127);
-            label8.Name = "label8";
-            label8.Size = new Size(108, 20);
-            label8.TabIndex = 14;
-            label8.Text = "Mã chuyến bay";
-            // 
-            // label9
-            // 
-            label9.AutoSize = true;
-            label9.Location = new Point(510, 199);
-            label9.Name = "label9";
-            label9.Size = new Size(37, 20);
-            label9.TabIndex = 13;
-            label9.Text = "Loại";
-            // 
-            // txtExtraFeeCheckin
-            // 
-            txtExtraFeeCheckin.Location = new Point(564, 386);
-            txtExtraFeeCheckin.Name = "txtExtraFeeCheckin";
-            txtExtraFeeCheckin.Size = new Size(125, 27);
-            txtExtraFeeCheckin.TabIndex = 12;
-            // 
-            // owedWeightCheckin
-            // 
-            owedWeightCheckin.Location = new Point(564, 305);
-            owedWeightCheckin.Name = "owedWeightCheckin";
-            owedWeightCheckin.Size = new Size(125, 27);
-            owedWeightCheckin.TabIndex = 11;
-            // 
-            // txtBaggageTypeCheckin
-            // 
-            txtBaggageTypeCheckin.Location = new Point(564, 240);
-            txtBaggageTypeCheckin.Name = "txtBaggageTypeCheckin";
-            txtBaggageTypeCheckin.Size = new Size(125, 27);
-            txtBaggageTypeCheckin.TabIndex = 10;
-            // 
-            // txtFlightCodeCheckin
-            // 
-            txtFlightCodeCheckin.Location = new Point(564, 159);
-            txtFlightCodeCheckin.Name = "txtFlightCodeCheckin";
-            txtFlightCodeCheckin.Size = new Size(125, 27);
-            txtFlightCodeCheckin.TabIndex = 9;
-            // 
-            // btnSaveAndPrintCheckin
-            // 
+            label1.Text = "Gắn tag / Check-in hành lý";
+            label1.Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point);
+            label1.ForeColor = Color.FromArgb(40, 40, 40);
+            label1.Dock = DockStyle.Left;
+            label1.Click += label1_Click; // nếu bạn có handler
+
+            titlePanel.Controls.Add(label1);
+            mainLayout.Controls.Add(titlePanel, 0, 0);
+
+            // ===== Inputs layout (2 cột x 4 hàng) =====
+            inputsLayout.Dock = DockStyle.Top;
+            inputsLayout.ColumnCount = 2;
+            inputsLayout.RowCount = 4;
+            inputsLayout.AutoSize = true;
+            inputsLayout.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            inputsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            inputsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            inputsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            inputsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            inputsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            inputsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            inputsLayout.Margin = new Padding(0, 8, 0, 0);
+
+            // common config cho UnderlinedTextField
+            void ConfigField(UnderlinedTextField field) {
+                field.Width = 300;
+                field.Margin = new Padding(0, 6, 24, 6);
+            }
+
+            ConfigField(txtNumTicketCheckin);
+            ConfigField(txtCodeCheckin);
+            ConfigField(txtSpecialHandlingCheckin);
+            ConfigField(txtActualWeightCheckin);
+            ConfigField(txtExtraFeeCheckin);
+            ConfigField(owedWeightCheckin);
+            ConfigField(txtBaggageTypeCheckin);
+            ConfigField(txtFlightCodeCheckin);
+
+            // Numeric-only cho cân nặng, định mức, phí phát sinh
+            txtActualWeightCheckin.KeyPress += (s, e) => {
+                if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
+                    e.Handled = true;
+            };
+            owedWeightCheckin.KeyPress += (s, e) => {
+                if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
+                    e.Handled = true;
+            };
+            txtExtraFeeCheckin.KeyPress += (s, e) => {
+                if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
+                    e.Handled = true;
+            };
+
+            // ===== HÀNG 0: Số vé – Mã chuyến bay =====
+            inputsLayout.Controls.Add(txtNumTicketCheckin, 0, 0);
+            inputsLayout.Controls.Add(txtFlightCodeCheckin, 1, 0);
+
+            // ===== HÀNG 1: Mã nhãn – Loại =====
+            inputsLayout.Controls.Add(txtCodeCheckin, 0, 1);
+            inputsLayout.Controls.Add(txtBaggageTypeCheckin, 1, 1);
+
+            // ===== HÀNG 2: Cân nặng thực tế – Định mức miễn cước =====
+            inputsLayout.Controls.Add(txtActualWeightCheckin, 0, 2);
+            inputsLayout.Controls.Add(owedWeightCheckin, 1, 2);
+
+            // ===== HÀNG 3: Xử lý đặc biệt – Phí phát sinh =====
+            inputsLayout.Controls.Add(txtSpecialHandlingCheckin, 0, 3);
+            inputsLayout.Controls.Add(txtExtraFeeCheckin, 1, 3);
+
+            mainLayout.Controls.Add(inputsLayout, 0, 1);
+
+            // ===== Button row =====
+            buttonRow.Dock = DockStyle.Top;
+            buttonRow.FlowDirection = FlowDirection.RightToLeft;
+            buttonRow.AutoSize = true;
+            buttonRow.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            buttonRow.Padding = new Padding(0, 12, 0, 0);
+
+            // Giữ style PrimaryButton hiện tại cho đẹp
             btnSaveAndPrintCheckin.AutoSize = true;
             btnSaveAndPrintCheckin.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             btnSaveAndPrintCheckin.BackColor = Color.FromArgb(155, 209, 243);
@@ -207,8 +161,8 @@
             btnSaveAndPrintCheckin.Icon = null;
             btnSaveAndPrintCheckin.IconSize = new Size(22, 22);
             btnSaveAndPrintCheckin.IconSpacing = 10;
-            btnSaveAndPrintCheckin.Location = new Point(828, 203);
-            btnSaveAndPrintCheckin.Name = "btnSaveAndPrintCheckin";
+            btnSaveAndPrintCheckin.Text = "Lưu và in tag";
+            btnSaveAndPrintCheckin.TextAlign = ContentAlignment.MiddleLeft;
             btnSaveAndPrintCheckin.NormalBackColor = Color.FromArgb(155, 209, 243);
             btnSaveAndPrintCheckin.NormalBorderColor = Color.FromArgb(40, 40, 40);
             btnSaveAndPrintCheckin.NormalForeColor = Color.White;
@@ -217,37 +171,12 @@
             btnSaveAndPrintCheckin.PressedBackColor = Color.FromArgb(225, 240, 255);
             btnSaveAndPrintCheckin.PressedBorderColor = Color.FromArgb(0, 92, 175);
             btnSaveAndPrintCheckin.PressedForeColor = Color.FromArgb(0, 92, 175);
-            btnSaveAndPrintCheckin.Size = new Size(204, 52);
-            btnSaveAndPrintCheckin.TabIndex = 18;
-            btnSaveAndPrintCheckin.Text = "Lưu và in tag";
-            btnSaveAndPrintCheckin.TextAlign = ContentAlignment.MiddleLeft;
-            btnSaveAndPrintCheckin.UseVisualStyleBackColor = false;
-            btnSaveAndPrintCheckin.WordWrap = false;
-            // 
-            // BaggageCheckinControl
-            // 
-            AutoScaleDimensions = new SizeF(8F, 20F);
-            AutoScaleMode = AutoScaleMode.Font;
-            Controls.Add(btnSaveAndPrintCheckin);
-            Controls.Add(label6);
-            Controls.Add(label7);
-            Controls.Add(label8);
-            Controls.Add(label9);
-            Controls.Add(txtExtraFeeCheckin);
-            Controls.Add(owedWeightCheckin);
-            Controls.Add(txtBaggageTypeCheckin);
-            Controls.Add(txtFlightCodeCheckin);
-            Controls.Add(label5);
-            Controls.Add(label4);
-            Controls.Add(label3);
-            Controls.Add(label2);
-            Controls.Add(txtSpecialHandlingCheckin);
-            Controls.Add(txtActualWeightCheckin);
-            Controls.Add(txtCodeCheckin);
-            Controls.Add(txtNumTicketCheckin);
-            Controls.Add(label1);
-            Name = "BaggageCheckinControl";
-            Size = new Size(1063, 565);
+            btnSaveAndPrintCheckin.Margin = new Padding(0, 0, 0, 0);
+            // event Click gắn ở file .cs chính
+
+            buttonRow.Controls.Add(btnSaveAndPrintCheckin);
+            mainLayout.Controls.Add(buttonRow, 0, 2);
+
             ResumeLayout(false);
             PerformLayout();
         }
@@ -255,22 +184,14 @@
         #endregion
 
         private Label label1;
-        private TextBox txtNumTicketCheckin;
-        private TextBox txtCodeCheckin;
-        private TextBox txtSpecialHandlingCheckin;
-        private TextBox txtActualWeightCheckin;
-        private Label label2;
-        private Label label3;
-        private Label label4;
-        private Label label5;
-        private Label label6;
-        private Label label7;
-        private Label label8;
-        private Label label9;
-        private TextBox txtExtraFeeCheckin;
-        private TextBox owedWeightCheckin;
-        private TextBox txtBaggageTypeCheckin;
-        private TextBox txtFlightCodeCheckin;
-        private Components.Buttons.PrimaryButton btnSaveAndPrintCheckin;
+        private UnderlinedTextField txtNumTicketCheckin;
+        private UnderlinedTextField txtCodeCheckin;
+        private UnderlinedTextField txtSpecialHandlingCheckin;
+        private UnderlinedTextField txtActualWeightCheckin;
+        private UnderlinedTextField txtExtraFeeCheckin;
+        private UnderlinedTextField owedWeightCheckin;
+        private UnderlinedTextField txtBaggageTypeCheckin;
+        private UnderlinedTextField txtFlightCodeCheckin;
+        private PrimaryButton btnSaveAndPrintCheckin;
     }
 }
