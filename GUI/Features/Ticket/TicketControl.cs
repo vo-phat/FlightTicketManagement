@@ -3,144 +3,177 @@ using DTO.Ticket;
 using GUI.Features.Ticket.subTicket;
 using GUI.Features.Baggage.SubFeatures;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-namespace GUI.Features.Ticket
-{
-    public partial class TicketControl : UserControl
-    {
+using GUI.Components.Buttons;
+
+namespace GUI.Features.Ticket {
+    public partial class TicketControl : UserControl {
+        // Child controls
         private BookingSearchControl bookingSearchControl;
         private HistoryTicketControl historyTicketControl;
         private TicketOpsControl ticketOpsControl;
         private frmPassengerInfoControl frmPassengerInfoControl;
-        public TicketControl()
-        {
+
+        // Tab index (cho dễ đọc, tránh magic number)
+        private const int TAB_BOOKING = 0;
+        private const int TAB_HISTORY = 1;
+        private const int TAB_TICKET_OPS = 2;
+        private const int TAB_PASSENGER_INFO = 3;
+
+        public TicketControl() {
             InitializeComponent();
-            /// content
+            InitializeChildControls();
+
+            // Event mở quản lý hành lý
+            ticketOpsControl.OnOpenBaggageManager += TicketOpsControl_OnOpenBaggageManager;
+
+            // Mặc định mở trang tìm kiếm vé
+            switchTab(TAB_BOOKING);
+        }
+
+        // Khởi tạo và gắn các UserControl con vào các panel tương ứng
+        private void InitializeChildControls() {
             bookingSearchControl = new BookingSearchControl();
             historyTicketControl = new HistoryTicketControl();
             ticketOpsControl = new TicketOpsControl();
-
-            
-
-
             frmPassengerInfoControl = new frmPassengerInfoControl();
 
-            // chức năng xem hành lý của khách
-            //int id = 1;
-            //FrmTicketBaggageManager frmTicketBaggageManager = new FrmTicketBaggageManager(id);
-
-
+            // Dock panel con
             pnlBookingSearch.Dock = DockStyle.Fill;
             pnlHistoryTicket.Dock = DockStyle.Fill;
             pnlTicketOps.Dock = DockStyle.Fill;
             pnlFrmPassengerInfo.Dock = DockStyle.Fill;
 
+            // Dock control con
             bookingSearchControl.Dock = DockStyle.Fill;
             historyTicketControl.Dock = DockStyle.Fill;
             ticketOpsControl.Dock = DockStyle.Fill;
             frmPassengerInfoControl.Dock = DockStyle.Fill;
 
-            //pnl content con
+            // Add control con vào panel
             pnlBookingSearch.Controls.Add(bookingSearchControl);
             pnlHistoryTicket.Controls.Add(historyTicketControl);
             pnlTicketOps.Controls.Add(ticketOpsControl);
             pnlFrmPassengerInfo.Controls.Add(frmPassengerInfoControl);
 
-
-            // pnl content cha
+            // Đảm bảo content panel chứa đủ 4 panel con
             pnlContentTicket.Controls.Add(pnlBookingSearch);
             pnlContentTicket.Controls.Add(pnlHistoryTicket);
             pnlContentTicket.Controls.Add(pnlTicketOps);
             pnlContentTicket.Controls.Add(pnlFrmPassengerInfo);
-            pnlBookingSearch.Dock = DockStyle.Fill;
-            pnlContentTicket.BringToFront();
 
-            ///// add butoon
-            //pnlHeaderTicket.Controls.Add(btnOpsTicket);
-            //pnlHeaderTicket.Controls.Add(btnCreateFindTicket);
-            //pnlHeaderTicket.Controls.Add(btnHistoryTicket);
-            // chỉnh header
+            // Header luôn dock trên cùng (phòng trường hợp designer chỉnh)
             pnlHeaderTicket.Dock = DockStyle.Top;
             pnlHeaderTicket.Height = 60;
-            pnlHeaderTicket.BringToFront();
-
-            //TicketControl.Dock = DockStyle.Fill;
-            ticketOpsControl.OnOpenBaggageManager += TicketOpsControl_OnOpenBaggageManager;
         }
-        private void TicketOpsControl_OnOpenBaggageManager(int ticketId)
-        {
-            MessageBox.Show($"Mở quản lý hành lý cho vé có ID: {ticketId}");
-            var frm = new FrmTicketBaggageManager(ticketId);
 
-            frm.Dock = DockStyle.Fill;
+        private void TicketOpsControl_OnOpenBaggageManager(int ticketId) {
+            MessageBox.Show($"Mở quản lý hành lý cho vé có ID: {ticketId}");
+
+            var frm = new FrmTicketBaggageManager(ticketId) {
+                Dock = DockStyle.Fill
+            };
+
             pnlTicketOps.Controls.Clear();
             pnlTicketOps.Controls.Add(frm);
             frm.BringToFront();
         }
 
-        private void btnHistoryTicketAdmin_Click(object sender, EventArgs e)
-        {
-            switchTab(1);
-        }
-        private void btnCreateAndFindSeat_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show("Chức năng đang phát triển!");
-            //switchTab(0);
+        // ==========================
+        // Sự kiện click của 3 tab
+        // ==========================
+
+        private void btnHistoryTicketAdmin_Click(object sender, EventArgs e) {
+            switchTab(TAB_HISTORY);
         }
 
-        private void btnOpsTicket_Click(object sender, EventArgs e)
-        {
-            switchTab(2);
-        }
-        private void btnFrmPassengerInfoTiket_Click(object sender, EventArgs e)
-        {
-            switchTab(3);
+        private void btnOpsTicket_Click(object sender, EventArgs e) {
+            switchTab(TAB_TICKET_OPS);
         }
 
-        public void switchTab(int i)
-        {
+        private void btnFrmPassengerInfoTiket_Click(object sender, EventArgs e) {
+            switchTab(TAB_PASSENGER_INFO);
+        }
+
+        // ==========================
+        // TAB SWITCHER
+        // ==========================
+
+        public void switchTab(int index) {
+            // Ẩn tất cả panel nội dung
             pnlBookingSearch.Visible = false;
             pnlHistoryTicket.Visible = false;
             pnlTicketOps.Visible = false;
             pnlFrmPassengerInfo.Visible = false;
-            switch (i)
-            {
-                case 0:
+
+            // Mở panel tương ứng
+            switch (index) {
+                case TAB_BOOKING:
                     pnlBookingSearch.Visible = true;
                     break;
-                case 1:
+                case TAB_HISTORY:
                     pnlHistoryTicket.Visible = true;
                     break;
-                case 2:
+                case TAB_TICKET_OPS:
                     pnlTicketOps.Visible = true;
                     break;
-                case 3:
+                case TAB_PASSENGER_INFO:
                     pnlFrmPassengerInfo.Visible = true;
                     break;
-                default:
-                    break;
             }
+
+            // Rebuild header: tab active = PrimaryButton, inactive = SecondaryButton
+            RebuildHeaderButtons(index);
         }
 
-        private void TicketControl_Load(object sender, EventArgs e)
-        {
+        // ==========================
+        // HEADER BUTTONS
+        // ==========================
 
+        private void RebuildHeaderButtons(int activeIndex) {
+            // Xoá hết nút header cũ
+            pnlHeaderTicket.Controls.Clear();
+
+            // --- Tab: Thông tin khách hàng (idx = 3) ---
+            if (activeIndex == TAB_PASSENGER_INFO)
+                btnFrmPassengerInfoTiket = new PrimaryButton("Thông tin khách hàng");
+            else
+                btnFrmPassengerInfoTiket = new SecondaryButton("Thông tin khách hàng");
+
+            btnFrmPassengerInfoTiket.AutoSize = true;
+            btnFrmPassengerInfoTiket.Click += btnFrmPassengerInfoTiket_Click;
+            pnlHeaderTicket.Controls.Add(btnFrmPassengerInfoTiket);
+
+            // --- Tab: Quản lý vé (idx = 2) ---
+            if (activeIndex == TAB_TICKET_OPS)
+                btnOpsTicket = new PrimaryButton("Quản lý vé");
+            else
+                btnOpsTicket = new SecondaryButton("Quản lý vé");
+
+            btnOpsTicket.AutoSize = true;
+            btnOpsTicket.Click += btnOpsTicket_Click;
+            pnlHeaderTicket.Controls.Add(btnOpsTicket);
+
+            // --- Tab: Lịch sử vé (idx = 1) ---
+            if (activeIndex == TAB_HISTORY)
+                btnHistoryTicketAdmin = new PrimaryButton("Lịch sử vé");
+            else
+                btnHistoryTicketAdmin = new SecondaryButton("Lịch sử vé");
+
+            btnHistoryTicketAdmin.AutoSize = true;
+            btnHistoryTicketAdmin.Click += btnHistoryTicketAdmin_Click;
+            pnlHeaderTicket.Controls.Add(btnHistoryTicketAdmin);
         }
 
-        private void pnlHeaderTicket_Paint(object sender, PaintEventArgs e)
-        {
+        // ==========================
+        // Event trống giữ nguyên
+        // ==========================
 
+        private void TicketControl_Load(object sender, EventArgs e) {
         }
 
-        /// Event nhận id
-        
-
+        private void pnlHeaderTicket_Paint(object sender, PaintEventArgs e) {
+        }
     }
 }

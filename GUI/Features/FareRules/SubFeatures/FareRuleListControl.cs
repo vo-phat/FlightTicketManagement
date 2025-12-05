@@ -10,6 +10,8 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using GUI.Features.FareRules;
+using DTO.Fare_Rule;
 
 namespace GUI.Features.FareRules.SubFeatures
 {
@@ -48,7 +50,6 @@ namespace GUI.Features.FareRules.SubFeatures
             LoadComboBoxes();
             LoadFareRules();
             FareRuleCreateControl.OnFareRuleAdded += LoadFareRules;
-
         }
 
         private void InitializeComponent()
@@ -107,18 +108,16 @@ namespace GUI.Features.FareRules.SubFeatures
                 RowCount = 2
             };
 
-            // Grid Inputs (2 cột x 3 hàng)
             var grid = new TableLayoutPanel
             {
                 Dock = DockStyle.Top,
-                AutoSize = false,             // ❌ tắt tự co (nguyên nhân chính)
-                Height = 220,                 // ✅ cố định chiều cao filter vừa đủ
+                AutoSize = false,             
+                Height = 220,               
                 ColumnCount = 2,
                 RowCount = 3,
                 Margin = new Padding(0, 0, 0, 8)
             };
 
-            // Giãn đều 3 hàng (thay vì AutoSize “nhảy loạn”)
             grid.RowStyles.Add(new RowStyle(SizeType.Percent, 33.3f));
             grid.RowStyles.Add(new RowStyle(SizeType.Percent, 33.3f));
             grid.RowStyles.Add(new RowStyle(SizeType.Percent, 33.3f));
@@ -191,11 +190,74 @@ namespace GUI.Features.FareRules.SubFeatures
                 new DataGridViewTextBoxColumn { Name="effectiveDate", HeaderText="Hiệu lực", DataPropertyName=nameof(FareRuleRow.EffectiveDate), MinimumWidth=120, DefaultCellStyle = new DataGridViewCellStyle{ Format = "dd/MM/yyyy" } },
                 new DataGridViewTextBoxColumn { Name="expiryDate", HeaderText="Hết hạn", DataPropertyName=nameof(FareRuleRow.ExpiryDate), MinimumWidth=120, DefaultCellStyle = new DataGridViewCellStyle{ Format = "dd/MM/yyyy" } },
                 new DataGridViewTextBoxColumn { Name="price", HeaderText="Giá (₫)", DataPropertyName=nameof(FareRuleRow.Price), MinimumWidth=110, DefaultCellStyle = new DataGridViewCellStyle{ Format = "N0" } },
+                new DataGridViewButtonColumn { Name="action", HeaderText="Xem Chi Tiết", Text="Xem", UseColumnTextForButtonValue = true, MinimumWidth=110, AutoSizeMode = DataGridViewAutoSizeColumnMode.None, Width = 160 }
             });
+
+            table.CellContentClick += Table_CellContentClick;
 
             table.DataSource = _bs;
             root.Controls.Add(table, 0, 2);
             Controls.Add(root);
+        }
+
+        private void Table_CellContentClick(object? sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+            var col = table.Columns[e.ColumnIndex];
+            if (col == null) return;
+
+            if (col.Name == "action")
+            {
+                var item = table.Rows[e.RowIndex].DataBoundItem as FareRuleRow;
+                if (item == null) return;
+                ShowDetail(item.RuleId);
+            }
+        }
+
+        private void ShowDetail(int ruleId)
+        {
+            try
+            {
+                FareRuleDTO dto = bus.GetById(ruleId);
+                if (dto == null)
+                {
+                    MessageBox.Show($"Không tìm thấy quy tắc vé #{ruleId}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                var parent = FindParentFareRulesControl();
+                if (parent != null)
+                {
+                    parent.ShowDetail(dto);
+                    return;
+                }
+
+                var det = new FareRuleDetailControl();
+                det.LoadRule(dto.RuleId, dto.RouteName, dto.CabinClass, dto.FareType, dto.Season, dto.EffectiveDate, dto.ExpiryDate, dto.Price, dto.Description);
+                using var frm = new Form
+                {
+                    Text = $"Chi tiết Quy tắc #{dto.RuleId}",
+                    StartPosition = FormStartPosition.CenterParent,
+                    ClientSize = det.Size
+                };
+                det.Dock = DockStyle.Fill;
+                frm.Controls.Add(det);
+                frm.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi mở chi tiết:\n" + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private GUI.Features.FareRules.FareRulesControl? FindParentFareRulesControl()
+        {
+            Control? p = Parent;
+            while (p != null)
+            {
+                if (p is GUI.Features.FareRules.FareRulesControl frc) return frc;
+                p = p.Parent;
+            }
+            return null;
         }
 
         private void LoadComboBoxes()
