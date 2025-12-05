@@ -1,6 +1,7 @@
 using BUS.Auth;
 using DTO.Auth;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using DTO.Flight;
@@ -11,14 +12,21 @@ namespace GUI.Features.Flight.SubFeatures
     {
         public event EventHandler? CloseRequested;
         public event Action<DTO.Booking.BookingRequestDTO>? NavigateToBookingRequested;
-        private FlightWithDetailsDTO _currentFlight;
-        private Button btnBookFlight;
-        private Label vFlightNumber, vAircraftModel, vAircraftManufacturer;
-        private Label vDepartureAirport, vArrivalAirport;
-        private Label vDepartureTime, vArrivalTime, vDuration;
-        private Label vStatus, vAvailableSeats;
-        private Label vRouteInfo;
-        private Label vNote;
+        private FlightWithDetailsDTO _currentFlight = null!;
+        private Button btnBookFlight = null!;
+        private List<DTO.Booking.BookingRequestDTO> _confirmedBookings = new List<DTO.Booking.BookingRequestDTO>();
+        private Label vFlightNumber = null!;
+        private Label vAircraftModel = null!;
+        private Label vAircraftManufacturer = null!;
+        private Label vDepartureAirport = null!;
+        private Label vArrivalAirport = null!;
+        private Label vDepartureTime = null!;
+        private Label vArrivalTime = null!;
+        private Label vDuration = null!;
+        private Label vStatus = null!;
+        private Label vAvailableSeats = null!;
+        private Label vRouteInfo = null!;
+        private Label vNote = null!;
 
         public FlightDetailControl()
         {
@@ -409,7 +417,7 @@ namespace GUI.Features.Flight.SubFeatures
             }
         }
 
-        private void BtnBookFlight_Click(object sender, EventArgs e)
+        private void BtnBookFlight_Click(object? sender, EventArgs e)
         {
             if (_currentFlight == null) return;
             
@@ -436,6 +444,9 @@ namespace GUI.Features.Flight.SubFeatures
                     // Chuyển sang trang Thông tin khách hàng với thông tin đặt vé
                     if (dialog.BookingRequest != null)
                     {
+                        // Lưu thông tin booking đã xác nhận
+                        _confirmedBookings.Add(dialog.BookingRequest);
+                        
                         NavigateToBookingRequested?.Invoke(dialog.BookingRequest);
                     }
                 }
@@ -474,7 +485,23 @@ namespace GUI.Features.Flight.SubFeatures
                     vStatus.ForeColor = Color.FromArgb(255, 152, 0);
                     vStatus.Font = new Font("Segoe UI", 11f, FontStyle.Bold);
                     break;
-            }
+            };
+        }
+
+        /// <summary>
+        /// Lấy danh sách các booking đã xác nhận
+        /// </summary>
+        public List<DTO.Booking.BookingRequestDTO> ConfirmedBooking()
+        {
+            return new List<DTO.Booking.BookingRequestDTO>(_confirmedBookings);
+        }
+
+        /// <summary>
+        /// Xóa danh sách booking đã xác nhận
+        /// </summary>
+        public void ClearConfirmedBookings()
+        {
+            _confirmedBookings.Clear();
         }
     }
 }
