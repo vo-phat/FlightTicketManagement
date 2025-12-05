@@ -31,6 +31,18 @@ namespace GUI.Features.Ticket {
             switchTab(TAB_BOOKING);
         }
 
+        /// <summary>
+        /// Load booking data và chuyển sang tab Thông tin khách hàng
+        /// </summary>
+        public void LoadBookingData(DTO.Booking.BookingRequestDTO bookingRequest)
+        {
+            // Chuyển sang tab Thông tin khách hàng
+            switchTab(TAB_BOOKING);
+            
+            // Truyền dữ liệu booking vào control
+            frmPassengerInfoControl.LoadBookingRequest(bookingRequest);
+        }
+
         // Khởi tạo và gắn các UserControl con vào các panel tương ứng
         private void InitializeChildControls() {
             //bookingSearchControl = new BookingSearchControl();

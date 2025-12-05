@@ -5,6 +5,7 @@ using DAO.EF;
 using DTO.BaggageDTO;
 using DTO.Profile;
 using DTO.Ticket;
+using DTO.Booking;
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -20,15 +21,15 @@ namespace GUI.Features.Ticket.subTicket
         private readonly BindingSource _bs = new();
         private int _editingIndex = -1; // -1 = thêm mới; >=0 = đang sửa dòng này
         private int _passengerCount = 0;
-        private int _ticketCount = 3;
-        private int _accountId = 1;
+        private int _ticketCount ;
+        private int _accountId ;
+        private BookingRequestDTO bookingRequest;
         public frmPassengerInfoControl()
         {
             
             InitializeComponent();
             
             InitGrid();
-            LoadInfomationAccount(_accountId);
             LoadCheckBaggage();
             LoadNationality();
             // cấu hình lưới + binding 1 lần
@@ -221,6 +222,7 @@ namespace GUI.Features.Ticket.subTicket
             {
                 MessageBox.Show($"Đã đủ {_ticketCount} hành khách cho vé này.");
             }
+            //MessageBox.Show(_accountId.ToString()+"test");
         }
 
 
@@ -332,9 +334,35 @@ namespace GUI.Features.Ticket.subTicket
 
         private void btnNextToPayment_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(_passengers.Count.ToString());
+            // 1) Lấy danh sách ticket từ BindingList
+            var tickets = _passengers.ToList();
 
+            if (tickets.Count == 0)
+            {
+                MessageBox.Show("Chưa có hành khách nào để thanh toán!");
+                return;
+            }
+
+            // 2) Tính số tiền (demo)
+            decimal totalAmount = tickets.Count * 1000000;  // mỗi vé 1 triệu, demo thôi
+
+            // 3) Tạo UserControl Payment
+            var payUC = new GUI.Features.Payments.SubFeatures.FrmPayment(totalAmount, tickets);
+            payUC.Dock = DockStyle.Fill;
+
+            // 4) Tạo popup Form
+            Form popup = new Form();
+            popup.StartPosition = FormStartPosition.CenterScreen;
+            popup.FormBorderStyle = FormBorderStyle.FixedDialog;
+            popup.MaximizeBox = false;
+            popup.MinimizeBox = false;
+            popup.ClientSize = new Size(380, 460);
+            popup.Controls.Add(payUC);
+
+            // 5) Show popup
+            popup.ShowDialog();
         }
+
         public void ShowTicketDtoInfo(TicketBookingRequestDTO dto)
         {
             if (dto == null)
@@ -358,6 +386,33 @@ namespace GUI.Features.Ticket.subTicket
             }
 
             MessageBox.Show(sb.ToString(), "DEBUG – Dữ liệu TicketBookingRequestDTO");
+        }
+
+        /// <summary>
+        /// Load thông tin booking từ dialog chọn hạng vé
+        /// </summary>
+        public void LoadBookingRequest(DTO.Booking.BookingRequestDTO bookingRequest)
+        {
+            if (bookingRequest == null) return;
+            _accountId = 2;
+            _ticketCount = 3; // cần chọn vé.
+            bookingRequest = bookingRequest;
+            LoadInfomationAccount(_accountId);
+
+            // Hiển thị thông tin chuyến bay đã chọn
+            MessageBox.Show(
+                $"Thông tin đặt vé:\n" +
+                $"Chuyến bay: {bookingRequest.FlightNumber}\n" +
+                $"Tuyến: {bookingRequest.DepartureAirportCode} → {bookingRequest.ArrivalAirportCode}\n" +
+                $"Hạng vé: {bookingRequest.CabinClassName}\n" +
+                $"Giờ khởi hành: {bookingRequest.DepartureTime?.ToString("dd/MM/yyyy HH:mm")}\n\n" +
+                $"Vui lòng điền thông tin hành khách.",
+                "Thông tin đặt vé",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+
+            // TODO: Pre-fill flight và cabin class information vào form
+            // Có thể lưu bookingRequest vào field để dùng khi submit
         }
     }
 }

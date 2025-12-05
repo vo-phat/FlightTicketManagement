@@ -116,17 +116,16 @@ INSERT INTO `Airports` (`airport_code`, `airport_name`, `city`, `country`) VALUE
 
 -- 7. Máy bay
 INSERT INTO `Aircrafts` (`airline_id`, `model`, `manufacturer`, `capacity`) VALUES
-(1, 'Airbus A350-900', 'Airbus', 16),
-(1, 'Boeing 787-10', 'Boeing', 16),
-(2, 'Airbus A321neo', 'Airbus', 16),
-(2, 'Airbus A320neo', 'Airbus', 16),
-(3, 'Embraer E195-E2', 'Embraer', 16),
-(3, 'Boeing 787-9 Dreamliner', 'Boeing', 16),
-(4, 'Boeing 737 MAX 8', 'Boeing', 16),
-(4, 'Airbus A321XLR', 'Airbus', 16),
-(5, 'Airbus A380-800', 'Airbus', 16),
-(5, 'Boeing 777-200ER', 'Boeing', 16);
-
+(1, 'Airbus A350-900', 'Airbus', 18),
+(1, 'Boeing 787-10', 'Boeing', 18),
+(2, 'Airbus A321neo', 'Airbus', 18),
+(2, 'Airbus A320neo', 'Airbus', 18),
+(3, 'Embraer E195-E2', 'Embraer', 18),
+(3, 'Boeing 787-9 Dreamliner', 'Boeing', 18),
+(4, 'Boeing 737 MAX 8', 'Boeing', 18),
+(4, 'Airbus A321XLR', 'Airbus', 18),
+(5, 'Airbus A380-800', 'Airbus', 18),
+(5, 'Boeing 777-200ER', 'Boeing', 18);
 -- 8. Tuyến bay
 INSERT INTO `Routes` (`departure_place_id`, `arrival_place_id`, `distance_km`, `duration_minutes`) VALUES 
 (1, 2, 1802, 230),
@@ -172,363 +171,194 @@ INSERT INTO `Cabin_Classes` (`class_name`, `description`) VALUES
 
 -- 11. Ghế cho trên mỗi máy bay
 INSERT INTO `Seats` (`seat_id`, `aircraft_id`, `seat_number`, `class_id`) VALUES
--- Aircraft 1 (seat_id: 1-16)
-(1, 1, '1A', 1), (2, 1, '1B', 1), (3, 1, '1C', 1), (4, 1, '1D', 1),
-(5, 1, '1E', 2), (6, 1, '1F', 2), (7, 1, '1G', 2), (8, 1, '1H', 2),
-(9, 1, '2A', 3), (10, 1, '2B', 3), (11, 1, '2C', 3), (12, 1, '2D', 3),
-(13, 1, '2E', 4), (14, 1, '2F', 4), (15, 1, '2G', 4), (16, 1, '2H', 4),
+-- Aircraft 1 (seat_id: 1-18)
+(1, 1, '1A', 1), (2, 1, '1B', 1), (3, 1, '1C', 1), (4, 1, '1D', 1), (5, 1, '1E', 1), (6, 1, '1F', 1),
+(7, 1, '2A', 2), (8, 1, '2B', 2), (9, 1, '2C', 2), (10, 1, '2D', 2), (11, 1, '2E', 2), (12, 1, '2F', 2),
+(13, 1, '3A', 3), (14, 1, '3B', 3), (15, 1, '3C', 3), (16, 1, '3D', 3), (17, 1, '3E', 3), (18, 1, '3F', 3),
 
--- Aircraft 2 (seat_id: 17-32)
-(17, 2, '1A', 1), (18, 2, '1B', 1), (19, 2, '1C', 1), (20, 2, '1D', 1),
-(21, 2, '1E', 2), (22, 2, '1F', 2), (23, 2, '1G', 2), (24, 2, '1H', 2),
-(25, 2, '2A', 3), (26, 2, '2B', 3), (27, 2, '2C', 3), (28, 2, '2D', 3),
-(29, 2, '2E', 4), (30, 2, '2F', 4), (31, 2, '2G', 4), (32, 2, '2H', 4),
+-- Aircraft 2 (seat_id: 19-36)
+(19, 2, '1A', 1), (20, 2, '1B', 1), (21, 2, '1C', 1), (22, 2, '1D', 1), (23, 2, '1E', 1), (24, 2, '1F', 1),
+(25, 2, '2A', 2), (26, 2, '2B', 2), (27, 2, '2C', 2), (28, 2, '2D', 2), (29, 2, '2E', 2), (30, 2, '2F', 2),
+(31, 2, '3A', 3), (32, 2, '3B', 3), (33, 2, '3C', 3), (34, 2, '3D', 3), (35, 2, '3E', 3), (36, 2, '3F', 3),
 
--- Aircraft 3 (seat_id: 33-48)
-(33, 3, '1A', 1), (34, 3, '1B', 1), (35, 3, '1C', 1), (36, 3, '1D', 1),
-(37, 3, '1E', 2), (38, 3, '1F', 2), (39, 3, '1G', 2), (40, 3, '1H', 2),
-(41, 3, '2A', 3), (42, 3, '2B', 3), (43, 3, '2C', 3), (44, 3, '2D', 3),
-(45, 3, '2E', 4), (46, 3, '2F', 4), (47, 3, '2G', 4), (48, 3, '2H', 4),
+-- Aircraft 3 (seat_id: 37-54)
+(37, 3, '1A', 1), (38, 3, '1B', 1), (39, 3, '1C', 1), (40, 3, '1D', 1), (41, 3, '1E', 1), (42, 3, '1F', 1),
+(43, 3, '2A', 2), (44, 3, '2B', 2), (45, 3, '2C', 2), (46, 3, '2D', 2), (47, 3, '2E', 2), (48, 3, '2F', 2),
+(49, 3, '3A', 3), (50, 3, '3B', 3), (51, 3, '3C', 3), (52, 3, '3D', 3), (53, 3, '3E', 3), (54, 3, '3F', 3),
 
--- Aircraft 4 (seat_id: 49-64)
-(49, 4, '1A', 1), (50, 4, '1B', 1), (51, 4, '1C', 1), (52, 4, '1D', 1),
-(53, 4, '1E', 2), (54, 4, '1F', 2), (55, 4, '1G', 2), (56, 4, '1H', 2),
-(57, 4, '2A', 3), (58, 4, '2B', 3), (59, 4, '2C', 3), (60, 4, '2D', 3),
-(61, 4, '2E', 4), (62, 4, '2F', 4), (63, 4, '2G', 4), (64, 4, '2H', 4),
+-- Aircraft 4 (seat_id: 55-72)
+(55, 4, '1A', 1), (56, 4, '1B', 1), (57, 4, '1C', 1), (58, 4, '1D', 1), (59, 4, '1E', 1), (60, 4, '1F', 1),
+(61, 4, '2A', 2), (62, 4, '2B', 2), (63, 4, '2C', 2), (64, 4, '2D', 2), (65, 4, '2E', 2), (66, 4, '2F', 2),
+(67, 4, '3A', 3), (68, 4, '3B', 3), (69, 4, '3C', 3), (70, 4, '3D', 3), (71, 4, '3E', 3), (72, 4, '3F', 3),
 
--- Aircraft 5 (seat_id: 65-80)
-(65, 5, '1A', 1), (66, 5, '1B', 1), (67, 5, '1C', 1), (68, 5, '1D', 1),
-(69, 5, '1E', 2), (70, 5, '1F', 2), (71, 5, '1G', 2), (72, 5, '1H', 2),
-(73, 5, '2A', 3), (74, 5, '2B', 3), (75, 5, '2C', 3), (76, 5, '2D', 3),
-(77, 5, '2E', 4), (78, 5, '2F', 4), (79, 5, '2G', 4), (80, 5, '2H', 4),
+-- Aircraft 5 (seat_id: 73-90)
+(73, 5, '1A', 1), (74, 5, '1B', 1), (75, 5, '1C', 1), (76, 5, '1D', 1), (77, 5, '1E', 1), (78, 5, '1F', 1),
+(79, 5, '2A', 2), (80, 5, '2B', 2), (81, 5, '2C', 2), (82, 5, '2D', 2), (83, 5, '2E', 2), (84, 5, '2F', 2),
+(85, 5, '3A', 3), (86, 5, '3B', 3), (87, 5, '3C', 3), (88, 5, '3D', 3), (89, 5, '3E', 3), (90, 5, '3F', 3),
 
--- Aircraft 6 (seat_id: 81-96)
-(81, 6, '1A', 1), (82, 6, '1B', 1), (83, 6, '1C', 1), (84, 6, '1D', 1),
-(85, 6, '1E', 2), (86, 6, '1F', 2), (87, 6, '1G', 2), (88, 6, '1H', 2),
-(89, 6, '2A', 3), (90, 6, '2B', 3), (91, 6, '2C', 3), (92, 6, '2D', 3),
-(93, 6, '2E', 4), (94, 6, '2F', 4), (95, 6, '2G', 4), (96, 6, '2H', 4),
+-- Aircraft 6 (seat_id: 91-108)
+(91, 6, '1A', 1), (92, 6, '1B', 1), (93, 6, '1C', 1), (94, 6, '1D', 1), (95, 6, '1E', 1), (96, 6, '1F', 1),
+(97, 6, '2A', 2), (98, 6, '2B', 2), (99, 6, '2C', 2), (100, 6, '2D', 2), (101, 6, '2E', 2), (102, 6, '2F', 2),
+(103, 6, '3A', 3), (104, 6, '3B', 3), (105, 6, '3C', 3), (106, 6, '3D', 3), (107, 6, '3E', 3), (108, 6, '3F', 3),
 
--- Aircraft 7 (seat_id: 97-112)
-(97, 7, '1A', 1), (98, 7, '1B', 1), (99, 7, '1C', 1), (100, 7, '1D', 1),
-(101, 7, '1E', 2), (102, 7, '1F', 2), (103, 7, '1G', 2), (104, 7, '1H', 2),
-(105, 7, '2A', 3), (106, 7, '2B', 3), (107, 7, '2C', 3), (108, 7, '2D', 3),
-(109, 7, '2E', 4), (110, 7, '2F', 4), (111, 7, '2G', 4), (112, 7, '2H', 4),
+-- Aircraft 7 (seat_id: 109-126)
+(109, 7, '1A', 1), (110, 7, '1B', 1), (111, 7, '1C', 1), (112, 7, '1D', 1), (113, 7, '1E', 1), (114, 7, '1F', 1),
+(115, 7, '2A', 2), (116, 7, '2B', 2), (117, 7, '2C', 2), (118, 7, '2D', 2), (119, 7, '2E', 2), (120, 7, '2F', 2),
+(121, 7, '3A', 3), (122, 7, '3B', 3), (123, 7, '3C', 3), (124, 7, '3D', 3), (125, 7, '3E', 3), (126, 7, '3F', 3),
 
--- Aircraft 8 (seat_id: 113-128)
-(113, 8, '1A', 1), (114, 8, '1B', 1), (115, 8, '1C', 1), (116, 8, '1D', 1),
-(117, 8, '1E', 2), (118, 8, '1F', 2), (119, 8, '1G', 2), (120, 8, '1H', 2),
-(121, 8, '2A', 3), (122, 8, '2B', 3), (123, 8, '2C', 3), (124, 8, '2D', 3),
-(125, 8, '2E', 4), (126, 8, '2F', 4), (127, 8, '2G', 4), (128, 8, '2H', 4),
+-- Aircraft 8 (seat_id: 127-144)
+(127, 8, '1A', 1), (128, 8, '1B', 1), (129, 8, '1C', 1), (130, 8, '1D', 1), (131, 8, '1E', 1), (132, 8, '1F', 1),
+(133, 8, '2A', 2), (134, 8, '2B', 2), (135, 8, '2C', 2), (136, 8, '2D', 2), (137, 8, '2E', 2), (138, 8, '2F', 2),
+(139, 8, '3A', 3), (140, 8, '3B', 3), (141, 8, '3C', 3), (142, 8, '3D', 3), (143, 8, '3E', 3), (144, 8, '3F', 3),
 
--- Aircraft 9 (seat_id: 129-144)
-(129, 9, '1A', 1), (130, 9, '1B', 1), (131, 9, '1C', 1), (132, 9, '1D', 1),
-(133, 9, '1E', 2), (134, 9, '1F', 2), (135, 9, '1G', 2), (136, 9, '1H', 2),
-(137, 9, '2A', 3), (138, 9, '2B', 3), (139, 9, '2C', 3), (140, 9, '2D', 3),
-(141, 9, '2E', 4), (142, 9, '2F', 4), (143, 9, '2G', 4), (144, 9, '2H', 4),
+-- Aircraft 9 (seat_id: 145-162)
+(145, 9, '1A', 1), (146, 9, '1B', 1), (147, 9, '1C', 1), (148, 9, '1D', 1), (149, 9, '1E', 1), (150, 9, '1F', 1),
+(151, 9, '2A', 2), (152, 9, '2B', 2), (153, 9, '2C', 2), (154, 9, '2D', 2), (155, 9, '2E', 2), (156, 9, '2F', 2),
+(157, 9, '3A', 3), (158, 9, '3B', 3), (159, 9, '3C', 3), (160, 9, '3D', 3), (161, 9, '3E', 3), (162, 9, '3F', 3),
 
--- Aircraft 10 (seat_id: 145-160)
-(145, 10, '1A', 1), (146, 10, '1B', 1), (147, 10, '1C', 1), (148, 10, '1D', 1),
-(149, 10, '1E', 2), (150, 10, '1F', 2), (151, 10, '1G', 2), (152, 10, '1H', 2),
-(153, 10, '2A', 3), (154, 10, '2B', 3), (155, 10, '2C', 3), (156, 10, '2D', 3),
-(157, 10, '2E', 4), (158, 10, '2F', 4), (159, 10, '2G', 4), (160, 10, '2H', 4);
+-- Aircraft 10 (seat_id: 163-180)
+(163, 10, '1A', 1), (164, 10, '1B', 1), (165, 10, '1C', 1), (166, 10, '1D', 1), (167, 10, '1E', 1), (168, 10, '1F', 1),
+(169, 10, '2A', 2), (170, 10, '2B', 2), (171, 10, '2C', 2), (172, 10, '2D', 2), (173, 10, '2E', 2), (174, 10, '2F', 2),
+(175, 10, '3A', 3), (176, 10, '3B', 3), (177, 10, '3C', 3), (178, 10, '3D', 3), (179, 10, '3E', 3), (180, 10, '3F', 3);
+
 
 -- 12. Ghế cho từng chuyến bay
 INSERT INTO `Flight_Seats` (`flight_id`, `seat_id`, `base_price`, `seat_status`) VALUES
--- Flight 2: aircraft_id = 9 (seat_id: 129-144)
-(2, 129, 900, 'AVAILABLE'),  -- 1A First
-(2, 130, 900, 'BOOKED'),     -- 1B First
-(2, 133, 550, 'BLOCKED'),    -- 1E Business
-(2, 134, 550, 'AVAILABLE'),  -- 1F Business
-(2, 137, 350, 'BOOKED'),     -- 2A Premium Economy
-(2, 138, 350, 'BLOCKED'),    -- 2B Premium Economy
-(2, 141, 200, 'AVAILABLE'),  -- 2E Economy
-(2, 142, 200, 'BOOKED'),     -- 2F Economy
+-- Flight 1 (18 ghế) - aircraft_id = 8 (seat_id: 127-144)
+(1, 127, 900, 'AVAILABLE'),  (1, 128, 900, 'BOOKED'),     (1, 129, 900, 'BLOCKED'),    
+(1, 130, 900, 'AVAILABLE'),  (1, 131, 900, 'BOOKED'),     (1, 132, 900, 'AVAILABLE'),
+(1, 133, 550, 'BOOKED'),     (1, 134, 550, 'AVAILABLE'),  (1, 135, 550, 'BLOCKED'),    
+(1, 136, 550, 'AVAILABLE'),  (1, 137, 550, 'BOOKED'),     (1, 138, 550, 'AVAILABLE'),
+(1, 139, 350, 'BOOKED'),     (1, 140, 350, 'AVAILABLE'),  (1, 141, 350, 'BLOCKED'),    
+(1, 142, 350, 'AVAILABLE'),  (1, 143, 350, 'BOOKED'),     (1, 144, 350, 'AVAILABLE'),
 
--- Flight 4: aircraft_id = 1 (seat_id: 1-16)
-(4, 1,  900, 'AVAILABLE'),   -- 1A First
-(4, 4,  900, 'AVAILABLE'),   -- 1D First
-(4, 5,  550, 'AVAILABLE'),   -- 1E Business
-(4, 8,  550, 'AVAILABLE'),   -- 1H Business
-(4, 9,  350, 'AVAILABLE'),   -- 2A Premium Economy
-(4, 12, 350, 'AVAILABLE'),   -- 2D Premium Economy
-(4, 13, 200, 'AVAILABLE'),   -- 2E Economy
-(4, 16, 200, 'AVAILABLE'),   -- 2H Economy
+-- Flight 2 (9 ghế) - aircraft_id = 9 (seat_id: 145-162)
+(2, 145, 900, 'AVAILABLE'),  (2, 146, 900, 'BOOKED'),     (2, 147, 900, 'BLOCKED'),
+(2, 151, 550, 'BOOKED'),     (2, 152, 550, 'AVAILABLE'),  (2, 153, 550, 'BLOCKED'),
+(2, 157, 350, 'BOOKED'),     (2, 158, 350, 'BLOCKED'),    (2, 159, 350, 'AVAILABLE'),
 
--- Flight 7: aircraft_id = 8 (seat_id: 113-128)
-(7, 113, 900, 'AVAILABLE'),  -- 1A First
-(7, 114, 900, 'BOOKED'),     -- 1B First
-(7, 115, 900, 'BLOCKED'),    -- 1C First
-(7, 116, 900, 'AVAILABLE'),  -- 1D First
-(7, 117, 550, 'BOOKED'),     -- 1E Business
-(7, 118, 550, 'AVAILABLE'),  -- 1F Business
-(7, 119, 550, 'BLOCKED'),    -- 1G Business
-(7, 120, 550, 'AVAILABLE'),  -- 1H Business
-(7, 121, 350, 'BOOKED'),     -- 2A Premium Economy
-(7, 122, 350, 'AVAILABLE'),  -- 2B Premium Economy
-(7, 123, 350, 'BLOCKED'),    -- 2C Premium Economy
-(7, 124, 350, 'AVAILABLE'),  -- 2D Premium Economy
-(7, 125, 200, 'BOOKED'),     -- 2E Economy
-(7, 126, 200, 'AVAILABLE'),  -- 2F Economy
-(7, 127, 200, 'BLOCKED'),    -- 2G Economy
-(7, 128, 200, 'AVAILABLE'),  -- 2H Economy
+-- Flight 3 (9 ghế) - aircraft_id = 10 (seat_id: 163-180)
+(3, 163, 900, 'AVAILABLE'),  (3, 164, 900, 'BOOKED'),     (3, 165, 900, 'BLOCKED'),
+(3, 169, 550, 'BLOCKED'),    (3, 170, 550, 'AVAILABLE'),  (3, 171, 550, 'BOOKED'),
+(3, 175, 350, 'BOOKED'),     (3, 176, 350, 'BLOCKED'),    (3, 177, 350, 'AVAILABLE'),
 
--- Flight 11: aircraft_id = 6 (seat_id: 81-96)
-(11, 81,  900, 'AVAILABLE'), -- 1A First
-(11, 82,  900, 'BOOKED'),    -- 1B First
-(11, 83,  900, 'BLOCKED'),   -- 1C First
-(11, 84,  900, 'AVAILABLE'), -- 1D First
-(11, 85,  550, 'BOOKED'),    -- 1E Business
-(11, 86,  550, 'AVAILABLE'), -- 1F Business
-(11, 87,  550, 'BLOCKED'),   -- 1G Business
-(11, 88,  550, 'AVAILABLE'), -- 1H Business
-(11, 89,  350, 'BOOKED'),    -- 2A Premium Economy
-(11, 90,  350, 'AVAILABLE'), -- 2B Premium Economy
-(11, 91,  350, 'BLOCKED'),   -- 2C Premium Economy
-(11, 92,  350, 'AVAILABLE'), -- 2D Premium Economy
-(11, 93,  200, 'BOOKED'),    -- 2E Economy
-(11, 94,  200, 'AVAILABLE'), -- 2F Economy
-(11, 95,  200, 'BLOCKED'),   -- 2G Economy
-(11, 96,  200, 'AVAILABLE'), -- 2H Economy
+-- Flight 4 (9 ghế) - aircraft_id = 1 (seat_id: 1-18)
+(4, 1,  900, 'AVAILABLE'),   (4, 2,  900, 'BOOKED'),      (4, 3,  900, 'AVAILABLE'),
+(4, 7,  550, 'AVAILABLE'),   (4, 8,  550, 'BOOKED'),      (4, 9,  550, 'AVAILABLE'),
+(4, 13, 350, 'AVAILABLE'),   (4, 14, 350, 'BLOCKED'),     (4, 15, 350, 'AVAILABLE'),
 
--- Flight 18: aircraft_id = 7 (seat_id: 97-112)
-(18, 97,  900, 'AVAILABLE'), -- 1A First
-(18, 98,  900, 'BOOKED'),    -- 1B First
-(18, 101, 550, 'BLOCKED'),   -- 1E Business
-(18, 102, 550, 'AVAILABLE'), -- 1F Business
-(18, 105, 350, 'BOOKED'),    -- 2A Premium Economy
-(18, 106, 350, 'AVAILABLE'), -- 2B Premium Economy
-(18, 109, 200, 'BLOCKED'),   -- 2E Economy
-(18, 110, 200, 'AVAILABLE'), -- 2F Economy
+-- Flight 5 (9 ghế) - aircraft_id = 9 (seat_id: 145-162)
+(5, 145, 900, 'AVAILABLE'),  (5, 146, 900, 'BOOKED'),     (5, 147, 900, 'BLOCKED'),
+(5, 151, 550, 'BLOCKED'),    (5, 152, 550, 'AVAILABLE'),  (5, 153, 550, 'BOOKED'),
+(5, 157, 350, 'BOOKED'),     (5, 158, 350, 'BLOCKED'),    (5, 159, 350, 'AVAILABLE'),
 
--- Flight 1 (16 ghế) - aircraft_id = 8
-(1, 113, 900, 'AVAILABLE'),  -- 1A First
-(1, 114, 900, 'BOOKED'),     -- 1B First
-(1, 115, 900, 'BLOCKED'),    -- 1C First
-(1, 116, 900, 'AVAILABLE'),  -- 1D First
-(1, 117, 550, 'BOOKED'),     -- 1E Business
-(1, 118, 550, 'AVAILABLE'),  -- 1F Business
-(1, 119, 550, 'BLOCKED'),    -- 1G Business
-(1, 120, 550, 'AVAILABLE'),  -- 1H Business
-(1, 121, 350, 'BOOKED'),     -- 2A Premium Economy
-(1, 122, 350, 'AVAILABLE'),  -- 2B Premium Economy
-(1, 123, 350, 'BLOCKED'),    -- 2C Premium Economy
-(1, 124, 350, 'AVAILABLE'),  -- 2D Premium Economy
-(1, 125, 200, 'BOOKED'),     -- 2E Economy
-(1, 126, 200, 'AVAILABLE'),  -- 2F Economy
-(1, 127, 200, 'BLOCKED'),    -- 2G Economy
-(1, 128, 200, 'AVAILABLE'),  -- 2H Economy
+-- Flight 6 (9 ghế) - aircraft_id = 10 (seat_id: 163-180)
+(6, 163, 900, 'AVAILABLE'),  (6, 164, 900, 'BOOKED'),     (6, 165, 900, 'BLOCKED'),
+(6, 169, 550, 'BLOCKED'),    (6, 170, 550, 'AVAILABLE'),  (6, 171, 550, 'BOOKED'),
+(6, 175, 350, 'BOOKED'),     (6, 176, 350, 'BLOCKED'),    (6, 177, 350, 'AVAILABLE'),
 
--- Flight 3 (8 ghế) - aircraft_id = 10
-(3, 145, 900, 'AVAILABLE'),  -- 1A First
-(3, 146, 900, 'BOOKED'),     -- 1B First
-(3, 149, 550, 'BLOCKED'),    -- 1E Business
-(3, 150, 550, 'AVAILABLE'),  -- 1F Business
-(3, 153, 350, 'BOOKED'),     -- 2A Premium Economy
-(3, 154, 350, 'BLOCKED'),    -- 2B Premium Economy
-(3, 157, 200, 'AVAILABLE'),  -- 2E Economy
-(3, 158, 200, 'BOOKED'),     -- 2F Economy
+-- Flight 7 (18 ghế) - aircraft_id = 8 (seat_id: 127-144)
+(7, 127, 900, 'AVAILABLE'),  (7, 128, 900, 'BOOKED'),     (7, 129, 900, 'BLOCKED'),    
+(7, 130, 900, 'AVAILABLE'),  (7, 131, 900, 'BOOKED'),     (7, 132, 900, 'AVAILABLE'),
+(7, 133, 550, 'BOOKED'),     (7, 134, 550, 'AVAILABLE'),  (7, 135, 550, 'BLOCKED'),    
+(7, 136, 550, 'AVAILABLE'),  (7, 137, 550, 'BOOKED'),     (7, 138, 550, 'AVAILABLE'),
+(7, 139, 350, 'BOOKED'),     (7, 140, 350, 'AVAILABLE'),  (7, 141, 350, 'BLOCKED'),    
+(7, 142, 350, 'AVAILABLE'),  (7, 143, 350, 'BOOKED'),     (7, 144, 350, 'AVAILABLE'),
 
--- Flight 5 (8 ghế) - aircraft_id = 9
-(5, 129, 900, 'AVAILABLE'),  -- 1A First
-(5, 130, 900, 'BOOKED'),     -- 1B First
-(5, 133, 550, 'BLOCKED'),    -- 1E Business
-(5, 134, 550, 'AVAILABLE'),  -- 1F Business
-(5, 137, 350, 'BOOKED'),     -- 2A Premium Economy
-(5, 138, 350, 'BLOCKED'),    -- 2B Premium Economy
-(5, 141, 200, 'AVAILABLE'),  -- 2E Economy
-(5, 142, 200, 'BOOKED'),     -- 2F Economy
+-- Flight 8 (9 ghế) - aircraft_id = 10 (seat_id: 163-180)
+(8, 163, 900, 'AVAILABLE'),  (8, 164, 900, 'BOOKED'),     (8, 165, 900, 'BLOCKED'),
+(8, 169, 550, 'BLOCKED'),    (8, 170, 550, 'AVAILABLE'),  (8, 171, 550, 'BOOKED'),
+(8, 175, 350, 'BOOKED'),     (8, 176, 350, 'BLOCKED'),    (8, 177, 350, 'AVAILABLE'),
 
--- Flight 6 (8 ghế) - aircraft_id = 10
-(6, 145, 900, 'AVAILABLE'),  -- 1A First
-(6, 146, 900, 'BOOKED'),     -- 1B First
-(6, 149, 550, 'BLOCKED'),    -- 1E Business
-(6, 150, 550, 'AVAILABLE'),  -- 1F Business
-(6, 153, 350, 'BOOKED'),     -- 2A Premium Economy
-(6, 154, 350, 'BLOCKED'),    -- 2B Premium Economy
-(6, 157, 200, 'AVAILABLE'),  -- 2E Economy
-(6, 158, 200, 'BOOKED'),     -- 2F Economy
+-- Flight 9 (18 ghế) - aircraft_id = 5 (seat_id: 73-90)
+(9, 73, 900, 'AVAILABLE'),   (9, 74, 900, 'BOOKED'),      (9, 75, 900, 'BLOCKED'),     
+(9, 76, 900, 'AVAILABLE'),   (9, 77, 900, 'BOOKED'),      (9, 78, 900, 'AVAILABLE'),
+(9, 79, 550, 'BOOKED'),      (9, 80, 550, 'AVAILABLE'),   (9, 81, 550, 'BLOCKED'),     
+(9, 82, 550, 'AVAILABLE'),   (9, 83, 550, 'BOOKED'),      (9, 84, 550, 'AVAILABLE'),
+(9, 85, 350, 'BOOKED'),      (9, 86, 350, 'AVAILABLE'),   (9, 87, 350, 'BLOCKED'),     
+(9, 88, 350, 'AVAILABLE'),   (9, 89, 350, 'BOOKED'),      (9, 90, 350, 'AVAILABLE'),
 
--- Flight 8 (8 ghế) - aircraft_id = 10
-(8, 145, 900, 'AVAILABLE'),  -- 1A First
-(8, 146, 900, 'BOOKED'),     -- 1B First
-(8, 149, 550, 'BLOCKED'),    -- 1E Business
-(8, 150, 550, 'AVAILABLE'),  -- 1F Business
-(8, 153, 350, 'BOOKED'),     -- 2A Premium Economy
-(8, 154, 350, 'BLOCKED'),    -- 2B Premium Economy
-(8, 157, 200, 'AVAILABLE'),  -- 2E Economy
-(8, 158, 200, 'BOOKED'),     -- 2F Economy
+-- Flight 10 (18 ghế) - aircraft_id = 3 (seat_id: 37-54)
+(10, 37, 900, 'AVAILABLE'),  (10, 38, 900, 'BOOKED'),     (10, 39, 900, 'BLOCKED'),    
+(10, 40, 900, 'AVAILABLE'),  (10, 41, 900, 'BOOKED'),     (10, 42, 900, 'AVAILABLE'),
+(10, 43, 550, 'BOOKED'),     (10, 44, 550, 'AVAILABLE'),  (10, 45, 550, 'BLOCKED'),    
+(10, 46, 550, 'AVAILABLE'),  (10, 47, 550, 'BOOKED'),     (10, 48, 550, 'AVAILABLE'),
+(10, 49, 350, 'BOOKED'),     (10, 50, 350, 'AVAILABLE'),  (10, 51, 350, 'BLOCKED'),    
+(10, 52, 350, 'AVAILABLE'),  (10, 53, 350, 'BOOKED'),     (10, 54, 350, 'AVAILABLE'),
 
--- Flight 9 (16 ghế) - aircraft_id = 5
-(9, 65, 900, 'AVAILABLE'),   -- 1A First
-(9, 66, 900, 'BOOKED'),      -- 1B First
-(9, 67, 900, 'BLOCKED'),     -- 1C First
-(9, 68, 900, 'AVAILABLE'),   -- 1D First
-(9, 69, 550, 'BOOKED'),      -- 1E Business
-(9, 70, 550, 'AVAILABLE'),   -- 1F Business
-(9, 71, 550, 'BLOCKED'),     -- 1G Business
-(9, 72, 550, 'AVAILABLE'),   -- 1H Business
-(9, 73, 350, 'BOOKED'),      -- 2A Premium Economy
-(9, 74, 350, 'AVAILABLE'),   -- 2B Premium Economy
-(9, 75, 350, 'BLOCKED'),     -- 2C Premium Economy
-(9, 76, 350, 'AVAILABLE'),   -- 2D Premium Economy
-(9, 77, 200, 'BOOKED'),      -- 2E Economy
-(9, 78, 200, 'AVAILABLE'),   -- 2F Economy
-(9, 79, 200, 'BLOCKED'),     -- 2G Economy
-(9, 80, 200, 'AVAILABLE'),   -- 2H Economy
+-- Flight 11 (18 ghế) - aircraft_id = 6 (seat_id: 91-108)
+(11, 91, 900, 'AVAILABLE'),  (11, 92, 900, 'BOOKED'),     (11, 93, 900, 'BLOCKED'),    
+(11, 94, 900, 'AVAILABLE'),  (11, 95, 900, 'BOOKED'),     (11, 96, 900, 'AVAILABLE'),
+(11, 97, 550, 'BOOKED'),     (11, 98, 550, 'AVAILABLE'),  (11, 99, 550, 'BLOCKED'),    
+(11, 100, 550, 'AVAILABLE'), (11, 101, 550, 'BOOKED'),    (11, 102, 550, 'AVAILABLE'),
+(11, 103, 350, 'BOOKED'),    (11, 104, 350, 'AVAILABLE'), (11, 105, 350, 'BLOCKED'),   
+(11, 106, 350, 'AVAILABLE'), (11, 107, 350, 'BOOKED'),    (11, 108, 350, 'AVAILABLE'),
 
--- Flight 10 (16 ghế) - aircraft_id = 3
-(10, 33, 900, 'AVAILABLE'),  -- 1A First
-(10, 34, 900, 'BOOKED'),     -- 1B First
-(10, 35, 900, 'BLOCKED'),    -- 1C First
-(10, 36, 900, 'AVAILABLE'),  -- 1D First
-(10, 37, 550, 'BOOKED'),     -- 1E Business
-(10, 38, 550, 'AVAILABLE'),  -- 1F Business
-(10, 39, 550, 'BLOCKED'),    -- 1G Business
-(10, 40, 550, 'AVAILABLE'),  -- 1H Business
-(10, 41, 350, 'BOOKED'),     -- 2A Premium Economy
-(10, 42, 350, 'AVAILABLE'),  -- 2B Premium Economy
-(10, 43, 350, 'BLOCKED'),    -- 2C Premium Economy
-(10, 44, 350, 'AVAILABLE'),  -- 2D Premium Economy
-(10, 45, 200, 'BOOKED'),     -- 2E Economy
-(10, 46, 200, 'AVAILABLE'),  -- 2F Economy
-(10, 47, 200, 'BLOCKED'),    -- 2G Economy
-(10, 48, 200, 'AVAILABLE'),  -- 2H Economy
+-- Flight 12 (18 ghế) - aircraft_id = 5 (seat_id: 73-90)
+(12, 73, 900, 'AVAILABLE'),  (12, 74, 900, 'BOOKED'),     (12, 75, 900, 'BLOCKED'),    
+(12, 76, 900, 'AVAILABLE'),  (12, 77, 900, 'BOOKED'),     (12, 78, 900, 'AVAILABLE'),
+(12, 79, 550, 'BOOKED'),     (12, 80, 550, 'AVAILABLE'),  (12, 81, 550, 'BLOCKED'),    
+(12, 82, 550, 'AVAILABLE'),  (12, 83, 550, 'BOOKED'),     (12, 84, 550, 'AVAILABLE'),
+(12, 85, 350, 'BOOKED'),     (12, 86, 350, 'AVAILABLE'),  (12, 87, 350, 'BLOCKED'),    
+(12, 88, 350, 'AVAILABLE'),  (12, 89, 350, 'BOOKED'),     (12, 90, 350, 'AVAILABLE'),
 
--- Flight 12 (16 ghế) - aircraft_id = 5
-(12, 65, 900, 'AVAILABLE'),
-(12, 66, 900, 'BOOKED'),
-(12, 67, 900, 'BLOCKED'),
-(12, 68, 900, 'AVAILABLE'),
-(12, 69, 550, 'BOOKED'),
-(12, 70, 550, 'AVAILABLE'),
-(12, 71, 550, 'BLOCKED'),
-(12, 72, 550, 'AVAILABLE'),
-(12, 73, 350, 'BOOKED'),
-(12, 74, 350, 'AVAILABLE'),
-(12, 75, 350, 'BLOCKED'),
-(12, 76, 350, 'AVAILABLE'),
-(12, 77, 200, 'BOOKED'),
-(12, 78, 200, 'AVAILABLE'),
-(12, 79, 200, 'BLOCKED'),
-(12, 80, 200, 'AVAILABLE'),
+-- Flight 13 (18 ghế) - aircraft_id = 5 (seat_id: 73-90)
+(13, 73, 900, 'AVAILABLE'),  (13, 74, 900, 'BOOKED'),     (13, 75, 900, 'BLOCKED'),    
+(13, 76, 900, 'AVAILABLE'),  (13, 77, 900, 'BOOKED'),     (13, 78, 900, 'AVAILABLE'),
+(13, 79, 550, 'BOOKED'),     (13, 80, 550, 'AVAILABLE'),  (13, 81, 550, 'BLOCKED'),    
+(13, 82, 550, 'AVAILABLE'),  (13, 83, 550, 'BOOKED'),     (13, 84, 550, 'AVAILABLE'),
+(13, 85, 350, 'BOOKED'),     (13, 86, 350, 'AVAILABLE'),  (13, 87, 350, 'BLOCKED'),    
+(13, 88, 350, 'AVAILABLE'),  (13, 89, 350, 'BOOKED'),     (13, 90, 350, 'AVAILABLE'),
 
--- Flight 13 (16 ghế) - aircraft_id = 5
-(13, 65, 900, 'AVAILABLE'),
-(13, 66, 900, 'BOOKED'),
-(13, 67, 900, 'BLOCKED'),
-(13, 68, 900, 'AVAILABLE'),
-(13, 69, 550, 'BOOKED'),
-(13, 70, 550, 'AVAILABLE'),
-(13, 71, 550, 'BLOCKED'),
-(13, 72, 550, 'AVAILABLE'),
-(13, 73, 350, 'BOOKED'),
-(13, 74, 350, 'AVAILABLE'),
-(13, 75, 350, 'BLOCKED'),
-(13, 76, 350, 'AVAILABLE'),
-(13, 77, 200, 'BOOKED'),
-(13, 78, 200, 'AVAILABLE'),
-(13, 79, 200, 'BLOCKED'),
-(13, 80, 200, 'AVAILABLE'),
+-- Flight 14 (18 ghế) - aircraft_id = 4 (seat_id: 55-72)
+(14, 55, 900, 'AVAILABLE'),  (14, 56, 900, 'BOOKED'),     (14, 57, 900, 'BLOCKED'),    
+(14, 58, 900, 'AVAILABLE'),  (14, 59, 900, 'BOOKED'),     (14, 60, 900, 'AVAILABLE'),
+(14, 61, 550, 'BOOKED'),     (14, 62, 550, 'AVAILABLE'),  (14, 63, 550, 'BLOCKED'),    
+(14, 64, 550, 'AVAILABLE'),  (14, 65, 550, 'BOOKED'),     (14, 66, 550, 'AVAILABLE'),
+(14, 67, 350, 'BOOKED'),     (14, 68, 350, 'AVAILABLE'),  (14, 69, 350, 'BLOCKED'),    
+(14, 70, 350, 'AVAILABLE'),  (14, 71, 350, 'BOOKED'),     (14, 72, 350, 'AVAILABLE'),
 
--- Flight 14 (16 ghế) - aircraft_id = 4
-(14, 49, 900, 'AVAILABLE'),
-(14, 50, 900, 'BOOKED'),
-(14, 51, 900, 'BLOCKED'),
-(14, 52, 900, 'AVAILABLE'),
-(14, 53, 550, 'BOOKED'),
-(14, 54, 550, 'AVAILABLE'),
-(14, 55, 550, 'BLOCKED'),
-(14, 56, 550, 'AVAILABLE'),
-(14, 57, 350, 'BOOKED'),
-(14, 58, 350, 'AVAILABLE'),
-(14, 59, 350, 'BLOCKED'),
-(14, 60, 350, 'AVAILABLE'),
-(14, 61, 200, 'BOOKED'),
-(14, 62, 200, 'AVAILABLE'),
-(14, 63, 200, 'BLOCKED'),
-(14, 64, 200, 'AVAILABLE'),
+-- Flight 15 (18 ghế) - aircraft_id = 4 (seat_id: 55-72)
+(15, 55, 900, 'AVAILABLE'),  (15, 56, 900, 'BOOKED'),     (15, 57, 900, 'BLOCKED'),    
+(15, 58, 900, 'AVAILABLE'),  (15, 59, 900, 'BOOKED'),     (15, 60, 900, 'AVAILABLE'),
+(15, 61, 550, 'BOOKED'),     (15, 62, 550, 'AVAILABLE'),  (15, 63, 550, 'BLOCKED'),    
+(15, 64, 550, 'AVAILABLE'),  (15, 65, 550, 'BOOKED'),     (15, 66, 550, 'AVAILABLE'),
+(15, 67, 350, 'BOOKED'),     (15, 68, 350, 'AVAILABLE'),  (15, 69, 350, 'BLOCKED'),    
+(15, 70, 350, 'AVAILABLE'),  (15, 71, 350, 'BOOKED'),     (15, 72, 350, 'AVAILABLE'),
 
--- Flight 15 (16 ghế) - aircraft_id = 4
-(15, 49, 900, 'AVAILABLE'),
-(15, 50, 900, 'BOOKED'),
-(15, 51, 900, 'BLOCKED'),
-(15, 52, 900, 'AVAILABLE'),
-(15, 53, 550, 'BOOKED'),
-(15, 54, 550, 'AVAILABLE'),
-(15, 55, 550, 'BLOCKED'),
-(15, 56, 550, 'AVAILABLE'),
-(15, 57, 350, 'BOOKED'),
-(15, 58, 350, 'AVAILABLE'),
-(15, 59, 350, 'BLOCKED'),
-(15, 60, 350, 'AVAILABLE'),
-(15, 61, 200, 'BOOKED'),
-(15, 62, 200, 'AVAILABLE'),
-(15, 63, 200, 'BLOCKED'),
-(15, 64, 200, 'AVAILABLE'),
+-- Flight 16 (18 ghế) - aircraft_id = 4 (seat_id: 55-72)
+(16, 55, 900, 'AVAILABLE'),  (16, 56, 900, 'BOOKED'),     (16, 57, 900, 'BLOCKED'),    
+(16, 58, 900, 'AVAILABLE'),  (16, 59, 900, 'BOOKED'),     (16, 60, 900, 'AVAILABLE'),
+(16, 61, 550, 'BOOKED'),     (16, 62, 550, 'AVAILABLE'),  (16, 63, 550, 'BLOCKED'),    
+(16, 64, 550, 'AVAILABLE'),  (16, 65, 550, 'BOOKED'),     (16, 66, 550, 'AVAILABLE'),
+(16, 67, 350, 'BOOKED'),     (16, 68, 350, 'AVAILABLE'),  (16, 69, 350, 'BLOCKED'),    
+(16, 70, 350, 'AVAILABLE'),  (16, 71, 350, 'BOOKED'),     (16, 72, 350, 'AVAILABLE'),
 
--- Flight 16 (16 ghế) - aircraft_id = 4
-(16, 49, 900, 'AVAILABLE'),
-(16, 50, 900, 'BOOKED'),
-(16, 51, 900, 'BLOCKED'),
-(16, 52, 900, 'AVAILABLE'),
-(16, 53, 550, 'BOOKED'),
-(16, 54, 550, 'AVAILABLE'),
-(16, 55, 550, 'BLOCKED'),
-(16, 56, 550, 'AVAILABLE'),
-(16, 57, 350, 'BOOKED'),
-(16, 58, 350, 'AVAILABLE'),
-(16, 59, 350, 'BLOCKED'),
-(16, 60, 350, 'AVAILABLE'),
-(16, 61, 200, 'BOOKED'),
-(16, 62, 200, 'AVAILABLE'),
-(16, 63, 200, 'BLOCKED'),
-(16, 64, 200, 'AVAILABLE'),
+-- Flight 17 (18 ghế) - aircraft_id = 4 (seat_id: 55-72)
+(17, 55, 900, 'AVAILABLE'),  (17, 56, 900, 'BOOKED'),     (17, 57, 900, 'BLOCKED'),    
+(17, 58, 900, 'AVAILABLE'),  (17, 59, 900, 'BOOKED'),     (17, 60, 900, 'AVAILABLE'),
+(17, 61, 550, 'BOOKED'),     (17, 62, 550, 'AVAILABLE'),  (17, 63, 550, 'BLOCKED'),    
+(17, 64, 550, 'AVAILABLE'),  (17, 65, 550, 'BOOKED'),     (17, 66, 550, 'AVAILABLE'),
+(17, 67, 350, 'BOOKED'),     (17, 68, 350, 'AVAILABLE'),  (17, 69, 350, 'BLOCKED'),    
+(17, 70, 350, 'AVAILABLE'),  (17, 71, 350, 'BOOKED'),     (17, 72, 350, 'AVAILABLE'),
 
--- Flight 17 (16 ghế) - aircraft_id = 4
-(17, 49, 900, 'AVAILABLE'),
-(17, 50, 900, 'BOOKED'),
-(17, 51, 900, 'BLOCKED'),
-(17, 52, 900, 'AVAILABLE'),
-(17, 53, 550, 'BOOKED'),
-(17, 54, 550, 'AVAILABLE'),
-(17, 55, 550, 'BLOCKED'),
-(17, 56, 550, 'AVAILABLE'),
-(17, 57, 350, 'BOOKED'),
-(17, 58, 350, 'AVAILABLE'),
-(17, 59, 350, 'BLOCKED'),
-(17, 60, 350, 'AVAILABLE'),
-(17, 61, 200, 'BOOKED'),
-(17, 62, 200, 'AVAILABLE'),
-(17, 63, 200, 'BLOCKED'),
-(17, 64, 200, 'AVAILABLE'),
+-- Flight 18 (9 ghế) - aircraft_id = 7 (seat_id: 109-126)
+(18, 109, 900, 'AVAILABLE'), (18, 110, 900, 'BOOKED'),    (18, 111, 900, 'BLOCKED'),
+(18, 115, 550, 'BLOCKED'),   (18, 116, 550, 'AVAILABLE'), (18, 117, 550, 'BOOKED'),
+(18, 121, 350, 'BOOKED'),    (18, 122, 350, 'AVAILABLE'), (18, 123, 350, 'BLOCKED'),
 
--- Flight 19 (8 ghế) - aircraft_id = 10
-(19, 145, 900, 'AVAILABLE'),
-(19, 146, 900, 'BOOKED'),
-(19, 149, 550, 'BLOCKED'),
-(19, 150, 550, 'AVAILABLE'),
-(19, 153, 350, 'BOOKED'),
-(19, 154, 350, 'BLOCKED'),
-(19, 157, 200, 'AVAILABLE'),
-(19, 158, 200, 'BOOKED'),
+-- Flight 19 (9 ghế) - aircraft_id = 10 (seat_id: 163-180)
+(19, 163, 900, 'AVAILABLE'), (19, 164, 900, 'BOOKED'),    (19, 165, 900, 'BLOCKED'),
+(19, 169, 550, 'BLOCKED'),   (19, 170, 550, 'AVAILABLE'), (19, 171, 550, 'BOOKED'),
+(19, 175, 350, 'BOOKED'),    (19, 176, 350, 'BLOCKED'),   (19, 177, 350, 'AVAILABLE'),
 
--- Flight 20 (16 ghế) - aircraft_id = 8
-(20, 113, 900, 'AVAILABLE'),
-(20, 114, 900, 'BOOKED'),
-(20, 115, 900, 'BLOCKED'),
-(20, 116, 900, 'AVAILABLE'),
-(20, 117, 550, 'BOOKED'),
-(20, 118, 550, 'AVAILABLE'),
-(20, 119, 550, 'BLOCKED'),
-(20, 120, 550, 'AVAILABLE'),
-(20, 121, 350, 'BOOKED'),
-(20, 122, 350, 'AVAILABLE'),
-(20, 123, 350, 'BLOCKED'),
-(20, 124, 350, 'AVAILABLE'),
-(20, 125, 200, 'BOOKED'),
-(20, 126, 200, 'AVAILABLE'),
-(20, 127, 200, 'BLOCKED'),
-(20, 128, 200, 'AVAILABLE');
+-- Flight 20 (18 ghế) - aircraft_id = 8 (seat_id: 127-144)
+(20, 127, 900, 'AVAILABLE'), (20, 128, 900, 'BOOKED'),    (20, 129, 900, 'BLOCKED'),   
+(20, 130, 900, 'AVAILABLE'), (20, 131, 900, 'BOOKED'),    (20, 132, 900, 'AVAILABLE'),
+(20, 133, 550, 'BOOKED'),    (20, 134, 550, 'AVAILABLE'), (20, 135, 550, 'BLOCKED'),   
+(20, 136, 550, 'AVAILABLE'), (20, 137, 550, 'BOOKED'),    (20, 138, 550, 'AVAILABLE'),
+(20, 139, 350, 'BOOKED'),    (20, 140, 350, 'AVAILABLE'), (20, 141, 350, 'BLOCKED'),   
+(20, 142, 350, 'AVAILABLE'), (20, 143, 350, 'BOOKED'),    (20, 144, 350, 'AVAILABLE');
 
 
 -- 13. Quy tắc gía vé
