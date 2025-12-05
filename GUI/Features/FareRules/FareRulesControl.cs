@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 using GUI.Components.Buttons;
+using DTO.Fare_Rule;
 
 namespace GUI.Features.FareRules {
     public class FareRulesControl : UserControl {
@@ -46,6 +47,28 @@ namespace GUI.Features.FareRules {
             btnList.Click += (_, __) => SwitchTab(0);
             btnCreate.Click += (_, __) => SwitchTab(1);
             top.Controls.Add(btnList); top.Controls.Add(btnCreate);
+        }
+
+        public void ShowDetail(FareRuleDTO dto)
+        {
+            if (dto == null) return;
+            detail.LoadRule(dto.RuleId, dto.RouteName, dto.CabinClass, dto.FareType, dto.Season, dto.EffectiveDate, dto.ExpiryDate, dto.Price, dto.Description);
+            list.Visible = false;
+            create.Visible = false;
+            detail.Visible = true;
+
+            var top = btnList.Parent as FlowLayoutPanel;
+            top!.Controls.Clear();
+            btnList = new SecondaryButton("Danh sách Quy tắc");
+            btnCreate = new SecondaryButton("Tạo Quy tắc");
+            btnList.Click += (_, __) => SwitchTab(0);
+            btnCreate.Click += (_, __) => SwitchTab(1);
+            top.Controls.Add(btnList); top.Controls.Add(btnCreate);
+        }
+
+        public void ShowList()
+        {
+            SwitchTab(0);
         }
     }
 }

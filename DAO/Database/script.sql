@@ -2,7 +2,7 @@ DROP DATABASE IF EXISTS `FlightTicketManagement`;
 
 CREATE DATABASE IF NOT EXISTS `FlightTicketManagement`
   DEFAULT CHARACTER SET utf8mb4
-  DEFAULT COLLATE utf8mb4_0900_ai_ci;
+  DEFAULT COLLATE utf8mb4_unicode_ci;
 
 USE `FlightTicketManagement`;
 
@@ -19,8 +19,8 @@ CREATE TABLE accounts (
 -- 2. Vai trò
 CREATE TABLE roles (
     role_id                 INT AUTO_INCREMENT PRIMARY KEY,
-    role_code               VARCHAR(50) NOT NULL UNIQUE,        -- 'USER','STAFF','ADMIN'
-    role_name               VARCHAR(100) NOT NULL -- 'NGƯỜI DÙNG', 'NHÂN VIÊN', 'QUẢN TRỊ VIÊN'
+    role_code               VARCHAR(50) NOT NULL UNIQUE,
+    role_name               VARCHAR(100) NOT NULL
 );
 
 -- 3. Gán vai trò cho tài khoản (N-N)
@@ -35,8 +35,8 @@ CREATE TABLE account_role (
 -- 4. Quyền
 CREATE TABLE permissions (
     permission_id INT AUTO_INCREMENT PRIMARY KEY,
-    permission_code     VARCHAR(100) NOT NULL UNIQUE,    -- ví dụ: 'FLIGHT.MANAGE','FARE_RULES.MANAGE','PAYMENT.POS'
-    permission_name     VARCHAR(150) NOT NULL -- ví dụ: 'Quản lý chuyến bay', 'Quản lý quy tắc giá vé',...
+    permission_code     VARCHAR(100) NOT NULL UNIQUE,
+    permission_name     VARCHAR(150) NOT NULL
 );
 
 -- 5. Vai trò - Quyền (N-N)
@@ -70,8 +70,8 @@ CREATE TABLE Aircrafts (
     aircraft_id INT AUTO_INCREMENT PRIMARY KEY,
     airline_id INT,
     model VARCHAR(100), 
-    manufacturer VARCHAR(100), -- nhà sản xuất
-    capacity INT, -- dung tích
+    manufacturer VARCHAR(100),
+    capacity INT,
     FOREIGN KEY (airline_id) REFERENCES Airlines(airline_id)
 );
 
@@ -80,8 +80,8 @@ CREATE TABLE Routes (
     route_id INT AUTO_INCREMENT PRIMARY KEY,
     departure_place_id INT,
     arrival_place_id INT,
-    distance_km INT, -- khoảng cách
-    duration_minutes INT, -- thời lượng (phút)
+    distance_km INT,
+    duration_minutes INT,
     FOREIGN KEY (departure_place_id) REFERENCES Airports(airport_id),
     FOREIGN KEY (arrival_place_id) REFERENCES Airports(airport_id)
 );
@@ -94,7 +94,10 @@ CREATE TABLE Flights (
     route_id INT,
     departure_time DATETIME,
     arrival_time DATETIME,
+    base_price DECIMAL(12,2) NOT NULL DEFAULT 0,
+    note TEXT,
     `status` ENUM('SCHEDULED','DELAYED','CANCELLED','COMPLETED') NOT NULL DEFAULT 'SCHEDULED',
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (aircraft_id) REFERENCES Aircrafts(aircraft_id),
     FOREIGN KEY (route_id) REFERENCES Routes(route_id)
 );
@@ -116,7 +119,7 @@ CREATE TABLE Seats (
     FOREIGN KEY (class_id) REFERENCES Cabin_Classes(class_id)
 );
 
--- 12. Ghế cho từng chuyến bay (trạng thái quản lý theo chuyến)
+-- 12. Ghế cho từng chuyến bay
 CREATE TABLE Flight_Seats (
     flight_seat_id INT AUTO_INCREMENT PRIMARY KEY,
     flight_id INT,
@@ -132,7 +135,7 @@ CREATE TABLE Fare_Rules (
     rule_id INT AUTO_INCREMENT PRIMARY KEY,
     route_id INT,
     class_id INT,
-    fare_type VARCHAR(50) DEFAULT 'Standard', -- Saver, Flex, Promo...
+    fare_type VARCHAR(50) DEFAULT 'Standard',
     season ENUM('PEAK','OFFPEAK','NORMAL') DEFAULT 'NORMAL',
     effective_date DATE,
     expiry_date DATE,
@@ -153,7 +156,7 @@ CREATE TABLE Bookings (
     FOREIGN KEY (account_id) REFERENCES Accounts(account_id)
 );
 
--- 15. Hồ sơ hành khách (Profile lâu dài)
+-- 15. Hồ sơ hành khách
 CREATE TABLE Passenger_Profiles (
     profile_id INT AUTO_INCREMENT PRIMARY KEY,
     account_id INT,
@@ -181,7 +184,7 @@ CREATE TABLE Tickets (
     flight_seat_id INT,
     ticket_number VARCHAR(50) UNIQUE,
     issue_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    segment_no INT NULL,  -- Thứ tự chặng trong booking: 1 (đi), 2 (về)
+    segment_no INT NULL,
     segment_type ENUM('OUTBOUND','INBOUND') NULL,
     `status` ENUM('BOOKED','CONFIRMED','CHECKED_IN','BOARDED','CANCELLED','REFUNDED') DEFAULT 'BOOKED',
     FOREIGN KEY (ticket_passenger_id) REFERENCES Booking_Passengers(booking_passenger_id),
@@ -212,15 +215,15 @@ CREATE TABLE Payments (
 -- 20. Hành lý
 CREATE TABLE Baggage (
     baggage_id INT AUTO_INCREMENT PRIMARY KEY,
-    ticket_id INT NOT NULL,                       -- Liên kết với vé
-    flight_id INT NOT NULL,                       -- Liên kết với chuyến bay
-    baggage_tag VARCHAR(20) UNIQUE,               -- Mã nhãn hành lý
-    baggage_type ENUM('CHECKED','CARRY_ON','SPECIAL') DEFAULT 'CHECKED', -- Ký gửi, xách tay, đặc biệt
-    weight_kg DECIMAL(5,2) NOT NULL,             -- Trọng lượng thực tế
-    allowed_weight_kg DECIMAL(5,2) NOT NULL,     -- Trọng lượng miễn phí theo cabin class / hạng vé
-    fee DECIMAL(12,2) DEFAULT 0.00,              -- Phí phát sinh nếu vượt chuẩn
+    ticket_id INT NOT NULL,
+    flight_id INT NOT NULL,
+    baggage_tag VARCHAR(20) UNIQUE,
+    baggage_type ENUM('CHECKED','CARRY_ON','SPECIAL') DEFAULT 'CHECKED',
+    weight_kg DECIMAL(5,2) NOT NULL,
+    allowed_weight_kg DECIMAL(5,2) NOT NULL,
+    fee DECIMAL(12,2) DEFAULT 0.00,
     `status` ENUM('CREATED','CHECKED_IN','LOADED','IN_TRANSIT','CLAIMED','LOST') DEFAULT 'CREATED',
-    special_handling VARCHAR(100),               -- Mô tả xử lý đặc biệt (ví dụ dụng cụ thể thao)
+    special_handling VARCHAR(100),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (ticket_id) REFERENCES Tickets(ticket_id),
@@ -237,49 +240,59 @@ CREATE TABLE Baggage_History (
     FOREIGN KEY (baggage_id) REFERENCES Baggage(baggage_id)
 );
 
--- 22. Hành lý xách tay
+-- Carry-on baggage
 CREATE TABLE carryon_baggage (
-	carryon_id INT AUTO_INCREMENT PRIMARY KEY,
-	weight_kg INT NOT NULL,
-	class_id INT NOT NULL,
-	size_limit VARCHAR(50),
-	`description` VARCHAR(255),
-	is_default TINYINT(1) DEFAULT 1,
-	FOREIGN KEY (class_id) REFERENCES Cabin_Classes(class_id)
+  carryon_id INT AUTO_INCREMENT PRIMARY KEY,
+  weight_kg INT NOT NULL,
+  class_id INT NOT NULL,
+  size_limit VARCHAR(50),
+  description VARCHAR(255),
+  is_default TINYINT(1) DEFAULT 1,
+  FOREIGN KEY (class_id) REFERENCES Cabin_Classes(class_id)
 );
 
--- 23. Kiểm tra hành lý
+-- Checked baggage
 CREATE TABLE checked_baggage (
-	checked_id INT AUTO_INCREMENT PRIMARY KEY,
-	weight_kg INT NOT NULL,
-	price DECIMAL(10,2) NOT NULL,
-	`description` VARCHAR(255)
+  checked_id INT AUTO_INCREMENT PRIMARY KEY,
+  weight_kg INT NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  description VARCHAR(255)
 );
 
--- 24. Quốc gia
+-- National
 CREATE TABLE national (
-	national_id INT AUTO_INCREMENT PRIMARY KEY,
-	country_name VARCHAR(100) NOT NULL UNIQUE,
-	country_code CHAR(2) NOT NULL UNIQUE,
-	phone_code VARCHAR(5)
+  national_id INT AUTO_INCREMENT PRIMARY KEY,
+  country_name VARCHAR(100) NOT NULL UNIQUE,
+  country_code CHAR(2) NOT NULL UNIQUE,
+  phone_code VARCHAR(5)
 );
 
--- 25. Vé - Hành lý
+-- Ticket baggage linking
 CREATE TABLE ticket_baggage (
-	id INT AUTO_INCREMENT PRIMARY KEY,
-	ticket_id INT NOT NULL,
-	baggage_type ENUM('carry_on','checked') NOT NULL,
-	carryon_id INT NULL,
-	checked_id INT NULL,
-	quantity INT DEFAULT 1,
-	note VARCHAR(255),
-	FOREIGN KEY (ticket_id) REFERENCES Tickets(ticket_id) ON DELETE CASCADE,
-	FOREIGN KEY (carryon_id) REFERENCES carryon_baggage(carryon_id),
-	FOREIGN KEY (checked_id) REFERENCES checked_baggage(checked_id),
-	CONSTRAINT chk_baggage_valid CHECK (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ticket_id INT NOT NULL,
+  baggage_type ENUM('carry_on','checked') NOT NULL,
+  carryon_id INT NULL,
+  checked_id INT NULL,
+  quantity INT DEFAULT 1,
+  note VARCHAR(255),
+  FOREIGN KEY (ticket_id) REFERENCES Tickets(ticket_id) ON DELETE CASCADE,
+  FOREIGN KEY (carryon_id) REFERENCES carryon_baggage(carryon_id),
+  FOREIGN KEY (checked_id) REFERENCES checked_baggage(checked_id),
+  CONSTRAINT chk_baggage_valid CHECK (
       (baggage_type = 'carry_on' AND carryon_id IS NOT NULL AND checked_id IS NULL)
       OR
       (baggage_type = 'checked' AND checked_id IS NOT NULL AND carryon_id IS NULL)
-	)
+  )
 );
 
+-- Update existing flights with default price (if any exist)
+UPDATE Flights SET base_price = 1000000 WHERE base_price = 0;
+
+-- Create index for better query performance
+CREATE INDEX idx_flights_is_deleted ON Flights(is_deleted);
+
+-- Update existing data to ensure all flights are marked as not deleted
+UPDATE Flights SET is_deleted = FALSE WHERE is_deleted IS NULL;
+
+SELECT 'Migration completed successfully!' AS Status;

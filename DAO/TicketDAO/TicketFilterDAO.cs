@@ -43,14 +43,13 @@ namespace DAO.TicketDAO
                         " fs.base_price               AS BasePrice, " +
                         " s.seat_number               AS SeatNumber, " +
                         " dep.airport_name            AS AirportName, " +
-                        " al.airline_name             AS AirlineName " +
+                        " 'Vietnam Airlines'          AS AirlineName " +
 
                         "FROM Tickets t " +
                         "JOIN Flight_Seats fs        ON t.flight_seat_id = fs.flight_seat_id " +
                         "JOIN Seats s                ON fs.seat_id = s.seat_id " +
                         "JOIN Flights f              ON fs.flight_id = f.flight_id " +
                         "JOIN Aircrafts ac           ON f.aircraft_id = ac.aircraft_id " +
-                        "JOIN Airlines al            ON ac.airline_id = al.airline_id " +
                         "JOIN Routes r               ON f.route_id = r.route_id " +
                         "JOIN Airports dep           ON r.departure_place_id = dep.airport_id " +
                         "JOIN Booking_Passengers bp  ON t.ticket_passenger_id = bp.booking_passenger_id " +
@@ -139,14 +138,13 @@ namespace DAO.TicketDAO
                                 " fs.base_price               AS BasePrice," +
                                 " s.seat_number               AS SeatNumber, " +
                                 " dep.airport_name            AS AirportName, " +
-                                " al.airline_name             AS AirlineName " +
+                                " 'Vietnam Airlines'          AS AirlineName " +
 
                                 "FROM Tickets t " +
                                 "JOIN Flight_Seats fs        ON t.flight_seat_id = fs.flight_seat_id " +
                                 "JOIN Seats s                ON fs.seat_id = s.seat_id " +
                                 "JOIN Flights f              ON fs.flight_id = f.flight_id " +
                                 "JOIN Aircrafts ac           ON f.aircraft_id = ac.aircraft_id " +
-                                "JOIN Airlines al            ON ac.airline_id = al.airline_id " +
                                 "JOIN Routes r               ON f.route_id = r.route_id " +
                                 "JOIN Airports dep           ON r.departure_place_id = dep.airport_id " +
                                 "JOIN Booking_Passengers bp  ON t.ticket_passenger_id = bp.booking_passenger_id " +

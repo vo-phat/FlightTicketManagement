@@ -16,6 +16,8 @@ namespace DTO.Flight
         private int _routeId;
         private DateTime? _departureTime;
         private DateTime? _arrivalTime;
+        private decimal _basePrice;
+        private string? _note;
         private FlightStatus _status;
 
         #endregion
@@ -86,25 +88,45 @@ namespace DTO.Flight
             get => _status;
             set => _status = value;
         }
+
+        public decimal BasePrice
+        {
+            get => _basePrice;
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentException("Giá vé không thể âm");
+                _basePrice = value;
+            }
+        }
+
+        public string? Note
+        {
+            get => _note;
+            set => _note = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        }
         #endregion
 
         #region Constructors
         public FlightDTO()
         {
             _status = FlightStatus.SCHEDULED;
+            _basePrice = 0;
         }
         public FlightDTO(string flightNumber, int aircraftId, int routeId,
-                         DateTime? departureTime, DateTime? arrivalTime)
+                         DateTime? departureTime, DateTime? arrivalTime, decimal basePrice = 0, string? note = null)
         {
             FlightNumber = flightNumber;
             AircraftId = aircraftId;
             RouteId = routeId;
             DepartureTime = departureTime;
             ArrivalTime = arrivalTime;
+            BasePrice = basePrice;
+            Note = note;
             _status = FlightStatus.SCHEDULED;
         }
         public FlightDTO(int flightId, string flightNumber, int aircraftId, int routeId,
-                         DateTime? departureTime, DateTime? arrivalTime, FlightStatus status)
+                         DateTime? departureTime, DateTime? arrivalTime, decimal basePrice, string? note, FlightStatus status)
         {
             FlightId = flightId;
             FlightNumber = flightNumber;
@@ -112,6 +134,8 @@ namespace DTO.Flight
             RouteId = routeId;
             DepartureTime = departureTime;
             ArrivalTime = arrivalTime;
+            BasePrice = basePrice;
+            Note = note;
             Status = status;
         }
         #endregion
@@ -171,6 +195,13 @@ namespace DTO.Flight
                 return false;
             }
 
+            // Validate base price
+            if (_basePrice < 0)
+            {
+                errorMessage = "Giá vé không thể âm";
+                return false;
+            }
+
             return true;
         }
 
@@ -213,6 +244,8 @@ namespace DTO.Flight
                 _routeId,
                 _departureTime,
                 _arrivalTime,
+                _basePrice,
+                _note,
                 _status
             );
         }

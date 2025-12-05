@@ -82,7 +82,17 @@ namespace GUI.Features.FareRules.SubFeatures {
                 FlatStyle = FlatStyle.Flat
             };
             btnClose.FlatAppearance.BorderSize = 0;
-            btnClose.Click += (_, __) => FindForm()?.Close();
+            btnClose.Click += (_, __) =>
+            {
+                Control? p = Parent;
+                while (p != null)
+                {
+                    if (p is GUI.Features.FareRules.FareRulesControl frc) { frc.ShowList(); return; }
+                    p = p.Parent;
+                }
+
+                FindForm()?.Close();
+            };
             bottom.Controls.Add(btnClose);
 
             card.Controls.Add(bottom);
