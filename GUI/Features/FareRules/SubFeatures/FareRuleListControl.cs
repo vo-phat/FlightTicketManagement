@@ -190,7 +190,7 @@ namespace GUI.Features.FareRules.SubFeatures
                 new DataGridViewTextBoxColumn { Name="effectiveDate", HeaderText="Hiệu lực", DataPropertyName=nameof(FareRuleRow.EffectiveDate), MinimumWidth=120, DefaultCellStyle = new DataGridViewCellStyle{ Format = "dd/MM/yyyy" } },
                 new DataGridViewTextBoxColumn { Name="expiryDate", HeaderText="Hết hạn", DataPropertyName=nameof(FareRuleRow.ExpiryDate), MinimumWidth=120, DefaultCellStyle = new DataGridViewCellStyle{ Format = "dd/MM/yyyy" } },
                 new DataGridViewTextBoxColumn { Name="price", HeaderText="Giá (₫)", DataPropertyName=nameof(FareRuleRow.Price), MinimumWidth=110, DefaultCellStyle = new DataGridViewCellStyle{ Format = "N0" } },
-                new DataGridViewButtonColumn { Name="action", HeaderText="Xem Chi Tiết", Text="Xem", UseColumnTextForButtonValue = true, MinimumWidth=80, AutoSizeMode = DataGridViewAutoSizeColumnMode.None, Width = 80 }
+                new DataGridViewButtonColumn { Name="action", HeaderText="Xem Chi Tiết", Text="Xem", UseColumnTextForButtonValue = true, MinimumWidth=110, AutoSizeMode = DataGridViewAutoSizeColumnMode.None, Width = 160 }
             });
 
             table.CellContentClick += Table_CellContentClick;
