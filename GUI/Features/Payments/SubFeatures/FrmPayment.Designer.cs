@@ -85,7 +85,7 @@
             Controls.Add(btnPay);
             Controls.Add(picQR);
             Name = "FrmPayment";
-            Size = new Size(750, 386);
+            Size = new Size(394, 386);
             ((System.ComponentModel.ISupportInitialize)picQR).EndInit();
             ResumeLayout(false);
             PerformLayout();
