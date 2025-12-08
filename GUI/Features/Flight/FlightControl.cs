@@ -8,10 +8,11 @@ namespace GUI.Features.Flight
 {
     public class FlightControl : UserControl
     {
-        private Button btnList, btnCreate;
-        private SubFeatures.FlightListControl list;
-        private SubFeatures.FlightCreateControl create;
-        private SubFeatures.FlightDetailControl detail;
+        private Button btnList = null!;
+        private Button btnCreate = null!;
+        private SubFeatures.FlightListControl list = null!;
+        private SubFeatures.FlightCreateControl create = null!;
+        private SubFeatures.FlightDetailControl detail = null!;
 
         public event Action<DTO.Booking.BookingRequestDTO>? NavigateToBookingRequested;
 

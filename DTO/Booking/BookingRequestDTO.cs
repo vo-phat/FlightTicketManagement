@@ -12,6 +12,7 @@ namespace DTO.Booking
         public int FlightId { get; set; }
         public int CabinClassId { get; set; }
         public string CabinClassName { get; set; }
+        public int TicketQuantity { get; set; } = 1; // Số lượng vé đặt
         public DateTime BookingDate { get; set; }
         
         // Thông tin chuyến bay (để hiển thị)
@@ -19,6 +20,15 @@ namespace DTO.Booking
         public string DepartureAirportCode { get; set; }
         public string ArrivalAirportCode { get; set; }
         public DateTime? DepartureTime { get; set; }
+
+        /// <summary>
+        /// Helper method: Trả về thông tin cần thiết cho việc đặt vé
+        /// Returns: (FlightId, CabinClassId, TicketQuantity)
+        /// </summary>
+        public (int FlightId, int CabinClassId, int Quantity) GetBookingInfo()
+        {
+            return (FlightId, CabinClassId, TicketQuantity);
+        }
     }
 
     /// <summary>

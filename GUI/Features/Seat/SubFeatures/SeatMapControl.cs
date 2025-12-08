@@ -152,21 +152,21 @@ namespace GUI.Features.Seat.SubFeatures
             {
                 seats = _bus.GetAllWithDetails();
 
-                // === Chuyến bay - Sắp xếp theo thứ tự tăng dần ===
+                // === Chuyến bay ===
                 var flights = seats.Select(s => s.FlightName).Distinct().OrderBy(f => f).ToList();
                 cbFlight.Items.Clear();
                 cbFlight.Items.Add("Tất cả");
                 cbFlight.Items.AddRange(flights.Cast<object>().ToArray());
                 cbFlight.SelectedIndex = 0;
 
-                // === Máy bay - Sắp xếp theo thứ tự tăng dần ===
+                // === Máy bay ===
                 var aircrafts = seats.Select(s => s.AircraftName).Distinct().OrderBy(a => a).ToList();
                 cbAircraft.Items.Clear();
                 cbAircraft.Items.Add("Tất cả");
                 cbAircraft.Items.AddRange(aircrafts.Cast<object>().ToArray());
                 cbAircraft.SelectedIndex = 0;
 
-                // === Hạng - Sắp xếp theo thứ tự ưu tiên ===
+                // === Hạng ===
                 var classOrder = new Dictionary<string, int>
                 {
                     { "First", 1 },
@@ -182,12 +182,12 @@ namespace GUI.Features.Seat.SubFeatures
                 cbClass.Items.AddRange(classes.Cast<object>().ToArray());
                 cbClass.SelectedIndex = 0;
 
-                // === Sự kiện thay đổi combobox ===
+                // === Events ===
                 cbFlight.SelectedIndexChanged += (_, __) => RefreshSeatMap();
                 cbAircraft.SelectedIndexChanged += (_, __) => RefreshSeatMap();
                 cbClass.SelectedIndexChanged += (_, __) => RefreshSeatMap();
 
-                // Hiển thị ban đầu
+                // Initial load
                 RefreshSeatMap();
             }
             catch (Exception ex)
@@ -205,7 +205,6 @@ namespace GUI.Features.Seat.SubFeatures
             string selectedAircraft = cbAircraft.SelectedItem?.ToString() ?? "Tất cả";
             string selectedClass = cbClass.SelectedItem?.ToString() ?? "Tất cả";
 
-            // Bắt đầu từ tất cả
             var filtered = seats.AsEnumerable();
 
             if (selectedFlight != "Tất cả")
@@ -231,13 +230,12 @@ namespace GUI.Features.Seat.SubFeatures
                 return;
             }
 
-            // Tạo sơ đồ ghế đầy đủ với các ô trống
             BuildCompleteSeatMap(list);
         }
 
         private void BuildCompleteSeatMap(List<FlightSeatDTO> filteredSeats)
         {
-            // Bước 1: Lấy tất cả ghế theo bộ lọc Chuyến bay và Máy bay (KHÔNG lọc theo Class)
+            // Bước 1: Lấy tất cả ghế theo bộ lọc Chuyến bay và Máy bay
             string selectedFlight = cbFlight.SelectedItem?.ToString() ?? "Tất cả";
             string selectedAircraft = cbAircraft.SelectedItem?.ToString() ?? "Tất cả";
 
@@ -253,72 +251,40 @@ namespace GUI.Features.Seat.SubFeatures
 
             if (allSeatsInSelection.Count == 0)
             {
-                stack.Controls.Add(new Label
-                {
-                    Text = "Không có dữ liệu ghế.",
-                    Font = new Font("Segoe UI", 12, FontStyle.Italic),
-                    AutoSize = true,
-                    Padding = new Padding(8)
-                });
+                stack.Controls.Add(new Label { Text = "Không có dữ liệu ghế.", Font = new Font("Segoe UI", 12, FontStyle.Italic), AutoSize = true, Padding = new Padding(8) });
                 return;
             }
 
-            // Bước 2: Tạo dictionary cho ghế đã lọc theo Class (để highlight)
+            // Bước 2: Dictionary highlight
             var highlightDict = new Dictionary<string, FlightSeatDTO>();
             foreach (var seat in filteredSeats)
             {
                 highlightDict[seat.SeatNumber] = seat;
             }
 
-            // Bước 3: LUÔN sử dụng 6 cột chuẩn (A-F)
+            // Bước 3: Cấu hình cột & hàng
             var firstSeat = allSeatsInSelection.FirstOrDefault();
-            if (firstSeat == null)
-            {
-                stack.Controls.Add(new Label
-                {
-                    Text = "Không có dữ liệu ghế.",
-                    Font = new Font("Segoe UI", 12, FontStyle.Italic),
-                    AutoSize = true,
-                    Padding = new Padding(8)
-                });
-                return;
-            }
+            if (firstSeat == null) return;
 
-            // LUÔN hiển thị 6 cột (A-F) theo chuẩn máy bay
             char[] standardColumns = { 'A', 'B', 'C', 'D', 'E', 'F' };
             var sortedCols = standardColumns.ToList();
 
-            // Tính số hàng dựa trên capacity
-            int seatsPerRow = sortedCols.Count; // 6 ghế/hàng
+            int seatsPerRow = sortedCols.Count;
             int estimatedRows = firstSeat.AircraftCapacity > 0
                 ? (int)Math.Ceiling((double)firstSeat.AircraftCapacity / seatsPerRow)
                 : 0;
 
-            // Tìm số hàng lớn nhất từ ghế có sẵn
             int maxRowFromSeats = allSeatsInSelection
                 .Select(s => int.TryParse(new string(s.SeatNumber.TakeWhile(char.IsDigit).ToArray()), out int n) ? n : 0)
                 .DefaultIfEmpty(0)
                 .Max();
 
-            // Sử dụng giá trị lớn hơn
             int maxRow = Math.Max(estimatedRows, maxRowFromSeats);
+            if (maxRow == 0) return;
 
-            if (maxRow == 0)
-            {
-                stack.Controls.Add(new Label
-                {
-                    Text = "Không xác định được số hàng tối đa.",
-                    Font = new Font("Segoe UI", 12, FontStyle.Italic),
-                    AutoSize = true,
-                    Padding = new Padding(8)
-                });
-                return;
-            }
-
-            // Tạo danh sách TẤT CẢ các hàng từ 1 đến maxRow
             var sortedRows = Enumerable.Range(1, maxRow).ToList();
 
-            // Bước 4: Tạo header với tên cột A-F
+            // Bước 4: Tạo header
             var headerPanel = new FlowLayoutPanel
             {
                 AutoSize = true,
@@ -328,13 +294,10 @@ namespace GUI.Features.Seat.SubFeatures
 
             headerPanel.Controls.Add(new Label { Width = RowLabelWidth, Height = 30, Text = "" });
 
-            int headerAisleIndex = 3; // Lối đi sau cột C
+            int headerAisleIndex = 3;
             for (int i = 0; i < sortedCols.Count; i++)
             {
-                if (i == headerAisleIndex)
-                {
-                    headerPanel.Controls.Add(new Panel { Width = AisleWidth, Height = 1 });
-                }
+                if (i == headerAisleIndex) headerPanel.Controls.Add(new Panel { Width = AisleWidth, Height = 1 });
 
                 var colLabel = new Label
                 {
@@ -348,40 +311,40 @@ namespace GUI.Features.Seat.SubFeatures
                 };
                 headerPanel.Controls.Add(colLabel);
             }
-
             stack.Controls.Add(headerPanel);
 
-            // Bước 5: Tạo bảng ghế
+            // Bước 5: Tạo GroupBox chứa Map
+            // <--- THAY ĐỔI: Style lại GroupBox giống FlightSeatControl --->
             var allCard = new GroupBox
             {
-                Text = $"  Sơ đồ ghế - {firstSeat.AircraftName} (Capacity: {firstSeat.AircraftCapacity})  ",
-                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
-                Padding = new Padding(16),
+                Text = $"   ✈  {firstSeat.FlightName.ToUpper()}   |   MÁY BAY: {firstSeat.AircraftName.ToUpper()}   ",
+                Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 51, 102), // Màu xanh đậm
+                Padding = new Padding(10, 40, 10, 20),
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                Margin = new Padding(0, 0, 0, 24)
+                Margin = new Padding(0, 0, 0, 24),
+                Dock = DockStyle.Fill
             };
+            // ----------------------------------------------------------------
 
             var grid = new TableLayoutPanel
             {
-                ColumnCount = sortedCols.Count + 2, // +1 label, +1 aisle
+                ColumnCount = sortedCols.Count + 2,
                 AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                BackColor = Color.White
             };
 
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, RowLabelWidth));
 
-            int gridAisleIndex = 3; // Lối đi sau cột C
+            int gridAisleIndex = 3;
             for (int i = 0; i < sortedCols.Count; i++)
             {
-                if (i == gridAisleIndex)
-                {
-                    grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, AisleWidth));
-                }
+                if (i == gridAisleIndex) grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, AisleWidth));
                 grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, SeatWidth));
             }
 
-            // Duyệt qua TẤT CẢ các hàng
             int rowIdx = 0;
             foreach (int rowNo in sortedRows)
             {
@@ -399,7 +362,6 @@ namespace GUI.Features.Seat.SubFeatures
                 };
                 grid.Controls.Add(lb, 0, rowIdx);
 
-                // Duyệt qua TẤT CẢ 6 cột
                 int gridCol = 1;
                 for (int colIndex = 0; colIndex < sortedCols.Count; colIndex++)
                 {
@@ -408,40 +370,43 @@ namespace GUI.Features.Seat.SubFeatures
 
                     if (colIndex == gridAisleIndex)
                     {
-                        grid.Controls.Add(new Panel
-                        {
-                            Width = AisleWidth,
-                            Height = 1,
-                            BackColor = Color.Transparent
-                        }, gridCol, rowIdx);
+                        grid.Controls.Add(new Panel { Width = AisleWidth, Height = 1, BackColor = Color.Transparent }, gridCol, rowIdx);
                         gridCol++;
                     }
 
-                    // Kiểm tra ghế
                     if (highlightDict.TryGetValue(seatNumber, out FlightSeatDTO seat))
                     {
-                        // Ghế khớp bộ lọc - đầy đủ màu
                         grid.Controls.Add(MakeSeat(seat), gridCol, rowIdx);
                     }
                     else if (allSeatsInSelection.Any(s => s.SeatNumber == seatNumber))
                     {
-                        // Ghế tồn tại nhưng không khớp bộ lọc - mờ
                         var dimSeat = allSeatsInSelection.First(s => s.SeatNumber == seatNumber);
                         grid.Controls.Add(MakeDimmedSeat(dimSeat), gridCol, rowIdx);
                     }
                     else
                     {
-                        // Không có ghế - ô trống
                         grid.Controls.Add(MakeEmptySeat(seatNumber), gridCol, rowIdx);
                     }
-
                     gridCol++;
                 }
-
                 rowIdx++;
             }
 
-            allCard.Controls.Add(grid);
+            // <--- THAY ĐỔI: Thêm Wrapper để căn giữa Grid trong GroupBox --->
+            var centerWrapper = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                AutoSize = true,
+                ColumnCount = 1,
+                RowCount = 1
+            };
+            centerWrapper.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
+            grid.Anchor = AnchorStyles.None; // Tự động căn giữa
+            centerWrapper.Controls.Add(grid, 0, 0);
+
+            allCard.Controls.Add(centerWrapper);
+            // ---------------------------------------------------------------
+
             stack.Controls.Add(allCard);
         }
 
@@ -495,7 +460,6 @@ namespace GUI.Features.Seat.SubFeatures
 
             panel.Controls.Add(label);
             tip.SetToolTip(panel, $"Vị trí {position} - Không có ghế");
-
             return panel;
         }
 
@@ -523,14 +487,12 @@ namespace GUI.Features.Seat.SubFeatures
             btn.ForeColor = Color.FromArgb(158, 158, 158);
 
             tip.SetToolTip(btn, $"{cabinName} • {status} • Giá: {price:n0}₫ (Không thuộc bộ lọc)");
-
             return btn;
         }
 
         private void StyleSeat(Button btn, string status)
         {
             btn.UseVisualStyleBackColor = false;
-
             if (status == "AVAILABLE")
             {
                 btn.BackColor = Color.FromArgb(232, 245, 233);
@@ -549,7 +511,6 @@ namespace GUI.Features.Seat.SubFeatures
                 btn.FlatAppearance.BorderColor = Color.FromArgb(229, 115, 115);
                 btn.ForeColor = Color.FromArgb(183, 28, 28);
             }
-
             btn.FlatAppearance.MouseOverBackColor = btn.BackColor;
             btn.FlatAppearance.MouseDownBackColor = btn.BackColor;
         }
