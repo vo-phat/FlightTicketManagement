@@ -2,10 +2,12 @@
 using BUS.Profile;
 using BUS.Ticket;
 using DAO.EF;
+using DAO.Models;
 using DTO.BaggageDTO;
+using DTO.Booking;
 using DTO.Profile;
 using DTO.Ticket;
-using DTO.Booking;
+using GUI.Features.Seat.SubFeatures;
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -180,12 +182,58 @@ namespace GUI.Features.Ticket.subTicket
                 Visible = false
             });
         }
-       
+        public class SeatSelectorForm : Form
+        {
+            public OpenSeatSelectorControl Selector { get; private set; }
+
+            public SeatSelectorForm(int flightId, int classId)
+            {
+                Text = "Chọn ghế";
+                Width = 500;
+                Height = 400;
+                StartPosition = FormStartPosition.CenterScreen;
+                FormBorderStyle = FormBorderStyle.FixedDialog;
+                MaximizeBox = false;
+                MinimizeBox = false;
+
+                Selector = new OpenSeatSelectorControl();
+                Selector.Dock = DockStyle.Fill;
+                Controls.Add(Selector);
+
+                // Load đúng thời điểm
+                Load += (s, e) =>
+                {
+                    Selector.LoadSeats(flightId, classId);
+                };
+            }
+        }
+
+
 
         private void btnSelectSeatTicket_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Chọn ghế sẽ xuất hiện sớm.");
+            var form = new SeatSelectorForm(1, 1);
+
+            var result = form.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                var seat = form.Selector.GetSelectedSeat();
+                if (seat != null)
+                {
+                    // Gán vào UI
+                    txtSeatTicket.Text = seat.SeatNumber;
+
+                    // Gán vào hidden fields nếu cần
+                    // (để MapFormToDto làm đúng)
+                    // Anh tự thêm nếu muốn:
+                    // _selectedSeatId = seat.SeatId;
+                    // _selectedFlightSeatId = seat.FlightSeatId;
+                    // _selectedSeatPrice = seat.Price;
+                }
+            }
         }
+
+
 
         // Nhập / Cập nhật
         private void btnAddPassengerTicket_Click(object sender, EventArgs e)
