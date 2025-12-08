@@ -42,11 +42,8 @@ namespace GUI.Features.Flight.SubFeatures
             // 
             BackColor = Color.FromArgb(232, 240, 252);
             Name = "FlightDetailControl";
-<<<<<<< HEAD
-            Size = new Size(1545, 810);
-=======
+
             Size = new Size(2110, 1064);
->>>>>>> cc6bdd0a1d5517a4276da5af63e857b747de75db
             ResumeLayout(false);
         }
 

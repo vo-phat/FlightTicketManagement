@@ -3,11 +3,12 @@ using BUS.Profile;
 using BUS.Ticket;
 using DAO.EF;
 using DAO.Models;
-using DTO.BaggageDTO;
+using DTO.Baggage;
 using DTO.Booking;
 using DTO.Profile;
 using DTO.Ticket;
 using GUI.Features.Seat.SubFeatures;
+using GUI.Features.Validator;
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -20,11 +21,19 @@ namespace GUI.Features.Ticket.subTicket
         // Nguồn dữ liệu & trạng thái
         private readonly BindingList<TicketBookingRequestDTO> _passengers = new(); // CÁCH 1
         private readonly ProfileBUS _profileBus = new ProfileBUS();
+        private readonly CarryOnBaggageBUS _carryOnBaggageBUS = new CarryOnBaggageBUS();
+        private List<CarryOnBaggageDTO> carryOnList = new();
         private readonly BindingSource _bs = new();
         private int _editingIndex = -1; // -1 = thêm mới; >=0 = đang sửa dòng này
         private int _passengerCount = 0;
         private int _ticketCount ;
         private int _accountId ;
+
+
+        private int _selectedSeatId;
+        private int _selectedFlightSeatId;
+        private decimal _selectedSeatPrice;
+        private int _classId ;
         private BookingRequestDTO bookingRequest;
         public frmPassengerInfoControl()
         {
@@ -34,12 +43,12 @@ namespace GUI.Features.Ticket.subTicket
             InitGrid();
             LoadCheckBaggage();
             LoadNationality();
-            // cấu hình lưới + binding 1 lần
             btnAddPassengerTicket.Text = "Nhập";
-
+            carryOnList = _carryOnBaggageBUS.GetAll();
             // Chặn popup DataError mặc định của DGV
             dgvPassengerListTicket.DataError += (s, e) => { e.ThrowException = false; };
         }
+       
         private void LoadCheckBaggage()
         {
             CheckedBaggageBUS checkedBaggageBUS = new CheckedBaggageBUS();
@@ -223,12 +232,13 @@ namespace GUI.Features.Ticket.subTicket
                     // Gán vào UI
                     txtSeatTicket.Text = seat.SeatNumber;
 
+
                     // Gán vào hidden fields nếu cần
                     // (để MapFormToDto làm đúng)
                     // Anh tự thêm nếu muốn:
-                    // _selectedSeatId = seat.SeatId;
-                    // _selectedFlightSeatId = seat.FlightSeatId;
-                    // _selectedSeatPrice = seat.Price;
+                    _selectedFlightSeatId = seat.FlightSeatId;
+                    _selectedSeatPrice = seat.Price;
+                    _classId = seat.ClassId;
                 }
             }
         }
@@ -314,6 +324,10 @@ namespace GUI.Features.Ticket.subTicket
                 dto.AccountId = _accountId; // nếu user login
                 MessageBox.Show(dto.AccountId.ToString());
             }
+            if(ValidatorForFrm.Check("qui 123 !@#", "phone"))
+            {
+                return;
+            }
             dto.FullName = txtFullNameTicket.Text;
             dto.DateOfBirth = dtpDateOfBirthTicket.Value;
             dto.PhoneNumber = txtPhoneNumberTicket.Text;
@@ -329,8 +343,8 @@ namespace GUI.Features.Ticket.subTicket
             // ========= Seat info =========
             dto.SeatNumber = txtSeatTicket.Text;
             dto.SeatId = 1;        // tùy theo UI của Anh, nếu chưa có thì để null.
-            dto.FlightSeatId = 1;  // tùy theo UI của Anh, nếu chưa có thì để null.
-            dto.ClassId = 1;      // tùy theo UI của Anh, nếu chưa có thì để null.
+            dto.FlightSeatId = _selectedFlightSeatId;  // tùy theo UI của Anh, nếu chưa có thì để null.
+            dto.ClassId = _classId;      // tùy theo UI của Anh, nếu chưa có thì để null.
 
             // ========= Baggage info =========
             if (cboBaggageTicket.SelectedItem != null)
@@ -340,21 +354,21 @@ namespace GUI.Features.Ticket.subTicket
                 dto.BaggageDisplayText = cboBaggageTicket.Text;
             }
             dto.Quantity = 1; // mặc định 1 kiện
-            dto.CarryOnId = CarryBaggageId(1); // hang ve
+            dto.CarryOnId = CarryBaggageId(_classId); // hang ve
             // carry on id nếu có UI chọn hành lý xách tay thêm thì map tương tự CheckedId
             dto.BaggageNote = txtNoteBaggage.Text;
-            dto.TicketPrice = (cboBaggageTicket.SelectedItem as DTO.Baggage.CheckedBaggageDTO)?.Price + SeatPrice(1, 1);
+            dto.TicketPrice = (cboBaggageTicket.SelectedItem as DTO.Baggage.CheckedBaggageDTO)?.Price + _selectedSeatPrice;
             // ========= Ticket info =========
             // dto.TicketNumber => BUS sẽ tự generate
         }
-        private decimal SeatPrice(int Flight_id, int Seat_id)
+        
+        private int CarryBaggageId(int ClassId)
         {
+            CarryOnBaggageDTO result = carryOnList
+                    .FirstOrDefault(c => c.ClassId == ClassId);
 
-            return 1;
-        }
-        private int CarryBaggageId(int CarryOn_id)
-        {
-            return 1;
+            return result.CarryOnId;   // nếu null thì return 0
+
         }
         private bool ValidateForm()
         {
@@ -430,6 +444,7 @@ namespace GUI.Features.Ticket.subTicket
             if (bookingRequest == null) return;
             _accountId = 2;
             _ticketCount = 2; // cần chọn vé.
+            _classId = 1;
             bookingRequest = bookingRequest;
             LoadInfomationAccount(_accountId);
 
