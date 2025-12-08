@@ -174,7 +174,7 @@ namespace DAO.TicketDAO
                                     cmd.ExecuteNonQuery();
                                 }
                             }
-                            else if (dto.CheckedId.HasValue)
+                            if (dto.CheckedId.HasValue)
                             {
                                 using (var cmd = new MySqlCommand(@"
                                     INSERT INTO ticket_baggage

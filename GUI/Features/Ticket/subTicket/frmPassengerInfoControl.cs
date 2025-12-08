@@ -43,7 +43,7 @@ namespace GUI.Features.Ticket.subTicket
             CheckedBaggageBUS checkedBaggageBUS = new CheckedBaggageBUS();
             var baggageList = checkedBaggageBUS.GetAllCheckedBaggage();
             cboBaggageTicket.DataSource = baggageList;
-            cboBaggageTicket.DisplayMember = "DisplayText";
+            cboBaggageTicket.DisplayMember = "Description";
             cboBaggageTicket.ValueMember = "CheckedId";
         }
         private void LoadNationality()
@@ -292,15 +292,22 @@ namespace GUI.Features.Ticket.subTicket
                 dto.BaggageDisplayText = cboBaggageTicket.Text;
             }
             dto.Quantity = 1; // mặc định 1 kiện
-            dto.CarryOnId = 1;
+            dto.CarryOnId = CarryBaggageId(1); // hang ve
             // carry on id nếu có UI chọn hành lý xách tay thêm thì map tương tự CheckedId
             dto.BaggageNote = txtNoteBaggage.Text;
-            dto.TicketPrice = 1000000; // tổng giá vé + hành lý, Anh tính ở ngoài rồi set vào đây
+            dto.TicketPrice = (cboBaggageTicket.SelectedItem as DTO.Baggage.CheckedBaggageDTO)?.Price + SeatPrice(1, 1);
             // ========= Ticket info =========
             // dto.TicketNumber => BUS sẽ tự generate
         }
+        private decimal SeatPrice(int Flight_id, int Seat_id)
+        {
 
-
+            return 1;
+        }
+        private int CarryBaggageId(int CarryOn_id)
+        {
+            return 1;
+        }
         private bool ValidateForm()
         {
             if (string.IsNullOrWhiteSpace(txtFullNameTicket.Text))
