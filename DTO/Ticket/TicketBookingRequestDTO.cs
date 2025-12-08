@@ -51,7 +51,7 @@ namespace DTO.Ticket
         // ============================
         // 5. Ticket info
         // ============================
-
+        public decimal? TicketPrice { get; set; }   // giá vé + hành lý
         public string? TicketNumber { get; set; }   // BUS có thể auto-generate
         public string? Note { get; set; }           // ghi chú của vé
     }

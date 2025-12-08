@@ -287,6 +287,7 @@ namespace GUI.Features.Ticket.subTicket
             // ========= Baggage info =========
             if (cboBaggageTicket.SelectedItem != null)
             {
+                
                 dto.CheckedId = (cboBaggageTicket.SelectedItem as DTO.Baggage.CheckedBaggageDTO)?.CheckedId;
                 dto.BaggageDisplayText = cboBaggageTicket.Text;
             }
@@ -294,7 +295,7 @@ namespace GUI.Features.Ticket.subTicket
             dto.CarryOnId = 1;
             // carry on id nếu có UI chọn hành lý xách tay thêm thì map tương tự CheckedId
             dto.BaggageNote = txtNoteBaggage.Text;
-
+            dto.TicketPrice = 1000000; // tổng giá vé + hành lý, Anh tính ở ngoài rồi set vào đây
             // ========= Ticket info =========
             // dto.TicketNumber => BUS sẽ tự generate
         }
@@ -337,30 +338,8 @@ namespace GUI.Features.Ticket.subTicket
             // 1) Lấy danh sách ticket từ BindingList
             var tickets = _passengers.ToList();
 
-            if (tickets.Count == 0)
-            {
-                MessageBox.Show("Chưa có hành khách nào để thanh toán!");
-                return;
-            }
-
-            // 2) Tính số tiền (demo)
-            decimal totalAmount = tickets.Count * 1000000;  // mỗi vé 1 triệu, demo thôi
-
-            // 3) Tạo UserControl Payment
-            var payUC = new GUI.Features.Payments.SubFeatures.FrmPayment(totalAmount, tickets);
-            payUC.Dock = DockStyle.Fill;
-
-            // 4) Tạo popup Form
-            Form popup = new Form();
-            popup.StartPosition = FormStartPosition.CenterScreen;
-            popup.FormBorderStyle = FormBorderStyle.FixedDialog;
-            popup.MaximizeBox = false;
-            popup.MinimizeBox = false;
-            popup.ClientSize = new Size(380, 460);
-            popup.Controls.Add(payUC);
-
-            // 5) Show popup
-            popup.ShowDialog();
+            SaveTicketRequestBUS saveTicketRequestBUS = new SaveTicketRequestBUS();
+            saveTicketRequestBUS.SaveTicketRequest(tickets, _accountId, "test");
         }
 
         public void ShowTicketDtoInfo(TicketBookingRequestDTO dto)
@@ -395,7 +374,7 @@ namespace GUI.Features.Ticket.subTicket
         {
             if (bookingRequest == null) return;
             _accountId = 2;
-            _ticketCount = 3; // cần chọn vé.
+            _ticketCount = 2; // cần chọn vé.
             bookingRequest = bookingRequest;
             LoadInfomationAccount(_accountId);
 
