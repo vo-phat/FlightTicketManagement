@@ -5,7 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using BUS.Flight;
 using BUS.Payment;
+using BUS.Stats;
 using DTO.Flight;
+using DTO.Stats;
 using GUI.Components.Buttons;
 
 namespace GUI.Features.Stats {
@@ -44,12 +46,26 @@ namespace GUI.Features.Stats {
         private Label lblCabinClassStatsTitle = null!;
         private DataGridView dgvCabinClassStats = null!;
 
+        // Flight Details Statistics
+        private Panel flightDetailsPanel = null!;
+        private Label lblFlightDetailsTitle = null!;
+        private DataGridView dgvFlightDetails = null!;
+        private Label lblFlightDetailsInfo = null!;
+
+        // Payment Statistics
+        private Panel paymentDetailsPanel = null!;
+        private Label lblPaymentDetailsTitle = null!;
+        private DataGridView dgvPaymentDetails = null!;
+        private Label lblPaymentDetailsInfo = null!;
+
         private readonly FlightBUS _flightBUS;
         private readonly PaymentBUS _paymentBUS;
+        private readonly StatsBUS _statsBUS;
 
         public StatsControl() {
             _flightBUS = FlightBUS.Instance;
             _paymentBUS = new PaymentBUS();
+            _statsBUS = StatsBUS.Instance;
             InitializeComponent();
             LoadStatistics();
         }
@@ -61,7 +77,7 @@ namespace GUI.Features.Stats {
             mainPanel = new TableLayoutPanel {
                 Dock = DockStyle.Fill,
                 ColumnCount = 2,
-                RowCount = 4,
+                RowCount = 5,
                 BackColor = Color.FromArgb(232, 240, 252),
                 Padding = new Padding(20)
             };
@@ -71,6 +87,7 @@ namespace GUI.Features.Stats {
             mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 200F)); // Flight stats
             mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 200F)); // Payment stats
             mainPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));  // Monthly report & cabin stats
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 350F)); // Flight details & Payment details
 
             // Header panel
             InitializeHeader();
@@ -87,6 +104,12 @@ namespace GUI.Features.Stats {
             // Cabin class statistics panel
             InitializeCabinClassStatsPanel();
 
+            // Flight details statistics panel
+            InitializeFlightDetailsPanel();
+
+            // Payment details statistics panel
+            InitializePaymentDetailsPanel();
+
             mainPanel.SetColumnSpan(headerPanel, 2); // Header spans both columns
             mainPanel.Controls.Add(headerPanel, 0, 0);
             
@@ -98,6 +121,9 @@ namespace GUI.Features.Stats {
             
             mainPanel.Controls.Add(monthlyReportPanel, 0, 3);
             mainPanel.Controls.Add(cabinClassStatsPanel, 1, 3);
+            
+            mainPanel.Controls.Add(flightDetailsPanel, 0, 4); // Flight details left column
+            mainPanel.Controls.Add(paymentDetailsPanel, 1, 4); // Payment details right column
 
             this.Controls.Add(mainPanel);
             this.ResumeLayout(false);
@@ -300,6 +326,117 @@ namespace GUI.Features.Stats {
             cabinClassStatsPanel.Controls.AddRange(new Control[] { lblCabinClassStatsTitle, dgvCabinClassStats });
         }
 
+        private void InitializeFlightDetailsPanel() {
+            flightDetailsPanel = new Panel {
+                Dock = DockStyle.Fill,
+                BackColor = Color.White,
+                Padding = new Padding(20),
+                Margin = new Padding(0, 10, 0, 0)
+            };
+
+            lblFlightDetailsTitle = new Label {
+                Text = "✈️ CHI TIẾT CHUYẾN BAY ĐI",
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 92, 175),
+                AutoSize = true,
+                Location = new Point(20, 15)
+            };
+
+            lblFlightDetailsInfo = new Label {
+                Text = "Tổng chuyến: 0 | Doanh thu: 0 VNĐ | Hành khách: 0 | Tỷ lệ lấp đầy TB: 0%",
+                Font = new Font("Segoe UI", 9),
+                ForeColor = Color.FromArgb(52, 73, 94),
+                AutoSize = true,
+                Location = new Point(20, 40)
+            };
+
+            dgvFlightDetails = new DataGridView {
+                Location = new Point(20, 65),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                Width = 650,
+                Height = 250,
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                ReadOnly = true,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                BackgroundColor = Color.White,
+                BorderStyle = BorderStyle.None,
+                ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle {
+                    BackColor = Color.FromArgb(0, 92, 175),
+                    ForeColor = Color.White,
+                    Font = new Font("Segoe UI", 10, FontStyle.Bold)
+                }
+            };
+
+            // Add columns
+            dgvFlightDetails.Columns.Add("FlightCode", "Mã chuyến");
+            dgvFlightDetails.Columns.Add("Route", "Tuyến đường");
+            dgvFlightDetails.Columns.Add("DepartureTime", "Giờ cất cánh");
+            dgvFlightDetails.Columns.Add("ArrivalTime", "Giờ hạ cánh");
+            dgvFlightDetails.Columns.Add("TotalSeats", "Tổng ghế");
+            dgvFlightDetails.Columns.Add("BookedSeats", "Ghế đã đặt");
+            dgvFlightDetails.Columns.Add("OccupancyRate", "Tỷ lệ lấp đầy (%)");
+            dgvFlightDetails.Columns.Add("TotalPassengers", "Hành khách");
+            dgvFlightDetails.Columns.Add("Revenue", "Doanh thu (VNĐ)");
+
+            flightDetailsPanel.Controls.AddRange(new Control[] { lblFlightDetailsTitle, lblFlightDetailsInfo, dgvFlightDetails });
+        }
+
+        private void InitializePaymentDetailsPanel() {
+            paymentDetailsPanel = new Panel {
+                Dock = DockStyle.Fill,
+                BackColor = Color.White,
+                Padding = new Padding(20),
+                Margin = new Padding(10, 10, 0, 0)
+            };
+
+            lblPaymentDetailsTitle = new Label {
+                Text = "💳 CHI TIẾT THANH TOÁN",
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 92, 175),
+                AutoSize = true,
+                Location = new Point(20, 15)
+            };
+
+            lblPaymentDetailsInfo = new Label {
+                Text = "Tổng doanh thu: 0 VNĐ | Tổng giao dịch: 0 | Thành công: 0 | Thất bại: 0 | Tỷ lệ thành công: 0%",
+                Font = new Font("Segoe UI", 9),
+                ForeColor = Color.FromArgb(52, 73, 94),
+                AutoSize = true,
+                Location = new Point(20, 40)
+            };
+
+            dgvPaymentDetails = new DataGridView {
+                Location = new Point(20, 65),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                Width = 650,
+                Height = 250,
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                ReadOnly = true,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                BackgroundColor = Color.White,
+                BorderStyle = BorderStyle.None,
+                ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle {
+                    BackColor = Color.FromArgb(0, 92, 175),
+                    ForeColor = Color.White,
+                    Font = new Font("Segoe UI", 10, FontStyle.Bold)
+                }
+            };
+
+            // Add columns
+            dgvPaymentDetails.Columns.Add("PaymentMethod", "Phương thức");
+            dgvPaymentDetails.Columns.Add("TotalTransactions", "Tổng GD");
+            dgvPaymentDetails.Columns.Add("TotalAmount", "Tổng tiền (VNĐ)");
+            dgvPaymentDetails.Columns.Add("SuccessCount", "Thành công");
+            dgvPaymentDetails.Columns.Add("FailedCount", "Thất bại");
+            dgvPaymentDetails.Columns.Add("SuccessRate", "Tỷ lệ TC (%)");
+
+            paymentDetailsPanel.Controls.AddRange(new Control[] { lblPaymentDetailsTitle, lblPaymentDetailsInfo, dgvPaymentDetails });
+        }
+
         private Label CreateStatLabel(string text, Point location, Color foreColor) {
             return new Label {
                 Text = text,
@@ -330,6 +467,12 @@ namespace GUI.Features.Stats {
                 
                 // Load cabin class statistics
                 LoadCabinClassStatistics(fromDate, toDate);
+
+                // Load flight details
+                LoadFlightDetails(fromDate, toDate);
+
+                // Load payment details
+                LoadPaymentDetails(fromDate, toDate);
             }
             catch (Exception ex) {
                 MessageBox.Show($"Lỗi khi tải thống kê: {ex.Message}", "Lỗi", 
@@ -373,10 +516,10 @@ namespace GUI.Features.Stats {
             try {
                 dgvMonthlyReport.Rows.Clear();
 
-                // Get monthly revenue report from database
-                var monthlyReport = DAO.Flight.FlightDAO.Instance.GetMonthlyRevenueReport(fromDate, toDate);
+                // Get monthly revenue report from BUS
+                var result = _statsBUS.GetMonthlyRevenueReport(fromDate, toDate);
 
-                if (monthlyReport != null && monthlyReport.Rows.Count > 0) {
+                if (result.Success && result.Data is System.Data.DataTable monthlyReport && monthlyReport.Rows.Count > 0) {
                     foreach (System.Data.DataRow row in monthlyReport.Rows) {
                         string monthYear = row["month_year"]?.ToString() ?? "";
                         int totalFlights = Convert.ToInt32(row["total_flights"]);
@@ -406,10 +549,10 @@ namespace GUI.Features.Stats {
             try {
                 dgvCabinClassStats.Rows.Clear();
 
-                // Get cabin class statistics from database
-                var cabinStats = DAO.Flight.FlightDAO.Instance.GetCabinClassStatistics(fromDate, toDate);
+                // Get cabin class statistics from BUS
+                var result = _statsBUS.GetCabinClassStatistics(fromDate, toDate);
 
-                if (cabinStats != null && cabinStats.Rows.Count > 0) {
+                if (result.Success && result.Data is System.Data.DataTable cabinStats && cabinStats.Rows.Count > 0) {
                     foreach (System.Data.DataRow row in cabinStats.Rows) {
                         string cabinClassName = row["cabin_class_name"]?.ToString() ?? "";
                         int totalTickets = Convert.ToInt32(row["total_tickets"]);
@@ -431,6 +574,106 @@ namespace GUI.Features.Stats {
             }
             catch (Exception ex) {
                 MessageBox.Show($"Lỗi khi tải thống kê hạng vé: {ex.Message}", "Lỗi", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void LoadFlightDetails(DateTime fromDate, DateTime toDate) {
+            try {
+                dgvFlightDetails.Rows.Clear();
+                lblFlightDetailsInfo.Text = "Đang tải dữ liệu...";
+
+                // Get year and month from the selected date
+                int year = fromDate.Year;
+                int month = fromDate.Month;
+
+                // Call BUS to get flight stats
+                var result = _statsBUS.GetFlightStatsReport(year, month);
+
+                if (result.Success && result.Data is FlightStatsReportViewModel report) {
+                    if (report.FlightDetails != null && report.FlightDetails.Count > 0) {
+                        foreach (var flight in report.FlightDetails) {
+                            dgvFlightDetails.Rows.Add(
+                                flight.FlightCode,
+                                flight.Route,
+                                flight.DepartureTime,
+                                flight.ArrivalTime,
+                                flight.TotalSeats,
+                                flight.BookedSeats,
+                                flight.OccupancyRate,
+                                flight.TotalPassengers,
+                                flight.Revenue.ToString("N0")
+                            );
+                        }
+
+                        // Update summary info
+                        lblFlightDetailsInfo.Text = 
+                            $"Tổng chuyến: {report.TotalFlights} | " +
+                            $"Doanh thu: {report.TotalRevenue:N0} VNĐ | " +
+                            $"Hành khách: {report.TotalPassengers} | " +
+                            $"Tỷ lệ lấp đầy TB: {report.AverageOccupancyRate}%";
+                    } else {
+                        dgvFlightDetails.Rows.Add("Không có dữ liệu", "-", "-", "-", "-", "-", "-", "-", "-");
+                        lblFlightDetailsInfo.Text = "Không có dữ liệu chuyến bay trong tháng được chọn";
+                    }
+                } else {
+                    // Show error message
+                    string errorMsg = result.Message ?? "Lỗi không xác định";
+                    dgvFlightDetails.Rows.Add(errorMsg, "-", "-", "-", "-", "-", "-", "-", "-");
+                    lblFlightDetailsInfo.Text = $"Lỗi: {errorMsg}";
+                    Console.WriteLine($"Error loading flight stats: {errorMsg}");
+                }
+            }
+            catch (Exception ex) {
+                Console.WriteLine($"Exception in LoadFlightDetails: {ex}");
+                MessageBox.Show($"Lỗi khi tải chi tiết chuyến bay:\n{ex.Message}\n\n{ex.InnerException?.Message}", "Lỗi", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void LoadPaymentDetails(DateTime fromDate, DateTime toDate) {
+            try {
+                dgvPaymentDetails.Rows.Clear();
+                lblPaymentDetailsInfo.Text = "Đang tải dữ liệu...";
+
+                int year = fromDate.Year;
+                int month = fromDate.Month;
+
+                var result = _statsBUS.GetPaymentStatsReport(year, month);
+
+                if (result.Success && result.Data is PaymentStatsReportViewModel report) {
+                    if (report.PaymentMethods != null && report.PaymentMethods.Count > 0) {
+                        foreach (var method in report.PaymentMethods) {
+                            dgvPaymentDetails.Rows.Add(
+                                method.PaymentMethod,
+                                method.TotalTransactions,
+                                method.TotalAmount.ToString("N0"),
+                                method.SuccessCount,
+                                method.FailedCount,
+                                method.SuccessRate
+                            );
+                        }
+
+                        lblPaymentDetailsInfo.Text =
+                            $"Tổng doanh thu: {report.TotalRevenue:N0} VNĐ | " +
+                            $"Tổng giao dịch: {report.TotalTransactions} | " +
+                            $"Thành công: {report.SuccessfulTransactions} | " +
+                            $"Thất bại: {report.FailedTransactions} | " +
+                            $"Tỷ lệ thành công: {report.SuccessRate}%";
+                    } else {
+                        dgvPaymentDetails.Rows.Add("Không có dữ liệu", "-", "-", "-", "-", "-");
+                        lblPaymentDetailsInfo.Text = "Không có dữ liệu thanh toán trong tháng được chọn";
+                    }
+                } else {
+                    string errorMsg = result.Message ?? "Lỗi không xác định";
+                    dgvPaymentDetails.Rows.Add(errorMsg, "-", "-", "-", "-", "-");
+                    lblPaymentDetailsInfo.Text = $"Lỗi: {errorMsg}";
+                    MessageBox.Show($"Lỗi khi tải thống kê thanh toán: {errorMsg}", "Lỗi", 
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex) {
+                MessageBox.Show($"Lỗi khi tải chi tiết thanh toán:\n{ex.Message}", "Lỗi", 
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }

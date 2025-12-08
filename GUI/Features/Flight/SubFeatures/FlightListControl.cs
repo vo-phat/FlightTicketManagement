@@ -18,10 +18,13 @@ namespace GUI.Features.Flight.SubFeatures
         private readonly FlightBUS _bus = FlightBUS.Instance;
         private DataGridView table = null!;
         private UnderlinedTextField txtFlightNumber = null!;
+        private UnderlinedTextField txtGlobalSearch = null!;
         private UnderlinedComboBox cbDepartureAirport = null!;
         private UnderlinedComboBox cbArrivalAirport = null!;
         private UnderlinedComboBox cbStatus = null!;
-        private DateTimePickerCustom dtpDeparture = null!;
+        private DateTimePickerCustom dtpFromDate = null!;
+        private DateTimePickerCustom dtpToDate = null!;
+        private CheckBox chkEnableDateFilter = null!;
         private Button btnSearch = null!;
         private Button btnClear = null!;
         private const string ACTION_COL = "Actions";
@@ -66,15 +69,26 @@ namespace GUI.Features.Flight.SubFeatures
                 Padding = new Padding(24, 20, 0, 12)
             };
 
-            // === PANEL BỘ LỌC ===
+            // === PANEL TÌM KIẾM TỔNG ===
+            var searchPanel = new Panel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(24, 8, 24, 8), BackColor = Color.FromArgb(250, 253, 255) };
+            
+            txtGlobalSearch = new UnderlinedTextField("Tìm kiếm mọi thứ...", "Số hiệu, tên sân bay, thành phố...")
+            {
+                Dock = DockStyle.Top,
+                Margin = new Padding(6, 4, 6, 12),
+                LineThickness = 1,
+                Font = new Font("Segoe UI", 11f)
+            };
+            txtGlobalSearch.TextChanged += (s, e) => RefreshList();
+            
+            // === PANEL BỘ LỌC CHI TIẾT ===
             var filterPanel = new FlowLayoutPanel
             {
                 Dock = DockStyle.Top,
                 AutoSize = true,
-                Padding = new Padding(24, 8, 24, 8),
+                Padding = new Padding(0),
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = true,
-                BackColor = Color.FromArgb(250, 253, 255)
             };
 
             // --- INPUTS TÙY CHỈNH ---
@@ -116,11 +130,53 @@ namespace GUI.Features.Flight.SubFeatures
             };
             cbStatus.SelectedIndex = 0;
 
-            dtpDeparture = new DateTimePickerCustom("Ngày khởi hành", "")
+            // Date filter with checkbox to enable/disable
+            var dateFilterPanel = new FlowLayoutPanel
             {
-                Width = 180,
+                FlowDirection = FlowDirection.TopDown,
+                AutoSize = true,
                 Margin = new Padding(6, 4, 6, 4)
             };
+
+            chkEnableDateFilter = new CheckBox
+            {
+                Text = "Lọc theo khoảng ngày",
+                AutoSize = true,
+                Checked = false,
+                Font = new Font("Segoe UI", 9f),
+                ForeColor = Color.FromArgb(70, 70, 70),
+                Margin = new Padding(0, 0, 0, 4)
+            };
+            
+            var datePickersPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.LeftToRight, AutoSize = true, Margin = new Padding(0), Padding = new Padding(0) };
+
+            dtpFromDate = new DateTimePickerCustom("Từ ngày", "")
+            {
+                Width = 140,
+                Enabled = false
+            };
+            dtpFromDate.Value = DateTime.Today.AddMonths(-1);
+
+            dtpToDate = new DateTimePickerCustom("Đến ngày", "")
+            {
+                Width = 140,
+                Margin = new Padding(8, 0, 0, 0),
+                Enabled = false
+            };
+            dtpToDate.Value = DateTime.Today;
+
+            chkEnableDateFilter.CheckedChanged += (s, e) =>
+            {
+                dtpFromDate.Enabled = chkEnableDateFilter.Checked;
+                dtpToDate.Enabled = chkEnableDateFilter.Checked;
+                RefreshList();
+            };
+
+            datePickersPanel.Controls.Add(dtpFromDate);
+            datePickersPanel.Controls.Add(dtpToDate);
+
+            dateFilterPanel.Controls.Add(chkEnableDateFilter);
+            dateFilterPanel.Controls.Add(datePickersPanel);
 
             // --- BUTTONS TÙY CHỈNH ---
             btnSearch = new PrimaryButton("🔍 Tìm kiếm")
@@ -146,10 +202,13 @@ namespace GUI.Features.Flight.SubFeatures
                 cbDepartureAirport, 
                 cbArrivalAirport, 
                 cbStatus, 
-                dtpDeparture,
+                dateFilterPanel,
                 btnSearch, 
                 btnClear 
             });
+
+            searchPanel.Controls.Add(filterPanel);
+            searchPanel.Controls.Add(txtGlobalSearch);
 
             // === BẢNG DANH SÁCH TÙY CHỈNH ===
             table = new TableCustom
@@ -190,12 +249,14 @@ namespace GUI.Features.Flight.SubFeatures
             tablePanel.Controls.Add(table);
 
             Controls.Add(tablePanel);
-            Controls.Add(filterPanel);
+            Controls.Add(searchPanel);
             Controls.Add(lblTitle);
 
             ResumeLayout(false);
             PerformLayout();
         }
+
+        private List<DTO.Airport.AirportDTO> _allAirports = new List<DTO.Airport.AirportDTO>();
 
         private void LoadComboBoxData()
         {
@@ -203,10 +264,10 @@ namespace GUI.Features.Flight.SubFeatures
             {
                 // Load airports - using Airport BUS
                 var airportBus = new BUS.Airport.AirportBUS();
-                var airports = airportBus.GetAllAirports();
+                _allAirports = airportBus.GetAllAirports();
                 
                 var airportDisplayList = new List<string> { "Tất cả" };
-                airportDisplayList.AddRange(airports.Select(a => $"{a.AirportCode} - {a.AirportName}"));
+                airportDisplayList.AddRange(_allAirports.Select(a => $"{a.AirportCode} - {a.AirportName}"));
 
                 cbDepartureAirport.Items.Clear();
                 cbDepartureAirport.Items.AddRange(airportDisplayList.ToArray());
@@ -237,76 +298,140 @@ namespace GUI.Features.Flight.SubFeatures
         {
             try
             {
-                _allFlights = _bus.GetAllFlightsWithDetails();
-                
-                // Apply filters
-                var filtered = _allFlights.AsEnumerable();
+                string globalSearchTerm = txtGlobalSearch.Text.Trim();
+                bool isGlobalSearch = !string.IsNullOrWhiteSpace(globalSearchTerm);
 
-                // Filter by flight number - optimized search
-                if (!string.IsNullOrWhiteSpace(txtFlightNumber.Text))
+                // Enable/disable specific filters based on global search
+                txtFlightNumber.Enabled = !isGlobalSearch;
+                cbDepartureAirport.Enabled = !isGlobalSearch;
+                cbArrivalAirport.Enabled = !isGlobalSearch;
+                cbStatus.Enabled = !isGlobalSearch;
+                chkEnableDateFilter.Enabled = !isGlobalSearch;
+                dtpFromDate.Enabled = !isGlobalSearch && chkEnableDateFilter.Checked;
+                dtpToDate.Enabled = !isGlobalSearch && chkEnableDateFilter.Checked;
+
+
+                if (isGlobalSearch)
                 {
-                    var searchText = txtFlightNumber.Text?.Trim().ToUpperInvariant().Replace(" ", "").Replace("-", "") ?? "";
-                    filtered = filtered.Where(f => 
+                    _allFlights = _bus.GlobalSearchFlights(globalSearchTerm);
+                    if (_allFlights.Count == 0)
                     {
-                        var flightNum = (f.FlightNumber ?? "").ToUpperInvariant().Replace(" ", "").Replace("-", "");
-                        return flightNum.Contains(searchText) || flightNum.StartsWith(searchText);
-                    });
-                }
-
-                // Filter by departure airport
-                if (cbDepartureAirport.SelectedIndex > 0)
-                {
-                    var selectedAirport = cbDepartureAirport.SelectedItem?.ToString()?.Split('-')[0].Trim() ?? "";
-                    filtered = filtered.Where(f => f.DepartureAirportCode == selectedAirport);
-                }
-
-                // Filter by arrival airport
-                if (cbArrivalAirport.SelectedIndex > 0)
-                {
-                    var selectedAirport = cbArrivalAirport.SelectedItem?.ToString()?.Split('-')[0].Trim() ?? "";
-                    filtered = filtered.Where(f => f.ArrivalAirportCode == selectedAirport);
-                }
-
-                // Filter by status
-                if (cbStatus.SelectedIndex > 0)
-                {
-                    var statusText = cbStatus.SelectedItem.ToString();
-                    FlightStatus status;
-                    switch (statusText)
-                    {
-                        case "Đã lên lịch":
-                            status = FlightStatus.SCHEDULED;
-                            break;
-                        case "Đang bay":
-                            status = FlightStatus.SCHEDULED;
-                            break;
-                        case "Đã hạ cánh":
-                            status = FlightStatus.COMPLETED;
-                            break;
-                        case "Đã hủy":
-                            status = FlightStatus.CANCELLED;
-                            break;
-                        case "Trì hoãn":
-                            status = FlightStatus.DELAYED;
-                            break;
-                        default:
-                            status = FlightStatus.SCHEDULED;
-                            break;
+                        // Show hint to clear global search
+                        MessageBox.Show($"Không tìm thấy chuyến bay với từ khóa \"{globalSearchTerm}\".\n\nGợi ý: Xóa ô 'Tìm kiếm mọi thứ' để dùng bộ lọc chi tiết.", 
+                            "Không tìm thấy", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
-                    filtered = filtered.Where(f => f.Status == status);
+                }
+                else
+                {
+                    // Build search criteria from filter controls
+                    var criteria = new FlightSearchCriteriaDTO();
+
+                    // Filter by flight number
+                    if (!string.IsNullOrWhiteSpace(txtFlightNumber.Text))
+                    {
+                        criteria.FlightNumber = txtFlightNumber.Text.Trim();
+                    }
+
+                    // Filter by departure airport
+                    if (cbDepartureAirport.SelectedIndex > 0)
+                    {
+                        var selectedAirportCode = cbDepartureAirport.SelectedItem?.ToString()?.Split('-')[0].Trim() ?? "";
+                        var airport = _allAirports.FirstOrDefault(a => a.AirportCode == selectedAirportCode);
+                        if (airport != null)
+                        {
+                            criteria.DepartureAirportId = airport.AirportId;
+                        }
+                    }
+
+                    // Filter by arrival airport
+                    if (cbArrivalAirport.SelectedIndex > 0)
+                    {
+                        var selectedAirportCode = cbArrivalAirport.SelectedItem?.ToString()?.Split('-')[0].Trim() ?? "";
+                        var airport = _allAirports.FirstOrDefault(a => a.AirportCode == selectedAirportCode);
+                        if (airport != null)
+                        {
+                            criteria.ArrivalAirportId = airport.AirportId;
+                        }
+                    }
+
+                    // Filter by status
+                    if (cbStatus.SelectedIndex > 0)
+                    {
+                        var statusText = cbStatus.SelectedItem.ToString();
+                        FlightStatus status;
+                        switch (statusText)
+                        {
+                            case "Đã lên lịch":
+                                status = FlightStatus.SCHEDULED;
+                                break;
+                            case "Đang bay":
+                                status = FlightStatus.SCHEDULED;
+                                break;
+                            case "Đã hạ cánh":
+                                status = FlightStatus.COMPLETED;
+                                break;
+                            case "Đã hủy":
+                                status = FlightStatus.CANCELLED;
+                                break;
+                            case "Trì hoãn":
+                                status = FlightStatus.DELAYED;
+                                break;
+                            default:
+                                status = FlightStatus.SCHEDULED;
+                                break;
+                        }
+                        criteria.Status = status;
+                    }
+
+                    // Filter by departure date if enabled
+                    if (chkEnableDateFilter.Checked)
+                    {
+                        if (dtpFromDate.Value.Date > dtpToDate.Value.Date)
+                        {
+                            MessageBox.Show("Ngày bắt đầu không thể sau ngày kết thúc.", "Lỗi lọc ngày", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return;
+                        }
+                        criteria.DepartureDateFrom = dtpFromDate.Value.Date;
+                        criteria.DepartureDateTo = dtpToDate.Value.Date.AddDays(1).AddSeconds(-1); // Include the whole "To" day
+                    }
+
+                    // Set sort order
+                    criteria.SortBy = "DepartureTime";
+                    criteria.SortOrder = "DESC";
+
+                    // Execute search at database level
+                    string searchMessage;
+                    _allFlights = _bus.SearchFlightsAdvanced(criteria, out searchMessage);
+                    
+                    // Debug: Show search details if no results
+                    if (_allFlights.Count == 0)
+                    {
+                        var criteriaDetails = new List<string>();
+                        if (!string.IsNullOrWhiteSpace(criteria.FlightNumber)) 
+                            criteriaDetails.Add($"Số hiệu: {criteria.FlightNumber}");
+                        if (criteria.DepartureAirportId.HasValue) 
+                            criteriaDetails.Add($"Sân bay đi: {cbDepartureAirport.SelectedItem}");
+                        if (criteria.ArrivalAirportId.HasValue) 
+                            criteriaDetails.Add($"Sân bay đến: {cbArrivalAirport.SelectedItem}");
+                        if (criteria.Status.HasValue) 
+                            criteriaDetails.Add($"Trạng thái: {cbStatus.SelectedItem}");
+                        if (criteria.DepartureDateFrom.HasValue) 
+                            criteriaDetails.Add($"Từ ngày: {criteria.DepartureDateFrom:dd/MM/yyyy} - {criteria.DepartureDateTo:dd/MM/yyyy}");
+                        
+                        var details = criteriaDetails.Count > 0 
+                            ? "\n\nĐiều kiện tìm kiếm:\n" + string.Join("\n", criteriaDetails)
+                            : "\n\nGợi ý: Thử xóa bớt điều kiện lọc hoặc mở rộng khoảng ngày.";
+                        
+                        MessageBox.Show($"Không tìm thấy chuyến bay nào phù hợp.{details}", 
+                            "Không tìm thấy", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
                 }
 
-                // Filter by departure date - skip for now as DateTimePickerCustom doesn't have Checked
-                if (false)
-                {
-                    var selectedDate = dtpDeparture.Value.Date;
-                    filtered = filtered.Where(f => f.DepartureTime.HasValue && 
-                                                   f.DepartureTime.Value.Date == selectedDate);
-                }
 
                 // Update table
                 table.Rows.Clear();
-                foreach (var flight in filtered.OrderByDescending(f => f.DepartureTime))
+                
+                foreach (var flight in _allFlights)
                 {
                     int rowIdx = table.Rows.Add();
                     var row = table.Rows[rowIdx];
@@ -354,10 +479,14 @@ namespace GUI.Features.Flight.SubFeatures
 
         private void ClearFilters()
         {
+            txtGlobalSearch.Text = "";
             txtFlightNumber.Text = "";
             cbDepartureAirport.SelectedIndex = 0;
             cbArrivalAirport.SelectedIndex = 0;
             cbStatus.SelectedIndex = 0;
+            chkEnableDateFilter.Checked = false;
+            dtpFromDate.Value = DateTime.Today.AddMonths(-1);
+            dtpToDate.Value = DateTime.Today;
             RefreshList();
         }
 
