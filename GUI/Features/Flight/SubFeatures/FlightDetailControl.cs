@@ -31,6 +31,7 @@ namespace GUI.Features.Flight.SubFeatures
         public FlightDetailControl()
         {
             InitializeComponent();
+            BuildLayout(); // Initialize all controls
         }
 
         private void InitializeComponent()

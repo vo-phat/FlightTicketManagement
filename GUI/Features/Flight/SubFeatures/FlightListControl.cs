@@ -442,6 +442,7 @@ namespace GUI.Features.Flight.SubFeatures
                     row.Cells["ArrivalAirport"].Value = flight.ArrivalAirportDisplay;
                     row.Cells["DepartureTime"].Value = flight.DepartureTime?.ToString("dd/MM/yyyy HH:mm");
                     row.Cells["ArrivalTime"].Value = flight.ArrivalTime?.ToString("HH:mm");
+                    row.Cells["Note"].Value = !string.IsNullOrWhiteSpace(flight.Note) ? flight.Note : "-";
                     row.Cells["Status"].Value = GetStatusText(flight.Status);
                     row.Cells["AvailableSeats"].Value = flight.AvailableSeats;
                     

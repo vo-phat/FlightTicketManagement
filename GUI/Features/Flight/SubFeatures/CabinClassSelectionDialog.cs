@@ -99,6 +99,27 @@ namespace GUI.Features.Flight.SubFeatures
             CreateCabinClassOption("Premium Economy", "Hạng Phổ Thông Đặc Biệt", "🎫", Color.FromArgb(60, 179, 113), 20, 305, 3);
             CreateCabinClassOption("Economy", "Hạng Phổ Thông", "🪑", Color.FromArgb(169, 169, 169), 20, 365, 4);
 
+            // Ticket Quantity Selector
+            var lblQuantity = new Label
+            {
+                Text = "Số lượng vé:",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                AutoSize = true,
+                Location = new Point(20, 427)
+            };
+            Controls.Add(lblQuantity);
+
+            var numQuantity = new NumericUpDown
+            {
+                Minimum = 1,
+                Maximum = 10,
+                Value = 1,
+                Width = 60,
+                Font = new Font("Segoe UI", 10),
+                Location = new Point(130, 425)
+            };
+            Controls.Add(numQuantity);
+
             // Buttons
             var btnConfirm = new Button
             {
@@ -127,6 +148,7 @@ namespace GUI.Features.Flight.SubFeatures
                     FlightId = _flight.FlightId,
                     CabinClassId = _selectedCabinClassId,
                     CabinClassName = _selectedCabinClass,
+                    TicketQuantity = (int)numQuantity.Value, // Thêm số lượng vé
                     BookingDate = DateTime.Now,
                     FlightNumber = _flight.FlightNumber,
                     DepartureAirportCode = _flight.DepartureAirportCode,

@@ -70,6 +70,10 @@ namespace DAO.Flight
                 ArrivalAirportName = GetString(reader, "arrival_airport_name"),
                 ArrivalCity = GetString(reader, "arrival_city"),
                 
+                // Aircraft information
+                AircraftModel = GetString(reader, "aircraft_model"),
+                AircraftManufacturer = GetString(reader, "aircraft_manufacturer"),
+                
                 // Available seats
                 AvailableSeats = GetInt32(reader, "available_seats")
             };
@@ -137,6 +141,10 @@ namespace DAO.Flight
                     arr_airport.airport_name AS arrival_airport_name,
                     arr_airport.city AS arrival_city,
                     
+                    -- Aircraft information
+                    ac.model AS aircraft_model,
+                    ac.manufacturer AS aircraft_manufacturer,
+                    
                     -- Available seats (tổng ghế trống)
                     COALESCE(SUM(CASE WHEN fs.seat_status = 'AVAILABLE' THEN 1 ELSE 0 END), 0) AS available_seats
                     
@@ -144,6 +152,7 @@ namespace DAO.Flight
                 INNER JOIN Routes r ON f.route_id = r.route_id
                 INNER JOIN Airports dep_airport ON r.departure_place_id = dep_airport.airport_id
                 INNER JOIN Airports arr_airport ON r.arrival_place_id = arr_airport.airport_id
+                LEFT JOIN Aircrafts ac ON f.aircraft_id = ac.aircraft_id
                 LEFT JOIN Flight_Seats fs ON f.flight_id = fs.flight_id
                 WHERE f.is_deleted = FALSE
                 GROUP BY f.flight_id, f.flight_number, f.aircraft_id, f.route_id, 
@@ -151,7 +160,8 @@ namespace DAO.Flight
                          dep_airport.airport_id, dep_airport.airport_code, 
                          dep_airport.airport_name, dep_airport.city,
                          arr_airport.airport_id, arr_airport.airport_code, 
-                         arr_airport.airport_name, arr_airport.city
+                         arr_airport.airport_name, arr_airport.city,
+                         ac.model, ac.manufacturer
                 ORDER BY f.departure_time DESC";
 
             try
@@ -1144,6 +1154,7 @@ namespace DAO.Flight
         #region Advanced Search - Tìm kiếm chuyến bay nâng cao
         /// <summary>
         /// Tìm kiếm chuyến bay với nhiều tiêu chí (Advanced Search)
+        /// NOTE: This is a simplified version using LINQ filtering on GetAllWithDetails
         /// </summary>
         public List<FlightWithDetailsDTO> SearchFlightsAdvanced(FlightSearchCriteriaDTO criteria)
         {
@@ -1152,174 +1163,65 @@ namespace DAO.Flight
                 throw new ArgumentNullException(nameof(criteria), "Criteria không được null");
             }
 
-            if (!criteria.IsValid(out string errorMessage))
-            {
-                throw new ArgumentException($"Tiêu chí tìm kiếm không hợp lệ: {errorMessage}");
-            }
-
-            var flights = new List<FlightWithDetailsDTO>();
-            var parameters = new Dictionary<string, object>();
-
-            // Build dynamic query
-            string query = @"
-                SELECT 
-                    f.flight_id,
-                    f.flight_number,
-                    f.aircraft_id,
-                    f.route_id,
-                    f.departure_time,
-                    f.arrival_time,
-                    f.status,
-                    
-                    -- Departure Airport
-                    dep_airport.airport_id AS departure_airport_id,
-                    dep_airport.airport_code AS departure_airport_code,
-                    dep_airport.airport_name AS departure_airport_name,
-                    dep_airport.city AS departure_city,
-                    
-                    -- Arrival Airport
-                    arr_airport.airport_id AS arrival_airport_id,
-                    arr_airport.airport_code AS arrival_airport_code,
-                    arr_airport.airport_name AS arrival_airport_name,
-                    arr_airport.city AS arrival_city,
-                    
-                    -- Available seats
-                    COALESCE(SUM(CASE WHEN fs.seat_status = 'AVAILABLE' THEN 1 ELSE 0 END), 0) AS available_seats
-                    
-                FROM Flights f
-                INNER JOIN Routes r ON f.route_id = r.route_id
-                INNER JOIN Airports dep_airport ON r.departure_place_id = dep_airport.airport_id
-                INNER JOIN Airports arr_airport ON r.arrival_place_id = arr_airport.airport_id
-                LEFT JOIN Flight_Seats fs ON f.flight_id = fs.flight_id";
-
-            // Add class filter if needed
-            if (criteria.ClassId.HasValue)
-            {
-                query += @"
-                LEFT JOIN Seats s ON fs.seat_id = s.seat_id";
-            }
-
-            query += @"
-                WHERE 1=1";
-
-            // Build WHERE conditions dynamically
-            if (criteria.DepartureAirportId.HasValue)
-            {
-                query += " AND r.departure_place_id = @departureAirportId";
-                parameters.Add("@departureAirportId", criteria.DepartureAirportId.Value);
-            }
-
-            if (criteria.ArrivalAirportId.HasValue)
-            {
-                query += " AND r.arrival_place_id = @arrivalAirportId";
-                parameters.Add("@arrivalAirportId", criteria.ArrivalAirportId.Value);
-            }
-
-            // Date filters
-            if (criteria.DepartureDate.HasValue)
-            {
-                // Tìm theo ngày cụ thể (chỉ ngày, không tính giờ)
-                query += " AND DATE(f.departure_time) = DATE(@departureDate)";
-                parameters.Add("@departureDate", criteria.DepartureDate.Value.Date);
-            }
-            else
-            {
-                // Tìm theo khoảng ngày
-                if (criteria.DepartureDateFrom.HasValue)
-                {
-                    query += " AND f.departure_time >= @departureDateFrom";
-                    parameters.Add("@departureDateFrom", criteria.DepartureDateFrom.Value);
-                }
-
-                if (criteria.DepartureDateTo.HasValue)
-                {
-                    query += " AND f.departure_time <= @departureDateTo";
-                    parameters.Add("@departureDateTo", criteria.DepartureDateTo.Value);
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(criteria.FlightNumber))
-            {
-                query += " AND f.flight_number LIKE @flightNumber";
-                parameters.Add("@flightNumber", $"%{criteria.FlightNumber}%");
-            }
-
-            if (criteria.Status.HasValue)
-            {
-                query += " AND f.status = @status";
-                parameters.Add("@status", criteria.Status.Value.ToString());
-            }
-
-            if (criteria.AircraftId.HasValue)
-            {
-                query += " AND f.aircraft_id = @aircraftId";
-                parameters.Add("@aircraftId", criteria.AircraftId.Value);
-            }
-
-            if (criteria.RouteId.HasValue)
-            {
-                query += " AND f.route_id = @routeId";
-                parameters.Add("@routeId", criteria.RouteId.Value);
-            }
-
-            if (criteria.ClassId.HasValue)
-            {
-                query += " AND s.class_id = @classId";
-                parameters.Add("@classId", criteria.ClassId.Value);
-            }
-
-            // Group by
-            query += @"
-                GROUP BY f.flight_id, f.flight_number, f.aircraft_id, f.route_id, 
-                         f.departure_time, f.arrival_time, f.status,
-                         dep_airport.airport_id, dep_airport.airport_code, 
-                         dep_airport.airport_name, dep_airport.city,
-                         arr_airport.airport_id, arr_airport.airport_code, 
-                         arr_airport.airport_name, arr_airport.city";
-
-            // Filter by minimum available seats AFTER grouping
-            if (criteria.MinAvailableSeats.HasValue)
-            {
-                query += @"
-                HAVING available_seats >= @minAvailableSeats";
-                parameters.Add("@minAvailableSeats", criteria.MinAvailableSeats.Value);
-            }
-
-            // Order by
-            string sortColumn = criteria.SortBy switch
-            {
-                "Price" => "f.departure_time", // Có thể thêm cột price nếu cần
-                "AvailableSeats" => "available_seats",
-                _ => "f.departure_time"
-            };
-
-            string sortOrder = string.IsNullOrWhiteSpace(criteria.SortOrder) ? "ASC" : criteria.SortOrder.ToUpper();
-            query += $" ORDER BY {sortColumn} {sortOrder}";
-
-            // Pagination
-            if (criteria.PageNumber.HasValue && criteria.PageSize.HasValue)
-            {
-                int offset = (criteria.PageNumber.Value - 1) * criteria.PageSize.Value;
-                query += " LIMIT @pageSize OFFSET @offset";
-                parameters.Add("@pageSize", criteria.PageSize.Value);
-                parameters.Add("@offset", offset);
-            }
-
             try
             {
-                ExecuteReader(query, reader =>
-                {
-                    flights.Add(MapReaderToDetailsDTO(reader));
-                }, parameters);
+                // Get all flights then filter with LINQ
+                var allFlights = GetAllWithDetails();
+                var query = allFlights.AsQueryable();
 
-                return flights;
+                // Apply filters
+                if (criteria.DepartureAirportId.HasValue)
+                    query = query.Where(f => f.DepartureAirportId == criteria.DepartureAirportId.Value);
+
+                if (criteria.ArrivalAirportId.HasValue)
+                    query = query.Where(f => f.ArrivalAirportId == criteria.ArrivalAirportId.Value);
+
+                if (!string.IsNullOrWhiteSpace(criteria.FlightNumber))
+                    query = query.Where(f => f.FlightNumber != null && f.FlightNumber.Contains(criteria.FlightNumber));
+
+                if (criteria.Status.HasValue)
+                    query = query.Where(f => f.Status == criteria.Status.Value);
+
+                if (criteria.DepartureDate.HasValue)
+                    query = query.Where(f => f.DepartureTime.HasValue && f.DepartureTime.Value.Date == criteria.DepartureDate.Value.Date);
+
+                if (criteria.DepartureDateFrom.HasValue)
+                    query = query.Where(f => f.DepartureTime.HasValue && f.DepartureTime.Value >= criteria.DepartureDateFrom.Value);
+
+                if (criteria.DepartureDateTo.HasValue)
+                    query = query.Where(f => f.DepartureTime.HasValue && f.DepartureTime.Value <= criteria.DepartureDateTo.Value);
+
+                if (criteria.MinAvailableSeats.HasValue)
+                    query = query.Where(f => f.AvailableSeats >= criteria.MinAvailableSeats.Value);
+
+                // Apply sorting
+                string sortBy = criteria.SortBy ?? "DepartureTime";
+                bool isAscending = string.IsNullOrWhiteSpace(criteria.SortOrder) || criteria.SortOrder.ToUpper() == "ASC";
+
+                query = sortBy switch
+                {
+                    "AvailableSeats" => isAscending 
+                        ? query.OrderBy(f => f.AvailableSeats)
+                        : query.OrderByDescending(f => f.AvailableSeats),
+                    _ => isAscending
+                        ? query.OrderBy(f => f.DepartureTime)
+                        : query.OrderByDescending(f => f.DepartureTime)
+                };
+
+                // Apply pagination
+                if (criteria.PageNumber.HasValue && criteria.PageSize.HasValue)
+                {
+                    int skip = (criteria.PageNumber.Value - 1) * criteria.PageSize.Value;
+                    query = query.Skip(skip).Take(criteria.PageSize.Value).AsQueryable();
+                }
+
+                return query.ToList();
             }
             catch (Exception ex)
             {
                 throw new Exception($"Lỗi khi tìm kiếm chuyến bay nâng cao: {ex.Message}", ex);
             }
         }
-
         /// <summary>
         /// Đếm tổng số kết quả tìm kiếm (để phân trang)
         /// </summary>
@@ -1442,7 +1344,19 @@ namespace DAO.Flight
                 SortOrder = "ASC"
             };
 
-            return SearchFlightsAdvanced(criteria);
+            // Get all flights then filter with LINQ
+            var allFlights = GetAllWithDetails();
+            var filtered = allFlights.Where(f =>
+            {
+                if (f.Status != FlightStatus.SCHEDULED) return false;
+                if (f.DepartureAirportId != departureAirportId) return false;
+                if (f.ArrivalAirportId != arrivalAirportId) return false;
+                if (f.DepartureTime?.Date != departureDate.Date) return false;
+                if (minSeats.HasValue && f.AvailableSeats < minSeats.Value) return false;
+                return true;
+            }).OrderBy(f => f.DepartureTime).ToList();
+
+            return filtered;
         }
         #endregion
 
