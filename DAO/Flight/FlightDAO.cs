@@ -711,6 +711,52 @@ namespace DAO.Flight
                 throw new Exception($"Lỗi khi lọc chuyến bay với tuyến bay ID {routeId}: {ex.Message}", ex);
             }
         }
+
+        public List<FlightWithDetailsDTO> GlobalSearch(string searchTerm)
+        {
+            var flights = new List<FlightWithDetailsDTO>();
+            string query = @"
+                SELECT 
+                    f.flight_id, f.flight_number, f.aircraft_id, f.route_id, f.departure_time, f.arrival_time, f.base_price, f.note, f.status,
+                    dep.airport_id AS departure_airport_id, dep.airport_code AS departure_airport_code, dep.airport_name AS departure_airport_name, dep.city AS departure_city,
+                    arr.airport_id AS arrival_airport_id, arr.airport_code AS arrival_airport_code, arr.airport_name AS arrival_airport_name, arr.city AS arrival_city,
+                    COALESCE(SUM(CASE WHEN fs.seat_status = 'AVAILABLE' THEN 1 ELSE 0 END), 0) AS available_seats
+                FROM Flights f
+                INNER JOIN Routes r ON f.route_id = r.route_id
+                INNER JOIN Airports dep ON r.departure_place_id = dep.airport_id
+                INNER JOIN Airports arr ON r.arrival_place_id = arr.airport_id
+                LEFT JOIN Flight_Seats fs ON f.flight_id = fs.flight_id
+                WHERE f.is_deleted = FALSE AND (
+                    f.flight_number LIKE @term OR
+                    dep.airport_name LIKE @term OR
+                    dep.city LIKE @term OR
+                    arr.airport_name LIKE @term OR
+                    arr.city LIKE @term
+                )
+                GROUP BY f.flight_id, f.flight_number, f.aircraft_id, f.route_id, 
+                         f.departure_time, f.arrival_time, f.base_price, f.note, f.status,
+                         dep.airport_id, dep.airport_code, dep.airport_name, dep.city,
+                         arr.airport_id, arr.airport_code, arr.airport_name, arr.city
+                ORDER BY f.departure_time DESC";
+
+            var parameters = new Dictionary<string, object>
+            {
+                { "@term", $"%{searchTerm}%" }
+            };
+
+            try
+            {
+                ExecuteReader(query, reader =>
+                {
+                    flights.Add(MapReaderToDetailsDTO(reader));
+                }, parameters);
+                return flights;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi thực hiện tìm kiếm toàn cục: {ex.Message}", ex);
+            }
+        }
         #endregion
         #region Bussiness Logic Methods
         public bool IsFlightNumberExists(string flightNumber, DateTime departureTime, int excludeFlightId = 0)

@@ -36,10 +36,12 @@ namespace GUI.Features.Flight.SubFeatures
         private void InitializeComponent()
         {
             SuspendLayout();
+            // 
+            // FlightDetailControl
+            // 
             BackColor = Color.FromArgb(232, 240, 252);
-            Dock = DockStyle.Fill;
-            
-            BuildLayout();
+            Name = "FlightDetailControl";
+            Size = new Size(2110, 1064);
             ResumeLayout(false);
         }
 

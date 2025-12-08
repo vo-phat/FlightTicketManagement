@@ -405,6 +405,21 @@ namespace BUS.Flight
                 throw new Exception($"BUS: Lỗi khi lọc chuyến bay theo tuyến bay: {ex.Message}", ex);
             }
         }
+
+        public List<FlightWithDetailsDTO> GlobalSearchFlights(string searchTerm)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(searchTerm))
+                    return new List<FlightWithDetailsDTO>();
+
+                return _flightDAO.GlobalSearch(searchTerm);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"BUS: Lỗi khi tìm kiếm toàn cục: {ex.Message}", ex);
+            }
+        }
         #endregion
 
         #region Status Management
