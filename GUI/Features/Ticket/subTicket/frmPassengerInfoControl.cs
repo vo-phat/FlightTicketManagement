@@ -22,6 +22,11 @@ namespace GUI.Features.Ticket.subTicket
         private int _passengerCount = 0;
         private int _ticketCount = 3;
         private int _accountId = 1;
+        
+        // Round-trip booking support
+        private DTO.Booking.BookingRequestDTO _outboundBooking;
+        private DTO.Booking.BookingRequestDTO _returnBooking;
+        private bool _isRoundTrip = false;
         public frmPassengerInfoControl()
         {
             
@@ -363,28 +368,72 @@ namespace GUI.Features.Ticket.subTicket
         /// <summary>
         /// Load thông tin booking từ dialog chọn hạng vé
         /// </summary>
-        public void LoadBookingRequest(DTO.Booking.BookingRequestDTO bookingRequest)
+        public void LoadBookingRequest(DTO.Booking.BookingRequestDTO outboundBooking, DTO.Booking.BookingRequestDTO returnBooking = null)
         {
-            if (bookingRequest == null) return;
+            if (outboundBooking == null) return;
+
+            // Store booking information
+            _outboundBooking = outboundBooking;
+            _returnBooking = returnBooking;
+            _isRoundTrip = outboundBooking.IsRoundTrip && returnBooking != null;
 
             // Lấy thông tin đặt vé
-            var (flightId, cabinClassId, ticketCount) = bookingRequest.GetBookingInfo();
+            var (flightId, cabinClassId, ticketCount, isRoundTrip) = outboundBooking.GetBookingInfo();
+            _ticketCount = ticketCount;
 
-            // Hiển thị thông tin chuyến bay đã chọn
+            // Build message with flight information
+            var message = new System.Text.StringBuilder();
+            message.AppendLine("═══════════════════════════════════════");
+            
+            if (_isRoundTrip)
+            {
+                message.AppendLine("✈️ VÉ KHỨ HỒI (2 CHIỀU)");
+                message.AppendLine("═══════════════════════════════════════\n");
+                
+                // Outbound flight
+                message.AppendLine("🛫 CHUYẾN ĐI:");
+                message.AppendLine($"   Chuyến bay: {outboundBooking.FlightNumber}");
+                message.AppendLine($"   Tuyến: {outboundBooking.DepartureAirportCode} → {outboundBooking.ArrivalAirportCode}");
+                message.AppendLine($"   Hạng vé: {outboundBooking.CabinClassName}");
+                message.AppendLine($"   Giờ khởi hành: {outboundBooking.DepartureTime?.ToString("dd/MM/yyyy HH:mm")}");
+                message.AppendLine();
+                
+                // Return flight
+                message.AppendLine("🛬 CHUYẾN VỀ:");
+                message.AppendLine($"   Chuyến bay: {returnBooking.FlightNumber}");
+                message.AppendLine($"   Tuyến: {returnBooking.DepartureAirportCode} → {returnBooking.ArrivalAirportCode}");
+                message.AppendLine($"   Hạng vé: {returnBooking.CabinClassName}");
+                message.AppendLine($"   Giờ khởi hành: {returnBooking.DepartureTime?.ToString("dd/MM/yyyy HH:mm")}");
+                message.AppendLine();
+                
+                message.AppendLine($"👥 Số lượng hành khách: {ticketCount} người");
+                message.AppendLine($"🔗 Mã nhóm: {outboundBooking.GroupBookingId}");
+            }
+            else
+            {
+                message.AppendLine("✈️ VÉ MỘT CHIỀU");
+                message.AppendLine("═══════════════════════════════════════\n");
+                message.AppendLine($"Chuyến bay: {outboundBooking.FlightNumber}");
+                message.AppendLine($"Tuyến: {outboundBooking.DepartureAirportCode} → {outboundBooking.ArrivalAirportCode}");
+                message.AppendLine($"Hạng vé: {outboundBooking.CabinClassName}");
+                message.AppendLine($"Giờ khởi hành: {outboundBooking.DepartureTime?.ToString("dd/MM/yyyy HH:mm")}");
+                message.AppendLine($"Số lượng hành khách: {ticketCount} người");
+            }
+            
+            message.AppendLine();
+            message.AppendLine($"Vui lòng điền thông tin cho {ticketCount} hành khách.");
+
             MessageBox.Show(
-                $"Thông tin đặt vé:\n" +
-                $"Chuyến bay: {bookingRequest.FlightNumber}\n" +
-                $"Tuyến: {bookingRequest.DepartureAirportCode} → {bookingRequest.ArrivalAirportCode}\n" +
-                $"Hạng vé: {bookingRequest.CabinClassName}\n" +
-                $"Giờ khởi hành: {bookingRequest.DepartureTime?.ToString("dd/MM/yyyy HH:mm")}\n" +
-                $"Số lượng vé: {ticketCount} người\n\n" +
-                $"Vui lòng điền thông tin cho {ticketCount} hành khách.",
+                message.ToString(),
                 "Thông tin đặt vé",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
 
-            // TODO: Pre-fill flight và cabin class information vào form
-            // Có thể lưu bookingRequest vào field để dùng khi submit
+            // Pre-fill flight date from outbound booking
+            if (outboundBooking.DepartureTime.HasValue)
+            {
+                dtpFlightDateTicket.Value = outboundBooking.DepartureTime.Value;
+            }
         }
     }
 }

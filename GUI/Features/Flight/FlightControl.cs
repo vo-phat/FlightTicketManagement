@@ -137,5 +137,13 @@ namespace GUI.Features.Flight
                 btnCreate.Enabled = true;
             }
         }
+
+        /// <summary>
+        /// Get confirmed bookings from the list control (for round-trip support)
+        /// </summary>
+        public System.Collections.Generic.List<DTO.Booking.BookingRequestDTO> GetConfirmedBookings()
+        {
+            return list.ConfirmedBooking();
+        }
     }
 }

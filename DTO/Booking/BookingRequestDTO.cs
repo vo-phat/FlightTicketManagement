@@ -26,12 +26,12 @@ namespace DTO.Booking
         public DateTime? DepartureTime { get; set; }
 
         /// <summary>
-        /// Lấy thông tin đặt vé: FlightId, CabinClassId, và số lượng vé
+        /// Lấy thông tin đặt vé: FlightId, CabinClassId, số lượng vé, và loại vé
         /// </summary>
-        /// <returns>Tuple chứa (FlightId, CabinClassId, TicketCount)</returns>
-        public (int FlightId, int CabinClassId, int TicketCount) GetBookingInfo()
+        /// <returns>Tuple chứa (FlightId, CabinClassId, TicketCount, IsRoundTrip)</returns>
+        public (int FlightId, int CabinClassId, int TicketCount, bool IsRoundTrip) GetBookingInfo()
         {
-            return (FlightId, CabinClassId, TicketCount);
+            return (FlightId, CabinClassId, TicketCount, IsRoundTrip);
         }
     }
 

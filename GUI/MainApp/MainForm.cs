@@ -487,17 +487,32 @@ namespace GUI.MainApp {
             ActivateTab(NavKey.Flights);
         }
 
-        private void OnNavigateToBookingRequested(DTO.Booking.BookingRequestDTO bookingRequest)
+        private void OnNavigateToBookingRequested(DTO.Booking.BookingRequestDTO outboundBooking)
         {
+            // Retrieve return booking if this is a round-trip
+            DTO.Booking.BookingRequestDTO returnBooking = null;
+            
+            if (outboundBooking.IsRoundTrip && outboundBooking.GroupBookingId.HasValue)
+            {
+                // Get FlightControl to retrieve return booking
+                if (controls.TryGetValue("Flight", out var flightControl) && flightControl is GUI.Features.Flight.FlightControl fc)
+                {
+                    var allBookings = fc.GetConfirmedBookings();
+                    returnBooking = allBookings.FirstOrDefault(b => 
+                        b.GroupBookingId == outboundBooking.GroupBookingId && 
+                        b.FlightId != outboundBooking.FlightId);
+                }
+            }
+            
             // Chuyển sang trang Thông tin khách hàng trong phần Đặt vé
-            OpenBookingWithData(bookingRequest);
+            OpenBookingWithData(outboundBooking, returnBooking);
         }
 
-        private void OpenBookingWithData(DTO.Booking.BookingRequestDTO bookingRequest)
+        private void OpenBookingWithData(DTO.Booking.BookingRequestDTO outboundBooking, DTO.Booking.BookingRequestDTO returnBooking = null)
         {
             // User/Staff đã có quyền nhấn nút "Đặt vé" nên không cần kiểm tra lại
             var ticketControl = new GUI.Features.Ticket.TicketControl();
-            ticketControl.LoadBookingData(bookingRequest);
+            ticketControl.LoadBookingData(outboundBooking, returnBooking);
             
             mainContentPanel.Controls.Clear();
             mainContentPanel.Controls.Add(ticketControl);
