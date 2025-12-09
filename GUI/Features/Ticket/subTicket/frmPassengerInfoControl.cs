@@ -29,11 +29,13 @@ namespace GUI.Features.Ticket.subTicket
         private int _ticketCount ;
         private int _accountId ;
 
-
+        private string _typeTrip;
         private int _selectedSeatId;
         private int _selectedFlightSeatId;
         private decimal _selectedSeatPrice;
         private int _classId ;
+        private int _flightId;
+        private int _seatId;
         private BookingRequestDTO bookingRequest;
         public frmPassengerInfoControl()
         {
@@ -337,7 +339,7 @@ namespace GUI.Features.Ticket.subTicket
 
             // ========= Flight info =========
             dto.FlightDate = dtpFlightDateTicket.Value;
-            dto.FlightId = 1; //=> Anh map ở ngoài khi chọn chuyến bay
+            dto.FlightId = _flightId; //=> Anh map ở ngoài khi chọn chuyến bay
 
             // ========= Seat info =========
             dto.SeatNumber = txtSeatTicket.Text;
@@ -407,7 +409,7 @@ namespace GUI.Features.Ticket.subTicket
             var tickets = _passengers.ToList();
 
             SaveTicketRequestBUS saveTicketRequestBUS = new SaveTicketRequestBUS();
-            saveTicketRequestBUS.SaveTicketRequest(tickets, _accountId, "test");
+            saveTicketRequestBUS.SaveTicketRequest(tickets, _accountId, _typeTrip);
         }
 
         public void ShowTicketDtoInfo(TicketBookingRequestDTO dto)
@@ -442,19 +444,25 @@ namespace GUI.Features.Ticket.subTicket
         {
             if (bookingRequest == null) return;
             _accountId = 2;
-            _ticketCount = 2; // cần chọn vé.
-            _classId = 1;
+       
             bookingRequest = bookingRequest;
             LoadInfomationAccount(_accountId);
 
+            // Lấy thông tin đặt vé
+            var (flightId, cabinClassId, ticketCount) = bookingRequest.GetBookingInfo();
+            _ticketCount = ticketCount; // cần chọn vé.
+            _classId = cabinClassId;
+            _flightId = flightId;
+            _typeTrip = "ONE_WAY";
             // Hiển thị thông tin chuyến bay đã chọn
             MessageBox.Show(
                 $"Thông tin đặt vé:\n" +
                 $"Chuyến bay: {bookingRequest.FlightNumber}\n" +
                 $"Tuyến: {bookingRequest.DepartureAirportCode} → {bookingRequest.ArrivalAirportCode}\n" +
                 $"Hạng vé: {bookingRequest.CabinClassName}\n" +
-                $"Giờ khởi hành: {bookingRequest.DepartureTime?.ToString("dd/MM/yyyy HH:mm")}\n\n" +
-                $"Vui lòng điền thông tin hành khách.",
+                $"Giờ khởi hành: {bookingRequest.DepartureTime?.ToString("dd/MM/yyyy HH:mm")}\n" +
+                $"Số lượng vé: {ticketCount} người\n\n" +
+                $"Vui lòng điền thông tin cho {ticketCount} hành khách.",
                 "Thông tin đặt vé",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
