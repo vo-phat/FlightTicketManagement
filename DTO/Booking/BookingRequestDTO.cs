@@ -12,8 +12,12 @@ namespace DTO.Booking
         public int FlightId { get; set; }
         public int CabinClassId { get; set; }
         public string CabinClassName { get; set; }
-        public int TicketQuantity { get; set; } = 1; // Số lượng vé đặt
         public DateTime BookingDate { get; set; }
+        public int TicketCount { get; set; } = 1; // Số lượng vé đặt
+        
+        // Round-trip support
+        public bool IsRoundTrip { get; set; } = false;
+        public Guid? GroupBookingId { get; set; } // Link outbound + return bookings
         
         // Thông tin chuyến bay (để hiển thị)
         public string FlightNumber { get; set; }
@@ -22,12 +26,12 @@ namespace DTO.Booking
         public DateTime? DepartureTime { get; set; }
 
         /// <summary>
-        /// Helper method: Trả về thông tin cần thiết cho việc đặt vé
-        /// Returns: (FlightId, CabinClassId, TicketQuantity)
+        /// Lấy thông tin đặt vé: FlightId, CabinClassId, và số lượng vé
         /// </summary>
-        public (int FlightId, int CabinClassId, int Quantity) GetBookingInfo()
+        /// <returns>Tuple chứa (FlightId, CabinClassId, TicketCount)</returns>
+        public (int FlightId, int CabinClassId, int TicketCount) GetBookingInfo()
         {
-            return (FlightId, CabinClassId, TicketQuantity);
+            return (FlightId, CabinClassId, TicketCount);
         }
     }
 
@@ -44,7 +48,8 @@ namespace DTO.Booking
         }
 
         public void AddBooking(int accountId, int flightId, int cabinClassId, string cabinClassName, 
-            string flightNumber, string departureCode, string arrivalCode, DateTime? departureTime)
+            string flightNumber, string departureCode, string arrivalCode, DateTime? departureTime,
+            int ticketCount = 1)
         {
             BookingRequests.Add(new BookingRequestDTO
             {
@@ -53,6 +58,7 @@ namespace DTO.Booking
                 CabinClassId = cabinClassId,
                 CabinClassName = cabinClassName,
                 BookingDate = DateTime.Now,
+                TicketCount = ticketCount,
                 FlightNumber = flightNumber,
                 DepartureAirportCode = departureCode,
                 ArrivalAirportCode = arrivalCode,

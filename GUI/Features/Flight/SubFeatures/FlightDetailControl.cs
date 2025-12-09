@@ -440,7 +440,7 @@ namespace GUI.Features.Flight.SubFeatures
             }
 
             // Hiển thị dialog chọn hạng vé
-            using (var dialog = new CabinClassSelectionDialog(_currentFlight))
+            using (var dialog = new CabinClassSelectionDialog(_currentFlight, null))
             {
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {

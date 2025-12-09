@@ -367,14 +367,18 @@ namespace GUI.Features.Ticket.subTicket
         {
             if (bookingRequest == null) return;
 
+            // Lấy thông tin đặt vé
+            var (flightId, cabinClassId, ticketCount) = bookingRequest.GetBookingInfo();
+
             // Hiển thị thông tin chuyến bay đã chọn
             MessageBox.Show(
                 $"Thông tin đặt vé:\n" +
                 $"Chuyến bay: {bookingRequest.FlightNumber}\n" +
                 $"Tuyến: {bookingRequest.DepartureAirportCode} → {bookingRequest.ArrivalAirportCode}\n" +
                 $"Hạng vé: {bookingRequest.CabinClassName}\n" +
-                $"Giờ khởi hành: {bookingRequest.DepartureTime?.ToString("dd/MM/yyyy HH:mm")}\n\n" +
-                $"Vui lòng điền thông tin hành khách.",
+                $"Giờ khởi hành: {bookingRequest.DepartureTime?.ToString("dd/MM/yyyy HH:mm")}\n" +
+                $"Số lượng vé: {ticketCount} người\n\n" +
+                $"Vui lòng điền thông tin cho {ticketCount} hành khách.",
                 "Thông tin đặt vé",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);

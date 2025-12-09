@@ -798,7 +798,7 @@ namespace GUI.Features.Flight.SubFeatures
             }
 
             // Hiển thị dialog chọn hạng vé
-            using (var dialog = new CabinClassSelectionDialog(flight))
+            using (var dialog = new CabinClassSelectionDialog(flight, _allFlights))
             {
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
@@ -807,6 +807,12 @@ namespace GUI.Features.Flight.SubFeatures
                     {
                         // Lưu thông tin booking đã xác nhận
                         _confirmedBookings.Add(dialog.BookingRequest);
+                        
+                        // If round-trip, also add return booking
+                        if (dialog.IsRoundTrip && dialog.ReturnBooking != null)
+                        {
+                            _confirmedBookings.Add(dialog.ReturnBooking);
+                        }
                         
                         NavigateToBookingRequested?.Invoke(dialog.BookingRequest);
                     }

@@ -1,31 +1,49 @@
 using BUS.Auth;
+using BUS.Flight;
 using DTO.Booking;
 using DTO.Flight;
 using System;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace GUI.Features.Flight.SubFeatures
 {
     public class CabinClassSelectionDialog : Form
     {
+        // Dialog modes for round-trip flow
+        private enum DialogMode { Outbound, ReturnFlightSelection, ReturnCabinSelection }
+        
         private FlightWithDetailsDTO _flight;
         private string _selectedCabinClass;
         private int _selectedCabinClassId;
+        private CheckBox chkRoundTrip;
+        private NumericUpDown numPassengers;
+        
+        // Round-trip state
+        private DialogMode _currentMode = DialogMode.Outbound;
+        private FlightWithDetailsDTO _selectedReturnFlight;
+        private BookingRequestDTO _outboundBooking;
+        private Panel _mainContentPanel;
+        private Panel _returnFlightPanel;
+        private List<FlightWithDetailsDTO> _allFlights; // For return flight selection
 
         // Property để lấy thông tin đặt vé sau khi dialog đóng
         public BookingRequestDTO BookingRequest { get; private set; }
+        public BookingRequestDTO ReturnBooking { get; set; } // For round-trip
+        public bool IsRoundTrip { get; private set; }
 
-        public CabinClassSelectionDialog(FlightWithDetailsDTO flight)
+        public CabinClassSelectionDialog(FlightWithDetailsDTO flight, List<FlightWithDetailsDTO> allFlights = null)
         {
             _flight = flight;
+            _allFlights = allFlights ?? new List<FlightWithDetailsDTO>();
             InitializeComponent();
         }
 
         private void InitializeComponent()
         {
             Text = "Chọn hạng vé";
-            Size = new Size(600, 500);
+            Size = new Size(600, 580); // Increased to 580 for buttons
             StartPosition = FormStartPosition.CenterParent;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
@@ -83,49 +101,71 @@ namespace GUI.Features.Flight.SubFeatures
 
             Controls.Add(flightInfoPanel);
 
+            // Passenger count selector
+            var lblPassengerCount = new Label
+            {
+                Text = "Số lượng hành khách:",
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                AutoSize = true,
+                Location = new Point(20, 155)
+            };
+            Controls.Add(lblPassengerCount);
+
+            var numPassengers = new NumericUpDown
+            {
+                Minimum = 1,
+                Maximum = 9,
+                Value = 1,
+                Width = 80,
+                Location = new Point(220, 153),
+                Font = new Font("Segoe UI", 11)
+            };
+            Controls.Add(numPassengers);
+
+            var lblNote = new Label
+            {
+                Text = "(1-9 người)",
+                ForeColor = Color.Gray,
+                Font = new Font("Segoe UI", 9),
+                AutoSize = true,
+                Location = new Point(310, 157)
+            };
+            Controls.Add(lblNote);
+
+            // Round-trip checkbox (NOW ENABLED!)
+            chkRoundTrip = new CheckBox
+            {
+                Text = "Khứ hồi (2 chiều)",
+                Font = new Font("Segoe UI", 10),
+                AutoSize = true,
+                Location = new Point(400, 157),
+                Enabled = true, // ENABLED for Phase 2
+                ForeColor = Color.FromArgb(0, 92, 175)
+            };
+            Controls.Add(chkRoundTrip);
+
             // Cabin classes
             var lblSelectClass = new Label
             {
                 Text = "Chọn hạng vé:",
                 Font = new Font("Segoe UI", 11, FontStyle.Bold),
                 AutoSize = true,
-                Location = new Point(20, 155)
+                Location = new Point(20, 195)
             };
             Controls.Add(lblSelectClass);
 
             // Cabin class options with IDs
-            CreateCabinClassOption("First Class", "Hạng Nhất", "✈️", Color.FromArgb(255, 215, 0), 20, 185, 1);
-            CreateCabinClassOption("Business", "Hạng Thương Gia", "💼", Color.FromArgb(100, 149, 237), 20, 245, 2);
-            CreateCabinClassOption("Premium Economy", "Hạng Phổ Thông Đặc Biệt", "🎫", Color.FromArgb(60, 179, 113), 20, 305, 3);
-            CreateCabinClassOption("Economy", "Hạng Phổ Thông", "🪑", Color.FromArgb(169, 169, 169), 20, 365, 4);
-
-            // Ticket Quantity Selector
-            var lblQuantity = new Label
-            {
-                Text = "Số lượng vé:",
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                AutoSize = true,
-                Location = new Point(20, 427)
-            };
-            Controls.Add(lblQuantity);
-
-            var numQuantity = new NumericUpDown
-            {
-                Minimum = 1,
-                Maximum = 10,
-                Value = 1,
-                Width = 60,
-                Font = new Font("Segoe UI", 10),
-                Location = new Point(130, 425)
-            };
-            Controls.Add(numQuantity);
+            CreateCabinClassOption("First Class", "Hạng Nhất", "✈️", Color.FromArgb(255, 215, 0), 20, 225, 1);
+            CreateCabinClassOption("Business", "Hạng Thương Gia", "💼", Color.FromArgb(100, 149, 237), 20, 285, 2);
+            CreateCabinClassOption("Premium Economy", "Hạng Phổ Thông Đặc Biệt", "🎫", Color.FromArgb(60, 179, 113), 20, 345, 3);
+            CreateCabinClassOption("Economy", "Hạng Phổ Thông", "🪑", Color.FromArgb(169, 169, 169), 20, 405, 4);
 
             // Buttons
             var btnConfirm = new Button
             {
                 Text = "Xác nhận",
                 Size = new Size(120, 40),
-                Location = new Point(340, 420),
+                Location = new Point(340, 480), // Shifted down
                 BackColor = Color.FromArgb(46, 125, 50),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
@@ -135,29 +175,81 @@ namespace GUI.Features.Flight.SubFeatures
             btnConfirm.FlatAppearance.BorderSize = 0;
             btnConfirm.Click += (s, e) =>
             {
-                if (string.IsNullOrEmpty(_selectedCabinClass))
+                if (_currentMode == DialogMode.Outbound)
                 {
-                    MessageBox.Show("Vui lòng chọn hạng vé.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    // Outbound mode validation
+                    if (string.IsNullOrEmpty(_selectedCabinClass))
+                    {
+                        MessageBox.Show("Vui lòng chọn hạng vé.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    // Create outbound booking
+                    var groupId = chkRoundTrip.Checked ? Guid.NewGuid() : (Guid?)null;
+                    
+                    BookingRequest = new BookingRequestDTO
+                    {
+                        AccountId = UserSession.CurrentAccountId,
+                        FlightId = _flight.FlightId,
+                        CabinClassId = _selectedCabinClassId,
+                        CabinClassName = _selectedCabinClass,
+                        BookingDate = DateTime.Now,
+                        TicketCount = (int)numPassengers.Value,
+                        IsRoundTrip = chkRoundTrip.Checked,
+                        GroupBookingId = groupId,
+                        FlightNumber = _flight.FlightNumber,
+                        DepartureAirportCode = _flight.DepartureAirportCode,
+                        ArrivalAirportCode = _flight.ArrivalAirportCode,
+                        DepartureTime = _flight.DepartureTime
+                    };
+
+                    IsRoundTrip = chkRoundTrip.Checked;
+
+                    if (chkRoundTrip.Checked)
+                    {
+                        // Store outbound and switch to return flight selection
+                        _outboundBooking = BookingRequest;
+                        _currentMode = DialogMode.ReturnFlightSelection;
+                        ShowReturnFlightSelection();
+                        return; // Don't close dialog
+                    }
+                    else
+                    {
+                        // One-way complete
+                        DialogResult = DialogResult.OK;
+                        Close();
+                    }
                 }
-
-                // Tạo thông tin đặt vé
-                BookingRequest = new BookingRequestDTO
+                else if (_currentMode == DialogMode.ReturnCabinSelection)
                 {
-                    AccountId = UserSession.CurrentAccountId,
-                    FlightId = _flight.FlightId,
-                    CabinClassId = _selectedCabinClassId,
-                    CabinClassName = _selectedCabinClass,
-                    TicketQuantity = (int)numQuantity.Value, // Thêm số lượng vé
-                    BookingDate = DateTime.Now,
-                    FlightNumber = _flight.FlightNumber,
-                    DepartureAirportCode = _flight.DepartureAirportCode,
-                    ArrivalAirportCode = _flight.ArrivalAirportCode,
-                    DepartureTime = _flight.DepartureTime
-                };
+                    // Return cabin selection validation
+                    if (string.IsNullOrEmpty(_selectedCabinClass))
+                    {
+                        MessageBox.Show("Vui lòng chọn hạng vé cho chuyến về.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
 
-                DialogResult = DialogResult.OK;
-                Close();
+                    // Create return booking with same GroupBookingId
+                    ReturnBooking = new BookingRequestDTO
+                    {
+                        AccountId = UserSession.CurrentAccountId,
+                        FlightId = _selectedReturnFlight.FlightId,
+                        CabinClassId = _selectedCabinClassId,
+                        CabinClassName = _selectedCabinClass,
+                        BookingDate = DateTime.Now,
+                        TicketCount = (int)numPassengers.Value,
+                        IsRoundTrip = true,
+                        GroupBookingId = _outboundBooking.GroupBookingId,
+                        FlightNumber = _selectedReturnFlight.FlightNumber,
+                        DepartureAirportCode = _selectedReturnFlight.DepartureAirportCode,
+                        ArrivalAirportCode = _selectedReturnFlight.ArrivalAirportCode,
+                        DepartureTime = _selectedReturnFlight.DepartureTime
+                    };
+
+                    // Round-trip complete
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
             };
             Controls.Add(btnConfirm);
 
@@ -165,7 +257,7 @@ namespace GUI.Features.Flight.SubFeatures
             {
                 Text = "Hủy",
                 Size = new Size(100, 40),
-                Location = new Point(470, 420),
+                Location = new Point(470, 480), // Shifted down
                 BackColor = Color.FromArgb(200, 200, 200),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
@@ -237,6 +329,213 @@ namespace GUI.Features.Flight.SubFeatures
             lblName.Click += clickHandler;
 
             Controls.Add(panel);
+        }
+
+        private void ShowReturnFlightSelection()
+        {
+            // Hide all existing controls
+            foreach (Control ctrl in Controls.OfType<Control>().ToList())
+            {
+                ctrl.Visible = false;
+            }
+
+            // Update title
+            Text = "Chọn chuyến bay chiều về";
+
+            // Title label
+            var lblTitle = new Label
+            {
+                Text = $"✈️ CHỌN CHUYẾN BAY CHIỀU VỀ\n{_flight.ArrivalAirportCode} → {_flight.DepartureAirportCode}",
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 92, 175),
+                AutoSize = false,
+                Size = new Size(560, 60),
+                Location = new Point(20, 20),
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+            Controls.Add(lblTitle);
+
+            // Get return flights from passed list
+            var returnFlights = _allFlights
+                .Where(f => f.DepartureAirportCode == _flight.ArrivalAirportCode &&
+                           f.ArrivalAirportCode == _flight.DepartureAirportCode &&
+                           f.Status == DTO.Flight.FlightStatus.SCHEDULED)
+                .ToList();
+
+            if (!returnFlights.Any())
+            {
+                MessageBox.Show(
+                    "Không tìm thấy chuyến bay chiều về.\nVui lòng thử lại sau.",
+                    "Thông báo",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                DialogResult = DialogResult.Cancel;
+                Close();
+                return;
+            }
+
+            // Flight list
+            var listBox = new ListBox
+            {
+                Location = new Point(20, 90),
+                Size = new Size(560, 350),
+                Font = new Font("Segoe UI", 10),
+                DisplayMember = "FlightNumber"
+            };
+
+            foreach (var flight in returnFlights)
+            {
+                var displayText = $"{flight.FlightNumber} | {flight.DepartureTime?.ToString("dd/MM/yyyy HH:mm")} | " +
+                                $"{flight.DepartureCity} → {flight.ArrivalCity}";
+                listBox.Items.Add(new { Flight = flight, Display = displayText });
+            }
+            listBox.DisplayMember = "Display";
+            listBox.SelectedIndexChanged += (s, e) =>
+            {
+                if (listBox.SelectedItem != null)
+                {
+                    dynamic selected = listBox.SelectedItem;
+                    _selectedReturnFlight = selected.Flight;
+                }
+            };
+            Controls.Add(listBox);
+
+            // Continue button
+            var btnContinue = new Button
+            {
+                Text = "Tiếp tục →",
+                Size = new Size(150, 45),
+                Location = new Point(340, 460),
+                BackColor = Color.FromArgb(46, 125, 50),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+            btnContinue.FlatAppearance.BorderSize = 0;
+            btnContinue.Click += (s, e) =>
+            {
+                if (_selectedReturnFlight == null)
+                {
+                    MessageBox.Show("Vui lòng chọn chuyến bay.", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                ShowReturnCabinSelection();
+            };
+            Controls.Add(btnContinue);
+
+            // Cancel button
+            var btnCancel = new Button
+            {
+                Text = "Hủy",
+                Size = new Size(120, 45),
+                Location = new Point(500, 460),
+                BackColor = Color.FromArgb(200, 200, 200),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10),
+                Cursor = Cursors.Hand
+            };
+            btnCancel.FlatAppearance.BorderSize = 0;
+            btnCancel.Click += (s, e) =>
+            {
+                DialogResult = DialogResult.Cancel;
+                Close();
+            };
+            Controls.Add(btnCancel);
+        }
+
+        private void ShowReturnCabinSelection()
+        {
+            // Reset for return cabin selection
+            _selectedCabinClass = null;
+            _selectedCabinClassId = 0;
+            _currentMode = DialogMode.ReturnCabinSelection;
+
+            // Hide return flight list
+            foreach (Control ctrl in Controls.OfType<Control>().ToList())
+            {
+                ctrl.Visible = false;
+            }
+
+            // Show cabin selection UI (reuse InitializeComponent structure)
+            Text = "Chọn hạng vé - Chiều về";
+            InitializeReturnCabinUI();
+        }
+
+        private void InitializeReturnCabinUI()
+        {
+            // Similar to InitializeComponent but for return
+            var lblTitle = new Label
+            {
+                Text = $"🎫 CHỌN HẠNG VÉ - CHIỀU VỀ\n{_selectedReturnFlight.FlightNumber}",
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 92, 175),
+                AutoSize = false,
+                Size = new Size(560, 60),
+                Location = new Point(20, 20)
+            };
+            Controls.Add(lblTitle);
+
+            var lblSelectClass = new Label
+            {
+                Text = "Chọn hạng vé:",
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                AutoSize = true,
+                Location = new Point(20, 90)
+            };
+            Controls.Add(lblSelectClass);
+
+            // Cabin class options
+            CreateCabinClassOption("First Class", "Hạng Nhất", "✈️", Color.FromArgb(255, 215, 0), 20, 120, 1);
+            CreateCabinClassOption("Business", "Hạng Thương Gia", "💼", Color.FromArgb(100, 149, 237), 20, 180, 2);
+            CreateCabinClassOption("Premium Economy", "Hạng Phổ Thông Đặc Biệt", "🎫", Color.FromArgb(60, 179, 113), 20, 240, 3);
+            CreateCabinClassOption("Economy", "Hạng Phổ Thông", "🪑", Color.FromArgb(169, 169, 169), 20, 300, 4);
+
+            // Confirm button (uses existing btnConfirm logic which handles ReturnCabinSelection mode)
+            var btnConfirm = new Button
+            {
+                Text = "Xác nhận",
+                Size = new Size(150, 45),
+                Location = new Point(340, 380),
+                BackColor = Color.FromArgb(46, 125, 50),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+            btnConfirm.FlatAppearance.BorderSize = 0;
+            btnConfirm.Click += (s, e) =>
+            {
+                if (string.IsNullOrEmpty(_selectedCabinClass))
+                {
+                    MessageBox.Show("Vui lòng chọn hạng vé cho chuyến về.", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Create return booking
+                ReturnBooking = new BookingRequestDTO
+                {
+                    AccountId = UserSession.CurrentAccountId,
+                    FlightId = _selectedReturnFlight.FlightId,
+                    CabinClassId = _selectedCabinClassId,
+                    CabinClassName = _selectedCabinClass,
+                    BookingDate = DateTime.Now,
+                    TicketCount = _outboundBooking.TicketCount,
+                    IsRoundTrip = true,
+                    GroupBookingId = _outboundBooking.GroupBookingId,
+                    FlightNumber = _selectedReturnFlight.FlightNumber,
+                    DepartureAirportCode = _selectedReturnFlight.DepartureAirportCode,
+                    ArrivalAirportCode = _selectedReturnFlight.ArrivalAirportCode,
+                    DepartureTime = _selectedReturnFlight.DepartureTime
+                };
+
+                DialogResult = DialogResult.OK;
+                Close();
+            };
+            Controls.Add(btnConfirm);
         }
     }
 }
