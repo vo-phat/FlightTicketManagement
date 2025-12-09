@@ -41,7 +41,6 @@
             txtSeatTicket = new GUI.Components.Inputs.UnderlinedTextField();
             btnSelectSeatTicket = new GUI.Components.Buttons.PrimaryButton();
             dgvPassengerListTicket = new GUI.Components.Tables.TableCustom();
-            txtAccountIdTicket = new GUI.Components.Inputs.UnderlinedTextField();
             dtpDateOfBirthTicket = new GUI.Components.Inputs.DateTimePickerCustom();
             cboBaggageTicket = new GUI.Components.Inputs.UnderlinedComboBox();
             txtNoteBaggage = new GUI.Components.Inputs.UnderlinedTextField();
@@ -204,6 +203,7 @@
             // 
             dtpFlightDateTicket.BackColor = Color.Transparent;
             dtpFlightDateTicket.CustomFormat = null;
+            dtpFlightDateTicket.EnableTime = false;
             dtpFlightDateTicket.LabelText = "Ngày bay";
             dtpFlightDateTicket.Location = new Point(322, 222);
             dtpFlightDateTicket.MaxDate = new DateTime(9998, 12, 31, 0, 0, 0, 0);
@@ -211,8 +211,11 @@
             dtpFlightDateTicket.Name = "dtpFlightDateTicket";
             dtpFlightDateTicket.Padding = new Padding(0, 4, 0, 8);
             dtpFlightDateTicket.PlaceholderText = "";
+            dtpFlightDateTicket.ShowUpDown = false;
+            dtpFlightDateTicket.ShowUpDownWhenTime = true;
             dtpFlightDateTicket.Size = new Size(222, 59);
             dtpFlightDateTicket.TabIndex = 46;
+            dtpFlightDateTicket.TimeFormat = "dd/MM/yyyy HH:mm";
             dtpFlightDateTicket.Value = new DateTime(2025, 10, 30, 10, 46, 34, 110);
             // 
             // txtSeatTicket
@@ -328,34 +331,11 @@
             dgvPassengerListTicket.TabIndex = 49;
             dgvPassengerListTicket.CellContentClick += dgvPassengerListTicket_CellContentClick;
             // 
-            // txtAccountIdTicket
-            // 
-            txtAccountIdTicket.BackColor = Color.Transparent;
-            txtAccountIdTicket.FocusedLineThickness = 3;
-            txtAccountIdTicket.InheritParentBackColor = true;
-            txtAccountIdTicket.LabelForeColor = Color.FromArgb(70, 70, 70);
-            txtAccountIdTicket.LabelText = "ID của tk(demo hoạt động)";
-            txtAccountIdTicket.LineColor = Color.FromArgb(40, 40, 40);
-            txtAccountIdTicket.LineColorFocused = Color.FromArgb(0, 92, 175);
-            txtAccountIdTicket.LineThickness = 2;
-            txtAccountIdTicket.Location = new Point(810, 124);
-            txtAccountIdTicket.Name = "txtAccountIdTicket";
-            txtAccountIdTicket.Padding = new Padding(0, 4, 0, 8);
-            txtAccountIdTicket.PasswordChar = '\0';
-            txtAccountIdTicket.PlaceholderText = "Placeholder";
-            txtAccountIdTicket.ReadOnly = false;
-            txtAccountIdTicket.ReadOnlyLineColor = Color.FromArgb(200, 200, 200);
-            txtAccountIdTicket.ReadOnlyTextColor = Color.FromArgb(90, 90, 90);
-            txtAccountIdTicket.Size = new Size(240, 63);
-            txtAccountIdTicket.TabIndex = 50;
-            txtAccountIdTicket.TextForeColor = Color.FromArgb(30, 30, 30);
-            txtAccountIdTicket.UnderlineSpacing = 2;
-            txtAccountIdTicket.UseSystemPasswordChar = false;
-            // 
             // dtpDateOfBirthTicket
             // 
             dtpDateOfBirthTicket.BackColor = Color.Transparent;
             dtpDateOfBirthTicket.CustomFormat = null;
+            dtpDateOfBirthTicket.EnableTime = false;
             dtpDateOfBirthTicket.LabelText = "Ngày sinh";
             dtpDateOfBirthTicket.Location = new Point(59, 128);
             dtpDateOfBirthTicket.MaxDate = new DateTime(9998, 12, 31, 0, 0, 0, 0);
@@ -363,8 +343,11 @@
             dtpDateOfBirthTicket.Name = "dtpDateOfBirthTicket";
             dtpDateOfBirthTicket.Padding = new Padding(0, 4, 0, 8);
             dtpDateOfBirthTicket.PlaceholderText = "";
+            dtpDateOfBirthTicket.ShowUpDown = false;
+            dtpDateOfBirthTicket.ShowUpDownWhenTime = true;
             dtpDateOfBirthTicket.Size = new Size(222, 59);
             dtpDateOfBirthTicket.TabIndex = 51;
+            dtpDateOfBirthTicket.TimeFormat = "dd/MM/yyyy HH:mm";
             dtpDateOfBirthTicket.Value = new DateTime(2025, 10, 30, 10, 46, 34, 110);
             // 
             // cboBaggageTicket
@@ -456,7 +439,6 @@
             Controls.Add(txtNoteBaggage);
             Controls.Add(cboBaggageTicket);
             Controls.Add(dtpDateOfBirthTicket);
-            Controls.Add(txtAccountIdTicket);
             Controls.Add(dgvPassengerListTicket);
             Controls.Add(btnSelectSeatTicket);
             Controls.Add(txtSeatTicket);
@@ -486,7 +468,6 @@
         private Components.Inputs.UnderlinedTextField txtSeatTicket;
         private Components.Buttons.PrimaryButton btnSelectSeatTicket;
         private Components.Tables.TableCustom dgvPassengerListTicket;
-        private Components.Inputs.UnderlinedTextField txtAccountIdTicket;
         private Components.Inputs.DateTimePickerCustom dtpDateOfBirthTicket;
         private Components.Inputs.UnderlinedComboBox cboBaggageTicket;
         private Components.Inputs.UnderlinedTextField txtNoteBaggage;

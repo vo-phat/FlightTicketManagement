@@ -37,7 +37,20 @@ namespace GUI.Features.Validator
                         return false;
                     }
                     return true;
-
+                case "passport":
+                    if (!Regex.IsMatch(input, @"^[A-Za-z0-9]{6,9}$"))
+                    {
+                        MessageBox.Show("Số hộ chiếu không hợp lệ! (Chỉ chữ và số, 6–9 ký tự)");
+                        return false;
+                    }
+                    return true;
+                case "seat":
+                    if (input==""||input==null)
+                    {
+                        MessageBox.Show("Vui lòng chọn ghế ngồi");
+                        return false;
+                    }
+                    return true;
                 default:
                     MessageBox.Show($"Loại kiểm tra '{type}' không hợp lệ!");
                     return false;

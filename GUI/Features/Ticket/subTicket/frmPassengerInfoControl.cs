@@ -249,6 +249,11 @@ namespace GUI.Features.Ticket.subTicket
         private void btnAddPassengerTicket_Click(object sender, EventArgs e)
         {
             if (!ValidateForm()) return;
+            if (!ValidatorForFrm.Check(txtFullNameTicket.Text, "name")) return;
+            if (!ValidatorForFrm.Check(txtPhoneNumberTicket.Text, "phone")) return;
+            if (!ValidatorForFrm.Check(txtEmailTicket.Text, "email")) return;
+            if (!ValidatorForFrm.Check(txtPassportNumberTicket.Text, "passport")) return;
+            if (!ValidatorForFrm.Check(txtSeatTicket.Text, "passport")) return;
 
             // ======== TRƯỜNG HỢP SỬA ========
             if (_editingIndex >= 0)
@@ -263,16 +268,13 @@ namespace GUI.Features.Ticket.subTicket
                 ClearForm();
                 return;
             }
-
             // ======== TRƯỜNG HỢP THÊM MỚI ========
             if (_passengerCount < _ticketCount)
             {
-               
-
                 var dto = new TicketBookingRequestDTO();
                 MapFormToDto(dto);
                 ShowTicketDtoInfo(dto);
-                _passengers.Add(dto);                       // BindingList tự refresh
+                _passengers.Add(dto);                      
                 ClearForm();
                 _passengerCount++;
             }
@@ -324,10 +326,7 @@ namespace GUI.Features.Ticket.subTicket
                 dto.AccountId = _accountId; // nếu user login
                 MessageBox.Show(dto.AccountId.ToString());
             }
-            if(ValidatorForFrm.Check("qui 123 !@#", "phone"))
-            {
-                return;
-            }
+            
             dto.FullName = txtFullNameTicket.Text;
             dto.DateOfBirth = dtpDateOfBirthTicket.Value;
             dto.PhoneNumber = txtPhoneNumberTicket.Text;

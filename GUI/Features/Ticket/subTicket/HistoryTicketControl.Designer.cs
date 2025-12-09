@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             dgvTicketNumberHistory = new GUI.Components.Tables.TableCustom();
             txtNumberHistoryTicket = new GUI.Components.Inputs.UnderlinedTextField();
             underlinedTextField2 = new GUI.Components.Inputs.UnderlinedTextField();
@@ -41,34 +41,34 @@
             // dgvTicketNumberHistory
             // 
             dgvTicketNumberHistory.AllowUserToResizeRows = false;
-            dataGridViewCellStyle4.BackColor = Color.FromArgb(248, 250, 252);
-            dgvTicketNumberHistory.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle1.BackColor = Color.FromArgb(248, 250, 252);
+            dgvTicketNumberHistory.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             dgvTicketNumberHistory.BackgroundColor = Color.White;
             dgvTicketNumberHistory.BorderColor = Color.FromArgb(40, 40, 40);
             dgvTicketNumberHistory.BorderStyle = BorderStyle.None;
             dgvTicketNumberHistory.BorderThickness = 2;
             dgvTicketNumberHistory.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             dgvTicketNumberHistory.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
-            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle5.BackColor = Color.White;
-            dataGridViewCellStyle5.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            dataGridViewCellStyle5.ForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle5.Padding = new Padding(12, 10, 12, 10);
-            dataGridViewCellStyle5.SelectionBackColor = Color.White;
-            dataGridViewCellStyle5.SelectionForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.False;
-            dgvTicketNumberHistory.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = Color.White;
+            dataGridViewCellStyle2.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            dataGridViewCellStyle2.ForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle2.Padding = new Padding(12, 10, 12, 10);
+            dataGridViewCellStyle2.SelectionBackColor = Color.White;
+            dataGridViewCellStyle2.SelectionForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
+            dgvTicketNumberHistory.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             dgvTicketNumberHistory.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvTicketNumberHistory.CornerRadius = 16;
-            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = Color.White;
-            dataGridViewCellStyle6.Font = new Font("Segoe UI", 10F);
-            dataGridViewCellStyle6.ForeColor = Color.FromArgb(33, 37, 41);
-            dataGridViewCellStyle6.Padding = new Padding(12, 6, 12, 6);
-            dataGridViewCellStyle6.SelectionBackColor = Color.FromArgb(155, 209, 243);
-            dataGridViewCellStyle6.SelectionForeColor = Color.White;
-            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
-            dgvTicketNumberHistory.DefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = Color.White;
+            dataGridViewCellStyle3.Font = new Font("Segoe UI", 10F);
+            dataGridViewCellStyle3.ForeColor = Color.FromArgb(33, 37, 41);
+            dataGridViewCellStyle3.Padding = new Padding(12, 6, 12, 6);
+            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(155, 209, 243);
+            dataGridViewCellStyle3.SelectionForeColor = Color.White;
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
+            dgvTicketNumberHistory.DefaultCellStyle = dataGridViewCellStyle3;
             dgvTicketNumberHistory.EnableHeadersVisualStyles = false;
             dgvTicketNumberHistory.GridColor = Color.FromArgb(230, 235, 240);
             dgvTicketNumberHistory.HeaderBackColor = Color.White;
@@ -100,7 +100,7 @@
             txtNumberHistoryTicket.LineColor = Color.FromArgb(40, 40, 40);
             txtNumberHistoryTicket.LineColorFocused = Color.FromArgb(0, 92, 175);
             txtNumberHistoryTicket.LineThickness = 2;
-            txtNumberHistoryTicket.Location = new Point(179, 213);
+            txtNumberHistoryTicket.Location = new Point(133, 223);
             txtNumberHistoryTicket.Name = "txtNumberHistoryTicket";
             txtNumberHistoryTicket.Padding = new Padding(0, 4, 0, 8);
             txtNumberHistoryTicket.PasswordChar = '\0';
@@ -125,7 +125,7 @@
             underlinedTextField2.LineColor = Color.FromArgb(40, 40, 40);
             underlinedTextField2.LineColorFocused = Color.FromArgb(0, 92, 175);
             underlinedTextField2.LineThickness = 2;
-            underlinedTextField2.Location = new Point(425, 213);
+            underlinedTextField2.Location = new Point(379, 223);
             underlinedTextField2.Name = "underlinedTextField2";
             underlinedTextField2.Padding = new Padding(0, 4, 0, 8);
             underlinedTextField2.PasswordChar = '\0';
@@ -158,7 +158,7 @@
             btnSearchTicketHistory.Icon = null;
             btnSearchTicketHistory.IconSize = new Size(22, 22);
             btnSearchTicketHistory.IconSpacing = 10;
-            btnSearchTicketHistory.Location = new Point(671, 223);
+            btnSearchTicketHistory.Location = new Point(813, 223);
             btnSearchTicketHistory.Name = "btnSearchTicketHistory";
             btnSearchTicketHistory.NormalBackColor = Color.FromArgb(155, 209, 243);
             btnSearchTicketHistory.NormalBorderColor = Color.FromArgb(40, 40, 40);
