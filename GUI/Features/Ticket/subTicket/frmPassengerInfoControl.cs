@@ -47,6 +47,8 @@ namespace GUI.Features.Ticket.subTicket
         private bool _isRoundTrip = false;
         private bool _isEnteringReturn = false;
         private TicketBookingRequestDTO _tempOutbound = null;
+        private int _returnFlightId;
+        private int _returnClassId;
 
         private readonly BindingList<TicketBookingRequestDTO> _outboundPassengers = new();
         private readonly BindingList<TicketBookingRequestDTO> _inboundPassengers = new();
@@ -237,7 +239,11 @@ namespace GUI.Features.Ticket.subTicket
         }
         private void btnSelectSeatTicket_Click(object sender, EventArgs e)
         {
-            var form = new SeatSelectorForm(1, 1);
+            // Nếu đang nhập chiều về thì dùng flight về
+            int targetFlightId = _isEnteringReturn ? _returnFlightId : _flightId;
+            int targetClassId = _isEnteringReturn ? _returnClassId : _classId;
+
+            var form = new SeatSelectorForm(targetFlightId, targetClassId);
 
             var result = form.ShowDialog();
             if (result == DialogResult.OK)
@@ -245,14 +251,13 @@ namespace GUI.Features.Ticket.subTicket
                 var seat = form.Selector.GetSelectedSeat();
                 if (seat != null)
                 {
-                    // Gán vào UI
                     txtSeatTicket.Text = seat.SeatNumber;
                     _selectedFlightSeatId = seat.FlightSeatId;
                     _selectedSeatPrice = seat.Price;
-                    _classId = seat.ClassId;
                 }
             }
         }
+
         // Nhập / Cập nhật
         private void btnAddPassengerTicket_Click(object sender, EventArgs e)
         {
@@ -261,29 +266,33 @@ namespace GUI.Features.Ticket.subTicket
             if (!ValidatorForFrm.Check(txtPhoneNumberTicket.Text, "phone")) return;
             if (!ValidatorForFrm.Check(txtEmailTicket.Text, "email")) return;
             if (!ValidatorForFrm.Check(txtPassportNumberTicket.Text, "passport")) return;
+            // Nếu đang yêu cầu nhập chiều về → không cho nhập chiều đi tiếp
+            if (_isEnteringReturn && !_isRoundTrip)
+            {
+                MessageBox.Show("Bạn đang trong bước nhập chiều về. Vui lòng hoàn tất trước.");
+                return;
+            }
 
-            // ========================================
-            // CASE SỬA THÔNG TIN CHIỀU ĐI
-            // ========================================
+            // ============================================================
+            // CASE 1) SỬA CHIỀU ĐI
+            // ============================================================
             if (_editingIndex >= 0 && !_isEnteringReturn)
             {
                 var dto = _outboundPassengers[_editingIndex];
+
+                // Chỉ update thông tin passenger – KHÔNG được sửa FlightId/ClassId
                 MapFormToDto(dto);
 
-                // Nếu vé khứ hồi → yêu cầu sửa tiếp chiều về
                 if (_isRoundTrip)
                 {
                     MessageBox.Show("✔ Đã cập nhật chiều đi. Tiếp tục sửa chiều về!");
-
-                    // Load form lại để nhập ghế chiều về
                     PrepareReturnForm(dto);
                     _isEnteringReturn = true;
-
                     btnAddPassengerTicket.Text = "Cập nhật chiều về";
                     return;
                 }
 
-                // Một chiều → kết thúc sửa
+                // Một chiều → kết thúc
                 _outboundPassengers.ResetItem(_editingIndex);
                 _editingIndex = -1;
                 btnAddPassengerTicket.Text = "Nhập";
@@ -291,15 +300,19 @@ namespace GUI.Features.Ticket.subTicket
                 return;
             }
 
-            // ========================================
-            // CASE SỬA THÔNG TIN CHIỀU VỀ
-            // ========================================
+            // ============================================================
+            // CASE 2) SỬA CHIỀU VỀ
+            // ============================================================
             if (_editingIndex >= 0 && _isEnteringReturn)
             {
                 var dtoReturn = _inboundPassengers[_editingIndex];
+
+                // Map passenger info
                 MapFormToDto(dtoReturn);
 
-                dtoReturn.FlightId = _returnBooking.FlightId;
+                // FIX: Gán đúng flight/class chiều về
+                dtoReturn.FlightId = _returnFlightId;
+                dtoReturn.ClassId = _returnClassId;
                 dtoReturn.FlightDate = _returnBooking.DepartureTime;
 
                 _inboundPassengers.ResetItem(_editingIndex);
@@ -315,14 +328,18 @@ namespace GUI.Features.Ticket.subTicket
                 return;
             }
 
-            // ========================================
-            // CASE THÊM MỚI (Anh giữ nguyên logic cũ)
-            // ========================================
+            // ============================================================
+            // CASE 3) THÊM MỚI – NHẬP CHIỀU VỀ (ROUND-TRIP)
+            // ============================================================
             if (_isRoundTrip && _isEnteringReturn)
             {
                 var returnDto = new TicketBookingRequestDTO();
+
                 MapFormToDto(returnDto);
-                returnDto.FlightId = _returnBooking.FlightId;
+
+                // FIX: Gán flight/class chiều về 100% đúng
+                returnDto.FlightId = _returnFlightId;
+                returnDto.ClassId = _returnClassId;
                 returnDto.FlightDate = _returnBooking.DepartureTime;
 
                 _inboundPassengers.Add(returnDto);
@@ -337,12 +354,18 @@ namespace GUI.Features.Ticket.subTicket
                 return;
             }
 
+            // ============================================================
+            // CASE 4) THÊM MỚI – NHẬP CHIỀU ĐI
+            // ============================================================
             if (_passengerCount < _ticketCount)
             {
                 var outboundDto = new TicketBookingRequestDTO();
+
                 MapFormToDto(outboundDto);
 
+                // FlightId/ClassId CHỈ GÁN Ở ĐÂY (chiều đi)
                 outboundDto.FlightId = _outboundBooking.FlightId;
+                outboundDto.ClassId = _classId;
                 outboundDto.FlightDate = _outboundBooking.DepartureTime;
 
                 _outboundPassengers.Add(outboundDto);
@@ -356,38 +379,49 @@ namespace GUI.Features.Ticket.subTicket
                     return;
                 }
 
+                // Một chiều
                 _passengerCount++;
                 ClearForm();
                 return;
             }
 
+            // ============================================================
+            // CASE 5) ĐÃ ĐỦ VÉ
+            // ============================================================
             MessageBox.Show($"Đã đủ {_ticketCount} hành khách.");
         }
 
+
         private void PrepareReturnForm(TicketBookingRequestDTO dto)
         {
+            // Copy passenger info
             txtFullNameTicket.Text = dto.FullName;
             txtPhoneNumberTicket.Text = dto.PhoneNumber;
             txtEmailTicket.Text = dto.Email;
             txtPassportNumberTicket.Text = dto.PassportNumber;
             cboNationalityTicket.Text = dto.Nationality;
-
             dtpDateOfBirthTicket.Value = dto.DateOfBirth ?? DateTime.Now;
 
-            // Gán thông tin flight chiều về
-            _flightId = _returnBooking.FlightId;
+            // Set flight chiều về – nhưng chỉ dùng để HIỂN THỊ
             dtpFlightDateTicket.Value = _returnBooking.DepartureTime ?? DateTime.Now;
 
-            // RESET GHẾ vì cần chọn lại ghế cho chiều về
+            // reset seat
             txtSeatTicket.Text = "";
             _selectedSeatPrice = 0;
             _selectedSeatId = 0;
             _selectedFlightSeatId = 0;
         }
 
+
         // Bấm nút "Sửa" trong lưới → đổ ngược lên form
         private void dgvPassengerListTicket_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
+            if (_isEnteringReturn)
+            {
+                MessageBox.Show("Bạn phải hoàn tất nhập/sửa chiều về trước khi sửa hành khách khác.");
+                return;
+            }
+
             if (e.RowIndex < 0) return;
             if (dgvPassengerListTicket.Columns[e.ColumnIndex].Name != "colAction") return;
 
@@ -418,18 +452,26 @@ namespace GUI.Features.Ticket.subTicket
 
             cboBaggageTicket.Text = item.BaggageDisplayText ?? "";
             txtNoteBaggage.Text = item.BaggageNote ?? "";
+
+            // ⭐ RẤT QUAN TRỌNG – GIỮ LẠI GHẾ CŨ KHI EDIT
+            _selectedFlightSeatId = item.FlightSeatId;
+            //_classId = item.ClassId ?? _classId;
+            //_flightId = item.FlightId ?? _flightId;
+
+
+            // Nếu có giá seat → giữ
+            if (item.TicketPrice.HasValue)
+            {
+                _selectedSeatPrice = item.TicketPrice.Value;
+            }
         }
+
 
         // Helpers
         private void MapFormToDto(TicketBookingRequestDTO dto)
         {
-            // ========= Passenger info =========
-            if(_editingIndex == 0 || _passengerCount ==0)
-            {
-                dto.AccountId = _accountId; // nếu user login
-                MessageBox.Show(dto.AccountId.ToString());
-            }
-            
+            // ===== Passenger Info =====
+            dto.AccountId = _accountId;
             dto.FullName = txtFullNameTicket.Text;
             dto.DateOfBirth = dtpDateOfBirthTicket.Value;
             dto.PhoneNumber = txtPhoneNumberTicket.Text;
@@ -437,31 +479,36 @@ namespace GUI.Features.Ticket.subTicket
             dto.Nationality = cboNationalityTicket.SelectedValue?.ToString();
             dto.Email = txtEmailTicket.Text;
 
-            // ========= Flight info =========
-            dto.FlightDate = dtpFlightDateTicket.Value;
-            dto.FlightId = _flightId; //=> Anh map ở ngoài khi chọn chuyến bay
-
-            // ========= Seat info =========
-            dto.SeatNumber = txtSeatTicket.Text;
-            dto.SeatId = 1;        // tùy theo UI của Anh, nếu chưa có thì để null.
-            dto.FlightSeatId = _selectedFlightSeatId;  // tùy theo UI của Anh, nếu chưa có thì để null.
-            dto.ClassId = _classId;      // tùy theo UI của Anh, nếu chưa có thì để null.
-
-            // ========= Baggage info =========
-            if (cboBaggageTicket.SelectedItem != null)
+            // ===== Seat Info =====
+            if (!string.IsNullOrEmpty(txtSeatTicket.Text) && _selectedFlightSeatId != 0)
             {
-                dto.CheckedId = (cboBaggageTicket.SelectedItem as DTO.Baggage.CheckedBaggageDTO)?.CheckedId;
+                // chọn ghế mới
+                dto.SeatNumber = txtSeatTicket.Text;
+                dto.FlightSeatId = _selectedFlightSeatId;
+            }
+
+            // ===== Baggage =====
+            if (cboBaggageTicket.SelectedItem is DTO.Baggage.CheckedBaggageDTO cb)
+            {
+                dto.CheckedId = cb.CheckedId;
                 dto.BaggageDisplayText = cboBaggageTicket.Text;
             }
-            dto.Quantity = 1; // mặc định 1 kiện
-            dto.CarryOnId = CarryBaggageId(_classId); // hang ve
-            // carry on id nếu có UI chọn hành lý xách tay thêm thì map tương tự CheckedId
+
+            dto.Quantity = 1;
             dto.BaggageNote = txtNoteBaggage.Text;
-            dto.TicketPrice = (cboBaggageTicket.SelectedItem as DTO.Baggage.CheckedBaggageDTO)?.Price + _selectedSeatPrice;
-            // ========= Ticket info =========
-            // dto.TicketNumber => BUS sẽ tự generate
+
+            // ===== Price =====
+            if (_selectedSeatPrice > 0)
+            {
+                var selectedBaggage = cboBaggageTicket.SelectedItem as DTO.Baggage.CheckedBaggageDTO;
+                var baggagePrice = selectedBaggage?.Price ?? 0;
+
+                dto.TicketPrice = baggagePrice + _selectedSeatPrice;
+            }
         }
-        
+
+
+
         private int CarryBaggageId(int ClassId)
         {
             CarryOnBaggageDTO result = carryOnList.FirstOrDefault(c => c.ClassId == ClassId);
@@ -501,6 +548,11 @@ namespace GUI.Features.Ticket.subTicket
         }
         private void btnNextToPayment_Click(object sender, EventArgs e)
         {
+            if (_isRoundTrip && _inboundPassengers.Count != _outboundPassengers.Count)
+            {
+                MessageBox.Show("Bạn phải nhập đầy đủ thông tin chiều về trước khi thanh toán.");
+                return;
+            }
             var bus = new SaveTicketRequestBUS();
 
             if (_isRoundTrip)
@@ -552,24 +604,44 @@ namespace GUI.Features.Ticket.subTicket
         /// </summary>
         public void LoadBookingRequest(BookingRequestDTO outbound, BookingRequestDTO inbound = null)
         {
-            if (outbound == null) return;
-            // chưa biết cách lấy id.
-            _accountId = 2;
-            LoadInfomationAccount(_accountId);
-
             _outboundBooking = outbound;
             _returnBooking = inbound;
+            _accountId = 2;
+
+            LoadInfomationAccount(_accountId);
+
+            if (outbound == null)
+                return;
+
+            // =====================================================
+            // CHIỀU ĐI
+            // =====================================================
+            var (flightId, cabinClass, ticketCount, _) = outbound.GetBookingInfo();
+
+            _flightId = flightId;          // Flight chiều đi
+            _classId = cabinClass;         // Class chiều đi
+            _ticketCount = ticketCount;    // Số lượng vé
+
+            // =====================================================
+            // CHIỀU VỀ (NẾU LÀ VÉ KHỨ HỒI)
+            // =====================================================
             _isRoundTrip = inbound != null;
 
-            var (flightId, cabinClass, ticketCount, _) = outbound.GetBookingInfo();
-            _flightId = flightId;
-            _classId = cabinClass;
-            _ticketCount = ticketCount;
+            if (_isRoundTrip)
+            {
+                var (reFlightId, reClassId, _, _) = inbound.GetBookingInfo();
 
+                _returnFlightId = reFlightId;    // Flight chiều về
+                _returnClassId = reClassId;      // Class chiều về
+            }
+
+            // Loại trip
             _typeTrip = _isRoundTrip ? "ROUND_TRIP" : "ONE_WAY";
 
+            // Hiển thị ngày bay chiều đi
             dtpFlightDateTicket.Value = outbound.DepartureTime ?? DateTime.Now;
         }
+
 
         //public void LoadBookingRequest1(DTO.Booking.BookingRequestDTO outboundBooking, DTO.Booking.BookingRequestDTO returnBooking = null)
         //{
@@ -579,7 +651,7 @@ namespace GUI.Features.Ticket.subTicket
         //    bookingRequest = bookingRequest;
         //    LoadInfomationAccount(_accountId);
 
-           
+
         //    if (outboundBooking == null) return;
 
         //    // Store booking information
