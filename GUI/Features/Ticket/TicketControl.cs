@@ -34,13 +34,13 @@ namespace GUI.Features.Ticket {
         /// <summary>
         /// Load booking data và chuyển sang tab Thông tin khách hàng
         /// </summary>
-        public void LoadBookingData(DTO.Booking.BookingRequestDTO bookingRequest)
+        public void LoadBookingData(DTO.Booking.BookingRequestDTO outboundBooking, DTO.Booking.BookingRequestDTO returnBooking = null)
         {
             // Chuyển sang tab Thông tin khách hàng
             switchTab(TAB_BOOKING);
             
-            // Truyền dữ liệu booking vào control
-            frmPassengerInfoControl.LoadBookingRequest(bookingRequest);
+            // Truyền dữ liệu booking vào control (both outbound and return if applicable)
+            frmPassengerInfoControl.LoadBookingRequest(outboundBooking, returnBooking);
         }
 
         // Khởi tạo và gắn các UserControl con vào các panel tương ứng

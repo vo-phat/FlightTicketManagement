@@ -9,11 +9,39 @@ namespace BUS.Ticket
 {
     public class SaveTicketRequestBUS
     {
-        // Placeholder for business logic to save ticket request
-        public void SaveTicketRequest(List<TicketBookingRequestDTO> dto, int id ,string trip_type )
+        private readonly SaveTicketRequestDAO _dao;
+
+        public SaveTicketRequestBUS()
         {
-            SaveTicketRequestDAO saveTicketRequestDAO = new SaveTicketRequestDAO();
-            saveTicketRequestDAO.CreateBooking(dto , id, trip_type);
+            _dao = new SaveTicketRequestDAO();
+        }
+
+        // ============================
+        // 1) ONE WAY
+        // ============================
+        public int SaveOneWay(List<TicketBookingRequestDTO> outbound, int accountId)
+        {
+            if (outbound == null || outbound.Count == 0)
+                throw new System.Exception("Danh sách vé chiều đi rỗng.");
+
+            return _dao.CreateBookingOneWay(outbound, accountId);
+        }
+
+        // ============================
+        // 2) ROUND TRIP (2 list)
+        // ============================
+        public int SaveRoundTrip(
+            List<TicketBookingRequestDTO> outbound,
+            List<TicketBookingRequestDTO> inbound,
+            int accountId)
+        {
+            if (outbound == null || inbound == null)
+                throw new System.Exception("Outbound hoặc inbound NULL.");
+
+            if (outbound.Count != inbound.Count)
+                throw new System.Exception("Số lượng khách chiều đi và về không khớp.");
+
+            return _dao.CreateBookingRoundTrip(outbound, inbound, accountId);
         }
     }
 }

@@ -32,7 +32,7 @@ namespace DTO.Ticket
         // ============================
 
         public int? SeatId { get; set; }            // seat_id trong bảng seat
-        public int? FlightSeatId { get; set; }      // flight_seat_id nếu chọn ghế từ bảng flight_seat
+        public int FlightSeatId { get; set; }      // flight_seat_id nếu chọn ghế từ bảng flight_seat
         public string? SeatNumber { get; set; }     // VD: "12A"
         public int? ClassId { get; set; }           // hạng ghế (economy/business/vip)
 
