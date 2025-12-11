@@ -11,6 +11,7 @@ namespace DTO.Seat
         public int FlightSeatId { get; set; }
         public string SeatNumber { get; set; }
         public decimal Price { get; set; }
+        public int SeatId { get; set; }
         public int ClassId { get; set; }
         public string SeatStatus { get; set; }  // thêm dòng này
     }

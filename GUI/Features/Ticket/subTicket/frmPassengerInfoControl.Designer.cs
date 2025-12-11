@@ -36,7 +36,6 @@
             txtFullNameTicket = new GUI.Components.Inputs.UnderlinedTextField();
             txtEmailTicket = new GUI.Components.Inputs.UnderlinedTextField();
             txtPhoneNumberTicket = new GUI.Components.Inputs.UnderlinedTextField();
-            btnAddPassengerTicket = new GUI.Components.Buttons.PrimaryButton();
             dtpFlightDateTicket = new GUI.Components.Inputs.DateTimePickerCustom();
             txtSeatTicket = new GUI.Components.Inputs.UnderlinedTextField();
             btnSelectSeatTicket = new GUI.Components.Buttons.PrimaryButton();
@@ -45,6 +44,8 @@
             cboBaggageTicket = new GUI.Components.Inputs.UnderlinedComboBox();
             txtNoteBaggage = new GUI.Components.Inputs.UnderlinedTextField();
             btnNextToPayment = new GUI.Components.Buttons.PrimaryButton();
+            btnAddOutbound = new GUI.Components.Buttons.PrimaryButton();
+            btnAddInbound = new GUI.Components.Buttons.PrimaryButton();
             ((System.ComponentModel.ISupportInitialize)dgvPassengerListTicket).BeginInit();
             SuspendLayout();
             // 
@@ -162,43 +163,6 @@
             txtPhoneNumberTicket.UnderlineSpacing = 2;
             txtPhoneNumberTicket.UseSystemPasswordChar = false;
             // 
-            // btnAddPassengerTicket
-            // 
-            btnAddPassengerTicket.AutoSize = true;
-            btnAddPassengerTicket.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            btnAddPassengerTicket.BackColor = Color.FromArgb(155, 209, 243);
-            btnAddPassengerTicket.BorderColor = Color.FromArgb(40, 40, 40);
-            btnAddPassengerTicket.BorderThickness = 2;
-            btnAddPassengerTicket.CornerRadius = 22;
-            btnAddPassengerTicket.EnableHoverEffects = true;
-            btnAddPassengerTicket.FlatAppearance.BorderSize = 0;
-            btnAddPassengerTicket.FlatStyle = FlatStyle.Flat;
-            btnAddPassengerTicket.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            btnAddPassengerTicket.ForeColor = Color.White;
-            btnAddPassengerTicket.HoverBackColor = Color.White;
-            btnAddPassengerTicket.HoverBorderColor = Color.FromArgb(0, 92, 175);
-            btnAddPassengerTicket.HoverForeColor = Color.FromArgb(0, 92, 175);
-            btnAddPassengerTicket.Icon = null;
-            btnAddPassengerTicket.IconSize = new Size(22, 22);
-            btnAddPassengerTicket.IconSpacing = 10;
-            btnAddPassengerTicket.Location = new Point(877, 330);
-            btnAddPassengerTicket.Name = "btnAddPassengerTicket";
-            btnAddPassengerTicket.NormalBackColor = Color.FromArgb(155, 209, 243);
-            btnAddPassengerTicket.NormalBorderColor = Color.FromArgb(40, 40, 40);
-            btnAddPassengerTicket.NormalForeColor = Color.White;
-            btnAddPassengerTicket.Padding = new Padding(24, 10, 24, 10);
-            btnAddPassengerTicket.PreferredMaxWidth = 0;
-            btnAddPassengerTicket.PressedBackColor = Color.FromArgb(225, 240, 255);
-            btnAddPassengerTicket.PressedBorderColor = Color.FromArgb(0, 92, 175);
-            btnAddPassengerTicket.PressedForeColor = Color.FromArgb(0, 92, 175);
-            btnAddPassengerTicket.Size = new Size(131, 52);
-            btnAddPassengerTicket.TabIndex = 39;
-            btnAddPassengerTicket.Text = "Nhập";
-            btnAddPassengerTicket.TextAlign = ContentAlignment.MiddleLeft;
-            btnAddPassengerTicket.UseVisualStyleBackColor = false;
-            btnAddPassengerTicket.WordWrap = false;
-            btnAddPassengerTicket.Click += btnAddPassengerTicket_Click;
-            // 
             // dtpFlightDateTicket
             // 
             dtpFlightDateTicket.BackColor = Color.Transparent;
@@ -261,7 +225,7 @@
             btnSelectSeatTicket.Icon = null;
             btnSelectSeatTicket.IconSize = new Size(22, 22);
             btnSelectSeatTicket.IconSpacing = 10;
-            btnSelectSeatTicket.Location = new Point(605, 330);
+            btnSelectSeatTicket.Location = new Point(536, 330);
             btnSelectSeatTicket.Name = "btnSelectSeatTicket";
             btnSelectSeatTicket.NormalBackColor = Color.FromArgb(155, 209, 243);
             btnSelectSeatTicket.NormalBorderColor = Color.FromArgb(40, 40, 40);
@@ -329,7 +293,6 @@
             dgvPassengerListTicket.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvPassengerListTicket.Size = new Size(1190, 259);
             dgvPassengerListTicket.TabIndex = 49;
-            dgvPassengerListTicket.CellContentClick += dgvPassengerListTicket_CellContentClick;
             // 
             // dtpDateOfBirthTicket
             // 
@@ -431,10 +394,86 @@
             btnNextToPayment.WordWrap = false;
             btnNextToPayment.Click += btnNextToPayment_Click;
             // 
+            // btnAddOutbound
+            // 
+            btnAddOutbound.AutoSize = true;
+            btnAddOutbound.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnAddOutbound.BackColor = Color.FromArgb(155, 209, 243);
+            btnAddOutbound.BorderColor = Color.FromArgb(40, 40, 40);
+            btnAddOutbound.BorderThickness = 2;
+            btnAddOutbound.CornerRadius = 22;
+            btnAddOutbound.EnableHoverEffects = true;
+            btnAddOutbound.FlatAppearance.BorderSize = 0;
+            btnAddOutbound.FlatStyle = FlatStyle.Flat;
+            btnAddOutbound.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            btnAddOutbound.ForeColor = Color.White;
+            btnAddOutbound.HoverBackColor = Color.White;
+            btnAddOutbound.HoverBorderColor = Color.FromArgb(0, 92, 175);
+            btnAddOutbound.HoverForeColor = Color.FromArgb(0, 92, 175);
+            btnAddOutbound.Icon = null;
+            btnAddOutbound.IconSize = new Size(22, 22);
+            btnAddOutbound.IconSpacing = 10;
+            btnAddOutbound.Location = new Point(820, 298);
+            btnAddOutbound.Name = "btnAddOutbound";
+            btnAddOutbound.NormalBackColor = Color.FromArgb(155, 209, 243);
+            btnAddOutbound.NormalBorderColor = Color.FromArgb(40, 40, 40);
+            btnAddOutbound.NormalForeColor = Color.White;
+            btnAddOutbound.Padding = new Padding(24, 10, 24, 10);
+            btnAddOutbound.PreferredMaxWidth = 0;
+            btnAddOutbound.PressedBackColor = Color.FromArgb(225, 240, 255);
+            btnAddOutbound.PressedBorderColor = Color.FromArgb(0, 92, 175);
+            btnAddOutbound.PressedForeColor = Color.FromArgb(0, 92, 175);
+            btnAddOutbound.Size = new Size(213, 52);
+            btnAddOutbound.TabIndex = 55;
+            btnAddOutbound.Text = "Nhập chiều đi";
+            btnAddOutbound.TextAlign = ContentAlignment.MiddleLeft;
+            btnAddOutbound.UseVisualStyleBackColor = false;
+            btnAddOutbound.WordWrap = false;
+            btnAddOutbound.Click += btnAddOutbound_Click;
+            // 
+            // btnAddInbound
+            // 
+            btnAddInbound.AutoSize = true;
+            btnAddInbound.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnAddInbound.BackColor = Color.FromArgb(155, 209, 243);
+            btnAddInbound.BorderColor = Color.FromArgb(40, 40, 40);
+            btnAddInbound.BorderThickness = 2;
+            btnAddInbound.CornerRadius = 22;
+            btnAddInbound.EnableHoverEffects = true;
+            btnAddInbound.FlatAppearance.BorderSize = 0;
+            btnAddInbound.FlatStyle = FlatStyle.Flat;
+            btnAddInbound.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            btnAddInbound.ForeColor = Color.White;
+            btnAddInbound.HoverBackColor = Color.White;
+            btnAddInbound.HoverBorderColor = Color.FromArgb(0, 92, 175);
+            btnAddInbound.HoverForeColor = Color.FromArgb(0, 92, 175);
+            btnAddInbound.Icon = null;
+            btnAddInbound.IconSize = new Size(22, 22);
+            btnAddInbound.IconSpacing = 10;
+            btnAddInbound.Location = new Point(820, 366);
+            btnAddInbound.Name = "btnAddInbound";
+            btnAddInbound.NormalBackColor = Color.FromArgb(155, 209, 243);
+            btnAddInbound.NormalBorderColor = Color.FromArgb(40, 40, 40);
+            btnAddInbound.NormalForeColor = Color.White;
+            btnAddInbound.Padding = new Padding(24, 10, 24, 10);
+            btnAddInbound.PreferredMaxWidth = 0;
+            btnAddInbound.PressedBackColor = Color.FromArgb(225, 240, 255);
+            btnAddInbound.PressedBorderColor = Color.FromArgb(0, 92, 175);
+            btnAddInbound.PressedForeColor = Color.FromArgb(0, 92, 175);
+            btnAddInbound.Size = new Size(216, 52);
+            btnAddInbound.TabIndex = 56;
+            btnAddInbound.Text = "Nhập chiều về";
+            btnAddInbound.TextAlign = ContentAlignment.MiddleLeft;
+            btnAddInbound.UseVisualStyleBackColor = false;
+            btnAddInbound.WordWrap = false;
+            btnAddInbound.Click += btnAddInbound_Click;
+            // 
             // frmPassengerInfoControl
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
+            Controls.Add(btnAddInbound);
+            Controls.Add(btnAddOutbound);
             Controls.Add(btnNextToPayment);
             Controls.Add(txtNoteBaggage);
             Controls.Add(cboBaggageTicket);
@@ -448,7 +487,6 @@
             Controls.Add(txtFullNameTicket);
             Controls.Add(txtEmailTicket);
             Controls.Add(txtPhoneNumberTicket);
-            Controls.Add(btnAddPassengerTicket);
             Name = "frmPassengerInfoControl";
             Size = new Size(1270, 734);
             ((System.ComponentModel.ISupportInitialize)dgvPassengerListTicket).EndInit();
@@ -463,7 +501,6 @@
         private Components.Inputs.UnderlinedTextField txtFullNameTicket;
         private Components.Inputs.UnderlinedTextField txtEmailTicket;
         private Components.Inputs.UnderlinedTextField txtPhoneNumberTicket;
-        private Components.Buttons.PrimaryButton btnAddPassengerTicket;
         private Components.Inputs.DateTimePickerCustom dtpFlightDateTicket;
         private Components.Inputs.UnderlinedTextField txtSeatTicket;
         private Components.Buttons.PrimaryButton btnSelectSeatTicket;
@@ -472,5 +509,7 @@
         private Components.Inputs.UnderlinedComboBox cboBaggageTicket;
         private Components.Inputs.UnderlinedTextField txtNoteBaggage;
         private Components.Buttons.PrimaryButton btnNextToPayment;
+        private Components.Buttons.PrimaryButton btnAddOutbound;
+        private Components.Buttons.PrimaryButton btnAddInbound;
     }
 }

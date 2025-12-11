@@ -21,6 +21,7 @@ namespace DAO.Seat
                 SELECT 
                     fs.flight_seat_id,
                     s.seat_number,
+                    s.seat_id,   
                     fs.base_price,
                     s.class_id,
                     fs.seat_status
@@ -43,11 +44,13 @@ namespace DAO.Seat
                             list.Add(new SeatSelectDTO
                             {
                                 FlightSeatId = reader.GetInt32("flight_seat_id"),
+                                SeatId = reader.GetInt32("seat_id"), 
                                 SeatNumber = reader.GetString("seat_number"),
                                 Price = reader.GetDecimal("base_price"),
                                 ClassId = reader.GetInt32("class_id"),
-                                SeatStatus = reader.GetString("seat_status")   // thêm
+                                SeatStatus = reader.GetString("seat_status")
                             });
+
 
                         }
                     }
