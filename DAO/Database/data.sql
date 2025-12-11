@@ -893,3 +893,176 @@ INSERT INTO `ticket_baggage` (`id`, `ticket_id`, `baggage_type`, `carryon_id`, `
 
 -- Ticket 30 (Premium Economy)
 (52, 30, 'carry_on', 3, NULL, 1, 'Premium Economy 10kg');
+
+-- Thêm thêm Bookings (từ ID 16 trở đi, giả sử auto-increment)
+INSERT INTO `Bookings` (account_id, booking_date, trip_type, status, total_amount) VALUES
+(4, '2025-04-15 12:30:45', 'ONE_WAY',     'CONFIRMED',  420.00),
+(5, '2025-05-20 09:45:22', 'ROUND_TRIP',  'PENDING',    850.00),
+(6, '2025-06-10 18:20:15', 'MULTI_WAY',   'CONFIRMED',  1300.00),
+(7, '2025-07-05 14:10:30', 'ONE_WAY',     'CANCELLED',  280.00),
+(8, '2025-08-12 11:55:40', 'ROUND_TRIP',  'REFUNDED',   700.00),
+(4, '2025-09-18 16:40:55', 'ONE_WAY',     'CONFIRMED',  500.00),
+(5, '2025-10-22 13:25:10', 'MULTI_WAY',   'PENDING',    950.00),
+(6, '2025-11-28 20:15:35', 'ONE_WAY',     'CONFIRMED',  220.00),
+(7, '2025-12-03 07:50:20', 'ROUND_TRIP',  'CANCELLED',  800.00),
+(8, '2026-01-15 15:35:45', 'ONE_WAY',     'CONFIRMED',  350.00),
+(4, '2026-02-20 10:20:30', 'MULTI_WAY',   'PENDING',    1100.00),
+(5, '2026-03-25 19:10:15', 'ROUND_TRIP',  'CONFIRMED',  920.00),
+(6, '2026-04-30 21:45:50', 'ONE_WAY',     'REFUNDED',   240.00),
+(7, '2026-05-05 12:30:25', 'MULTI_WAY',   'CONFIRMED',  1050.00),
+(8, '2026-06-10 08:15:40', 'ONE_WAY',     'PENDING',    300.00);
+
+-- Thêm Booking_Passengers cho các bookings mới (liên kết với các profile_id hiện có 4-8)
+INSERT INTO Booking_Passengers (booking_id, profile_id) VALUES
+(16, 4),
+(17, 5),
+(17, 6),
+(18, 6),
+(18, 7),
+(19, 7),
+(20, 8),
+(21, 4),
+(21, 5),
+(22, 5),
+(23, 6),
+(24, 7),
+(25, 8),
+(26, 4),
+(26, 5),
+(27, 5),
+(27, 6),
+(28, 6),
+(29, 7),
+(30, 8),
+(30, 4);
+
+-- Thêm Tickets cho các bookings mới (liên kết với các flight_seat_id từ các flights hiện có, ví dụ sử dụng flight_id 1-20 và seat_id phù hợp)
+-- Giả sử thêm cho một số flights, và ticket_id tiếp tục từ 31
+INSERT INTO Tickets (ticket_id, ticket_passenger_id, flight_seat_id, ticket_number, segment_no, segment_type, `status`) VALUES
+(31, 21, 127, 'TK202600001', 1, 'OUTBOUND', 'CONFIRMED'),  -- Flight 1, seat 127
+(32, 22, 128, 'TK202600002', 1, 'OUTBOUND', 'BOOKED'),     -- Flight 1, seat 128
+(33, 23, 133, 'TK202600003', 1, 'OUTBOUND', 'CHECKED_IN'), -- Flight 1, seat 133
+(34, 24, 134, 'TK202600004', 1, 'OUTBOUND', 'CONFIRMED'),  -- Flight 1, seat 134
+(35, 25, 139, 'TK202600005', 1, 'OUTBOUND', 'BOOKED'),     -- Flight 1, seat 139
+(36, 26, 145, 'TK202600006', 1, 'OUTBOUND', 'CONFIRMED'),  -- Flight 2, seat 145
+(37, 27, 146, 'TK202600007', 1, 'OUTBOUND', 'BOOKED'),     -- Flight 2, seat 146
+(38, 28, 151, 'TK202600008', 1, 'OUTBOUND', 'CHECKED_IN'), -- Flight 2, seat 151
+(39, 29, 152, 'TK202600009', 1, 'OUTBOUND', 'CONFIRMED'),  -- Flight 2, seat 152
+(40, 30, 157, 'TK202600010', 1, 'OUTBOUND', 'BOOKED'),     -- Flight 2, seat 157
+(41, 31, 163, 'TK202600011', 1, 'OUTBOUND', 'CONFIRMED'),  -- Flight 3, seat 163
+(42, 32, 164, 'TK202600012', 1, 'OUTBOUND', 'BOOKED'),     -- Flight 3, seat 164
+(43, 33, 169, 'TK202600013', 1, 'OUTBOUND', 'CHECKED_IN'), -- Flight 3, seat 169
+(44, 34, 170, 'TK202600014', 1, 'OUTBOUND', 'CONFIRMED'),  -- Flight 3, seat 170
+(45, 35, 175, 'TK202600015', 1, 'OUTBOUND', 'BOOKED');     -- Flight 3, seat 175
+
+-- Thêm Ticket_History cho các tickets mới
+INSERT INTO Ticket_History (ticket_id, old_status, new_status, changed_at) VALUES
+(31, 'BOOKED', 'CONFIRMED', '2025-04-16 10:00:00'),
+(32, 'BOOKED', 'CONFIRMED', '2025-05-21 09:00:00'),
+(32, 'CONFIRMED', 'CHECKED_IN', '2025-05-22 08:30:00'),
+(33, 'BOOKED', 'CONFIRMED', '2025-06-11 17:00:00'),
+(34, 'BOOKED', 'CANCELLED', '2025-07-06 13:00:00'),
+(35, 'BOOKED', 'CONFIRMED', '2025-08-13 10:00:00'),
+(36, 'BOOKED', 'CONFIRMED', '2025-09-19 15:00:00'),
+(37, 'BOOKED', 'CHECKED_IN', '2025-10-23 12:00:00'),
+(38, 'BOOKED', 'CONFIRMED', '2025-11-29 19:00:00'),
+(39, 'BOOKED', 'CANCELLED', '2025-12-04 06:00:00'),
+(40, 'BOOKED', 'CONFIRMED', '2026-01-16 14:00:00'),
+(41, 'BOOKED', 'CONFIRMED', '2026-02-21 09:00:00'),
+(42, 'BOOKED', 'CHECKED_IN', '2026-03-26 18:00:00'),
+(43, 'BOOKED', 'REFUNDED', '2026-04-30 20:00:00'),
+(44, 'BOOKED', 'CONFIRMED', '2026-05-06 11:00:00'),
+(45, 'BOOKED', 'CONFIRMED', '2026-06-11 07:00:00');
+
+-- Thêm Payments cho các bookings mới (từ ID 16-30)
+INSERT INTO Payments (booking_id, amount, payment_method, payment_date, `status`) VALUES
+(16, 420.00,  'CREDIT_CARD',   '2025-04-15 13:00:00', 'SUCCESS'),
+(17, 850.00,  'E_WALLET',      '2025-05-20 10:00:00', 'PENDING'),
+(18, 1300.00, 'BANK_TRANSFER', '2025-06-10 19:00:00', 'SUCCESS'),
+(19, 280.00,  'CASH',          '2025-07-05 15:00:00', 'FAILED'),
+(20, 700.00,  'CREDIT_CARD',   '2025-08-12 12:00:00', 'SUCCESS'),
+(21, 500.00,  'E_WALLET',      '2025-09-18 17:00:00', 'SUCCESS'),
+(22, 950.00,  'BANK_TRANSFER', '2025-10-22 14:00:00', 'PENDING'),
+(23, 220.00,  'CASH',          '2025-11-28 21:00:00', 'SUCCESS'),
+(24, 800.00,  'CREDIT_CARD',   '2025-12-03 08:00:00', 'FAILED'),
+(25, 350.00,  'E_WALLET',      '2026-01-15 16:00:00', 'SUCCESS'),
+(26, 1100.00, 'BANK_TRANSFER', '2026-02-20 11:00:00', 'SUCCESS'),
+(27, 920.00,  'CREDIT_CARD',   '2026-03-25 20:00:00', 'SUCCESS'),
+(28, 240.00,  'CASH',          '2026-04-30 22:00:00', 'FAILED'),
+(29, 1050.00, 'E_WALLET',      '2026-05-05 13:00:00', 'SUCCESS'),
+(30, 300.00,  'BANK_TRANSFER', '2026-06-10 09:00:00', 'PENDING');
+
+-- Thêm Baggage cho các tickets mới (baggage_id tiếp tục từ 28)
+INSERT INTO Baggage (baggage_id, ticket_id, flight_id, baggage_tag, baggage_type, weight_kg, allowed_weight_kg, fee, `status`, special_handling) VALUES
+(28, 31, 1, 'BG20001', 'CHECKED',   19.0, 20.0, 0.00,   'CHECKED_IN', NULL),
+(29, 32, 1, 'BG20002', 'CARRY_ON',  8.5, 10.0, 0.00,   'LOADED',     NULL),
+(30, 33, 1, 'BG20003', 'CHECKED',   22.0, 20.0, 30.00,  'IN_TRANSIT', 'FRAGILE'),
+(31, 34, 1, 'BG20004', 'SPECIAL',   28.0, 25.0, 45.00,  'LOADED',     'SPORT_EQUIPMENT'),
+(32, 35, 1, 'BG20005', 'CHECKED',   18.5, 20.0, 0.00,   'CHECKED_IN', NULL),
+(33, 36, 2, 'BG20006', 'CHECKED',   21.0, 20.0, 15.00,  'LOADED',     NULL),
+(34, 37, 2, 'BG20007', 'CARRY_ON',  9.0, 10.0, 0.00,   'CHECKED_IN', NULL),
+(35, 38, 2, 'BG20008', 'CHECKED',   23.5, 20.0, 52.50,  'IN_TRANSIT', NULL),
+(36, 39, 2, 'BG20009', 'CHECKED',   19.0, 20.0, 0.00,   'LOADED',     NULL),
+(37, 40, 2, 'BG20010', 'SPECIAL',   30.0, 25.0, 75.00,  'CHECKED_IN', 'MUSICAL_INSTRUMENT'),
+(38, 41, 3, 'BG20011', 'CHECKED',   20.5, 20.0, 7.50,   'LOADED',     NULL),
+(39, 42, 3, 'BG20012', 'CARRY_ON',  7.0, 10.0, 0.00,   'CHECKED_IN', NULL),
+(40, 43, 3, 'BG20013', 'CHECKED',   24.0, 25.0, 0.00,   'IN_TRANSIT', 'PRIORITY'),
+(41, 44, 3, 'BG20014', 'CHECKED',   18.0, 20.0, 0.00,   'LOADED',     NULL),
+(42, 45, 3, 'BG20015', 'CARRY_ON',  8.0, 10.0, 0.00,   'CHECKED_IN', NULL);
+
+-- Thêm Baggage_History cho các baggage mới
+INSERT INTO Baggage_History (baggage_id, old_status, new_status, changed_at) VALUES
+(28, 'CREATED', 'CHECKED_IN', '2025-04-16 09:00:00'),
+(29, 'CREATED', 'CHECKED_IN', '2025-05-21 08:00:00'),
+(29, 'CHECKED_IN', 'LOADED', '2025-05-21 09:30:00'),
+(30, 'CREATED', 'CHECKED_IN', '2025-06-11 16:00:00'),
+(30, 'CHECKED_IN', 'LOADED', '2025-06-11 17:30:00'),
+(30, 'LOADED', 'IN_TRANSIT', '2025-06-11 19:00:00'),
+(31, 'CREATED', 'CHECKED_IN', '2025-07-06 12:00:00'),
+(31, 'CHECKED_IN', 'LOADED', '2025-07-06 13:30:00'),
+(32, 'CREATED', 'CHECKED_IN', '2025-08-13 09:00:00'),
+(33, 'CREATED', 'CHECKED_IN', '2025-09-19 14:00:00'),
+(33, 'CHECKED_IN', 'LOADED', '2025-09-19 15:30:00'),
+(34, 'CREATED', 'CHECKED_IN', '2025-10-23 11:00:00'),
+(35, 'CREATED', 'CHECKED_IN', '2025-11-29 18:00:00'),
+(35, 'CHECKED_IN', 'LOADED', '2025-11-29 19:30:00'),
+(35, 'LOADED', 'IN_TRANSIT', '2025-11-29 21:00:00'),
+(36, 'CREATED', 'CHECKED_IN', '2025-12-04 05:00:00'),
+(36, 'CHECKED_IN', 'LOADED', '2025-12-04 06:30:00'),
+(37, 'CREATED', 'CHECKED_IN', '2026-01-16 13:00:00'),
+(38, 'CREATED', 'CHECKED_IN', '2026-02-21 08:00:00'),
+(38, 'CHECKED_IN', 'LOADED', '2026-02-21 09:30:00'),
+(39, 'CREATED', 'CHECKED_IN', '2026-03-26 17:00:00'),
+(40, 'CREATED', 'CHECKED_IN', '2026-05-01 19:00:00'),
+(40, 'CHECKED_IN', 'LOADED', '2026-05-01 20:30:00'),
+(40, 'LOADED', 'IN_TRANSIT', '2026-05-01 22:00:00'),
+(41, 'CREATED', 'CHECKED_IN', '2026-05-06 10:00:00'),
+(41, 'CHECKED_IN', 'LOADED', '2026-05-06 11:30:00'),
+(42, 'CREATED', 'CHECKED_IN', '2026-06-11 06:00:00');
+
+-- Thêm Ticket_Baggage cho các tickets mới (id tiếp tục từ 53)
+INSERT INTO `ticket_baggage` (`id`, `ticket_id`, `baggage_type`, `carryon_id`, `checked_id`, `quantity`, `note`) VALUES
+(53, 31, 'carry_on', 1, NULL, 1, 'Xách tay mặc định First Class 14kg'),
+(54, 31, 'checked', NULL, 3, 1, 'Ký gửi 20kg'),
+(55, 32, 'carry_on', 1, NULL, 1, 'Xách tay 14kg'),
+(56, 33, 'carry_on', 2, NULL, 1, 'Xách tay mặc định Business 10kg'),
+(57, 33, 'checked', NULL, 3, 1, 'Ký gửi 20kg'),
+(58, 34, 'carry_on', 2, NULL, 1, 'Xách tay 10kg'),
+(59, 34, 'checked', NULL, 4, 1, 'Ký gửi 25kg - Sport Equipment'),
+(60, 35, 'carry_on', 3, NULL, 1, 'Xách tay mặc định Premium Economy 10kg'),
+(61, 36, 'carry_on', 3, NULL, 1, 'Xách tay 10kg'),
+(62, 36, 'checked', NULL, 3, 1, 'Ký gửi 20kg'),
+(63, 37, 'carry_on', 4, NULL, 1, 'Xách tay mặc định Economy 7kg'),
+(64, 38, 'carry_on', 4, NULL, 1, 'Xách tay 7kg'),
+(65, 38, 'checked', NULL, 3, 1, 'Ký gửi 20kg'),
+(66, 39, 'carry_on', 1, NULL, 1, 'Xách tay 14kg'),
+(67, 40, 'carry_on', 1, NULL, 1, 'Xách tay 14kg'),
+(68, 40, 'checked', NULL, 5, 1, 'Ký gửi 30kg - Musical Instrument'),
+(69, 41, 'carry_on', 2, NULL, 1, 'Xách tay 10kg'),
+(70, 41, 'checked', NULL, 3, 1, 'Ký gửi 20kg'),
+(71, 42, 'carry_on', 2, NULL, 1, 'Xách tay 10kg'),
+(72, 43, 'carry_on', 3, NULL, 1, 'Xách tay 10kg'),
+(73, 43, 'checked', NULL, 4, 1, 'Ký gửi 25kg - Priority'),
+(74, 44, 'carry_on', 3, NULL, 1, 'Xách tay 10kg'),
+(75, 44, 'checked', NULL, 3, 1, 'Ký gửi 20kg'),
+(76, 45, 'carry_on', 4, NULL, 1, 'Xách tay 7kg');

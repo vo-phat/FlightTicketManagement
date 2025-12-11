@@ -12,6 +12,7 @@ using GUI.Features.Profile;
 using GUI.Features.Route;
 using GUI.Features.Seat;
 using GUI.Features.Setting;
+using GUI.Features.Stats;
 // REMOVED: using GUI.Features.Stats; - Feature deleted
 using GUI.Features.Ticket;
 using GUI.Properties;
@@ -308,12 +309,11 @@ namespace GUI.MainApp {
                     }
                 },
 
-                // REMOVED: Reports menu - Stats feature deleted
-                // new() {
-                //     Key = NavKey.Reports, Text = "📈 Báo cáo",
-                //     IsVisible = r => HasPerm(Perm.Reports_View),
-                //     OnClick = () => LoadControl(new StatsControl())
-                // },
+                new() {
+                    Key = NavKey.Reports, Text = "📈 Báo cáo",
+                    IsVisible = r => HasPerm(Perm.Reports_View),
+                    OnClick = () => ShowControl("Stats", () => new StatsControl())
+                },
 
                 new() {
                     Key = NavKey.MyProfile, Text = "🙍 Hồ sơ của tôi",

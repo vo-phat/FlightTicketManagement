@@ -194,11 +194,13 @@ namespace GUI.Features.Airline.SubFeatures
             var f = e.CellStyle.Font ?? table.Font;
             var r = GetRects(e.CellBounds, f);
             Color link = Color.FromArgb(0, 92, 175), sep = Color.FromArgb(120, 120, 120), del = Color.FromArgb(220, 53, 69);
-            TextRenderer.DrawText(e.Graphics, TXT_VIEW, f, r.rcView.Location, link, TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(e.Graphics, SEP, f, new Point(r.rcView.Right, r.rcView.Top), sep, TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(e.Graphics, TXT_EDIT, f, r.rcEdit.Location, link, TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(e.Graphics, SEP, f, new Point(r.rcEdit.Right, r.rcEdit.Top), sep, TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(e.Graphics, TXT_DEL, f, r.rcDel.Location, del, TextFormatFlags.NoPadding);
+            TextRenderer.DrawText(e.Graphics, TXT_VIEW, f, r.rcView, link, TextFormatFlags.NoPadding);
+            var sepRect1 = new Rectangle(r.rcView.Right, r.rcView.Top, 20, r.rcView.Height);
+            TextRenderer.DrawText(e.Graphics, SEP, f, sepRect1, sep, TextFormatFlags.NoPadding);
+            TextRenderer.DrawText(e.Graphics, TXT_EDIT, f, r.rcEdit, link, TextFormatFlags.NoPadding);
+            var sepRect2 = new Rectangle(r.rcEdit.Right, r.rcEdit.Top, 20, r.rcEdit.Height);
+            TextRenderer.DrawText(e.Graphics, SEP, f, sepRect2, sep, TextFormatFlags.NoPadding);
+            TextRenderer.DrawText(e.Graphics, TXT_DEL, f, r.rcDel, del, TextFormatFlags.NoPadding);
         }
 
         private void Table_CellMouseMove(object? s, DataGridViewCellMouseEventArgs e)
