@@ -155,6 +155,25 @@ namespace BUS.FlightSeat
             }
         }
         #endregion
+
+        #region Lấy số ghế trống theo hạng vé
+        /// <summary>
+        /// Lấy số ghế trống (AVAILABLE) cho chuyến bay theo từng hạng vé
+        /// </summary>
+        /// <param name="flightId">Mã chuyến bay</param>
+        /// <returns>Dictionary với key = class_id, value = số ghế AVAILABLE</returns>
+        public Dictionary<int, int> GetAvailableSeatsByClass(int flightId)
+        {
+            try
+            {
+                return _dao.GetAvailableSeatsByClass(flightId);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi lấy số ghế trống theo hạng vé: {ex.Message}", ex);
+            }
+        }
+        #endregion
       
     }
 }
