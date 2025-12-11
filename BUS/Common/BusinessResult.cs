@@ -9,11 +9,11 @@ namespace BUS.Common
     {
         #region Properties
         public bool Success { get; set; }
-        public string Message { get; set; }
-        public object Data { get; set; }
-        public string ErrorCode { get; set; }
-        public string TechnicalMessage { get; set; }
-        public List<string> ValidationErrors { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public object? Data { get; set; }
+        public string? ErrorCode { get; set; }
+        public string? TechnicalMessage { get; set; }
+        public List<string> ValidationErrors { get; set; } = new List<string>();
 
         #endregion
 

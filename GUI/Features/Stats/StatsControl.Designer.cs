@@ -40,9 +40,16 @@ namespace GUI.Features.Stats
             this.comboBoxMonth = new System.Windows.Forms.ComboBox();
             this.chartRevenue = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.dgvRevenueRoutes = new System.Windows.Forms.DataGridView();
+            this.lblRevenueSummary = new System.Windows.Forms.Label();
             this.dgvFlights = new System.Windows.Forms.DataGridView();
+            this.lblFlightSummary = new System.Windows.Forms.Label();
             this.chartPayments = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.dgvPayments = new System.Windows.Forms.DataGridView();
+            this.lblPaymentSummary = new System.Windows.Forms.Label();
+            this.tabPageRoutesAircrafts = new System.Windows.Forms.TabPage();
+            this.dgvTopRoutes = new System.Windows.Forms.DataGridView();
+            this.dgvTopAircrafts = new System.Windows.Forms.DataGridView();
+            this.lblRoutesAircraftsSummary = new System.Windows.Forms.Label();
             this.tabControlStats.SuspendLayout();
             this.tabPageRevenue.SuspendLayout();
             this.tabPageFlights.SuspendLayout();
@@ -53,6 +60,9 @@ namespace GUI.Features.Stats
             ((System.ComponentModel.ISupportInitialize)(this.dgvFlights)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chartPayments)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvPayments)).BeginInit();
+            this.tabPageRoutesAircrafts.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvTopRoutes)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvTopAircrafts)).BeginInit();
             this.SuspendLayout();
             // 
             // tabControlStats
@@ -60,6 +70,7 @@ namespace GUI.Features.Stats
             this.tabControlStats.Controls.Add(this.tabPageRevenue);
             this.tabControlStats.Controls.Add(this.tabPageFlights);
             this.tabControlStats.Controls.Add(this.tabPagePayments);
+            this.tabControlStats.Controls.Add(this.tabPageRoutesAircrafts);
             this.tabControlStats.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControlStats.Location = new System.Drawing.Point(0, 50);
             this.tabControlStats.Name = "tabControlStats";
@@ -70,6 +81,7 @@ namespace GUI.Features.Stats
             // tabPageRevenue
             // 
             this.tabPageRevenue.Controls.Add(this.dgvRevenueRoutes);
+            this.tabPageRevenue.Controls.Add(this.lblRevenueSummary);
             this.tabPageRevenue.Controls.Add(this.chartRevenue);
             this.tabPageRevenue.Location = new System.Drawing.Point(4, 22);
             this.tabPageRevenue.Name = "tabPageRevenue";
@@ -82,6 +94,7 @@ namespace GUI.Features.Stats
             // tabPageFlights
             // 
             this.tabPageFlights.Controls.Add(this.dgvFlights);
+            this.tabPageFlights.Controls.Add(this.lblFlightSummary);
             this.tabPageFlights.Location = new System.Drawing.Point(4, 22);
             this.tabPageFlights.Name = "tabPageFlights";
             this.tabPageFlights.Padding = new System.Windows.Forms.Padding(3);
@@ -93,6 +106,7 @@ namespace GUI.Features.Stats
             // tabPagePayments
             // 
             this.tabPagePayments.Controls.Add(this.dgvPayments);
+            this.tabPagePayments.Controls.Add(this.lblPaymentSummary);
             this.tabPagePayments.Controls.Add(this.chartPayments);
             this.tabPagePayments.Location = new System.Drawing.Point(4, 22);
             this.tabPagePayments.Name = "tabPagePayments";
@@ -166,22 +180,44 @@ namespace GUI.Features.Stats
             this.chartRevenue.TabIndex = 0;
             this.chartRevenue.Text = "chart1";
             // 
+            // lblRevenueSummary
+            // 
+            this.lblRevenueSummary.Dock = System.Windows.Forms.DockStyle.Top;
+            this.lblRevenueSummary.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold);
+            this.lblRevenueSummary.Location = new System.Drawing.Point(3, 203);
+            this.lblRevenueSummary.Name = "lblRevenueSummary";
+            this.lblRevenueSummary.Padding = new System.Windows.Forms.Padding(10, 5, 10, 5);
+            this.lblRevenueSummary.Size = new System.Drawing.Size(786, 30);
+            this.lblRevenueSummary.TabIndex = 2;
+            this.lblRevenueSummary.Text = "Tổng doanh thu: 0 VND";
+            // 
             // dgvRevenueRoutes
             // 
             this.dgvRevenueRoutes.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvRevenueRoutes.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvRevenueRoutes.Location = new System.Drawing.Point(3, 203);
+            this.dgvRevenueRoutes.Location = new System.Drawing.Point(3, 233);
             this.dgvRevenueRoutes.Name = "dgvRevenueRoutes";
-            this.dgvRevenueRoutes.Size = new System.Drawing.Size(786, 168);
+            this.dgvRevenueRoutes.Size = new System.Drawing.Size(786, 138);
             this.dgvRevenueRoutes.TabIndex = 1;
+            // 
+            // lblFlightSummary
+            // 
+            this.lblFlightSummary.Dock = System.Windows.Forms.DockStyle.Top;
+            this.lblFlightSummary.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold);
+            this.lblFlightSummary.Location = new System.Drawing.Point(3, 3);
+            this.lblFlightSummary.Name = "lblFlightSummary";
+            this.lblFlightSummary.Padding = new System.Windows.Forms.Padding(10, 5, 10, 5);
+            this.lblFlightSummary.Size = new System.Drawing.Size(786, 30);
+            this.lblFlightSummary.TabIndex = 1;
+            this.lblFlightSummary.Text = "Tổng chuyến bay: 0";
             // 
             // dgvFlights
             // 
             this.dgvFlights.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvFlights.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvFlights.Location = new System.Drawing.Point(3, 3);
+            this.dgvFlights.Location = new System.Drawing.Point(3, 33);
             this.dgvFlights.Name = "dgvFlights";
-            this.dgvFlights.Size = new System.Drawing.Size(786, 368);
+            this.dgvFlights.Size = new System.Drawing.Size(786, 338);
             this.dgvFlights.TabIndex = 0;
             // 
             // chartPayments
@@ -193,14 +229,66 @@ namespace GUI.Features.Stats
             this.chartPayments.TabIndex = 0;
             this.chartPayments.Text = "chart2";
             // 
+            // lblPaymentSummary
+            // 
+            this.lblPaymentSummary.Dock = System.Windows.Forms.DockStyle.Top;
+            this.lblPaymentSummary.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold);
+            this.lblPaymentSummary.Location = new System.Drawing.Point(300, 0);
+            this.lblPaymentSummary.Name = "lblPaymentSummary";
+            this.lblPaymentSummary.Padding = new System.Windows.Forms.Padding(10, 5, 10, 5);
+            this.lblPaymentSummary.Size = new System.Drawing.Size(492, 30);
+            this.lblPaymentSummary.TabIndex = 2;
+            this.lblPaymentSummary.Text = "Tổng giao dịch: 0";
+            // 
             // dgvPayments
             // 
             this.dgvPayments.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvPayments.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvPayments.Location = new System.Drawing.Point(300, 0);
+            this.dgvPayments.Location = new System.Drawing.Point(300, 30);
             this.dgvPayments.Name = "dgvPayments";
-            this.dgvPayments.Size = new System.Drawing.Size(492, 374);
+            this.dgvPayments.Size = new System.Drawing.Size(492, 344);
             this.dgvPayments.TabIndex = 1;
+            // 
+            // tabPageRoutesAircrafts
+            // 
+            this.tabPageRoutesAircrafts.Controls.Add(this.dgvTopAircrafts);
+            this.tabPageRoutesAircrafts.Controls.Add(this.dgvTopRoutes);
+            this.tabPageRoutesAircrafts.Controls.Add(this.lblRoutesAircraftsSummary);
+            this.tabPageRoutesAircrafts.Location = new System.Drawing.Point(4, 22);
+            this.tabPageRoutesAircrafts.Name = "tabPageRoutesAircrafts";
+            this.tabPageRoutesAircrafts.Size = new System.Drawing.Size(792, 374);
+            this.tabPageRoutesAircrafts.TabIndex = 3;
+            this.tabPageRoutesAircrafts.Text = "Tuyến bay & Máy bay";
+            this.tabPageRoutesAircrafts.UseVisualStyleBackColor = true;
+            // 
+            // dgvTopRoutes
+            // 
+            this.dgvTopRoutes.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvTopRoutes.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvTopRoutes.Location = new System.Drawing.Point(0, 30);
+            this.dgvTopRoutes.Name = "dgvTopRoutes";
+            this.dgvTopRoutes.Size = new System.Drawing.Size(792, 172);
+            this.dgvTopRoutes.TabIndex = 1;
+            // 
+            // dgvTopAircrafts
+            // 
+            this.dgvTopAircrafts.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvTopAircrafts.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.dgvTopAircrafts.Location = new System.Drawing.Point(0, 202);
+            this.dgvTopAircrafts.Name = "dgvTopAircrafts";
+            this.dgvTopAircrafts.Size = new System.Drawing.Size(792, 172);
+            this.dgvTopAircrafts.TabIndex = 2;
+            // 
+            // lblRoutesAircraftsSummary
+            // 
+            this.lblRoutesAircraftsSummary.Dock = System.Windows.Forms.DockStyle.Top;
+            this.lblRoutesAircraftsSummary.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold);
+            this.lblRoutesAircraftsSummary.Location = new System.Drawing.Point(0, 0);
+            this.lblRoutesAircraftsSummary.Name = "lblRoutesAircraftsSummary";
+            this.lblRoutesAircraftsSummary.Padding = new System.Windows.Forms.Padding(10, 5, 10, 5);
+            this.lblRoutesAircraftsSummary.Size = new System.Drawing.Size(792, 30);
+            this.lblRoutesAircraftsSummary.TabIndex = 0;
+            this.lblRoutesAircraftsSummary.Text = "Thống kê tuyến bay và máy bay";
             // 
             // StatsControl
             // 
@@ -214,6 +302,7 @@ namespace GUI.Features.Stats
             this.tabPageRevenue.ResumeLayout(false);
             this.tabPageFlights.ResumeLayout(false);
             this.tabPagePayments.ResumeLayout(false);
+            this.tabPageRoutesAircrafts.ResumeLayout(false);
             this.panelFilters.ResumeLayout(false);
             this.panelFilters.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chartRevenue)).EndInit();
@@ -221,6 +310,8 @@ namespace GUI.Features.Stats
             ((System.ComponentModel.ISupportInitialize)(this.dgvFlights)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.chartPayments)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvPayments)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvTopRoutes)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvTopAircrafts)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -239,8 +330,15 @@ namespace GUI.Features.Stats
         private System.Windows.Forms.ComboBox comboBoxMonth;
         private System.Windows.Forms.DataVisualization.Charting.Chart chartRevenue;
         private System.Windows.Forms.DataGridView dgvRevenueRoutes;
+        private System.Windows.Forms.Label lblRevenueSummary;
         private System.Windows.Forms.DataGridView dgvFlights;
+        private System.Windows.Forms.Label lblFlightSummary;
         private System.Windows.Forms.DataVisualization.Charting.Chart chartPayments;
         private System.Windows.Forms.DataGridView dgvPayments;
+        private System.Windows.Forms.Label lblPaymentSummary;
+        private System.Windows.Forms.TabPage tabPageRoutesAircrafts;
+        private System.Windows.Forms.DataGridView dgvTopRoutes;
+        private System.Windows.Forms.DataGridView dgvTopAircrafts;
+        private System.Windows.Forms.Label lblRoutesAircraftsSummary;
     }
 }

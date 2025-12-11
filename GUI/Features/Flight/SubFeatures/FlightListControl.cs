@@ -399,9 +399,40 @@ namespace GUI.Features.Flight.SubFeatures
                     criteria.SortBy = "DepartureTime";
                     criteria.SortOrder = "DESC";
 
-                    // Execute search at database level
-                    string searchMessage;
-                    _allFlights = _bus.SearchFlightsAdvanced(criteria, out searchMessage);
+                    // Execute search - fetch all and filter client-side for now
+                    _allFlights = _bus.GetAllFlightsWithDetails();
+                    
+                    // Apply filters
+                    var filtered = _allFlights.AsEnumerable();
+                    
+                    if (!string.IsNullOrWhiteSpace(criteria.FlightNumber))
+                    {
+                        filtered = filtered.Where(f => f.FlightNumber != null && f.FlightNumber.Contains(criteria.FlightNumber, StringComparison.OrdinalIgnoreCase));
+                    }
+                    
+                    if (criteria.DepartureAirportId.HasValue)
+                    {
+                        filtered = filtered.Where(f => f.DepartureAirportId == criteria.DepartureAirportId.Value);
+                    }
+                    
+                    if (criteria.ArrivalAirportId.HasValue)
+                    {
+                        filtered = filtered.Where(f => f.ArrivalAirportId == criteria.ArrivalAirportId.Value);
+                    }
+                    
+                    if (criteria.Status.HasValue)
+                    {
+                        filtered = filtered.Where(f => f.Status == criteria.Status.Value);
+                    }
+                    
+                    if (criteria.DepartureDateFrom.HasValue && criteria.DepartureDateTo.HasValue)
+                    {
+                        filtered = filtered.Where(f => f.DepartureTime.HasValue && 
+                            f.DepartureTime.Value >= criteria.DepartureDateFrom.Value &&
+                            f.DepartureTime.Value <= criteria.DepartureDateTo.Value);
+                    }
+                    
+                    _allFlights = filtered.ToList();
                     
                     // Debug: Show search details if no results
                     if (_allFlights.Count == 0)
