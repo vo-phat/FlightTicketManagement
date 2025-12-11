@@ -3,6 +3,7 @@ using BUS.Flight;
 using DTO.Booking;
 using DTO.Flight;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -19,6 +20,10 @@ namespace GUI.Features.Flight.SubFeatures
         private int _selectedCabinClassId;
         private CheckBox chkRoundTrip;
         private NumericUpDown numPassengers;
+        
+        // Seat availability tracking
+        private Dictionary<int, int> _availableSeats; // class_id -> available count
+        private BUS.FlightSeat.FlightSeatBUS _seatBUS = new BUS.FlightSeat.FlightSeatBUS();
         
         // Round-trip state
         private DialogMode _currentMode = DialogMode.Outbound;
@@ -37,6 +42,18 @@ namespace GUI.Features.Flight.SubFeatures
         {
             _flight = flight;
             _allFlights = allFlights ?? new List<FlightWithDetailsDTO>();
+            
+            // Load available seats for this flight
+            try
+            {
+                _availableSeats = _seatBUS.GetAvailableSeatsByClass(flight.FlightId);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi tải thông tin ghế trống: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _availableSeats = new Dictionary<int, int>();
+            }
+            
             InitializeComponent();
         }
 
@@ -184,6 +201,22 @@ namespace GUI.Features.Flight.SubFeatures
                         return;
                     }
 
+                    // Validate seat availability
+                    int requestedSeats = (int)numPassengers.Value;
+                    int availableSeats = _availableSeats.ContainsKey(_selectedCabinClassId) ? _availableSeats[_selectedCabinClassId] : 0;
+                    
+                    if (requestedSeats > availableSeats)
+                    {
+                        MessageBox.Show(
+                            $"Không đủ chỗ trống!\n\n" +
+                            $"Hạng vé đã chọn chỉ còn {availableSeats} chỗ trống.\n" +
+                            $"Vui lòng chọn ít hành khách hơn hoặc chọn hạng vé khác.",
+                            "Không đủ chỗ",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+                        return;
+                    }
+
                     // Create outbound booking
                     var groupId = chkRoundTrip.Checked ? Guid.NewGuid() : (Guid?)null;
                     
@@ -226,6 +259,22 @@ namespace GUI.Features.Flight.SubFeatures
                     if (string.IsNullOrEmpty(_selectedCabinClass))
                     {
                         MessageBox.Show("Vui lòng chọn hạng vé cho chuyến về.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    // Validate seat availability for return flight
+                    int requestedSeats = (int)numPassengers.Value;
+                    int availableSeats = _availableSeats.ContainsKey(_selectedCabinClassId) ? _availableSeats[_selectedCabinClassId] : 0;
+                    
+                    if (requestedSeats > availableSeats)
+                    {
+                        MessageBox.Show(
+                            $"Không đủ chỗ trống cho chuyến về!\n\n" +
+                            $"Hạng vé đã chọn chỉ còn {availableSeats} chỗ trống.\n" +
+                            $"Vui lòng chọn ít hành khách hơn hoặc chọn hạng vé khác.",
+                            "Không đủ chỗ",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
                         return;
                     }
 
@@ -275,14 +324,19 @@ namespace GUI.Features.Flight.SubFeatures
 
         private void CreateCabinClassOption(string className, string displayName, string icon, Color color, int x, int y, int cabinClassId)
         {
+            // Get available seats for this class
+            int availableCount = _availableSeats.ContainsKey(cabinClassId) ? _availableSeats[cabinClassId] : 0;
+            string availabilityText = availableCount > 0 ? $"(còn {availableCount} chỗ)" : "(hết chỗ)";
+            
             var panel = new Panel
             {
                 Location = new Point(x, y),
                 Size = new Size(540, 50),
                 BorderStyle = BorderStyle.FixedSingle,
-                BackColor = Color.White,
-                Cursor = Cursors.Hand,
-                Tag = (className, cabinClassId)
+                BackColor = availableCount > 0 ? Color.White : Color.FromArgb(240, 240, 240),
+                Cursor = availableCount > 0 ? Cursors.Hand : Cursors.No,
+                Tag = (className, cabinClassId),
+                Enabled = availableCount > 0
             };
 
             var lblIcon = new Label
@@ -296,9 +350,9 @@ namespace GUI.Features.Flight.SubFeatures
 
             var lblName = new Label
             {
-                Text = displayName,
+                Text = $"{displayName} {availabilityText}",
                 Font = new Font("Segoe UI", 11, FontStyle.Bold),
-                ForeColor = color,
+                ForeColor = availableCount > 0 ? color : Color.Gray,
                 AutoSize = true,
                 Location = new Point(60, 15)
             };
@@ -307,6 +361,17 @@ namespace GUI.Features.Flight.SubFeatures
             // Click event for the entire panel
             EventHandler clickHandler = (s, e) =>
             {
+                // Only allow selection if seats are available
+                if (availableCount == 0)
+                {
+                    MessageBox.Show(
+                        $"Hạng vé {displayName} đã hết chỗ.\nVui lòng chọn hạng vé khác.",
+                        "Hết chỗ",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                    return;
+                }
+                
                 _selectedCabinClass = className;
                 _selectedCabinClassId = cabinClassId;
                 
@@ -421,6 +486,18 @@ namespace GUI.Features.Flight.SubFeatures
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
+                
+                // Load available seats for return flight
+                try
+                {
+                    _availableSeats = _seatBUS.GetAvailableSeatsByClass(_selectedReturnFlight.FlightId);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi khi tải thông tin ghế trống cho chuyến về: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    _availableSeats = new Dictionary<int, int>();
+                }
+                
                 ShowReturnCabinSelection();
             };
             Controls.Add(btnContinue);
@@ -512,6 +589,22 @@ namespace GUI.Features.Flight.SubFeatures
                 {
                     MessageBox.Show("Vui lòng chọn hạng vé cho chuyến về.", "Thông báo",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Validate seat availability for return flight  
+                int requestedSeats = _outboundBooking.TicketCount;
+                int availableSeats = _availableSeats.ContainsKey(_selectedCabinClassId) ? _availableSeats[_selectedCabinClassId] : 0;
+                
+                if (requestedSeats > availableSeats)
+                {
+                    MessageBox.Show(
+                        $"Không đủ chỗ trống cho chuyến về!\n\n" +
+                        $"Hạng vé đã chọn chỉ còn {availableSeats} chỗ trống.\n" +
+                        $"Vui lòng chọn ít hành khách hơn hoặc chọn hạng vé khác.",
+                        "Không đủ chỗ",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
                     return;
                 }
 
