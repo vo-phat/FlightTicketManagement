@@ -8,11 +8,16 @@ namespace DTO.Ticket
 {
     public class TicketHistoryDTO
     {
-        public string TicketNumber { get; set; }
-        public DateTime issue_date { get; set; }
-        public string status { get; set; }
-        public string old_status { get; set; }
-        public string new_status { get; set; }
-        public DateTime changed_at { get; set; }
+        public string TicketNumber { get; set; }          // Mã vé
+        public string PassengerName { get; set; }         // Tên hành khách
+        public string FlightCode { get; set; }            // Mã chuyến bay
+        public string DepartureAirport { get; set; }
+        public string ArrivalAirport { get; set; }
+        public DateTime DepartureTime { get; set; }       // Ngày giờ bay
+        public string SeatCode { get; set; }              // Ghế
+        public string Status { get; set; }                // Upcoming / Completed / Cancelled
+        public string? BaggageSummary { get; set; }       // Hành lý gộp vào 1 dòng
     }
+
+
 }

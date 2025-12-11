@@ -32,7 +32,7 @@ namespace DTO.Ticket
         // ============================
 
         public int? SeatId { get; set; }            // seat_id trong bảng seat
-        public int? FlightSeatId { get; set; }      // flight_seat_id nếu chọn ghế từ bảng flight_seat
+        public int FlightSeatId { get; set; }      // flight_seat_id nếu chọn ghế từ bảng flight_seat
         public string? SeatNumber { get; set; }     // VD: "12A"
         public int? ClassId { get; set; }           // hạng ghế (economy/business/vip)
 
@@ -51,7 +51,7 @@ namespace DTO.Ticket
         // ============================
         // 5. Ticket info
         // ============================
-
+        public decimal? TicketPrice { get; set; }   // giá vé + hành lý
         public string? TicketNumber { get; set; }   // BUS có thể auto-generate
         public string? Note { get; set; }           // ghi chú của vé
     }

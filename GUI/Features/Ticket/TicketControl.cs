@@ -20,7 +20,6 @@ namespace GUI.Features.Ticket {
         private const int TAB_HISTORY = 1;
         private const int TAB_TICKET_OPS = 2;
         private const int TAB_PASSENGER_INFO = 3;
-
         public TicketControl() {
             InitializeComponent();
             InitializeChildControls();
@@ -38,7 +37,7 @@ namespace GUI.Features.Ticket {
         public void LoadBookingData(DTO.Booking.BookingRequestDTO outboundBooking, DTO.Booking.BookingRequestDTO returnBooking = null)
         {
             // Chuyển sang tab Thông tin khách hàng
-            switchTab(TAB_PASSENGER_INFO);
+            switchTab(TAB_BOOKING);
             
             // Truyền dữ liệu booking vào control (both outbound and return if applicable)
             frmPassengerInfoControl.LoadBookingRequest(outboundBooking, returnBooking);
@@ -46,7 +45,7 @@ namespace GUI.Features.Ticket {
 
         // Khởi tạo và gắn các UserControl con vào các panel tương ứng
         private void InitializeChildControls() {
-            bookingSearchControl = new BookingSearchControl();
+            //bookingSearchControl = new BookingSearchControl();
             historyTicketControl = new HistoryTicketControl();
             ticketOpsControl = new TicketOpsControl();
             frmPassengerInfoControl = new frmPassengerInfoControl();
@@ -58,19 +57,19 @@ namespace GUI.Features.Ticket {
             pnlFrmPassengerInfo.Dock = DockStyle.Fill;
 
             // Dock control con
-            bookingSearchControl.Dock = DockStyle.Fill;
+            //bookingSearchControl.Dock = DockStyle.Fill;
             historyTicketControl.Dock = DockStyle.Fill;
             ticketOpsControl.Dock = DockStyle.Fill;
             frmPassengerInfoControl.Dock = DockStyle.Fill;
 
             // Add control con vào panel
-            pnlBookingSearch.Controls.Add(bookingSearchControl);
+            //pnlBookingSearch.Controls.Add(bookingSearchControl);
             pnlHistoryTicket.Controls.Add(historyTicketControl);
             pnlTicketOps.Controls.Add(ticketOpsControl);
             pnlFrmPassengerInfo.Controls.Add(frmPassengerInfoControl);
 
             // Đảm bảo content panel chứa đủ 4 panel con
-            pnlContentTicket.Controls.Add(pnlBookingSearch);
+            //pnlContentTicket.Controls.Add(pnlBookingSearch);
             pnlContentTicket.Controls.Add(pnlHistoryTicket);
             pnlContentTicket.Controls.Add(pnlTicketOps);
             pnlContentTicket.Controls.Add(pnlFrmPassengerInfo);
@@ -105,7 +104,7 @@ namespace GUI.Features.Ticket {
         }
 
         private void btnFrmPassengerInfoTiket_Click(object sender, EventArgs e) {
-            switchTab(TAB_PASSENGER_INFO);
+            switchTab(TAB_BOOKING);
         }
 
         // ==========================
@@ -122,7 +121,7 @@ namespace GUI.Features.Ticket {
             // Mở panel tương ứng
             switch (index) {
                 case TAB_BOOKING:
-                    pnlBookingSearch.Visible = true;
+                    pnlFrmPassengerInfo.Visible = true;
                     break;
                 case TAB_HISTORY:
                     pnlHistoryTicket.Visible = true;
@@ -130,9 +129,9 @@ namespace GUI.Features.Ticket {
                 case TAB_TICKET_OPS:
                     pnlTicketOps.Visible = true;
                     break;
-                case TAB_PASSENGER_INFO:
-                    pnlFrmPassengerInfo.Visible = true;
-                    break;
+                //case TAB_PASSENGER_INFO:
+                //    pnlFrmPassengerInfo.Visible = true;
+                //    break;
             }
 
             // Rebuild header: tab active = PrimaryButton, inactive = SecondaryButton
@@ -151,7 +150,8 @@ namespace GUI.Features.Ticket {
             if (activeIndex == TAB_PASSENGER_INFO)
                 btnFrmPassengerInfoTiket = new PrimaryButton("Thông tin khách hàng");
             else
-                btnFrmPassengerInfoTiket = new SecondaryButton("Thông tin khách hàng");
+                //btnFrmPassengerInfoTiket = new SecondaryButton("Thông tin khách hàng");
+                btnFrmPassengerInfoTiket = new PrimaryButton("Thông tin khách hàng");
 
             btnFrmPassengerInfoTiket.AutoSize = true;
             btnFrmPassengerInfoTiket.Click += btnFrmPassengerInfoTiket_Click;
@@ -159,7 +159,10 @@ namespace GUI.Features.Ticket {
 
             // --- Tab: Quản lý vé (idx = 2) ---
             if (activeIndex == TAB_TICKET_OPS)
-                btnOpsTicket = new PrimaryButton("Quản lý vé");
+            {
+                btnOpsTicket = new SecondaryButton("Quản lý vé");
+                //btnOpsTicket = new PrimaryButton("Quản lý vé");
+            }
             else
                 btnOpsTicket = new SecondaryButton("Quản lý vé");
 
@@ -169,7 +172,8 @@ namespace GUI.Features.Ticket {
 
             // --- Tab: Lịch sử vé (idx = 1) ---
             if (activeIndex == TAB_HISTORY)
-                btnHistoryTicketAdmin = new PrimaryButton("Lịch sử vé");
+                //btnHistoryTicketAdmin = new PrimaryButton("Lịch sử vé");
+            btnHistoryTicketAdmin = new SecondaryButton("Lịch sử vé");
             else
                 btnHistoryTicketAdmin = new SecondaryButton("Lịch sử vé");
 
