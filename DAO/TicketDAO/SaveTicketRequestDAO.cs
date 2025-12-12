@@ -1,8 +1,9 @@
-﻿using DTO.Ticket;
+﻿using DAO.Payment;
+using DTO.Payment;
+using DTO.Ticket;
 using MySqlConnector;
 using System;
 using System.Collections.Generic;
-
 namespace DAO.TicketDAO
 {
     public class SaveTicketRequestDAO
@@ -42,7 +43,17 @@ namespace DAO.TicketDAO
                             InsertBaggage(conn, tran, ticketId, dto);
                             UpdateSeatStatus(conn, tran, dto.FlightSeatId);
                         }
+                        // 4) GHI NHẬN PAYMENT
+                        var paymentDto = new PaymentDTO
+                        {
+                            BookingId = bookingId,
+                            Amount = totalAmount,
+                            PaymentMethod = "CREDIT_CARD", // hoặc lấy từ UI
+                            PaymentDate = DateTime.Now,
+                            Status = "SUCCESS"
+                        };
 
+                        new PaymentDAO().RecordPayment(paymentDto, tran);
                         tran.Commit();
                         return bookingId;
                     }
@@ -101,6 +112,17 @@ namespace DAO.TicketDAO
                             InsertBaggage(conn, tran, ticketIdIn, inbound[i]);
                             UpdateSeatStatus(conn, tran, inbound[i].FlightSeatId);
                         }
+                        // 4) GHI NHẬN PAYMENT
+                        var paymentDto = new PaymentDTO
+                        {
+                            BookingId = bookingId,
+                            Amount = totalAmount,
+                            PaymentMethod = "CREDIT_CARD",
+                            PaymentDate = DateTime.Now,
+                            Status = "SUCCESS"
+                        };
+
+                        new PaymentDAO().RecordPayment(paymentDto, tran);
 
                         tran.Commit();
                         return bookingId;

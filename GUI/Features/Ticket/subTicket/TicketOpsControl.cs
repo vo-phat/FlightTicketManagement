@@ -190,17 +190,35 @@ namespace GUI.Features.Ticket.subTicket
             {
                 try
                 {
-                    new CancelTicketBUS()
-                        .CancelTicket(dto, currentAdminId);
+                    // ✅ Check nghiệp vụ nhanh
+                    if (dto.Status != "BOOKED")
+                    {
+                        MessageBox.Show("Chỉ được hủy vé đang BOOKED");
+                        return;
+                    }
+
+                    // ✅ MỞ FORM CHỌN LÝ DO
+                    using (var frm = new frmCancelReason())
+                    {
+                        if (frm.ShowDialog(this) != DialogResult.OK)
+                            return;
+
+                        string reason = frm.SelectedReason;
+
+                        // ✅ GỌI BUS VỚI LÝ DO THẬT
+                        new CancelTicketBUS()
+                            .CancelTicket(dto, currentAdminId, reason);
+                    }
 
                     MessageBox.Show("Hủy vé thành công");
-                    ReloadGrid(); // load lại danh sách
+                    ReloadGrid();
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message, "Lỗi");
                 }
             }
+
             else if (colName == "btnRefund")
             {
                 try
@@ -233,7 +251,12 @@ namespace GUI.Features.Ticket.subTicket
 
             else if (colName == "btnView")
             {
-                MessageBox.Show($"Xem vé: {dto.TicketNumber}");
+                var detail = new TicketDetailBUS()
+                    .GetTicketDetail(dto.TicketId);
+
+                using var frm = new frmTicketDetail();
+                frm.LoadData(detail);
+                frm.ShowDialog();
             }
             else if (colName == "btnBaggage")
             {
