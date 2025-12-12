@@ -142,7 +142,7 @@ namespace GUI.Features.FareRules.SubFeatures
 
             // Row 1
             cbRoute = CreateCombo("Tuyến bay", grayBg, inputMargin);
-            cbCabin = CreateCombo("Hạng vé (Cabin Class)", grayBg, inputMargin);
+            cbCabin = CreateCombo("Hạng ghế (Cabin Class)", grayBg, inputMargin);
             cbFareType = CreateCombo("Loại vé", grayBg, inputMargin);
             cbFareType.Items.AddRange(new object[] { "Standard", "Flex", "Saver", "Promo" });
 
@@ -219,7 +219,7 @@ namespace GUI.Features.FareRules.SubFeatures
             // Style Grid Columns
             table.Columns.Add(CreateCol("ruleId", "ID", 5));
             table.Columns.Add(CreateCol("route", "Tuyến bay", 15));
-            table.Columns.Add(CreateCol("cabin", "Hạng vé", 10));
+            table.Columns.Add(CreateCol("cabin", "Hạng ghế", 10));
             table.Columns.Add(CreateCol("fareType", "Loại", 10));
             table.Columns.Add(CreateCol("season", "Mùa", 8));
             table.Columns.Add(CreateCol("effective", "Hiệu lực", 10));
@@ -443,7 +443,7 @@ namespace GUI.Features.FareRules.SubFeatures
         private bool ValidateInput()
         {
             if (cbRoute.SelectedItem == null) { MessageBox.Show("Chọn tuyến bay!"); return false; }
-            if (cbCabin.SelectedIndex < 0) { MessageBox.Show("Chọn hạng vé!"); return false; }
+            if (cbCabin.SelectedIndex < 0) { MessageBox.Show("Chọn hạng ghế!"); return false; }
             if (string.IsNullOrWhiteSpace(txtPrice.Text)) { MessageBox.Show("Nhập giá vé!"); return false; }
             return true;
         }
