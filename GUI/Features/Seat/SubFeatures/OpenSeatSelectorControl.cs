@@ -6,10 +6,13 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
+
 namespace GUI.Features.Seat.SubFeatures
 {
     public class OpenSeatSelectorControl : UserControl
     {
+        private FlowLayoutPanel legendPanel;
+
         private readonly OpenSeatSelectorBUS _bus = new();
         private Panel seatPanel;
         private Label lblPrice;
@@ -17,20 +20,27 @@ namespace GUI.Features.Seat.SubFeatures
 
         private SeatSelectDTO selectedSeat;
         private int SelectedClassId;
+        public List<int> TakenSeats { get; set; } = new();
 
-        // màu theo hạng ghế
-        private readonly Color COLOR_FIRST = Color.LightPink;
-        private readonly Color COLOR_BUSINESS = Color.LightSkyBlue;
-        private readonly Color COLOR_PREMIUM = Color.Khaki;
-        private readonly Color COLOR_ECONOMY = Color.LightGreen;
+        // ======================
+        // MÀU THEO HẠNG VÉ (KHỚP UI)
+        // ======================
+        private readonly Color COLOR_FIRST = Color.Gold;                 // Hạng Nhất
+        private readonly Color COLOR_BUSINESS = Color.DodgerBlue;        // Thương Gia
+        private readonly Color COLOR_PREMIUM = Color.MediumSeaGreen;    // Phổ Thông Đặc Biệt
+        private readonly Color COLOR_ECONOMY = Color.LightGray;          // Phổ Thông
 
-        // màu trạng thái
-        private readonly Color COLOR_BOOKED = Color.LightGray;
+        // ======================
+        // MÀU TRẠNG THÁI
+        // ======================
+        private readonly Color COLOR_BOOKED = Color.DarkGray;
         private readonly Color COLOR_BLOCKED = Color.IndianRed;
-        private readonly Color COLOR_SELECTED = Color.Orange;
+        private readonly Color COLOR_SELECTED = Color.Black;             // GHẾ ĐANG CHỌN
+
 
         public OpenSeatSelectorControl()
         {
+            
             InitializeUI();
         }
 
@@ -53,6 +63,27 @@ namespace GUI.Features.Seat.SubFeatures
                 Padding = new Padding(40)
             };
 
+            legendPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 80,
+                Padding = new Padding(10),
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = true,
+                BackColor = Color.White
+            };
+
+            // ===== Legend items =====
+            legendPanel.Controls.Add(CreateLegendItem(COLOR_FIRST, "Hạng Nhất"));
+            legendPanel.Controls.Add(CreateLegendItem(COLOR_BUSINESS, "Hạng Thương Gia"));
+            legendPanel.Controls.Add(CreateLegendItem(COLOR_PREMIUM, "Phổ Thông Đặc Biệt"));
+            legendPanel.Controls.Add(CreateLegendItem(COLOR_ECONOMY, "Phổ Thông"));
+
+            legendPanel.Controls.Add(CreateLegendItem(COLOR_SELECTED, "Ghế đang chọn", true));
+            legendPanel.Controls.Add(CreateLegendItem(COLOR_BOOKED, "Đã đặt"));
+            legendPanel.Controls.Add(CreateLegendItem(COLOR_BLOCKED, "Không khả dụng"));
+            legendPanel.Controls.Add(CreateLegendItem(Color.DarkOrange, "Đang giữ"));
+
             btnConfirm = new Button
             {
                 Text = "Xác nhận",
@@ -64,9 +95,11 @@ namespace GUI.Features.Seat.SubFeatures
             };
             btnConfirm.Click += BtnConfirm_Click;
 
-            Controls.Add(btnConfirm);
-            Controls.Add(seatPanel);
-            Controls.Add(lblPrice);
+            // ===== THỨ TỰ ADD CONTROLS (RẤT QUAN TRỌNG) =====
+            Controls.Add(btnConfirm);   // Bottom (dưới cùng)
+            Controls.Add(legendPanel);  // Trên nút xác nhận
+            Controls.Add(seatPanel);    // Chiếm phần giữa
+            Controls.Add(lblPrice);     // Trên cùng
         }
 
         public void LoadSeats(int flightId, int classId)
@@ -160,7 +193,11 @@ namespace GUI.Features.Seat.SubFeatures
         {
             var btn = sender as Button;
             var seat = (SeatSelectDTO)btn.Tag;
-
+            if (TakenSeats.Contains(seat.FlightSeatId))
+            {
+                MessageBox.Show($"Ghế {seat.SeatNumber} đã được hành khách khác chọn!", "Cảnh báo");
+                return;
+            }
             // Kiểm tra class mismatch
             if (seat.ClassId != SelectedClassId)
             {
@@ -188,9 +225,13 @@ namespace GUI.Features.Seat.SubFeatures
 
         private Color GetSeatColor(SeatSelectDTO seat)
         {
+            // Trạng thái ưu tiên cao nhất
             if (seat.SeatStatus == "BOOKED") return COLOR_BOOKED;
             if (seat.SeatStatus == "BLOCKED") return COLOR_BLOCKED;
+            if (TakenSeats.Contains(seat.FlightSeatId))
+                return Color.DarkOrange; // ghế đang bị giữ trong booking khác
 
+            // Màu theo hạng vé
             return seat.ClassId switch
             {
                 1 => COLOR_FIRST,
@@ -200,6 +241,42 @@ namespace GUI.Features.Seat.SubFeatures
                 _ => Color.White
             };
         }
+        // tạo legend cho chọn ghế
+        private Control CreateLegendItem(Color color, string text, bool isSelected = false)
+        {
+            var box = new Panel
+            {
+                Width = 22,
+                Height = 22,
+                BackColor = color,
+                Margin = new Padding(8, 10, 4, 10),
+                BorderStyle = BorderStyle.FixedSingle
+            };
+
+            var label = new Label
+            {
+                Text = text,
+                AutoSize = true,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Margin = new Padding(0, 12, 16, 0),
+                Font = isSelected
+                    ? new Font("Segoe UI", 9, FontStyle.Bold)
+                    : new Font("Segoe UI", 9)
+            };
+
+            var wrapper = new FlowLayoutPanel
+            {
+                AutoSize = true,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false
+            };
+
+            wrapper.Controls.Add(box);
+            wrapper.Controls.Add(label);
+
+            return wrapper;
+        }
+
 
         private void HighlightSelection(Button selectedBtn)
         {
@@ -207,12 +284,22 @@ namespace GUI.Features.Seat.SubFeatures
             {
                 if (ctrl is Button b && b.Tag is SeatSelectDTO dto)
                 {
-                    b.BackColor = (dto == selectedSeat)
-                        ? COLOR_SELECTED
-                        : GetSeatColor(dto);
+                    if (dto == selectedSeat)
+                    {
+                        b.BackColor = COLOR_SELECTED;
+                        b.ForeColor = Color.White;
+                        b.Font = new Font(b.Font, FontStyle.Bold);
+                    }
+                    else
+                    {
+                        b.BackColor = GetSeatColor(dto);
+                        b.ForeColor = Color.Black;
+                        b.Font = new Font(b.Font, FontStyle.Regular);
+                    }
                 }
             }
         }
+
 
         private string GetClassName(int id)
         {

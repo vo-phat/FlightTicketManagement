@@ -54,6 +54,8 @@ namespace GUI.Features.Ticket.subTicket
         private bool _isRoundTrip = false;
         private int _returnFlightId;
         private int _returnClassId;
+        private List<int> _takenOutboundSeats = new();
+        private List<int> _takenInboundSeats = new();
 
         public frmPassengerInfoControl()
         {
@@ -195,7 +197,7 @@ namespace GUI.Features.Ticket.subTicket
         {
             public OpenSeatSelectorControl Selector { get; private set; }
 
-            public SeatSelectorForm(int flightId, int classId)
+            public SeatSelectorForm(int flightId, int classId, List<int> takenSeats)
             {
                 Text = "Chọn ghế";
                 Width = 500;
@@ -206,6 +208,7 @@ namespace GUI.Features.Ticket.subTicket
                 MinimizeBox = false;
 
                 Selector = new OpenSeatSelectorControl();
+                Selector.TakenSeats = takenSeats; // 🔥 truyền vào control
                 Selector.Dock = DockStyle.Fill;
                 Controls.Add(Selector);
 
@@ -253,8 +256,18 @@ namespace GUI.Features.Ticket.subTicket
         {
             int targetFlightId = _isEditingInbound ? _returnFlightId : _flightId;
             int targetClassId = _isEditingInbound ? _returnClassId : _classId;
+            var takenList = _isEditingInbound ? _takenInboundSeats : _takenOutboundSeats;
 
-            var form = new SeatSelectorForm(targetFlightId, targetClassId);
+            // 🌟 Snapshot để rollback nếu Cancel
+            var snapshot = takenList.ToList();
+
+            int oldSeatId = _selectedFlightSeatId;
+
+            // 🟦 Nếu đang SỬA và có ghế cũ → tạm thời unlock
+            if (oldSeatId > 0)
+                takenList.Remove(oldSeatId);
+
+            var form = new SeatSelectorForm(targetFlightId, targetClassId, takenList);
 
             if (form.ShowDialog() == DialogResult.OK)
             {
@@ -264,13 +277,28 @@ namespace GUI.Features.Ticket.subTicket
                     txtSeatTicket.Text = seat.SeatNumber;
                     _selectedFlightSeatId = seat.FlightSeatId;
                     _selectedSeatId = seat.SeatId;
-                    _selectedSeatPrice = seat.Price; // ✅ Đã có giá từ selector
+                    _selectedSeatPrice = seat.Price;
 
-                    // ⭐ Hiển thị giá ghế ngay sau khi chọn
+                    // 🔐 Lock ghế mới
+                    if (!takenList.Contains(seat.FlightSeatId))
+                        takenList.Add(seat.FlightSeatId);
+
                     UpdatePriceDisplay();
                 }
             }
+            else
+            {
+                // ❌ Cancel → restore nguyên trạng
+                takenList.Clear();
+                foreach (var s in snapshot)
+                    takenList.Add(s);
+
+                // Restore ghế cũ
+                _selectedFlightSeatId = oldSeatId;
+            }
         }
+
+
 
         // ===== HELPERS CẢI TIẾN =====
 
@@ -343,20 +371,19 @@ namespace GUI.Features.Ticket.subTicket
             _isEditingInbound = true;
             _editingIndex = _inboundPassengers.IndexOf(dto);
 
-            // ===== 1. LOAD THÔNG TIN CÁ NHÂN (KHÔNG BỊ MẤT) =====
             LoadPersonalInfoToForm(dto);
 
-            // ===== 2. GHẾ VÀ HÀNH LÝ =====
-            // Nếu DTO đã có ghế/hành lý → LOAD LẠI (đang SỬA)
-            // Nếu chưa có → RESET (lần đầu nhập)
+            // 🟦 Unlock ghế cũ tạm thời
+            if (dto.FlightSeatId > 0)
+                _takenInboundSeats.Remove(dto.FlightSeatId);
+
+            // Nếu đang sửa có ghế → load ghế
             if (!string.IsNullOrEmpty(dto.SeatNumber) && dto.FlightSeatId > 0)
             {
-                // ⭐ LOAD LẠI ghế đã chọn - GIÁ ĐÃ CÓ TRONG DTO
                 txtSeatTicket.Text = dto.SeatNumber;
                 _selectedSeatId = dto.SeatId ?? 0;
                 _selectedFlightSeatId = dto.FlightSeatId;
 
-                // ⭐ Tính lại giá ghế từ TicketPrice - baggagePrice
                 decimal baggagePrice = 0;
                 if (dto.CheckedId.HasValue && dto.CheckedId > 0)
                 {
@@ -365,45 +392,31 @@ namespace GUI.Features.Ticket.subTicket
                         .FirstOrDefault(b => b.CheckedId == dto.CheckedId.Value);
 
                     if (baggage != null)
-                    {
                         baggagePrice = baggage.Price;
-                    }
                 }
 
                 _selectedSeatPrice = (dto.TicketPrice ?? 0) - baggagePrice;
             }
             else
             {
-                // Reset ghế (lần đầu nhập)
+                // Chưa có ghế — reset
                 txtSeatTicket.Text = "";
                 _selectedSeatId = 0;
                 _selectedFlightSeatId = 0;
                 _selectedSeatPrice = 0;
-            }
-
-            // Load lại hành lý nếu đã chọn
-            if (dto.CheckedId.HasValue && dto.CheckedId > 0)
-            {
-                cboBaggageTicket.SelectedValue = dto.CheckedId;
-            }
-            else
-            {
                 cboBaggageTicket.SelectedIndex = -1;
             }
 
             txtNoteBaggage.Text = dto.BaggageNote ?? "";
 
-            // ===== 3. NGÀY BAY CHIỀU VỀ =====
             if (_returnBooking != null)
-            {
                 dtpFlightDateTicket.Value = _returnBooking.DepartureTime ?? DateTime.Now;
-            }
 
-            // ===== 4. ẨN NÚT CHIỀU ĐI, HIỆN NÚT CHIỀU VỀ =====
             btnAddOutbound.Visible = false;
             btnAddInbound.Visible = true;
             btnAddInbound.Text = "💾 Lưu chiều về";
         }
+
 
         /// <summary>
         /// Load form để sửa chiều đi - Load ĐẦY ĐỦ thông tin
@@ -413,14 +426,16 @@ namespace GUI.Features.Ticket.subTicket
             _isEditingInbound = false;
             _editingIndex = _outboundPassengers.IndexOf(dto);
 
-            // ===== LOAD ĐẦY ĐỦ (bao gồm cả ghế/hành lý) =====
             LoadPersonalInfoToForm(dto);
+
+            // 🟦 Unlock ghế cũ tạm thời
+            if (dto.FlightSeatId > 0)
+                _takenOutboundSeats.Remove(dto.FlightSeatId);
 
             txtSeatTicket.Text = dto.SeatNumber ?? "";
             _selectedSeatId = dto.SeatId ?? 0;
             _selectedFlightSeatId = dto.FlightSeatId;
 
-            // ⭐ Tính lại giá ghế từ TicketPrice - baggagePrice
             decimal baggagePrice = 0;
             if (dto.CheckedId.HasValue && dto.CheckedId > 0)
             {
@@ -429,9 +444,7 @@ namespace GUI.Features.Ticket.subTicket
                     .FirstOrDefault(b => b.CheckedId == dto.CheckedId.Value);
 
                 if (baggage != null)
-                {
                     baggagePrice = baggage.Price;
-                }
 
                 cboBaggageTicket.SelectedValue = dto.CheckedId;
             }
@@ -440,15 +453,13 @@ namespace GUI.Features.Ticket.subTicket
             txtNoteBaggage.Text = dto.BaggageNote ?? "";
 
             if (_outboundBooking != null)
-            {
                 dtpFlightDateTicket.Value = _outboundBooking.DepartureTime ?? DateTime.Now;
-            }
 
-            // ===== HIỆN NÚT CHIỀU ĐI, ẨN NÚT CHIỀU VỀ =====
             btnAddOutbound.Visible = true;
             btnAddInbound.Visible = false;
             btnAddOutbound.Text = "💾 Cập nhật chiều đi";
         }
+
 
         private int CarryBaggageId(int classId)
         {
@@ -826,7 +837,16 @@ namespace GUI.Features.Ticket.subTicket
             newOutbound.FlightId = _flightId;
             newOutbound.ClassId = _classId;
             newOutbound.FlightDate = _outboundBooking.DepartureTime;
+
+            // 🔥 LOCK GHẾ — đặt ở đây!
+            if (newOutbound.FlightSeatId > 0)
+            {
+                if (!_takenOutboundSeats.Contains(newOutbound.FlightSeatId))
+                    _takenOutboundSeats.Add(newOutbound.FlightSeatId);
+            }
+
             _outboundPassengers.Add(newOutbound);
+
 
             // ===== Khi là round-trip — tạo inbound CLONE =====
             if (_isRoundTrip)
@@ -909,7 +929,24 @@ namespace GUI.Features.Ticket.subTicket
             newInbound.ClassId = _returnClassId;
             newInbound.FlightDate = _returnBooking.DepartureTime;
             _inboundPassengers.Add(newInbound);
+            if (!_takenInboundSeats.Contains(newInbound.FlightSeatId))
+                _takenInboundSeats.Add(newInbound.FlightSeatId);
             ClearForm();
+        }
+
+        private void dtpFlightDateTicket_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void dtpDateOfBirthTicket_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void txtPhoneNumberTicket_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }
