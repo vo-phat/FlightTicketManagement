@@ -1,14 +1,15 @@
-﻿using System;
+﻿using BUS.Airport;
+using BUS.Route;
+using DAO.Models;
+using DTO.Airport;
+using DTO.Route;
+using GUI.Components.Buttons;
+using GUI.Components.Inputs;
+using GUI.Components.Tables;
+using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using GUI.Components.Inputs;
-using GUI.Components.Buttons;
-using GUI.Components.Tables;
-using DTO.Route;
-using BUS.Route;
-using BUS.Airport;
-using DTO.Airport;
 
 namespace GUI.Features.Route.SubFeatures
 {
@@ -31,8 +32,16 @@ namespace GUI.Features.Route.SubFeatures
         public RouteCreateControl()
         {
             InitializeComponent();
-            LoadAirports();  // ✅ Nạp dữ liệu ComboBox
+            LoadAirports();  
             LoadRouteList();
+        }
+
+        private void FrmRouteManager_VisibleChanged(object sender, EventArgs e)
+        {
+            if (this.Visible)
+            {
+                LoadAirports();
+            }
         }
 
         private void InitializeComponent()
@@ -127,7 +136,9 @@ namespace GUI.Features.Route.SubFeatures
         {
             try
             {
-                var list = _airportBus.GetAllAirports(); // List<AirportDTO>
+                var airportList = new AirportBUS();
+
+                var list = airportList.GetAllAirports();
 
                 var displayList = list.Select(a => new
                 {

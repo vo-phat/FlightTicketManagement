@@ -6,6 +6,7 @@
         /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
+        private GUI.Components.Buttons.SecondaryButton btnBack; // Dùng nút phụ cho đẹp
 
         /// <summary> 
         /// Clean up any resources being used.
@@ -34,6 +35,7 @@
             DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
 
             // 2. Init Controls (Giữ nguyên tên biến cũ)
+            this.btnBack = new GUI.Components.Buttons.SecondaryButton();
             this.txtTicketBaggageId = new GUI.Components.Inputs.UnderlinedTextField();
             this.txtQuantity = new GUI.Components.Inputs.UnderlinedTextField();
             this.txtNote = new GUI.Components.Inputs.UnderlinedTextField();
@@ -73,6 +75,7 @@
             tlpInputs.RowCount = 2;
             tlpInputs.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             tlpInputs.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+
 
             // 
             // === 3. FLOW LAYOUT (BUTTONS) ===
@@ -156,6 +159,12 @@
             btnAdd.ForeColor = Color.White;
             btnAdd.Click += btnAdd_Click;
 
+            btnBack.Text = " Quay lại";
+            btnBack.Size = new Size(130, 45);
+            btnBack.Margin = new Padding(10, 0, 0, 0); // Cách lề trái
+            btnBack.Click += BtnBack_Click; // Gắn sự kiện
+            flpActions.Controls.Add(btnBack);
+
             // 
             // === 6. CẤU HÌNH GRID ===
             // 
@@ -216,6 +225,7 @@
             this.Size = new Size(1200, 700);
             ((System.ComponentModel.ISupportInitialize)(this.dgvTicketBaggage)).EndInit();
             this.ResumeLayout(false);
+
         }
 
         #endregion
