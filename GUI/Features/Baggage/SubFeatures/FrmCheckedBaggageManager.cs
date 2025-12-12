@@ -37,6 +37,39 @@ namespace GUI.Features.Baggage.SubFeatures
             dgvChecked.Columns["WeightKg"].HeaderText = "Weight (kg)";
             dgvChecked.Columns["Price"].HeaderText = "Price";
             dgvChecked.Columns["Description"].HeaderText = "Description";
+            StyleGrid();
+        }
+
+        private void StyleGrid()
+        {
+            dgvChecked.RowHeadersVisible = false;
+            dgvChecked.EnableHeadersVisualStyles = false;
+
+            // Cấu hình từng cột
+            ConfigureColumn("CheckedId", "Mã", 80, DataGridViewContentAlignment.MiddleCenter);
+            ConfigureColumn("WeightKg", "Trọng lượng (kg)", 140, DataGridViewContentAlignment.MiddleCenter);
+            // Format cột tiền tệ
+            ConfigureColumn("Price", "Giá cước", 150, DataGridViewContentAlignment.MiddleLeft);
+            if (dgvChecked.Columns["Price"] != null)
+                dgvChecked.Columns["Price"].DefaultCellStyle.Format = "N0";
+
+            // Cột Mô tả giãn hết phần còn lại
+            if (dgvChecked.Columns["Description"] != null)
+            {
+                dgvChecked.Columns["Description"].HeaderText = "Mô tả chi tiết";
+                dgvChecked.Columns["Description"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                dgvChecked.Columns["Description"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            }
+        }
+
+        private void ConfigureColumn(string colName, string headerText, int width, DataGridViewContentAlignment align)
+        {
+            if (dgvChecked.Columns[colName] != null)
+            {
+                dgvChecked.Columns[colName].HeaderText = headerText;
+                dgvChecked.Columns[colName].Width = width;
+                dgvChecked.Columns[colName].DefaultCellStyle.Alignment = align;
+            }
         }
 
         // ============================
