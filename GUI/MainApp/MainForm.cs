@@ -281,16 +281,16 @@ namespace GUI.MainApp {
                         // ("Hãng hàng không",
                         //     r => HasPerm(Perm.Catalogs_Airlines),
                         //     () => OpenAirlines()),
-                        ("Máy bay Vietnam Airlines",
-                            r => HasPerm(Perm.Catalogs_Aircrafts),
-                            () => OpenAircrafts()),
+                        // ("Máy bay Vietnam Airlines",
+                        //     r => HasPerm(Perm.Catalogs_Aircrafts),
+                        //     () => OpenAircrafts()),
                         ("Sân bay",
                             r => HasPerm(Perm.Catalogs_Airports),
                             () => LoadControl(new AirportControl())),
                         ("Tuyến bay",
                             r => HasPerm(Perm.Catalogs_Routes),
                             () => OpenRoutes()),
-                        ("Hạng vé",
+                        ("Hạng ghế",
                             r => HasPerm(Perm.Catalogs_CabinClasses),
                             () => OpenCabinClasses()),
                         ("Ghế máy bay",
@@ -575,9 +575,9 @@ namespace GUI.MainApp {
 
         // ĐÃ XÓA: OpenAirlines() - Không còn cần quản lý Airlines
 
-        private void OpenAircrafts() {
-            ShowControl("Aircrafts", () => new AircraftControl());
-        }
+        //private void OpenAircrafts() {
+        //    ShowControl("Aircrafts", () => new AircraftControl());
+        //}
 
         private void OpenRoutes() {
             ShowControl("Routes", () => new RouteControl());

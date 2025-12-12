@@ -200,8 +200,9 @@ namespace GUI.Features.Ticket.subTicket
             public SeatSelectorForm(int flightId, int classId, List<int> takenSeats)
             {
                 Text = "Chọn ghế";
-                Width = 500;
-                Height = 400;
+                //Width = 500;
+                //Height = 600;
+                this.WindowState = FormWindowState.Maximized;
                 StartPosition = FormStartPosition.CenterScreen;
                 FormBorderStyle = FormBorderStyle.FixedDialog;
                 MaximizeBox = false;
