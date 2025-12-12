@@ -89,6 +89,38 @@ namespace GUI.Features.Ticket {
             pnlTicketOps.Controls.Clear();
             pnlTicketOps.Controls.Add(frm);
             frm.BringToFront();
+            // Tạo control quản lý hành lý
+            var frmBaggage = new FrmTicketBaggageManager(ticketId)
+            {
+                Dock = DockStyle.Fill
+            };
+
+            // Đăng ký sự kiện: Khi bấm nút Back -> Quay lại giao diện cũ
+            frmBaggage.OnClose += () =>
+            {
+                // 1. Xóa form hành lý đi
+                pnlTicketOps.Controls.Remove(frmBaggage);
+                frmBaggage.Dispose();
+
+                // 2. Hiển thị lại ticketOpsControl gốc
+                // (Giả sử bạn đã add ticketOpsControl vào pnlTicketOps từ đầu)
+                if (!pnlTicketOps.Controls.Contains(ticketOpsControl))
+                {
+                    pnlTicketOps.Controls.Add(ticketOpsControl);
+                }
+                ticketOpsControl.Visible = true;
+                ticketOpsControl.BringToFront();
+            };
+
+            // Ẩn giao diện cũ (Ops) và hiện giao diện mới (Baggage)
+            // Cách 1: Xóa tạm thời (Tiết kiệm ram, nhưng mất trạng thái search cũ)
+            // pnlTicketOps.Controls.Clear(); 
+
+            // Cách 2: Ẩn đi (Giữ nguyên trạng thái search cũ - Khuyên dùng)
+            ticketOpsControl.Visible = false;
+
+            pnlTicketOps.Controls.Add(frmBaggage);
+            frmBaggage.BringToFront();
         }
 
         // ==========================
