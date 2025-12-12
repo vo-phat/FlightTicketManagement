@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using GUI.Components.Buttons;
 using GUI.Components.Inputs;
 using DTO.Permissions;
+using BUS.Auth;
 
 namespace GUI.Features.Setting.SubFeatures {
     internal class RoleEditForm : Form {
@@ -11,10 +12,19 @@ namespace GUI.Features.Setting.SubFeatures {
         private UnderlinedTextField txtName;
         private Button btnOk, btnCancel;
 
+        // Nếu form tạo role mới, service trả về id mới -> lưu ở đây để caller dùng
+        public int? CreatedRoleId { get; private set; }
+
+        // Expose values for caller if needed
         public string RoleCode => txtCode.Text.Trim();
         public string RoleName => txtName.Text.Trim();
 
+        // internal state
+        private readonly RoleItem? _editingRole;
+        private readonly RolePermissionService _service = new();
+
         public RoleEditForm(RoleItem? role = null) {
+            _editingRole = role;
             InitializeComponent(role);
         }
 
@@ -25,7 +35,7 @@ namespace GUI.Features.Setting.SubFeatures {
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
-            ClientSize = new Size(600, 600);
+            ClientSize = new Size(600, 600); // nhỏ lại hợp lý
 
             // ===== Root container =================================================
             var root = new TableLayoutPanel {
@@ -110,6 +120,8 @@ namespace GUI.Features.Setting.SubFeatures {
             if (role != null) {
                 txtCode.Text = role.Code;
                 txtName.Text = role.Name;
+                // Không cho sửa mã role khi edit (an toàn)
+                txtCode.Enabled = false;
             }
 
             // ===== Events ========================================================
@@ -138,7 +150,29 @@ namespace GUI.Features.Setting.SubFeatures {
                 return;
             }
 
-            DialogResult = DialogResult.OK;
+            try {
+                if (_editingRole == null) {
+                    // Create new role via service
+                    var req = new DTO.Permissions.CreateRoleRequest(code, name);
+                    int newId = _service.CreateRole(req);
+                    // nếu không exception => success
+                    CreatedRoleId = newId;
+                    DialogResult = DialogResult.OK;
+                } else {
+                    // Update existing role (only name allowed)
+                    var req = new DTO.Permissions.UpdateRoleRequest(_editingRole.RoleId, name);
+                    bool ok = _service.UpdateRole(req);
+                    if (!ok) {
+                        MessageBox.Show("Cập nhật vai trò thất bại.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    DialogResult = DialogResult.OK;
+                }
+            } catch (Exception ex) {
+                // Show meaningful message and keep form open for correction
+                MessageBox.Show(ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
         }
     }
 }
