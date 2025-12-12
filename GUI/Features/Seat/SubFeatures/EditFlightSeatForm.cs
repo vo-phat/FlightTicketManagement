@@ -8,43 +8,40 @@ using System.Windows.Forms;
 using GUI.Components.Inputs;
 using GUI.Components.Buttons;
 using BUS.Seat;
+using BUS.CabinClass;
 using DTO.Seat;
 
 public class EditFlightSeatForm : Form
 {
     public int FlightSeatId { get; }
-    public int SelectedFlightId { get; private set; }
     public int SelectedSeatId { get; private set; }
     public int SelectedClassId { get; private set; }
     public decimal NewPrice { get; private set; }
 
     private readonly SeatBUS _seatBUS = new SeatBUS();
+    private readonly CabinClassBUS _cabinClassBUS = new CabinClassBUS();
 
     // Controls
-    private UnderlinedComboBox cbAircraft;
-    private UnderlinedComboBox cbSeat;   // <--- QUAY LẠI COMBOBOX
     private UnderlinedComboBox cbClass;
+    private UnderlinedComboBox cbSeat;
     private UnderlinedTextField txtPrice;
     private PrimaryButton btnSave;
     private SecondaryButton btnCancel;
 
     // Data lists
-    private List<ComboboxItem> _aircraftItems = new();
-    private List<ComboboxItem> _seatItems = new();
     private List<ComboboxItem> _classItems = new();
+    private List<ComboboxItem> _allSeatItems = new();
+    private int _currentAircraftId;
 
     // Current values
-    private int _currentAircraftId;
     private int _currentSeatId;
     private int _currentClassId;
     private decimal _currentPrice;
 
-    public EditFlightSeatForm(int flightSeatId, int aircraftId, int seatId, int classId, decimal price)
+    public EditFlightSeatForm(int flightSeatId, int seatId, decimal price)
     {
         FlightSeatId = flightSeatId;
-        _currentAircraftId = aircraftId;
         _currentSeatId = seatId;
-        _currentClassId = classId;
         _currentPrice = price;
 
         InitializeComponent();
@@ -56,14 +53,14 @@ public class EditFlightSeatForm : Form
     {
         // 1. Cấu hình Form
         Text = $"✏️ Sửa thông tin ghế";
-        Size = new Size(480, 560); // Tăng chiều cao một chút cho thoải mái
+        Size = new Size(480, 520);
         BackColor = Color.FromArgb(250, 253, 255);
         StartPosition = FormStartPosition.CenterParent;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
 
-        // 2. Panel chứa nút (Ghim đáy - Dock Bottom) -> Đảm bảo luôn hiển thị
+        // 2. Panel chứa nút (Ghim đáy - Dock Bottom)
         var pnlBottom = new Panel
         {
             Dock = DockStyle.Bottom,
@@ -88,7 +85,7 @@ public class EditFlightSeatForm : Form
         pnlBottom.Controls.Add(flowButtons);
 
         // 3. Panel chứa Inputs (Dock Fill)
-        var pnlInputs = new Panel // Dùng Panel thường để chứa FlowLayout
+        var pnlInputs = new Panel
         {
             Dock = DockStyle.Fill,
             Padding = new Padding(40, 30, 40, 0)
@@ -105,26 +102,38 @@ public class EditFlightSeatForm : Form
         // Khởi tạo Inputs
         int itemWidth = 380;
 
-        cbAircraft = new UnderlinedComboBox("Máy bay", Array.Empty<object>()) { Width = itemWidth, Height = 60, Margin = new Padding(0, 0, 0, 20) };
-        cbAircraft.InnerCombo.DropDownStyle = ComboBoxStyle.DropDownList;
-
-        cbClass = new UnderlinedComboBox("Hạng ghế", Array.Empty<object>()) { Width = itemWidth, Height = 60, Margin = new Padding(0, 0, 0, 20) };
+        // ComboBox hạng ghế
+        cbClass = new UnderlinedComboBox("Hạng ghế", Array.Empty<object>())
+        {
+            Width = itemWidth,
+            Height = 60,
+            Margin = new Padding(0, 0, 0, 20)
+        };
         cbClass.InnerCombo.DropDownStyle = ComboBoxStyle.DropDownList;
 
-        // <--- COMBOBOX GHẾ ---
-        cbSeat = new UnderlinedComboBox("Số ghế", Array.Empty<object>()) { Width = itemWidth, Height = 60, Margin = new Padding(0, 0, 0, 20) };
+        // ComboBox ghế
+        cbSeat = new UnderlinedComboBox("Số ghế", Array.Empty<object>())
+        {
+            Width = itemWidth,
+            Height = 60,
+            Margin = new Padding(0, 0, 0, 20)
+        };
         cbSeat.InnerCombo.DropDownStyle = ComboBoxStyle.DropDownList;
 
-        txtPrice = new UnderlinedTextField("💰 Giá cơ bản (₫)", "Ví dụ: 1.000.000") { Width = itemWidth, Height = 60, Margin = new Padding(0, 0, 0, 20) };
+        // TextField giá
+        txtPrice = new UnderlinedTextField("💰 Giá cơ bản (₫)", "Ví dụ: 1.000.000")
+        {
+            Width = itemWidth,
+            Height = 60,
+            Margin = new Padding(0, 0, 0, 20)
+        };
         txtPrice.InnerTextBox.TextAlign = HorizontalAlignment.Right;
         txtPrice.InnerTextBox.Text = _currentPrice.ToString("N0", new CultureInfo("vi-VN"));
 
         // Thêm vào FlowLayout
-        flowInputs.Controls.Add(cbAircraft);
-        flowInputs.Controls.Add(CreateSpacer(10));
         flowInputs.Controls.Add(cbClass);
         flowInputs.Controls.Add(CreateSpacer(10));
-        flowInputs.Controls.Add(cbSeat); // Thêm Combobox ghế
+        flowInputs.Controls.Add(cbSeat);
         flowInputs.Controls.Add(CreateSpacer(10));
         flowInputs.Controls.Add(txtPrice);
 
@@ -138,8 +147,8 @@ public class EditFlightSeatForm : Form
         btnSave.Click += BtnSave_Click;
         btnCancel.Click += (_, __) => Close();
 
-        // Sự kiện lọc ghế khi đổi máy bay
-        cbAircraft.InnerCombo.SelectedIndexChanged += (_, __) => FilterSeatsByAircraft();
+        // Sự kiện khi thay đổi hạng ghế -> lọc lại danh sách ghế
+        cbClass.InnerCombo.SelectedIndexChanged += (_, __) => FilterSeatsByClass();
     }
 
     private Control CreateSpacer(int height) => new Panel { Height = height, Width = 1, BackColor = Color.Transparent };
@@ -148,105 +157,129 @@ public class EditFlightSeatForm : Form
     {
         try
         {
+            // Lấy thông tin của ghế hiện tại
             var allSeats = _seatBUS.GetAllSeatsWithDetails();
+            var currentSeat = allSeats.FirstOrDefault(s => s.SeatId == _currentSeatId);
 
-            // 1. Máy bay
-            _aircraftItems = allSeats
-                .Select(s => new { s.AircraftId, Name = $"{s.AircraftManufacturer} {s.AircraftModel}" })
-                .Distinct()
-                .Select(a => new ComboboxItem { Id = a.AircraftId, Name = a.Name })
-                .OrderBy(a => a.Name)
-                .ToList();
-
-            // 2. Tất cả ghế (để lọc sau)
-            _seatItems = allSeats
-                .Select(s => new ComboboxItem { Id = s.SeatId, Name = s.SeatNumber, ExtraId = s.AircraftId })
-                .ToList();
-
-            // 3. Hạng ghế
-            _classItems = allSeats
-                .Select(s => new ComboboxItem { Id = s.ClassId, Name = s.ClassName })
-                .DistinctBy(c => c.Id)
-                .OrderBy(c => c.Name)
-                .ToList();
-
-            // Bind data ban đầu
-            if (cbAircraft.InnerCombo is ComboBox rawAircraft)
+            if (currentSeat == null)
             {
-                rawAircraft.DisplayMember = "Name"; rawAircraft.ValueMember = "Id"; rawAircraft.DataSource = _aircraftItems;
+                MessageBox.Show("Không tìm thấy thông tin ghế.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Close();
+                return;
             }
 
+            _currentAircraftId = currentSeat.AircraftId;
+            _currentClassId = currentSeat.ClassId;
+
+            // 1. Load TẤT CẢ hạng ghế từ bảng cabin_classes trong database
+            var allCabinClasses = _cabinClassBUS.GetAllCabinClasses();
+
+            _classItems = allCabinClasses
+                .Select(c => new ComboboxItem { Id = c.ClassId, Name = c.ClassName })
+                .OrderBy(c =>
+                {
+                    // Sắp xếp theo thứ tự ưu tiên
+                    var order = new Dictionary<string, int>
+                    {
+                        { "First", 1 },
+                        { "Business", 2 },
+                        { "Premium Economy", 3 },
+                        { "Economy", 4 }
+                    };
+                    return order.ContainsKey(c.Name) ? order[c.Name] : 99;
+                })
+                .ThenBy(c => c.Name) // Sắp xếp theo tên nếu không có trong dictionary
+                .ToList();
+
+            // 2. Load tất cả ghế của máy bay hiện tại (để lọc sau theo hạng)
+            _allSeatItems = allSeats
+                .Where(s => s.AircraftId == _currentAircraftId)
+                .Select(s => new ComboboxItem
+                {
+                    Id = s.SeatId,
+                    Name = s.SeatNumber,
+                    ExtraId = s.ClassId // Lưu ClassId để lọc
+                })
+                .OrderBy(s => s.Name)
+                .ToList();
+
+            // Bind ComboBox hạng ghế
             if (cbClass.InnerCombo is ComboBox rawClass)
             {
-                rawClass.DisplayMember = "Name"; rawClass.ValueMember = "Id"; rawClass.DataSource = _classItems;
+                rawClass.DisplayMember = "Name";
+                rawClass.ValueMember = "Id";
+                rawClass.DataSource = _classItems;
             }
 
-            // Gọi lọc lần đầu để điền dữ liệu cho cbSeat
-            FilterSeatsByAircraft();
+            // Gọi lọc ghế lần đầu
+            FilterSeatsByClass();
         }
-        catch (Exception ex) { MessageBox.Show("Lỗi tải dữ liệu: " + ex.Message); }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Lỗi tải dữ liệu: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 
-    private void FilterSeatsByAircraft()
+    private void FilterSeatsByClass()
     {
-        if (cbAircraft.InnerCombo is not ComboBox rawAircraft || cbSeat.InnerCombo is not ComboBox rawSeat) return;
+        if (cbClass.InnerCombo is not ComboBox rawClass || cbSeat.InnerCombo is not ComboBox rawSeat)
+            return;
 
-        var selectedAircraft = rawAircraft.SelectedItem as ComboboxItem;
-        if (selectedAircraft == null) return;
+        var selectedClass = rawClass.SelectedItem as ComboboxItem;
+        if (selectedClass == null) return;
 
-        // Lọc danh sách ghế thuộc máy bay đã chọn
-        var filteredSeats = _seatItems
-            .Where(x => x.ExtraId == selectedAircraft.Id)
-            .OrderBy(x => x.Name) // Sắp xếp theo số ghế (A-Z)
+        // Lọc ghế theo hạng đã chọn
+        var filteredSeats = _allSeatItems
+            .Where(s => s.ExtraId == selectedClass.Id)
+            .OrderBy(s => s.Name)
             .ToList();
 
         rawSeat.DisplayMember = "Name";
         rawSeat.ValueMember = "Id";
         rawSeat.DataSource = filteredSeats;
+
+        // Nếu đang chọn hạng hiện tại, tự động chọn ghế hiện tại
+        if (selectedClass.Id == _currentClassId)
+        {
+            var currentIndex = filteredSeats.FindIndex(s => s.Id == _currentSeatId);
+            if (currentIndex >= 0)
+            {
+                rawSeat.SelectedIndex = currentIndex;
+            }
+        }
     }
 
     private void SelectCurrentValues()
     {
-        // 1. Chọn máy bay
-        if (cbAircraft.InnerCombo is ComboBox rawAircraft)
-            rawAircraft.SelectedIndex = _aircraftItems.FindIndex(a => a.Id == _currentAircraftId);
-
-        // 2. Chọn ghế (Logic lọc đã chạy ở FilterSeatsByAircraft nhờ sự kiện hoặc gọi trực tiếp)
-        // Cần tìm lại index trong danh sách ĐÃ LỌC
-        if (cbSeat.InnerCombo is ComboBox rawSeat)
+        // 1. Chọn hạng ghế hiện tại
+        if (cbClass.InnerCombo is ComboBox rawClass)
         {
-            var currentList = rawSeat.DataSource as List<ComboboxItem>;
-            if (currentList != null)
-            {
-                rawSeat.SelectedIndex = currentList.FindIndex(s => s.Id == _currentSeatId);
-            }
+            rawClass.SelectedIndex = _classItems.FindIndex(c => c.Id == _currentClassId);
         }
 
-        // 3. Chọn hạng
-        if (cbClass.InnerCombo is ComboBox rawClass)
-            rawClass.SelectedIndex = _classItems.FindIndex(c => c.Id == _currentClassId);
+        // 2. Ghế sẽ tự động được chọn trong FilterSeatsByClass()
     }
 
     private void BtnSave_Click(object? sender, EventArgs e)
     {
-        var aircraft = cbAircraft.InnerCombo.SelectedItem as ComboboxItem;
-        var seat = cbSeat.InnerCombo.SelectedItem as ComboboxItem;
         var cls = cbClass.InnerCombo.SelectedItem as ComboboxItem;
+        var seat = cbSeat.InnerCombo.SelectedItem as ComboboxItem;
 
-        if (aircraft == null || seat == null || cls == null)
+        if (cls == null || seat == null)
         {
-            MessageBox.Show("Vui lòng chọn đầy đủ thông tin.", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning); return;
+            MessageBox.Show("Vui lòng chọn đầy đủ thông tin.", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
         }
 
         var rawPrice = Regex.Replace(txtPrice.InnerTextBox.Text ?? "", @"[^\d]", "");
         if (!decimal.TryParse(rawPrice, out var price) || price <= 0)
         {
-            MessageBox.Show("Giá không hợp lệ.", "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Warning); return;
+            MessageBox.Show("Giá không hợp lệ.", "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
         }
 
-        SelectedFlightId = aircraft.Id;
-        SelectedSeatId = seat.Id; // Lấy trực tiếp ID từ Combobox
         SelectedClassId = cls.Id;
+        SelectedSeatId = seat.Id;
         NewPrice = price;
 
         DialogResult = DialogResult.OK;
@@ -257,7 +290,7 @@ public class EditFlightSeatForm : Form
     {
         public string Name { get; set; } = "";
         public int Id { get; set; }
-        public int ExtraId { get; set; }
+        public int ExtraId { get; set; } // Dùng để lưu ClassId cho seat items
         public override string ToString() => Name;
     }
 }

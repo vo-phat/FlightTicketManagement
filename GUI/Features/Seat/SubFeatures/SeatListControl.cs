@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using GUI.Components.Buttons;
 using GUI.Components.Inputs;
 using BUS.Seat;
+using BUS.CabinClass;
 using DTO.Seat;
 
 namespace GUI.Features.Seat.SubFeatures
@@ -31,6 +32,7 @@ namespace GUI.Features.Seat.SubFeatures
         private const int SeatGap = 8;
 
         public readonly SeatBUS _seatBUS;
+        private readonly CabinClassBUS _cabinClassBUS;
         public event Action<int> ViewOrEditRequested;
         public event Action<int> EditRequested;
 
@@ -58,6 +60,7 @@ namespace GUI.Features.Seat.SubFeatures
         public SeatListControl()
         {
             _seatBUS = new SeatBUS();
+            _cabinClassBUS = new CabinClassBUS();
             tip = new ToolTip();
             InitializeComponent();
             LoadData();
@@ -273,15 +276,16 @@ namespace GUI.Features.Seat.SubFeatures
             {
                 rawCbAircraft.DisplayMember = "Name";
                 rawCbAircraft.ValueMember = "Id";
-                rawCbAircraft.DropDownStyle = ComboBoxStyle.DropDownList; // Không cho nhập tay
+                rawCbAircraft.DropDownStyle = ComboBoxStyle.DropDownList;
             }
             if (cbFormClass.InnerCombo is ComboBox rawCbClass)
             {
                 rawCbClass.DisplayMember = "Name";
                 rawCbClass.ValueMember = "Id";
-                rawCbClass.DropDownStyle = ComboBoxStyle.DropDownList; // Không cho nhập tay
+                rawCbClass.DropDownStyle = ComboBoxStyle.DropDownList;
             }
         }
+
         private void ToggleForm()
         {
             _isFormVisible = !_isFormVisible;
@@ -331,6 +335,7 @@ namespace GUI.Features.Seat.SubFeatures
         {
             try
             {
+                // Load Aircraft từ seats
                 _aircraftItems = allSeats
                     .Select(s => new { s.AircraftId, Name = $"{s.AircraftManufacturer} {s.AircraftModel}" })
                     .Distinct()
@@ -338,11 +343,23 @@ namespace GUI.Features.Seat.SubFeatures
                     .OrderBy(a => a.Name)
                     .ToList();
 
-                _classItems = allSeats
-                    .Select(s => new { s.ClassId, s.ClassName })
-                    .Distinct()
+                // Load Classes từ database thay vì từ seats
+                var allCabinClasses = _cabinClassBUS.GetAllCabinClasses();
+                _classItems = allCabinClasses
                     .Select(c => new ComboboxItem { Id = c.ClassId, Name = c.ClassName })
-                    .OrderBy(c => c.Name)
+                    .OrderBy(c =>
+                    {
+                        // Sắp xếp theo thứ tự ưu tiên
+                        var order = new Dictionary<string, int>
+                        {
+                            { "First", 1 },
+                            { "Business", 2 },
+                            { "Premium Economy", 3 },
+                            { "Economy", 4 }
+                        };
+                        return order.ContainsKey(c.Name) ? order[c.Name] : 99;
+                    })
+                    .ThenBy(c => c.Name)
                     .ToList();
 
                 if (cbFormAircraft.InnerCombo is ComboBox rawCbAircraft)
@@ -508,6 +525,8 @@ namespace GUI.Features.Seat.SubFeatures
             cbAircraft.Items.AddRange(aircrafts.Cast<object>().ToArray());
             cbAircraft.SelectedIndex = 0;
 
+            // Load Classes từ database thay vì từ data
+            var allCabinClasses = _cabinClassBUS.GetAllCabinClasses();
             var classOrder = new Dictionary<string, int>
             {
                 { "First", 1 },
@@ -515,9 +534,12 @@ namespace GUI.Features.Seat.SubFeatures
                 { "Premium Economy", 3 },
                 { "Economy", 4 }
             };
-            var classes = data.Select(x => x.ClassName).Distinct()
+            var classes = allCabinClasses
+                .Select(c => c.ClassName)
                 .OrderBy(c => classOrder.ContainsKey(c) ? classOrder[c] : 99)
+                .ThenBy(c => c)
                 .ToList();
+
             cbClass.Items.Clear();
             cbClass.Items.Add("Tất cả");
             cbClass.Items.AddRange(classes.Cast<object>().ToArray());
