@@ -13,7 +13,7 @@ namespace BUS.Ticket
 
         public void CancelTicket(
             TicketListDTO dto,
-            int adminId)
+            int adminId, string reason)
         {
             // 1️⃣ CHECK NGHIỆP VỤ
             if (dto.Status != "BOOKED")
@@ -44,7 +44,7 @@ namespace BUS.Ticket
                     dto.Status,
                     "CANCELLED",
                     adminId,
-                    "Admin hủy vé",
+                    reason,
                     tran
                 );
 

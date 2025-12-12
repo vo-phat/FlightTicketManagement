@@ -56,7 +56,7 @@ namespace GUI.Features.FareRules.SubFeatures {
             int r = 0;
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Mã quy tắc:"), 0, r); vRuleId = Val("vRuleId"); grid.Controls.Add(vRuleId, 1, r++);
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Tuyến bay:"), 0, r); vRoute = Val("vRoute"); grid.Controls.Add(vRoute, 1, r++);
-            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Hạng vé:"), 0, r); vCabin = Val("vCabin"); grid.Controls.Add(vCabin, 1, r++);
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Hạng ghế:"), 0, r); vCabin = Val("vCabin"); grid.Controls.Add(vCabin, 1, r++);
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Loại vé:"), 0, r); vFareType = Val("vFareType"); grid.Controls.Add(vFareType, 1, r++);
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Mùa:"), 0, r); vSeason = Val("vSeason"); grid.Controls.Add(vSeason, 1, r++);
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize)); grid.Controls.Add(Key("Hiệu lực từ:"), 0, r); vEffective = Val("vEffective"); grid.Controls.Add(vEffective, 1, r++);

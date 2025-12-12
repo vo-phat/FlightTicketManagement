@@ -23,6 +23,11 @@ namespace GUI.Features.Baggage.SubFeatures
             InitializeComponent();
             LoadClassCombo();
             LoadCarryOnList();
+            txtCarryOnId.PlaceholderText = "__";
+            txtWeightKg.PlaceholderText = "Nhập số KG";
+            txtSizeLimit.PlaceholderText = "VD: 56 x 36 x 23 cm";
+            underlinedTextField5.PlaceholderText = "VD: Hành lý Tiêu chuẩn";
+            txtDescription.PlaceholderText = "Nhập ghi chú chi tiết về quy định...";
         }
 
         private void FrmCarryOnManager_Load(object sender, EventArgs e)
@@ -45,20 +50,64 @@ namespace GUI.Features.Baggage.SubFeatures
         }
 
         // ===============================
-        // 2. LOAD DANH SÁCH CARRY-ON
+        // 2. LOAD DANH SÁCH CARRY-ON 
         // ===============================
         private void LoadCarryOnList()
         {
+            // 1. Gán dữ liệu
             dgvCarryOn.DataSource = bus.GetAll();
 
-            // Đảm bảo mapping đúng tên cột
-            dgvCarryOn.Columns["CarryOnId"].HeaderText = "ID";
-            dgvCarryOn.Columns["WeightKg"].HeaderText = "Weight (kg)";
-            dgvCarryOn.Columns["ClassId"].HeaderText = "Class ID";
-            dgvCarryOn.Columns["ClassName"].HeaderText = "Class Name";
-            dgvCarryOn.Columns["SizeLimit"].HeaderText = "Size Limit";
-            dgvCarryOn.Columns["Description"].HeaderText = "Description";
-            dgvCarryOn.Columns["IsDefault"].HeaderText = "Default";
+            // 2. Gọi hàm định dạng giao diện (Tách riêng để code gọn)
+            StyleGrid();
+        }
+
+        private void StyleGrid()
+        {
+            // --- A. CẤU HÌNH CHUNG ---
+            dgvCarryOn.RowHeadersVisible = false; 
+            dgvCarryOn.EnableHeadersVisualStyles = false; 
+            dgvCarryOn.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter; 
+            dgvCarryOn.RowTemplate.Height = 45; 
+
+            // --- B. ẨN CÁC CỘT KHÔNG CẦN THIẾT ---
+            if (dgvCarryOn.Columns["ClassId"] != null) 
+                dgvCarryOn.Columns["ClassId"].Visible = false; 
+
+            // --- C. ĐẶT TÊN VÀ CĂN LỀ CỘT ---
+            
+            // 1. Cột ID
+            ConfigureColumn("CarryOnId", "Mã", 60, DataGridViewContentAlignment.MiddleCenter);
+
+            // 2. Cột Cân nặng
+            ConfigureColumn("WeightKg", "Cân nặng (Kg)", 120, DataGridViewContentAlignment.MiddleCenter);
+            
+            // 3. Cột Tên hạng vé
+            ConfigureColumn("ClassName", "Hạng vé", 150, DataGridViewContentAlignment.MiddleLeft);
+
+            // 4. Cột Kích thước
+            ConfigureColumn("SizeLimit", "Kích thước", 120, DataGridViewContentAlignment.MiddleCenter);
+
+            // 5. Cột Mặc định (Checkbox)
+            ConfigureColumn("IsDefault", "Mặc định", 80, DataGridViewContentAlignment.MiddleCenter);
+
+            // 6. Cột Mô tả (Quan trọng: Cho giãn hết phần còn lại)
+            if (dgvCarryOn.Columns["Description"] != null)
+            {
+                dgvCarryOn.Columns["Description"].HeaderText = "Mô tả chi tiết";
+                dgvCarryOn.Columns["Description"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill; 
+                dgvCarryOn.Columns["Description"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            }
+        }
+
+        // Hàm phụ trợ để set thuộc tính cột nhanh gọn
+        private void ConfigureColumn(string colName, string headerText, int width, DataGridViewContentAlignment align)
+        {
+            if (dgvCarryOn.Columns[colName] != null)
+            {
+                dgvCarryOn.Columns[colName].HeaderText = headerText;
+                dgvCarryOn.Columns[colName].Width = width;
+                dgvCarryOn.Columns[colName].DefaultCellStyle.Alignment = align;
+            }
         }
 
         // ===============================

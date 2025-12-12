@@ -127,7 +127,7 @@ namespace GUI.Features.FareRules.SubFeatures
 
 
             txtCode = new UnderlinedTextField("Mã quy tắc", "") { Width = 300, Margin = new Padding(0, 2, 24, 2) };
-            cbCabin = new UnderlinedComboBox("Hạng vé", Array.Empty<object>()) { Width = 300, Margin = new Padding(0, 2, 24, 2) };
+            cbCabin = new UnderlinedComboBox("Hạng ghế", Array.Empty<object>()) { Width = 300, Margin = new Padding(0, 2, 24, 2) };
             cbFareType = new UnderlinedComboBox("Loại vé", new object[] { "Tất cả", "Standard", "Flex", "Saver", "Promo" }) { Width = 300, Margin = new Padding(0, 2, 24, 2) };
             cbRoute = new UnderlinedComboBox("Tuyến bay", Array.Empty<object>()) { Width = 300, Margin = new Padding(12, 2, 0, 2) };
             cbSeason = new UnderlinedComboBox("Mùa", new object[] { "Tất cả", "PEAK", "NORMAL", "OFFPEAK" }) { Width = 300, Margin = new Padding(12, 2, 0, 2) };
@@ -185,7 +185,7 @@ namespace GUI.Features.FareRules.SubFeatures
                 new DataGridViewTextBoxColumn { Name="ruleId", HeaderText="Mã", DataPropertyName=nameof(FareRuleRow.RuleId), MinimumWidth=70  },
                 new DataGridViewTextBoxColumn { Name="routeName", HeaderText="Tuyến bay", DataPropertyName=nameof(FareRuleRow.RouteName), MinimumWidth=150 },
                 new DataGridViewTextBoxColumn { Name="cabinClass", HeaderText="Hạng vé", DataPropertyName=nameof(FareRuleRow.CabinClass), MinimumWidth=120 },
-                new DataGridViewTextBoxColumn { Name="fareType", HeaderText="Loại vé", DataPropertyName=nameof(FareRuleRow.FareType), MinimumWidth=110 },
+                new DataGridViewTextBoxColumn { Name="fareType", HeaderText="Hạng ghế", DataPropertyName=nameof(FareRuleRow.FareType), MinimumWidth=110 },
                 new DataGridViewTextBoxColumn { Name="season", HeaderText="Mùa", DataPropertyName=nameof(FareRuleRow.Season), MinimumWidth=90 },
                 new DataGridViewTextBoxColumn { Name="effectiveDate", HeaderText="Hiệu lực", DataPropertyName=nameof(FareRuleRow.EffectiveDate), MinimumWidth=120, DefaultCellStyle = new DataGridViewCellStyle{ Format = "dd/MM/yyyy" } },
                 new DataGridViewTextBoxColumn { Name="expiryDate", HeaderText="Hết hạn", DataPropertyName=nameof(FareRuleRow.ExpiryDate), MinimumWidth=120, DefaultCellStyle = new DataGridViewCellStyle{ Format = "dd/MM/yyyy" } },
