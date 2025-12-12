@@ -120,7 +120,7 @@ public class EditFlightSeatForm : Form
         txtPrice.InnerTextBox.Text = _currentPrice.ToString("N0", new CultureInfo("vi-VN"));
 
         // Thêm vào FlowLayout
-        flowInputs.Controls.Add(cbAircraft);
+        //flowInputs.Controls.Add(cbAircraft);
         flowInputs.Controls.Add(CreateSpacer(10));
         flowInputs.Controls.Add(cbClass);
         flowInputs.Controls.Add(CreateSpacer(10));

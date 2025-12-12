@@ -130,9 +130,12 @@ namespace GUI.Features.Ticket.subTicket
         {
             cbStatus.Items.Clear();
             cbStatus.Items.Add("Tất cả");
-            cbStatus.Items.Add("Upcoming"); // Nên đồng bộ với Enum trong database nếu có
-            cbStatus.Items.Add("Completed");
-            cbStatus.Items.Add("Cancelled");
+            cbStatus.Items.Add("BOOKED"); // Nên đồng bộ với Enum trong database nếu có
+            cbStatus.Items.Add("CONFIRMED");
+            cbStatus.Items.Add("CHECKED_IN");
+            cbStatus.Items.Add("BOARDED");
+            cbStatus.Items.Add("CANCELLED");
+            cbStatus.Items.Add("REFUNDED");
             cbStatus.SelectedIndex = 0;
         }
 

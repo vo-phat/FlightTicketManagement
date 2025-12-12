@@ -94,7 +94,7 @@ namespace GUI.Features.Flight.SubFeatures
             // --- INPUTS TÙY CHỈNH ---
             txtFlightNumber = new UnderlinedTextField("Số hiệu chuyến bay", "VN123")
             {
-                Width = 180,
+                Width = 220,
                 Margin = new Padding(6, 4, 6, 4),
                 InheritParentBackColor = true,
                 LineThickness = 1
@@ -105,13 +105,13 @@ namespace GUI.Features.Flight.SubFeatures
 
             cbDepartureAirport = new UnderlinedComboBox("Sân bay đi", Array.Empty<string>())
             {
-                Width = 200,
+                Width = 250,
                 Margin = new Padding(6, 4, 6, 4),
             };
 
             cbArrivalAirport = new UnderlinedComboBox("Sân bay đến", Array.Empty<string>())
             {
-                Width = 200,
+                Width = 250,
                 Margin = new Padding(6, 4, 6, 4),
             };
 
@@ -125,7 +125,7 @@ namespace GUI.Features.Flight.SubFeatures
                 "Trì hoãn" 
             })
             {
-                Width = 160,
+                Width = 200,
                 Margin = new Padding(6, 4, 6, 4),
             };
             cbStatus.SelectedIndex = 0;
@@ -152,18 +152,18 @@ namespace GUI.Features.Flight.SubFeatures
 
             dtpFromDate = new DateTimePickerCustom("Từ ngày", "")
             {
-                Width = 140,
+                Width = 170,
                 Enabled = false
             };
-            dtpFromDate.Value = DateTime.Today.AddMonths(-1);
+            dtpFromDate.Value = DateTime.Today;
 
             dtpToDate = new DateTimePickerCustom("Đến ngày", "")
             {
-                Width = 140,
+                Width = 170,
                 Margin = new Padding(8, 0, 0, 0),
                 Enabled = false
             };
-            dtpToDate.Value = DateTime.Today;
+            dtpToDate.Value = DateTime.Today.AddDays(7);
 
             chkEnableDateFilter.CheckedChanged += (s, e) =>
             {
@@ -488,10 +488,10 @@ namespace GUI.Features.Flight.SubFeatures
                     }
                     else if (UserSession.CurrentAppRole == AppRole.Staff)
                     {
-                        // Staff: Xem, Đặt vé (nếu lên lịch), Sửa, Xóa
+                        // Staff: Xem, Đặt vé (nếu lên lịch), Sửa (không có Xóa)
                         actions = flight.Status == FlightStatus.SCHEDULED
-                            ? $"{TXT_VIEW}{SEP}{TXT_BOOK}{SEP}{TXT_EDIT}{SEP}{TXT_DEL}"
-                            : $"{TXT_VIEW}{SEP}{TXT_EDIT}{SEP}{TXT_DEL}";
+                            ? $"{TXT_VIEW}{SEP}{TXT_BOOK}{SEP}{TXT_EDIT}"
+                            : $"{TXT_VIEW}{SEP}{TXT_EDIT}";
                     }
                     else // Admin
                     {
@@ -517,8 +517,8 @@ namespace GUI.Features.Flight.SubFeatures
             cbArrivalAirport.SelectedIndex = 0;
             cbStatus.SelectedIndex = 0;
             chkEnableDateFilter.Checked = false;
-            dtpFromDate.Value = DateTime.Today.AddMonths(-1);
-            dtpToDate.Value = DateTime.Today;
+            dtpFromDate.Value = DateTime.Today;
+            dtpToDate.Value = DateTime.Today.AddDays(7);
             RefreshList();
         }
 
@@ -761,32 +761,45 @@ namespace GUI.Features.Flight.SubFeatures
                     }
                 }
                 else if (UserSession.CurrentAppRole == AppRole.Staff)
+        {
+            // Staff role: button layout depends on flight status (no delete permission)
+            if (flight.Status == FlightStatus.SCHEDULED)
+            {
+                // Scheduled flight: Xem | Đặt vé | Sửa (no delete)
+                var bookStart = viewEnd + sepSize.Width;
+                var bookEnd = bookStart + bookSize.Width;
+                var editStart = bookEnd + sepSize.Width;
+                var editEnd = editStart + editSize.Width;
+                
+                if (clickX >= startX && clickX <= viewEnd)
                 {
-                    // Staff: Xem | Đặt vé | Sửa | Xóa
-                    var bookStart = viewEnd + sepSize.Width;
-                    var bookEnd = bookStart + bookSize.Width;
-                    var editStart = bookEnd + sepSize.Width;
-                    var editEnd = editStart + editSize.Width;
-                    var delStart = editEnd + sepSize.Width;
-                    var delEnd = delStart + delSize.Width;
-                    
-                    if (clickX >= startX && clickX <= viewEnd)
-                    {
-                        ViewRequested?.Invoke(flight);
-                    }
-                    else if (clickX >= bookStart && clickX <= bookEnd)
-                    {
-                        HandleBookFlight(flight);
-                    }
-                    else if (clickX >= editStart && clickX <= editEnd)
-                    {
-                        RequestEdit?.Invoke(flight);
-                    }
-                    else if (clickX >= delStart && clickX <= delEnd)
-                    {
-                        HandleDelete(flight);
-                    }
+                    ViewRequested?.Invoke(flight);
                 }
+                else if (clickX >= bookStart && clickX <= bookEnd)
+                {
+                    HandleBookFlight(flight);
+                }
+                else if (clickX >= editStart && clickX <= editEnd)
+                {
+                    RequestEdit?.Invoke(flight);
+                }
+            }
+            else
+            {
+                // Non-scheduled flight: Xem | Sửa (no booking, no delete)
+                var editStart = viewEnd + sepSize.Width;
+                var editEnd = editStart + editSize.Width;
+                
+                if (clickX >= startX && clickX <= viewEnd)
+                {
+                    ViewRequested?.Invoke(flight);
+                }
+                else if (clickX >= editStart && clickX <= editEnd)
+                {
+                    RequestEdit?.Invoke(flight);
+                }
+            }
+        }
                 else // Admin
                 {
                     // Admin: Xem | Sửa | Xóa

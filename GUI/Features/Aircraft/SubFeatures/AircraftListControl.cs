@@ -182,7 +182,7 @@ namespace GUI.Features.Aircraft.SubFeatures
             // Add controls
             headerPanel.Controls.Add(lblTitle);
             searchPanel.Controls.AddRange(new Control[] { 
-                txtSearch, cboStatus, btnSearch, btnClear, btnAddNew 
+                txtSearch, btnSearch, btnClear, btnAddNew 
             });
             
             Controls.Add(aircraftContainer);

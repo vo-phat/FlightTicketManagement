@@ -53,7 +53,6 @@ namespace GUI.Features.Flight.SubFeatures
         // Section C: Hành động
         private PrimaryButton btnSave = null!;
         private SecondaryButton btnCancel = null!;
-        private SecondaryButton btnReset = null!;
         private Label lblPriceWarning = null!;
 
         private List<AircraftDTO> _aircraftList;
@@ -354,18 +353,8 @@ namespace GUI.Features.Flight.SubFeatures
             };
             btnCancel.Click += BtnCancel_Click;
 
-            btnReset = new SecondaryButton
-            {
-                Text = "🔄 Khôi phục",
-                Width = 140,
-                Height = 45,
-                Margin = new Padding(10, 0, 0, 0)
-            };
-            btnReset.Click += BtnReset_Click;
-
             actionPanel.Controls.Add(btnSave);
             actionPanel.Controls.Add(btnCancel);
-            actionPanel.Controls.Add(btnReset);
 
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             grid.Controls.Add(actionPanel, 0, row);
