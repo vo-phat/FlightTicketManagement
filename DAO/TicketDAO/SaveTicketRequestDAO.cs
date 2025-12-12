@@ -166,32 +166,34 @@ namespace DAO.TicketDAO
         /// Tìm hoặc tạo passenger_profile (bao gồm cả email)
         /// </summary>
         private int GetOrCreatePassengerProfile(MySqlConnection conn, MySqlTransaction tran,
-                                                TicketBookingRequestDTO dto, int accountId)
+                                        TicketBookingRequestDTO dto, int accountId)
         {
-            // 1) Tìm profile đã tồn tại
+            // 1) Tìm profile đã tồn tại theo tên + hộ chiếu
             string findSql = @"
-                SELECT profile_id FROM passenger_profiles
-                WHERE full_name=@name AND passport_number=@passport 
-                LIMIT 1;";
+        SELECT profile_id 
+        FROM passenger_profiles
+        WHERE full_name = @name 
+          AND passport_number = @passport
+        LIMIT 1;";
 
             using (var cmd = new MySqlCommand(findSql, conn, tran))
             {
                 cmd.Parameters.AddWithValue("@name", dto.FullName);
                 cmd.Parameters.AddWithValue("@passport", dto.PassportNumber);
-                var exist = cmd.ExecuteScalar();
 
+                var exist = cmd.ExecuteScalar();
                 if (exist != null)
                     return Convert.ToInt32(exist);
             }
 
-            // 2) Tạo mới profile
+            // 2) Tạo mới profile (không có email)
             string insertSql = @"
-                INSERT INTO passenger_profiles
-                    (account_id, full_name, date_of_birth, phone_number, 
-                     passport_number, nationality, email)
-                VALUES
-                    (@acc, @name, @dob, @phone, @pass, @nation, @email);
-                SELECT LAST_INSERT_ID();";
+        INSERT INTO passenger_profiles
+            (account_id, full_name, date_of_birth, phone_number,
+             passport_number, nationality)
+        VALUES
+            (@acc, @name, @dob, @phone, @pass, @nation);
+        SELECT LAST_INSERT_ID();";
 
             using (var cmd = new MySqlCommand(insertSql, conn, tran))
             {
@@ -201,11 +203,11 @@ namespace DAO.TicketDAO
                 cmd.Parameters.AddWithValue("@phone", dto.PhoneNumber ?? "");
                 cmd.Parameters.AddWithValue("@pass", dto.PassportNumber);
                 cmd.Parameters.AddWithValue("@nation", dto.Nationality ?? "VN");
-                cmd.Parameters.AddWithValue("@email", dto.Email ?? "");
 
                 return Convert.ToInt32(cmd.ExecuteScalar());
             }
         }
+
 
         /// <summary>
         /// Liên kết booking với passenger

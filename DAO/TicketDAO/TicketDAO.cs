@@ -56,6 +56,18 @@ namespace DAO.TicketDAO
             //Console.WriteLine($"Tổng số vé đọc được: {listTickets.Count}");
             return listTickets;
         }
+        public void UpdateStatus(
+           int ticketId,
+           string newStatus,
+           MySqlTransaction tran)
+        {
+            string sql = "UPDATE tickets SET status=@st WHERE ticket_id=@id";
+
+            using var cmd = new MySqlCommand(sql, tran.Connection, tran);
+            cmd.Parameters.AddWithValue("@st", newStatus);
+            cmd.Parameters.AddWithValue("@id", ticketId);
+            cmd.ExecuteNonQuery();
+        }
 
     }
 }

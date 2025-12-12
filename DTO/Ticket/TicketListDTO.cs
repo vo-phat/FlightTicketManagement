@@ -17,5 +17,8 @@ namespace DTO.Ticket
         public string SeatCode { get; set; }
         public decimal Price { get; set; }
         public string Status { get; set; }
+        public bool IsRefundable { get; set; }  
+        public int RefundFeePercent { get; set; }
+
     }
 }

@@ -102,6 +102,27 @@ namespace DAO.TicketDAO
                 "    f.departure_time, s.seat_number, t.status " +
 
                 "ORDER BY t.issue_date DESC;";
+        public void Insert(
+           int ticketId,
+           string oldStatus,
+           string newStatus,
+           int adminId,
+           string reason,
+           MySqlTransaction tran)
+        {
+            string sql = @"
+                INSERT INTO ticket_status_history
+                (ticket_id, old_status, new_status, changed_by, change_reason)
+                VALUES
+                (@tid,@old,@new,@admin,@reason)";
 
+            using var cmd = new MySqlCommand(sql, tran.Connection, tran);
+            cmd.Parameters.AddWithValue("@tid", ticketId);
+            cmd.Parameters.AddWithValue("@old", oldStatus);
+            cmd.Parameters.AddWithValue("@new", newStatus);
+            cmd.Parameters.AddWithValue("@admin", adminId);
+            cmd.Parameters.AddWithValue("@reason", reason);
+            cmd.ExecuteNonQuery();
+        }
     }
 }
