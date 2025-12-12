@@ -14,12 +14,17 @@ namespace GUI.Features.Baggage.SubFeatures
 {
     public partial class FrmTicketBaggageManager : UserControl
     {
+        public event Action OnClose;
         private readonly TicketBaggageBUS tbBus = new TicketBaggageBUS();
         private readonly CarryOnBaggageBUS carryBus = new CarryOnBaggageBUS();
         private readonly CheckedBaggageBUS checkedBus = new CheckedBaggageBUS();
 
         private int _ticketId;
-
+        private void BtnBack_Click(object sender, EventArgs e)
+        {
+            // Kích hoạt sự kiện để Form cha xử lý
+            OnClose?.Invoke();
+        }
         public FrmTicketBaggageManager(int ticketId)
         {
             InitializeComponent();
@@ -221,27 +226,58 @@ namespace GUI.Features.Baggage.SubFeatures
         }
 
         // ============================
-        // DELETE
+        // DELETE (SỬA LỖI KHÔNG CHỌN ĐƯỢC)
         // ============================
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            if (txtTicketBaggageId.Text == "")
+            // 1. Kiểm tra xem có dòng nào được chọn trên Grid không
+            if (dgvTicketBaggage.SelectedRows.Count == 0)
             {
-                MessageBox.Show("Chọn mục cần xóa!");
-                return;
+                // Fallback: Nếu không chọn trên grid, thử kiểm tra textbox (cách cũ)
+                if (string.IsNullOrWhiteSpace(txtTicketBaggageId.Text))
+                {
+                    MessageBox.Show("Vui lòng chọn dòng cần xóa trên bảng!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
             }
 
-            int id = int.Parse(txtTicketBaggageId.Text);
+            // 2. Lấy ID cần xóa
+            int idToDelete = 0;
 
-            if (tbBus.Delete(id))
+            if (dgvTicketBaggage.SelectedRows.Count > 0)
             {
-                MessageBox.Show("Xóa hành lý thành công!");
-                LoadTicketBaggage();
-                ClearForm();
+                // Ưu tiên lấy từ dòng đang chọn trên Grid
+                var cellValue = dgvTicketBaggage.SelectedRows[0].Cells["Id"].Value;
+                if (cellValue != null)
+                {
+                    idToDelete = Convert.ToInt32(cellValue);
+                }
             }
             else
             {
-                MessageBox.Show("Xóa thất bại!");
+                // Lấy từ Textbox nếu grid không focus (ít xảy ra nhưng cứ handle cho chắc)
+                int.TryParse(txtTicketBaggageId.Text, out idToDelete);
+            }
+
+            if (idToDelete <= 0)
+            {
+                MessageBox.Show("Không tìm thấy ID hợp lệ để xóa.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // 3. Xác nhận xóa
+            if (MessageBox.Show("Bạn có chắc chắn muốn xóa mục hành lý này?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                if (tbBus.Delete(idToDelete))
+                {
+                    MessageBox.Show("Xóa thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    LoadTicketBaggage(); // Load lại bảng
+                    ClearForm(); // Xóa trắng form nhập liệu
+                }
+                else
+                {
+                    MessageBox.Show("Xóa thất bại! Có thể dữ liệu không tồn tại.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
     }
