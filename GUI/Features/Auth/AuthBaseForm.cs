@@ -4,43 +4,65 @@ using GUI.Properties;
 using GUI.Components.Buttons;
 using GUI.Components.Inputs;
 
-namespace GUI.Features.Auth {
-    public class AuthBaseForm : Form {
-        protected Panel content;       // nơi đặt controls chính
+namespace GUI.Features.Auth
+{
+
+    // 1. Tạo class Panel hỗ trợ chống giật (Double Buffer)
+    // Bạn có thể để class này bên trong file này hoặc tách ra file riêng
+    public class BufferedPanel : Panel
+    {
+        public BufferedPanel()
+        {
+            this.DoubleBuffered = true;
+            this.SetStyle(ControlStyles.AllPaintingInWmPaint |
+                          ControlStyles.UserPaint |
+                          ControlStyles.OptimizedDoubleBuffer, true);
+            this.UpdateStyles();
+        }
+    }
+
+    public class AuthBaseForm : Form
+    {
+        // 2. Đổi kiểu dữ liệu từ Panel thường sang BufferedPanel
+        protected BufferedPanel content;
         protected Label? title;
 
-        public AuthBaseForm(string titleText) {
-            // --- Khung form & nền ---
-            DoubleBuffered = true;
+        public AuthBaseForm(string titleText)
+        {
+            this.DoubleBuffered = true;
+            this.SetStyle(ControlStyles.AllPaintingInWmPaint |
+                          ControlStyles.UserPaint |
+                          ControlStyles.OptimizedDoubleBuffer, true);
+            this.UpdateStyles();
+
             StartPosition = FormStartPosition.CenterScreen;
-            BackgroundImage = Resources.login;    // ảnh nền máy bay
+            BackgroundImage = Resources.login;
             BackgroundImageLayout = ImageLayout.Stretch;
-            FormBorderStyle = FormBorderStyle.Sizable; 
+            FormBorderStyle = FormBorderStyle.Sizable;
             WindowState = FormWindowState.Maximized;
 
-            // Lớp phủ mờ để tăng độ tương phản
-            var overlay = new Panel {
+            var overlay = new BufferedPanel
+            {
                 Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(10, 0, 0, 0)
+                BackColor = Color.FromArgb(10, 0, 0, 0) 
             };
             Controls.Add(overlay);
 
-            // --- Vùng nội dung tự co giãn ---
-            content = new Panel {
+            content = new BufferedPanel
+            {
                 BackColor = Color.Transparent,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink
             };
             overlay.Controls.Add(content);
 
-            // Căn giữa khi content thay đổi kích thước
             content.SizeChanged += (_, __) => {
-                RecenterChildren();            // canh giữa lại con
-                CenterContentHorizontally();   // canh giữa content
+                RecenterChildren();
+                CenterContentHorizontally();
             };
 
-            // --- Tiêu đề ---
-            title = new Label {
+            title = new Label
+            {
                 AutoSize = false,
                 TextAlign = ContentAlignment.MiddleCenter,
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
@@ -52,40 +74,35 @@ namespace GUI.Features.Auth {
             };
             content.Controls.Add(title);
 
-            // Khi form đổi size / hiển thị lần đầu, căn giữa lại
             Resize += (_, __) => CenterContentHorizontally();
             Shown += (_, __) => CenterContentHorizontally();
         }
 
-        // Căn giữa panel content trong form
-        protected void CenterContentHorizontally() {
-            // Căn giữa theo trục X và Y, đẩy lên một chút
+
+        protected void CenterContentHorizontally()
+        {
             int x = (ClientSize.Width - content.Width) / 2;
             int y = (ClientSize.Height - content.Height) / 2 - 20;
-
-            // tránh giá trị âm nếu form quá nhỏ
             content.Left = x < 0 ? 0 : x;
             content.Top = y < 0 ? 0 : y;
         }
 
-        // Canh giữa những control nên đặt giữa (textfield, primary button)
-        protected virtual void RecenterChildren() {
-            foreach (Control c in content.Controls) {
+        protected virtual void RecenterChildren()
+        {
+            foreach (Control c in content.Controls)
+            {
                 if (ShouldCenter(c)) CenterX(c);
             }
         }
 
-        // Quy tắc chọn control cần canh giữa
         protected bool ShouldCenter(Control c) =>
             c is UnderlinedTextField ||
             c is PrimaryButton;
 
-        /// <summary>
-        /// Tạo một panel “hàng link” rộng bằng control tham chiếu (alignTo),
-        /// luôn căn-phải LinkLabel và tự động "bám" khi alignTo di chuyển/đổi kích thước.
-        /// </summary>
-        protected Panel CreateRightAlignedLinkRow(Control alignTo, string linkText, EventHandler onClick) {
-            var row = new Panel {
+        protected Panel CreateRightAlignedLinkRow(Control alignTo, string linkText, EventHandler onClick)
+        {
+            var row = new Panel
+            {
                 Width = alignTo.Width,
                 Height = 24,
                 Left = alignTo.Left,
@@ -93,10 +110,11 @@ namespace GUI.Features.Auth {
                 BackColor = Color.Transparent
             };
 
-            var link = new LinkLabel {
+            var link = new LinkLabel
+            {
                 Text = linkText,
                 AutoSize = true,
-                LinkColor = Color.FromArgb(0, 92, 175),       // màu dễ nhìn trên nền sáng
+                LinkColor = Color.FromArgb(0, 92, 175),
                 ActiveLinkColor = Color.FromArgb(0, 92, 175),
                 VisitedLinkColor = Color.FromArgb(0, 92, 175),
                 BackColor = Color.Transparent,
@@ -105,8 +123,8 @@ namespace GUI.Features.Auth {
 
             row.Controls.Add(link);
 
-            // Căn phải link trong row
-            void RightAlignLink() {
+            void RightAlignLink()
+            {
                 int x = row.Width - link.PreferredWidth;
                 if (x < 0) x = 0;
                 link.Location = new Point(x, 0);
@@ -114,12 +132,10 @@ namespace GUI.Features.Auth {
             RightAlignLink();
 
             link.Click += onClick;
-
-            // Khi row đổi size (do content AutoSize), cập nhật vị trí link
             row.SizeChanged += (_, __) => RightAlignLink();
 
-            // 🔗 BÁM THEO control tham chiếu
-            void FollowAlignTo(object? s, EventArgs e) {
+            void FollowAlignTo(object? s, EventArgs e)
+            {
                 row.Left = alignTo.Left;
                 row.Width = alignTo.Width;
                 row.Top = alignTo.Bottom + 8;
@@ -131,15 +147,14 @@ namespace GUI.Features.Auth {
             return row;
         }
 
-        /// Căn control theo giữa nội dung theo trục X
         protected void CenterX(Control c) => c.Left = (content.Width - c.Width) / 2;
 
-        /// Điều hướng: ẩn form hiện tại và mở form đích.
-        protected void Navigate(Form next) {
+        protected void Navigate(Form next)
+        {
             next.StartPosition = FormStartPosition.CenterScreen;
             next.Show();
             Hide();
-            next.FormClosed += (_, __) => Close(); // đóng chuỗi điều hướng
+            next.FormClosed += (_, __) => Close();
         }
     }
 }

@@ -7,6 +7,7 @@ using DTO.Baggage;
 using DTO.Booking;
 using DTO.Profile;
 using DTO.Ticket;
+using GUI.Components.Buttons;
 using GUI.Features.Seat.SubFeatures;
 using GUI.Features.Validator;
 using System;
@@ -102,120 +103,169 @@ namespace GUI.Features.Ticket.subTicket
             cboNationalityTicket.Text = profile.Nationality ?? "VN";
         }
 
-        private void InitGrid()
-        {
-            dgvPassengerListTicket.AutoGenerateColumns = false;
-            dgvPassengerListTicket.AllowUserToAddRows = false;
-            dgvPassengerListTicket.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvPassengerListTicket.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dgvPassengerListTicket.Columns.Clear();
-
-            dgvPassengerListTicket.Columns.Add(new DataGridViewTextBoxColumn
+            // =========================================================
+            // 1. CẤU HÌNH GRID ĐẸP (HIỆN ĐẠI & THOÁNG)
+            // =========================================================
+            private void InitGrid()
             {
-                Name = "colFullName",
-                HeaderText = "Họ và tên",
-                DataPropertyName = "FullName",
-                FillWeight = 25
-            });
+                // --- Cấu hình giao diện chung ---
+                dgvPassengerListTicket.BackgroundColor = Color.White;
+                dgvPassengerListTicket.BorderStyle = BorderStyle.None;
+                dgvPassengerListTicket.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal; // Chỉ hiện dòng kẻ ngang
+                dgvPassengerListTicket.GridColor = Color.FromArgb(240, 240, 240); // Màu kẻ rất nhạt
 
-            dgvPassengerListTicket.Columns.Add(new DataGridViewTextBoxColumn
+                dgvPassengerListTicket.AutoGenerateColumns = false;
+                dgvPassengerListTicket.AllowUserToAddRows = false;
+                dgvPassengerListTicket.AllowUserToResizeRows = false;
+                dgvPassengerListTicket.ShowCellToolTips = false;
+
+                // --- Header Style (Cao & Đậm) ---
+                dgvPassengerListTicket.EnableHeadersVisualStyles = false;
+                dgvPassengerListTicket.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
+                dgvPassengerListTicket.ColumnHeadersHeight = 50; // Header cao thoáng
+                dgvPassengerListTicket.ColumnHeadersDefaultCellStyle.BackColor = Color.White;
+                dgvPassengerListTicket.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(100, 100, 100); // Màu chữ xám chuyên nghiệp
+                dgvPassengerListTicket.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+                dgvPassengerListTicket.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+                dgvPassengerListTicket.ColumnHeadersDefaultCellStyle.Padding = new Padding(10, 0, 0, 0); // Padding trái
+
+                // --- Row Style (Cao & Phẳng) ---
+                dgvPassengerListTicket.RowTemplate.Height = 55; // Dòng dữ liệu cao
+                dgvPassengerListTicket.DefaultCellStyle.BackColor = Color.White;
+                dgvPassengerListTicket.DefaultCellStyle.ForeColor = Color.FromArgb(50, 50, 50);
+                dgvPassengerListTicket.DefaultCellStyle.Font = new Font("Segoe UI", 10F);
+                dgvPassengerListTicket.DefaultCellStyle.SelectionBackColor = Color.FromArgb(235, 245, 255); // Màu xanh rất nhạt khi chọn
+                dgvPassengerListTicket.DefaultCellStyle.SelectionForeColor = Color.FromArgb(0, 92, 175); // Chữ xanh đậm khi chọn
+                dgvPassengerListTicket.DefaultCellStyle.Padding = new Padding(10, 0, 0, 0);
+                dgvPassengerListTicket.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+                dgvPassengerListTicket.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+
+                // --- Xóa cột cũ & Thêm cột mới ---
+                dgvPassengerListTicket.Columns.Clear();
+
+                // 1. Họ tên (Đậm)
+                var colName = AddTextColumn("colFullName", "HỌ VÀ TÊN", "FullName", 25);
+                colName.DefaultCellStyle.Font = new Font("Segoe UI", 10F, FontStyle.Bold); // Tên người đậm lên
+
+                // 2. Ngày sinh
+                AddTextColumn("colDateOfBirth", "NGÀY SINH", "DateOfBirth", 12).DefaultCellStyle.Format = "dd/MM/yyyy";
+
+                // 3. Quốc tịch
+                AddTextColumn("colNationality", "QUỐC TỊCH", "Nationality", 12);
+
+                // 4. Hộ chiếu
+                AddTextColumn("colPassportNumber", "HỘ CHIẾU/CCCD", "PassportNumber", 15);
+
+                // 5. Ghế đi (Màu xanh)
+                var colSeatOut = AddTextColumn("colSeatNumber", "GHẾ ĐI", "SeatNumber", 10);
+                colSeatOut.DefaultCellStyle.ForeColor = Color.SeaGreen;
+                colSeatOut.DefaultCellStyle.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+
+                // 6. Ghế về (Màu cam - Unbound)
+                var colSeatIn = new DataGridViewTextBoxColumn();
+                colSeatIn.Name = "colSeatIn";
+                colSeatIn.HeaderText = "GHẾ VỀ";
+                colSeatIn.FillWeight = 10;
+                colSeatIn.DefaultCellStyle.ForeColor = Color.Chocolate;
+                colSeatIn.DefaultCellStyle.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+                dgvPassengerListTicket.Columns.Add(colSeatIn);
+
+                // 7. Nút Sửa Đi
+                AddButtonColumn("colEditOutbound", "", "✎ Sửa Đi");
+
+                // 8. Nút Sửa Về
+                AddButtonColumn("colEditInbound", "", "✎ Sửa Về").Visible = false;
+
+                // --- Load Data Source ---
+                AddHiddenColumns(); // (Giữ nguyên hàm thêm cột ẩn của bạn)
+                _bs.DataSource = _outboundPassengers;
+                dgvPassengerListTicket.DataSource = _bs;
+
+                // Event
+                dgvPassengerListTicket.CellContentClick += dgvPassengerListTicket_CellContentClick;
+            }
+
+            // Helper thêm cột text nhanh
+            private DataGridViewTextBoxColumn AddTextColumn(string name, string header, string prop, float weight)
             {
-                Name = "colDateOfBirth",
-                HeaderText = "Ngày sinh",
-                DataPropertyName = "DateOfBirth",
-                FillWeight = 15,
-                DefaultCellStyle = new DataGridViewCellStyle { Format = "dd/MM/yyyy" }
-            });
+                var col = new DataGridViewTextBoxColumn
+                {
+                    Name = name,
+                    HeaderText = header,
+                    DataPropertyName = prop,
+                    FillWeight = weight
+                };
+                dgvPassengerListTicket.Columns.Add(col);
+                return col;
+            }
 
-            dgvPassengerListTicket.Columns.Add(new DataGridViewTextBoxColumn
+            // Helper thêm cột button đẹp
+            private DataGridViewButtonColumn AddButtonColumn(string name, string header, string text)
             {
-                Name = "colNationality",
-                HeaderText = "Quốc tịch",
-                DataPropertyName = "Nationality",
-                FillWeight = 15
-            });
+                var btn = new DataGridViewButtonColumn
+                {
+                    Name = name,
+                    HeaderText = header,
+                    Text = text,
+                    UseColumnTextForButtonValue = true,
+                    AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells,
+                    FlatStyle = FlatStyle.Flat, // Button phẳng
+                };
+                // Lưu ý: Style màu button trong GridView hơi hạn chế, thường nó sẽ ăn theo System Colors
+                // Trừ khi bạn dùng CellPainting (như ở form trước).
+                dgvPassengerListTicket.Columns.Add(btn);
+                return btn;
+            }
 
-            dgvPassengerListTicket.Columns.Add(new DataGridViewTextBoxColumn
+            // Hàm thêm cột ẩn (Copy lại logic cũ của bạn vào đây cho gọn)
+            private void AddHiddenColumns()
             {
-                Name = "colPassportNumber",
-                HeaderText = "Hộ chiếu",
-                DataPropertyName = "PassportNumber",
-                FillWeight = 20
-            });
+                string[] hiddenProps = { "AccountId", "FlightId", "FlightDate", "PhoneNumber", "Email",
+                                     "SeatId", "FlightSeatId", "ClassId", "CarryOnId", "CheckedId",
+                                     "Quantity", "BaggageNote", "BaggageDisplayText", "TicketNumber", "Note" };
+                foreach (var prop in hiddenProps)
+                {
+                    dgvPassengerListTicket.Columns.Add(new DataGridViewTextBoxColumn
+                    {
+                        Name = "col" + prop,
+                        DataPropertyName = prop,
+                        Visible = false
+                    });
+                }
+            }
 
-            dgvPassengerListTicket.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                Name = "colSeatNumber",
-                HeaderText = "Số ghế",
-                DataPropertyName = "SeatNumber",
-                FillWeight = 15
-            });
+            // =========================================================
+            // 2. GỌI FORM CHỌN GHẾ (DÙNG CLASS MỚI BÊN DƯỚI)
+            // =========================================================
 
-            dgvPassengerListTicket.Columns.Add(new DataGridViewButtonColumn
-            {
-                Name = "colEditOutbound",
-                HeaderText = "Sửa đi",
-                Text = "Sửa đi",
-                UseColumnTextForButtonValue = true,
-                AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells
-            });
-
-            // Các cột ẩn
-            AddHiddenColumn("AccountId");
-            AddHiddenColumn("FlightId");
-            AddHiddenColumn("FlightDate");
-            AddHiddenColumn("PhoneNumber");
-            AddHiddenColumn("Email");
-            AddHiddenColumn("SeatId");
-            AddHiddenColumn("FlightSeatId");
-            AddHiddenColumn("ClassId");
-            AddHiddenColumn("CarryOnId");
-            AddHiddenColumn("CheckedId");
-            AddHiddenColumn("Quantity");
-            AddHiddenColumn("BaggageNote");
-            AddHiddenColumn("BaggageDisplayText");
-            AddHiddenColumn("TicketNumber");
-            AddHiddenColumn("Note");
-
-            _bs.DataSource = _outboundPassengers;
-            dgvPassengerListTicket.DataSource = _bs;
-            dgvPassengerListTicket.CellContentClick += dgvPassengerListTicket_CellContentClick;
-        }
-
-        private void AddHiddenColumn(string propertyName)
-        {
-            dgvPassengerListTicket.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                Name = "col" + propertyName,
-                HeaderText = propertyName,
-                DataPropertyName = propertyName,
-                Visible = false
-            });
-        }
-
-        public class SeatSelectorForm : Form
+            public class SeatSelectorForm : Form
         {
             public OpenSeatSelectorControl Selector { get; private set; }
 
             public SeatSelectorForm(int flightId, int classId, List<int> takenSeats)
             {
-                Text = "Chọn ghế";
-                Width = 500;
-                Height = 400;
-                StartPosition = FormStartPosition.CenterScreen;
-                FormBorderStyle = FormBorderStyle.FixedDialog;
-                MaximizeBox = false;
-                MinimizeBox = false;
+                // 1. Cấu hình Form
+                this.Text = "Sơ đồ ghế chuyến bay";
+                this.Size = new Size(1100, 750);
+                this.MinimumSize = new Size(800, 600);
+                this.StartPosition = FormStartPosition.CenterParent;
+                this.FormBorderStyle = FormBorderStyle.Sizable;
+                this.BackColor = Color.White;
+                this.Font = new Font("Segoe UI", 10F);
 
+                // 2. Control Chọn Ghế (Body)
                 Selector = new OpenSeatSelectorControl();
-                Selector.TakenSeats = takenSeats; // 🔥 truyền vào control
+                Selector.TakenSeats = takenSeats;
                 Selector.Dock = DockStyle.Fill;
-                Controls.Add(Selector);
+                Selector.BackColor = Color.White;
 
-                Load += (s, e) =>
-                {
-                    Selector.LoadSeats(flightId, classId);
-                };
+ 
+
+                // 4. Add vào Form
+                this.Controls.Add(Selector); // Fill
+
+                // 5. Load dữ liệu khi hiển thị
+                this.Load += (s, e) => Selector.LoadSeats(flightId, classId);
             }
         }
 
