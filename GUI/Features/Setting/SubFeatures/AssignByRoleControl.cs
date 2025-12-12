@@ -34,8 +34,8 @@ namespace GUI.Features.Setting.SubFeatures {
         private int? _selectedRoleId = null;
         private Button btnAddRole, btnEditRole, btnDeleteRole;
 
-        public AssignByRoleControl() { 
-            InitializeComponent(); 
+        public AssignByRoleControl() {
+            InitializeComponent();
         }
 
         private void InitializeComponent() {
@@ -58,7 +58,6 @@ namespace GUI.Features.Setting.SubFeatures {
                 WrapContents = false
             };
 
-            // Khai báo giống mẫu _cbTimezone (label + items + MinimumSize + Width + Margin)
             cboModule = new UnderlinedComboBox("Module", new object[] { "(Tất cả)" }) {
                 MinimumSize = new Size(0, 56),
                 Width = 200,
@@ -109,29 +108,10 @@ namespace GUI.Features.Setting.SubFeatures {
             btnSave = new PrimaryButton("💾 Lưu");
             btnClearAll = new SecondaryButton("Bỏ chọn tất cả");
 
-            btnAddRole.Click += (_, __) =>
-            {
-                using var dlg = new RoleEditForm(null);   // form ở chế độ thêm mới
-                dlg.ShowDialog(this);
-            };
-
-            btnEditRole.Click += (_, __) =>
-            {
-                using var dlg = new RoleEditForm(null);   // tạm thời mở form rỗng
-                dlg.ShowDialog(this);
-            };
-
-            btnDeleteRole.Click += (_, __) =>
-            {
-                MessageBox.Show("Tính năng xóa vai trò sẽ được bổ sung sau.",
-                    "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            };
-
-            /* Bổ sung sau
             btnAddRole.Click += (_, __) => AddRole();
             btnEditRole.Click += (_, __) => EditRole();
-            btnDeleteRole.Click += (_, __) => DeleteRole(); 
-            */
+            btnDeleteRole.Click += (_, __) => DeleteRole();
+
             btnSave.Click += (_, __) => SaveAllRoles();
             btnClearAll.Click += (_, __) => ClearAll();
 
@@ -161,6 +141,9 @@ namespace GUI.Features.Setting.SubFeatures {
             LoadData();
         }
 
+        /// <summary>
+        /// Tải dữ liệu từ service (permissions + roles + role->perms)
+        /// </summary>
         private void LoadData() {
             _suspendReload = true;
 
@@ -175,7 +158,7 @@ namespace GUI.Features.Setting.SubFeatures {
 
             _roleToPermIds.Clear();
             foreach (var r in _roles)
-                _roleToPermIds[r.RoleId] = _service.GetPermissionIdsOfRole(r.RoleId);
+                _roleToPermIds[r.RoleId] = _service.GetPermissionIdsOfRole(r.RoleId) ?? new HashSet<int>();
 
             BuildTableColumns();
             BuildSelectAllRow();
@@ -184,6 +167,10 @@ namespace GUI.Features.Setting.SubFeatures {
             ReloadTable();
         }
 
+        /// <summary>
+        /// Xây dựng cột (gọi lại khi roles thay đổi)
+        /// - Cột admin được đặt ReadOnly = true (hiển thị checked và không cho thay đổi)
+        /// </summary>
         private void BuildTableColumns() {
             table.Rows.Clear();
             table.Columns.Clear();
@@ -197,7 +184,7 @@ namespace GUI.Features.Setting.SubFeatures {
             };
             table.Columns.Add(colPerm);
 
-            // Cột checkbox cho từng role
+            // Cột checkbox cho từng role (thêm động)
             foreach (var role in _roles) {
                 var col = new DataGridViewCheckBoxColumn {
                     Name = $"Role_{role.RoleId}",
@@ -207,10 +194,20 @@ namespace GUI.Features.Setting.SubFeatures {
                     FalseValue = false,
                     FillWeight = 80
                 };
+
+                // Quy ước: nếu role là quản trị viên (dựa trên role.Code) -> disable editing
+                bool isAdmin = IsAdminRole(role);
+                if (isAdmin) {
+                    col.ReadOnly = true; // không cho thay đổi checkbox
+                }
+
                 table.Columns.Add(col);
             }
         }
 
+        /// <summary>
+        /// Build hàng select-all phía trên dựa trên _roles hiện tại
+        /// </summary>
         private void BuildSelectAllRow() {
             selectAllRow.Controls.Clear();
             selectAllRow.Controls.Add(new Label {
@@ -230,6 +227,13 @@ namespace GUI.Features.Setting.SubFeatures {
                     var rid = (int)((CheckBox)s).Tag;
                     SetColumnAll(rid, cb.Checked);
                 };
+
+                // Nếu role admin -> disable checkbox select-all UI (vì cột admin mặc định full checked)
+                if (IsAdminRole(role)) {
+                    cb.Enabled = false;
+                    cb.Checked = true;
+                }
+
                 selectAllRow.Controls.Add(cb);
             }
         }
@@ -260,15 +264,31 @@ namespace GUI.Features.Setting.SubFeatures {
                 for (int i = 0; i < _roles.Count; i++) {
                     var role = _roles[i];
                     bool granted = _roleToPermIds.TryGetValue(role.RoleId, out var set) && set.Contains(p.PermissionId);
-                    table.Rows[rowIdx].Cells[i + 1].Value = granted;
+
+                    // Nếu role admin -> force true (hiển thị tick full dòng) và cell ReadOnly = true
+                    if (IsAdminRole(role)) {
+                        table.Rows[rowIdx].Cells[i + 1].Value = true;
+                        table.Rows[rowIdx].Cells[i + 1].ReadOnly = true;
+                        // đảm bảo mapping admin chứa full permissions để khi lưu không bị xóa
+                        if (!_roleToPermIds.TryGetValue(role.RoleId, out var s)) {
+                            s = new HashSet<int>();
+                            _roleToPermIds[role.RoleId] = s;
+                        }
+                        s.Add(p.PermissionId);
+                    } else {
+                        table.Rows[rowIdx].Cells[i + 1].Value = granted;
+                        table.Rows[rowIdx].Cells[i + 1].ReadOnly = false;
+                    }
                 }
             }
         }
 
         private void SetColumnAll(int roleId, bool check) {
+            int colIdx = ColIndexByRoleId(roleId);
+            if (colIdx <= 0) return;
+
             foreach (DataGridViewRow row in table.Rows) {
-                int colIdx = ColIndexByRoleId(roleId);
-                if (colIdx > 0) row.Cells[colIdx].Value = check;
+                row.Cells[colIdx].Value = check;
             }
 
             if (_roleToPermIds.TryGetValue(roleId, out var set)) {
@@ -291,6 +311,9 @@ namespace GUI.Features.Setting.SubFeatures {
             if (row.Tag is not PermissionItem p) return;
 
             var role = _roles[e.ColumnIndex - 1];
+            // Nếu column này readonly (ví dụ admin), bỏ qua
+            if (table.Columns[e.ColumnIndex].ReadOnly || row.Cells[e.ColumnIndex].ReadOnly) return;
+
             bool granted = Convert.ToBoolean(row.Cells[e.ColumnIndex].Value ?? false);
 
             if (!_roleToPermIds.TryGetValue(role.RoleId, out var set)) {
@@ -304,19 +327,30 @@ namespace GUI.Features.Setting.SubFeatures {
         private void SaveAllRoles() {
             foreach (var role in _roles) {
                 var set = _roleToPermIds.TryGetValue(role.RoleId, out var s) ? s : new HashSet<int>();
-                _service.SavePermissionsForRole(role.RoleId, set);
+                try {
+                    // Gọi service để lưu.
+                    _service.SavePermissionsForRole(role.RoleId, set);
+                } catch (Exception ex) {
+                    MessageBox.Show($"Lưu quyền cho vai trò {role.Name} thất bại: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
             }
             MessageBox.Show("Đã lưu ma trận quyền cho tất cả vai trò.", "Phân quyền", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void ClearAll() {
             foreach (DataGridViewRow row in table.Rows)
-                for (int c = 1; c < table.Columns.Count; c++)
+                for (int c = 1; c < table.Columns.Count; c++) {
+                    // Nếu cột readonly (admin) thì không clear
+                    if (table.Columns[c].ReadOnly) continue;
                     row.Cells[c].Value = false;
+                }
 
             foreach (var rid in _roles.Select(r => r.RoleId))
-                _roleToPermIds[rid].Clear();
+                if (_roleToPermIds.TryGetValue(rid, out var s) && (ColIndexByRoleId(rid) > 0 && !table.Columns[ColIndexByRoleId(rid)].ReadOnly))
+                    s.Clear();
         }
+
         private void HighlightRoleColumn(int columnIndex) {
             // Reset màu tất cả header
             for (int i = 0; i < table.Columns.Count; i++)
@@ -342,6 +376,223 @@ namespace GUI.Features.Setting.SubFeatures {
             _selectedRoleId = role.RoleId;
 
             HighlightRoleColumn(e.ColumnIndex);
+        }
+
+        // ---------- New: Add / Edit / Delete role ----------
+        private void AddRole() {
+            using var dlg = new RoleEditForm(null); // form ở chế độ thêm mới
+            var dr = dlg.ShowDialog(this);
+            if (dr == DialogResult.OK) {
+                // Nếu RoleEditForm trả về id mới qua property CreatedRoleId
+                int newId = 0;
+                try {
+                    // dùng reflection-safe check (nếu form không có prop, fall back reload)
+                    var prop = dlg.GetType().GetProperty("CreatedRoleId");
+                    if (prop != null) newId = (int)(prop.GetValue(dlg) ?? 0);
+                } catch { newId = 0; }
+
+                if (newId > 0) {
+                    // Insert cột cục bộ để mượt UI
+                    var newRole = _service.GetRoleById(newId);
+                    if (newRole != null) InsertRoleColumn(newRole);
+                    // Ensure mapping exists
+                    _roleToPermIds[newId] = _service.GetPermissionIdsOfRole(newId) ?? new HashSet<int>();
+                } else {
+                    // fallback: reload toàn bộ
+                    LoadData();
+                }
+            }
+        }
+
+        private void EditRole() {
+            if (_selectedRoleId == null) {
+                MessageBox.Show("Vui lòng chọn cột vai trò (click header) để sửa.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var role = _roles.FirstOrDefault(r => r.RoleId == _selectedRoleId.Value);
+            if (role == null) return;
+
+            using var dlg = new RoleEditForm(role); // truyền role để sửa
+            var dr = dlg.ShowDialog(this);
+            if (dr == DialogResult.OK) {
+                // Re-fetch updated role and update UI header
+                var updated = _service.GetRoleById(role.RoleId);
+                if (updated != null) UpdateRoleColumn(updated);
+            }
+        }
+
+        private void DeleteRole() {
+            if (_selectedRoleId == null) {
+                MessageBox.Show("Vui lòng chọn cột vai trò (click header) để xóa.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var role = _roles.FirstOrDefault(r => r.RoleId == _selectedRoleId.Value);
+            if (role == null) return;
+
+            // Không cho xóa role admin
+            if (IsAdminRole(role)) {
+                MessageBox.Show("Không thể xóa vai trò quản trị viên.", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var confirm = MessageBox.Show($"Bạn có chắc muốn xóa vai trò '{role.Name}' không? Hành động này không thể hoàn tác.", "Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (confirm != DialogResult.Yes) return;
+
+            try {
+                _service.DeleteRole(role.RoleId);
+                // nếu không ném exception -> success
+                RemoveRoleColumn(role.RoleId);
+            } catch (Exception ex) {
+                MessageBox.Show($"Xóa vai trò thất bại: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // ---------- Column helpers: insert / update / remove ----------
+        private void InsertRoleColumn(RoleItem newRole) {
+            if (newRole == null) return;
+
+            // 1. thêm vào danh sách role UI
+            _roles.Add(newRole);
+
+            // 2. thêm column checkbox cuối cùng
+            var col = new DataGridViewCheckBoxColumn {
+                Name = $"Role_{newRole.RoleId}",
+                HeaderText = newRole.Name,
+                ThreeState = false,
+                TrueValue = true,
+                FalseValue = false,
+                FillWeight = 80
+            };
+
+            // If admin -> readonly
+            if (!string.IsNullOrEmpty(newRole.Code) && newRole.Code.Trim().Equals("ADMIN", StringComparison.OrdinalIgnoreCase))
+                col.ReadOnly = true;
+
+            table.Columns.Add(col);
+            int colIdx = table.Columns.Count - 1;
+
+            // 3. add a select-all checkbox in selectAllRow
+            var cb = new CheckBox {
+                Text = newRole.Name,
+                AutoSize = true,
+                Tag = newRole.RoleId,
+                Margin = new Padding(8, 4, 0, 0),
+            };
+            cb.CheckedChanged += (s, e) => {
+                var rid = (int)((CheckBox)s).Tag;
+                SetColumnAll(rid, cb.Checked);
+            };
+
+            if (!string.IsNullOrEmpty(newRole.Code) && newRole.Code.Trim().Equals("ADMIN", StringComparison.OrdinalIgnoreCase)) {
+                cb.Enabled = false;
+                cb.Checked = true;
+            }
+
+            selectAllRow.Controls.Add(cb);
+
+            // 4. populate values for each row based on _roleToPermIds (if exists)
+            var existing = _roleToPermIds.TryGetValue(newRole.RoleId, out var ex) ? ex : new HashSet<int>();
+            for (int r = 0; r < table.Rows.Count; r++) {
+                var row = table.Rows[r];
+                if (row.Tag is PermissionItem p) {
+                    bool granted = existing.Contains(p.PermissionId);
+                    if (!string.IsNullOrEmpty(newRole.Code) && newRole.Code.Trim().Equals("ADMIN", StringComparison.OrdinalIgnoreCase)) {
+                        row.Cells[colIdx].Value = true;
+                        row.Cells[colIdx].ReadOnly = true;
+                        // ensure mapping contains all permissions
+                        if (!_roleToPermIds.TryGetValue(newRole.RoleId, out var set)) {
+                            set = new HashSet<int>();
+                            _roleToPermIds[newRole.RoleId] = set;
+                        }
+                        set.Add(p.PermissionId);
+                    } else {
+                        row.Cells[colIdx].Value = granted;
+                        row.Cells[colIdx].ReadOnly = false;
+                    }
+                }
+            }
+
+            // ensure mapping exists
+            if (!_roleToPermIds.ContainsKey(newRole.RoleId))
+                _roleToPermIds[newRole.RoleId] = existing;
+        }
+
+        private void UpdateRoleColumn(RoleItem updatedRole) {
+            if (updatedRole == null) return;
+            // Update in _roles list
+            var idx = _roles.FindIndex(r => r.RoleId == updatedRole.RoleId);
+            if (idx >= 0) _roles[idx] = updatedRole;
+
+            int colIdx = ColIndexByRoleId(updatedRole.RoleId);
+            if (colIdx > 0) {
+                table.Columns[colIdx].HeaderText = updatedRole.Name;
+
+                // Update selectAll label
+                foreach (Control c in selectAllRow.Controls) {
+                    if (c is CheckBox cb && cb.Tag is int rid && rid == updatedRole.RoleId) {
+                        cb.Text = updatedRole.Name;
+                        break;
+                    }
+                }
+
+                // If admin status changed (rare), update readonly state
+                bool isAdmin = !string.IsNullOrEmpty(updatedRole.Code) && updatedRole.Code.Trim().Equals("ADMIN", StringComparison.OrdinalIgnoreCase);
+                table.Columns[colIdx].ReadOnly = isAdmin;
+                for (int r = 0; r < table.Rows.Count; r++) {
+                    var cell = table.Rows[r].Cells[colIdx];
+                    if (isAdmin) {
+                        cell.Value = true;
+                        cell.ReadOnly = true;
+                    } else {
+                        // keep existing value from mapping if present
+                        if (_roleToPermIds.TryGetValue(updatedRole.RoleId, out var set))
+                            cell.Value = set.Contains(((PermissionItem)table.Rows[r].Tag).PermissionId);
+                        cell.ReadOnly = false;
+                    }
+                }
+
+                // Update selectAll checkbox enablement
+                foreach (Control c in selectAllRow.Controls) {
+                    if (c is CheckBox cb && cb.Tag is int rid && rid == updatedRole.RoleId) {
+                        cb.Enabled = !isAdmin;
+                        if (isAdmin) cb.Checked = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void RemoveRoleColumn(int roleId) {
+            int colIdx = ColIndexByRoleId(roleId);
+            if (colIdx > 0) {
+                table.Columns.RemoveAt(colIdx);
+            }
+
+            // remove selectAll checkbox
+            Control toRemove = null;
+            foreach (Control c in selectAllRow.Controls) {
+                if (c is CheckBox cb && cb.Tag is int rid && rid == roleId) {
+                    toRemove = c;
+                    break;
+                }
+            }
+            if (toRemove != null) selectAllRow.Controls.Remove(toRemove);
+
+            // remove from lists
+            var role = _roles.FirstOrDefault(r => r.RoleId == roleId);
+            if (role != null) _roles.Remove(role);
+            if (_roleToPermIds.ContainsKey(roleId)) _roleToPermIds.Remove(roleId);
+
+            _selectedRoleId = null;
+        }
+
+        // Helper: cách nhận dạng role admin (dựa trên Role.Code)
+        private bool IsAdminRole(RoleItem role) {
+            if (role == null) return false;
+            var code = (role.Code ?? string.Empty).Trim();
+            return code.Equals("ADMIN", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

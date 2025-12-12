@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace DTO.Ticket
 {
-    public  class TicketHistory
+    public class TicketHistory
     {
         [Key]
-        public int  history_id { get; set; }
+        public int history_id { get; set; }
         public int ticket_id { get; set; }
         public string old_status { get; set; }
         public string new_status { get; set; }

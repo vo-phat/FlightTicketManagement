@@ -15,7 +15,7 @@ namespace GUI.Features.Ticket.subTicket
     public partial class TicketOpsControl : UserControl
     {
         TicketListBUS ticketListBUS;
-
+        private int currentAdminId = 1; // Giả sử admin hiện tại có ID là 1
 
         public TicketOpsControl()
         {
@@ -168,32 +168,87 @@ namespace GUI.Features.Ticket.subTicket
         // ==================================================================
         private void dgvListFilerTickets_CellClick(object sender, DataGridViewCellEventArgs e)
         {
+            // 1️⃣ BẢO VỆ CƠ BẢN
             if (e.RowIndex < 0) return;
+            if (e.ColumnIndex < 0) return;
 
-            var dto = dgvTicketOpsControl.Rows[e.RowIndex].DataBoundItem as TicketListDTO;
+            // 2️⃣ LẤY DTO TỪ DÒNG
+            var dto = dgvTicketOpsControl
+                .Rows[e.RowIndex]
+                .DataBoundItem as TicketListDTO;
+
             if (dto == null) return;
 
-            string col = dgvTicketOpsControl.Columns[e.ColumnIndex].Name;
+            // 3️⃣ XÁC ĐỊNH CỘT ĐƯỢC BẤM
+            string colName = dgvTicketOpsControl.Columns[e.ColumnIndex].Name;
 
-            if (col == "btnView")
+            // =========================
+            // 4️⃣ GỌI BUS ĐÚNG CHỖ
+            // =========================
+
+            if (colName == "btnCancel")
+            {
+                try
+                {
+                    new CancelTicketBUS()
+                        .CancelTicket(dto, currentAdminId);
+
+                    MessageBox.Show("Hủy vé thành công");
+                    ReloadGrid(); // load lại danh sách
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Lỗi");
+                }
+            }
+            else if (colName == "btnRefund")
+            {
+                try
+                {
+                    // 1️⃣ DTO từ grid (list)
+                    var listDto = dto; // dto đã lấy ở trên rồi
+
+                    // 2️⃣ MAP sang DTO refund
+                    var refundDto = new RefundTicketDTO
+                    {
+                        TicketId = listDto.TicketId,
+                        Status = listDto.Status,
+                        TicketPrice = listDto.Price,          // hoặc TicketPrice
+                        IsRefundable = listDto.IsRefundable,
+                        RefundFeePercent = listDto.RefundFeePercent,
+                        AdminId = currentAdminId
+                    };
+
+                    // 3️⃣ Gọi BUS refund
+                    new RefundTicketBUS().Refund(refundDto);
+
+                    MessageBox.Show("Đã ghi nhận hoàn tiền");
+                    ReloadGrid();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Lỗi");
+                }
+            }
+
+            else if (colName == "btnView")
             {
                 MessageBox.Show($"Xem vé: {dto.TicketNumber}");
             }
-            else if (col == "btnCancel")
+            else if (colName == "btnBaggage")
             {
-                MessageBox.Show("Nhấn Hủy vé — Anh xử lý logic tại đây.");
-            }
-            else if (col == "btnRefund")
-            {
-                MessageBox.Show("Nhấn Hoàn vé — Anh xử lý logic tại đây.");
-            }
-            else if (col == "btnBaggage")
-            {
-                MessageBox.Show("Bạn đang nhấn vào xem hành lý");
-                int ticketId = dto.TicketId; // lấy ID từ DTO
-                OnOpenBaggageManager?.Invoke(ticketId);
+                OnOpenBaggageManager?.Invoke(dto.TicketId);
             }
         }
+        private void ReloadGrid()
+        {
+            ticketListBUS = new TicketListBUS();
+            List<TicketListDTO> data = ticketListBUS.GetAllTickets();
+
+            dgvTicketOpsControl.DataSource = null;
+            dgvTicketOpsControl.DataSource = data;
+        }
+
         private void SearchTickets()
         {
             string keyword = txtSearchTicket.Text.Trim();

@@ -424,5 +424,23 @@ namespace DAO.FlightSeat
             return result;
         }
         #endregion
+
+        public void ReleaseSeatByTicketId(
+           int ticketId,
+           MySqlTransaction tran)
+        {
+            string sql = @"
+                UPDATE flight_seats
+                SET seat_status = 'AVAILABLE'
+                WHERE flight_seat_id = (
+                    SELECT flight_seat_id
+                    FROM tickets
+                    WHERE ticket_id = @tid
+                )";
+
+            using var cmd = new MySqlCommand(sql, tran.Connection, tran);
+            cmd.Parameters.AddWithValue("@tid", ticketId);
+            cmd.ExecuteNonQuery();
+        }
     }
 }

@@ -63,6 +63,7 @@ namespace DAO.TicketDAO
             return @"
         SELECT 
             t.ticket_id,
+            t.total_price,
             t.ticket_number,
             pp.full_name,
             f.flight_number,
@@ -72,7 +73,11 @@ namespace DAO.TicketDAO
             f.departure_time,
              s.seat_number AS seat_code,
             fs.base_price,
-            t.status
+            t.status,
+            arp.refund_fee_percent,
+            arp.is_refundable
+          
+            
         FROM tickets t
 
         JOIN booking_passengers bp 
@@ -98,9 +103,11 @@ namespace DAO.TicketDAO
 
         JOIN airports a2 
             ON r.arrival_place_id = a2.airport_id
+        LEFT JOIN ticket_refund_policy arp 
+            ON s.class_id  = arp.class_id 
     ";
         }
-
+        /// mới thêm đang test
 
         // ================================
         // EXECUTE + MAP DTO
@@ -133,9 +140,12 @@ namespace DAO.TicketDAO
                         Route = reader.GetString("route_name"),
                         DepartureTime = reader.GetDateTime("departure_time"),
                         SeatCode = reader.GetString("seat_code"),
-                        Price = reader.GetDecimal("base_price"),
-                        Status = reader.GetString("status")
-                    });
+                        Price = reader.GetDecimal("total_price"),
+                        Status = reader.GetString("status"),
+                        IsRefundable = reader.GetBoolean("is_refundable"),
+                        RefundFeePercent = reader.GetInt16("refund_fee_percent")
+                         
+                     });
                 }
             }
 
