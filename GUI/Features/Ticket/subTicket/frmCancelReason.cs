@@ -101,6 +101,11 @@ namespace GUI.Features.Ticket.subTicket
             txtNote.Enabled = cboReason.SelectedItem?.ToString() == "Khác";
         }
 
+        private void InitializeComponent()
+        {
+
+        }
+
         private void BtnConfirm_Click(object sender, EventArgs e)
         {
             if (cboReason.SelectedIndex < 0)

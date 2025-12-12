@@ -148,10 +148,10 @@ namespace GUI.Features.Ticket {
 
             // --- Tab: Thông tin khách hàng (idx = 3) ---
             if (activeIndex == TAB_PASSENGER_INFO)
-                btnFrmPassengerInfoTiket = new PrimaryButton("Thông tin khách hàng");
+                btnFrmPassengerInfoTiket = new PrimaryButton("Nhâp thông tin hành khách");
             else
                 //btnFrmPassengerInfoTiket = new SecondaryButton("Thông tin khách hàng");
-                btnFrmPassengerInfoTiket = new PrimaryButton("Thông tin khách hàng");
+                btnFrmPassengerInfoTiket = new PrimaryButton("Nhâp thông tin hành khách");
 
             btnFrmPassengerInfoTiket.AutoSize = true;
             btnFrmPassengerInfoTiket.Click += btnFrmPassengerInfoTiket_Click;
@@ -173,9 +173,9 @@ namespace GUI.Features.Ticket {
             // --- Tab: Lịch sử vé (idx = 1) ---
             if (activeIndex == TAB_HISTORY)
                 //btnHistoryTicketAdmin = new PrimaryButton("Lịch sử vé");
-            btnHistoryTicketAdmin = new SecondaryButton("Lịch sử vé");
+            btnHistoryTicketAdmin = new SecondaryButton("Lịch sử vé của tôi");
             else
-                btnHistoryTicketAdmin = new SecondaryButton("Lịch sử vé");
+                btnHistoryTicketAdmin = new SecondaryButton("Lịch sử vé của tôi");
 
             btnHistoryTicketAdmin.AutoSize = true;
             btnHistoryTicketAdmin.Click += btnHistoryTicketAdmin_Click;

@@ -1,5 +1,7 @@
-﻿using BUS.Baggage;
+﻿using BUS.Auth;
+using BUS.Baggage;
 using BUS.Profile;
+using BUS.Seat;
 using BUS.Ticket;
 using DAO.EF;
 using DAO.Models;
@@ -34,11 +36,12 @@ namespace GUI.Features.Ticket.subTicket
         // dữ liệu ticket
         private int _ticketCount;
         private int _accountId;
-
+        // admin_id
+        
         // danh sách passengers
         private readonly BindingList<TicketBookingRequestDTO> _outboundPassengers = new();
         private readonly BindingList<TicketBookingRequestDTO> _inboundPassengers = new();
-
+        private readonly PriceSeatFareBUS priceSeatFareBUS = new();
         // ghế đang chọn
         private int _selectedSeatId;
         private int _selectedFlightSeatId;
@@ -401,18 +404,36 @@ namespace GUI.Features.Ticket.subTicket
             dto.CarryOnId = CarryBaggageId(classId);
 
             // ===== 4. CHECKED BAGGAGE =====
+            decimal baggagePrice = 0;
             if (cboBaggageTicket.SelectedItem is CheckedBaggageDTO cb)
             {
                 dto.CheckedId = cb.CheckedId;
                 dto.BaggageDisplayText = cb.Description;
+                baggagePrice = cb.Price;
             }
             dto.BaggageNote = txtNoteBaggage.Text;
 
-            // ===== 5. PRICE =====
-            decimal baggagePrice = (cboBaggageTicket.SelectedItem as CheckedBaggageDTO)?.Price ?? 0;
-            dto.TicketPrice = _selectedSeatPrice + baggagePrice;
+            // ===== 5. FARE RULE (CHỐT ĐÚNG CHIỀU) =====
+            int flightId = isInbound ? _returnFlightId : _flightId;
+            DateTime flightDate = isInbound
+                ? (_returnBooking?.DepartureTime ?? DateTime.Now)
+                : (_outboundBooking?.DepartureTime ?? DateTime.Now);
+
+            decimal farePrice = GetPriceFareRules(flightId, flightDate);
+
+            // ===== 6. FINAL PRICE =====
+            dto.TicketPrice = _selectedSeatPrice
+                            + baggagePrice
+                            + farePrice;
         }
 
+        private decimal GetPriceFareRules(int route_id, DateTime timenow)
+        {
+            decimal seatPrice = 0;
+            var priceSeatFareBUS = new PriceSeatFareBUS();
+            seatPrice = priceSeatFareBUS.GetFarePrice(route_id, timenow);
+            return seatPrice;
+        }
         /// <summary>
         /// Load form để nhập chiều về - GIỮ NGUYÊN thông tin cá nhân
         /// </summary>
@@ -785,7 +806,8 @@ namespace GUI.Features.Ticket.subTicket
         {
             _outboundBooking = outbound;
             _returnBooking = inbound;
-            _accountId = 2;
+            int accountId = UserSession.CurrentAccount.AccountId;
+            _accountId = accountId;
             _isbooked = false;
             LoadInfomationAccount(_accountId);
 
