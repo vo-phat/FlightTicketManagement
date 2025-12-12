@@ -381,6 +381,48 @@ namespace DAO.FlightSeat
                 throw new Exception($"Lỗi khi lấy thông tin ghế: {ex.Message}", ex);
             }
         }
+
+        /// <summary>
+        /// Lấy số ghế trống (AVAILABLE) cho chuyến bay theo từng hạng vé
+        /// </summary>
+        /// <param name="flightId">Mã chuyến bay</param>
+        /// <returns>Dictionary với key = class_id, value = số ghế AVAILABLE</returns>
+        public Dictionary<int, int> GetAvailableSeatsByClass(int flightId)
+        {
+            var result = new Dictionary<int, int>();
+            
+            const string query = @"
+                SELECT s.class_id, 
+                       COUNT(fs.flight_seat_id) AS available_count
+                FROM flight_seats fs
+                JOIN seats s ON fs.seat_id = s.seat_id
+                WHERE fs.flight_id = @flightId 
+                  AND fs.seat_status = 'AVAILABLE'
+                GROUP BY s.class_id";
+
+            try
+            {
+                using var conn = DatabaseConnection.GetConnection();
+                conn.Open();
+
+                using var cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@flightId", flightId);
+
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    int classId = reader.GetInt32("class_id");
+                    int count = reader.GetInt32("available_count");
+                    result[classId] = count;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi lấy số ghế trống theo hạng vé: {ex.Message}", ex);
+            }
+
+            return result;
+        }
         #endregion
 
         public void ReleaseSeatByTicketId(
