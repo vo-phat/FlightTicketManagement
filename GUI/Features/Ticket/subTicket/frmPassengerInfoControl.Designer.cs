@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle10 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle11 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle12 = new DataGridViewCellStyle();
             cboNationalityTicket = new GUI.Components.Inputs.UnderlinedComboBox();
             txtPassportNumberTicket = new GUI.Components.Inputs.UnderlinedTextField();
             txtFullNameTicket = new GUI.Components.Inputs.UnderlinedTextField();
@@ -125,7 +125,7 @@
             txtEmailTicket.LineColor = Color.FromArgb(40, 40, 40);
             txtEmailTicket.LineColorFocused = Color.FromArgb(0, 92, 175);
             txtEmailTicket.LineThickness = 2;
-            txtEmailTicket.Location = new Point(59, 319);
+            txtEmailTicket.Location = new Point(1042, 3);
             txtEmailTicket.Name = "txtEmailTicket";
             txtEmailTicket.Padding = new Padding(0, 4, 0, 8);
             txtEmailTicket.PasswordChar = '\0';
@@ -138,6 +138,7 @@
             txtEmailTicket.TextForeColor = Color.FromArgb(30, 30, 30);
             txtEmailTicket.UnderlineSpacing = 2;
             txtEmailTicket.UseSystemPasswordChar = false;
+            txtEmailTicket.Visible = false;
             // 
             // txtPhoneNumberTicket
             // 
@@ -192,7 +193,7 @@
             txtSeatTicket.LineColor = Color.FromArgb(40, 40, 40);
             txtSeatTicket.LineColorFocused = Color.FromArgb(0, 92, 175);
             txtSeatTicket.LineThickness = 2;
-            txtSeatTicket.Location = new Point(322, 319);
+            txtSeatTicket.Location = new Point(59, 319);
             txtSeatTicket.Name = "txtSeatTicket";
             txtSeatTicket.Padding = new Padding(0, 4, 0, 8);
             txtSeatTicket.PasswordChar = '\0';
@@ -225,7 +226,7 @@
             btnSelectSeatTicket.Icon = null;
             btnSelectSeatTicket.IconSize = new Size(22, 22);
             btnSelectSeatTicket.IconSpacing = 10;
-            btnSelectSeatTicket.Location = new Point(536, 330);
+            btnSelectSeatTicket.Location = new Point(322, 330);
             btnSelectSeatTicket.Name = "btnSelectSeatTicket";
             btnSelectSeatTicket.NormalBackColor = Color.FromArgb(155, 209, 243);
             btnSelectSeatTicket.NormalBorderColor = Color.FromArgb(40, 40, 40);
@@ -246,34 +247,34 @@
             // dgvPassengerListTicket
             // 
             dgvPassengerListTicket.AllowUserToResizeRows = false;
-            dataGridViewCellStyle1.BackColor = Color.FromArgb(248, 250, 252);
-            dgvPassengerListTicket.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle10.BackColor = Color.FromArgb(248, 250, 252);
+            dgvPassengerListTicket.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle10;
             dgvPassengerListTicket.BackgroundColor = Color.White;
             dgvPassengerListTicket.BorderColor = Color.FromArgb(40, 40, 40);
             dgvPassengerListTicket.BorderStyle = BorderStyle.None;
             dgvPassengerListTicket.BorderThickness = 2;
             dgvPassengerListTicket.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             dgvPassengerListTicket.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = Color.White;
-            dataGridViewCellStyle2.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            dataGridViewCellStyle2.ForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle2.Padding = new Padding(12, 10, 12, 10);
-            dataGridViewCellStyle2.SelectionBackColor = Color.White;
-            dataGridViewCellStyle2.SelectionForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
-            dgvPassengerListTicket.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle11.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle11.BackColor = Color.White;
+            dataGridViewCellStyle11.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            dataGridViewCellStyle11.ForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle11.Padding = new Padding(12, 10, 12, 10);
+            dataGridViewCellStyle11.SelectionBackColor = Color.White;
+            dataGridViewCellStyle11.SelectionForeColor = Color.FromArgb(126, 185, 232);
+            dataGridViewCellStyle11.WrapMode = DataGridViewTriState.False;
+            dgvPassengerListTicket.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle11;
             dgvPassengerListTicket.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvPassengerListTicket.CornerRadius = 16;
-            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = Color.White;
-            dataGridViewCellStyle3.Font = new Font("Segoe UI", 10F);
-            dataGridViewCellStyle3.ForeColor = Color.FromArgb(33, 37, 41);
-            dataGridViewCellStyle3.Padding = new Padding(12, 6, 12, 6);
-            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(155, 209, 243);
-            dataGridViewCellStyle3.SelectionForeColor = Color.White;
-            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
-            dgvPassengerListTicket.DefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle12.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle12.BackColor = Color.White;
+            dataGridViewCellStyle12.Font = new Font("Segoe UI", 10F);
+            dataGridViewCellStyle12.ForeColor = Color.FromArgb(33, 37, 41);
+            dataGridViewCellStyle12.Padding = new Padding(12, 6, 12, 6);
+            dataGridViewCellStyle12.SelectionBackColor = Color.FromArgb(155, 209, 243);
+            dataGridViewCellStyle12.SelectionForeColor = Color.White;
+            dataGridViewCellStyle12.WrapMode = DataGridViewTriState.False;
+            dgvPassengerListTicket.DefaultCellStyle = dataGridViewCellStyle12;
             dgvPassengerListTicket.EnableHeadersVisualStyles = false;
             dgvPassengerListTicket.GridColor = Color.FromArgb(230, 235, 240);
             dgvPassengerListTicket.HeaderBackColor = Color.White;
@@ -320,7 +321,7 @@
             cboBaggageTicket.DisplayMember = "";
             cboBaggageTicket.DropDownStyle = ComboBoxStyle.DropDown;
             cboBaggageTicket.LabelText = "Hành lý mua thêm";
-            cboBaggageTicket.Location = new Point(586, 222);
+            cboBaggageTicket.Location = new Point(558, 31);
             cboBaggageTicket.MinimumSize = new Size(140, 56);
             cboBaggageTicket.Name = "cboBaggageTicket";
             cboBaggageTicket.SelectedIndex = -1;
@@ -338,11 +339,11 @@
             txtNoteBaggage.FocusedLineThickness = 3;
             txtNoteBaggage.InheritParentBackColor = true;
             txtNoteBaggage.LabelForeColor = Color.FromArgb(70, 70, 70);
-            txtNoteBaggage.LabelText = "Note";
+            txtNoteBaggage.LabelText = "Note for Baggage";
             txtNoteBaggage.LineColor = Color.FromArgb(40, 40, 40);
             txtNoteBaggage.LineColorFocused = Color.FromArgb(0, 92, 175);
             txtNoteBaggage.LineThickness = 2;
-            txtNoteBaggage.Location = new Point(820, 222);
+            txtNoteBaggage.Location = new Point(558, 128);
             txtNoteBaggage.Name = "txtNoteBaggage";
             txtNoteBaggage.Padding = new Padding(0, 4, 0, 8);
             txtNoteBaggage.PasswordChar = '\0';
@@ -376,7 +377,7 @@
             btnNextToPayment.Icon = null;
             btnNextToPayment.IconSize = new Size(22, 22);
             btnNextToPayment.IconSpacing = 10;
-            btnNextToPayment.Location = new Point(563, 104);
+            btnNextToPayment.Location = new Point(777, 233);
             btnNextToPayment.Name = "btnNextToPayment";
             btnNextToPayment.NormalBackColor = Color.FromArgb(155, 209, 243);
             btnNextToPayment.NormalBorderColor = Color.FromArgb(40, 40, 40);
@@ -386,9 +387,9 @@
             btnNextToPayment.PressedBackColor = Color.FromArgb(225, 240, 255);
             btnNextToPayment.PressedBorderColor = Color.FromArgb(0, 92, 175);
             btnNextToPayment.PressedForeColor = Color.FromArgb(0, 92, 175);
-            btnNextToPayment.Size = new Size(231, 52);
+            btnNextToPayment.Size = new Size(142, 52);
             btnNextToPayment.TabIndex = 54;
-            btnNextToPayment.Text = "NextToPayment";
+            btnNextToPayment.Text = "Đặt vé";
             btnNextToPayment.TextAlign = ContentAlignment.MiddleLeft;
             btnNextToPayment.UseVisualStyleBackColor = false;
             btnNextToPayment.WordWrap = false;
@@ -413,7 +414,7 @@
             btnAddOutbound.Icon = null;
             btnAddOutbound.IconSize = new Size(22, 22);
             btnAddOutbound.IconSpacing = 10;
-            btnAddOutbound.Location = new Point(820, 298);
+            btnAddOutbound.Location = new Point(555, 199);
             btnAddOutbound.Name = "btnAddOutbound";
             btnAddOutbound.NormalBackColor = Color.FromArgb(155, 209, 243);
             btnAddOutbound.NormalBorderColor = Color.FromArgb(40, 40, 40);
@@ -450,7 +451,7 @@
             btnAddInbound.Icon = null;
             btnAddInbound.IconSize = new Size(22, 22);
             btnAddInbound.IconSpacing = 10;
-            btnAddInbound.Location = new Point(820, 366);
+            btnAddInbound.Location = new Point(555, 267);
             btnAddInbound.Name = "btnAddInbound";
             btnAddInbound.NormalBackColor = Color.FromArgb(155, 209, 243);
             btnAddInbound.NormalBorderColor = Color.FromArgb(40, 40, 40);

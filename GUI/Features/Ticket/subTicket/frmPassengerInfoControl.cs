@@ -28,7 +28,8 @@ namespace GUI.Features.Ticket.subTicket
         // trạng thái sửa
         private int _editingIndex = -1;      // -1 = thêm mới; >= 0 = đang sửa
         private bool _isEditingInbound = false;
-
+        // đặt vé
+        private bool _isbooked;
         // dữ liệu ticket
         private int _ticketCount;
         private int _accountId;
@@ -593,32 +594,107 @@ namespace GUI.Features.Ticket.subTicket
 
         private void btnNextToPayment_Click(object sender, EventArgs e)
         {
-            if (_isRoundTrip && _inboundPassengers.Count != _outboundPassengers.Count)
-            {
-                MessageBox.Show("Bạn phải nhập đầy đủ thông tin chiều về trước khi thanh toán.");
-                return;
-            }
+            btnNextToPayment.Enabled = false;
 
-            var bus = new SaveTicketRequestBUS();
-
-            if (_isRoundTrip)
+            try
             {
-                bus.SaveRoundTrip(
-                    _outboundPassengers.ToList(),
-                    _inboundPassengers.ToList(),
-                    _accountId
-                );
-            }
-            else
-            {
-                bus.SaveOneWay(
-                    _outboundPassengers.ToList(),
-                    _accountId
-                );
-            }
+                if (_isbooked)
+                {
+                    MessageBox.Show("Bạn đã đặt vé thành công trước đó.");
+                    return;
+                }
 
-            MessageBox.Show("Đặt vé thành công!");
+                // ============================
+                // ONE-WAY CHECK
+                // ============================
+                if (!_isRoundTrip)
+                {
+                    if (_outboundPassengers == null || _outboundPassengers.Count == 0)
+                    {
+                        MessageBox.Show("Bạn chưa nhập thông tin hành khách.");
+                        return;
+                    }
+
+                    // 🔥 Kiểm tra không nhập đủ hành khách
+                    if (_outboundPassengers.Count < _ticketCount)
+                    {
+                        MessageBox.Show($"Bạn đã chọn {_ticketCount} vé nhưng chỉ nhập {_outboundPassengers.Count} hành khách.");
+                        return;
+                    }
+                }
+
+                // ============================
+                // ROUND-TRIP CHECK
+                // ============================
+                if (_isRoundTrip)
+                {
+                    // 1) Outbound phải có
+                    if (_outboundPassengers == null || _outboundPassengers.Count == 0)
+                    {
+                        MessageBox.Show("Bạn chưa nhập thông tin chiều đi.");
+                        return;
+                    }
+
+                    // 2) Inbound phải có
+                    if (_inboundPassengers == null || _inboundPassengers.Count == 0)
+                    {
+                        MessageBox.Show("Bạn chưa nhập thông tin chiều về.");
+                        return;
+                    }
+
+                    // 3) Outbound < số vé đã chọn
+                    if (_outboundPassengers.Count < _ticketCount)
+                    {
+                        MessageBox.Show($"Bạn đã chọn {_ticketCount} vé nhưng chỉ nhập {_outboundPassengers.Count} hành khách cho chiều đi.");
+                        return;
+                    }
+
+                    // 4) Inbound < số vé đã chọn
+                    if (_inboundPassengers.Count < _ticketCount)
+                    {
+                        MessageBox.Show($"Bạn đã chọn {_ticketCount} vé nhưng chỉ nhập {_inboundPassengers.Count} hành khách cho chiều về.");
+                        return;
+                    }
+
+                    // 5) Số lượng đi – về phải bằng nhau
+                    if (_outboundPassengers.Count != _inboundPassengers.Count)
+                    {
+                        MessageBox.Show("Số lượng hành khách chiều đi và chiều về không khớp.");
+                        return;
+                    }
+                }
+
+                // ============================
+                // CALL BUS
+                // ============================
+                var bus = new SaveTicketRequestBUS();
+
+                if (_isRoundTrip)
+                    bus.SaveRoundTrip(_outboundPassengers.ToList(), _inboundPassengers.ToList(), _accountId);
+                else
+                    bus.SaveOneWay(_outboundPassengers.ToList(), _accountId);
+
+                // ============================
+                // SUCCESS HANDLING
+                // ============================
+                MessageBox.Show("Đặt vé thành công!");
+
+                _isbooked = true;
+                _outboundPassengers.Clear();
+                if (_isRoundTrip)
+                    _inboundPassengers.Clear();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi đặt vé: " + ex.Message);
+            }
+            finally
+            {
+                btnNextToPayment.Enabled = true;
+            }
         }
+
+
 
         public void ShowTicketDtoInfo(TicketBookingRequestDTO dto)
         {
@@ -649,6 +725,7 @@ namespace GUI.Features.Ticket.subTicket
             _outboundBooking = outbound;
             _returnBooking = inbound;
             _accountId = 2;
+            _isbooked = false;
             LoadInfomationAccount(_accountId);
 
             if (outbound == null)
