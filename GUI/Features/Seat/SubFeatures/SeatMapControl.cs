@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using BUS.FlightSeat;
+using BUS.CabinClass;
 using DTO.FlightSeat;
 using GUI.Components.Buttons;
 using GUI.Components.Inputs;
@@ -27,12 +28,12 @@ namespace GUI.Features.Seat.SubFeatures
         private UnderlinedComboBox cbFlight, cbAircraft, cbClass;
         private PrimaryButton btnRefresh;
         private Panel mapHost;
-        private TableLayoutPanel centerLayout;
-        private FlowLayoutPanel stack;
+        private TableLayoutPanel stack;
         private ToolTip tip;
 
         // Dữ liệu từ BUS
         private readonly FlightSeatBUS _bus = new();
+        private readonly CabinClassBUS _cabinClassBUS = new();
         private List<FlightSeatDTO> seats = new();
 
         public SeatMapControl()
@@ -105,23 +106,16 @@ namespace GUI.Features.Seat.SubFeatures
                 BackColor = Color.White
             };
 
-            centerLayout = new TableLayoutPanel
+            stack = new TableLayoutPanel
             {
                 Dock = DockStyle.Top,
                 AutoSize = true,
-                ColumnCount = 3
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                ColumnCount = 1
             };
-            centerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-            centerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            centerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-            stack = new FlowLayoutPanel
-            {
-                FlowDirection = FlowDirection.TopDown,
-                AutoSize = true,
-                WrapContents = false
-            };
-            centerLayout.Controls.Add(stack, 1, 0);
-            mapHost.Controls.Add(centerLayout);
+            stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
+
+            mapHost.Controls.Add(stack);
 
             // --- Root layout ---
             root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4 };
@@ -166,7 +160,8 @@ namespace GUI.Features.Seat.SubFeatures
                 cbAircraft.Items.AddRange(aircrafts.Cast<object>().ToArray());
                 cbAircraft.SelectedIndex = 0;
 
-                // === Hạng ===
+                // === Hạng - Load từ database ===
+                var allCabinClasses = _cabinClassBUS.GetAllCabinClasses();
                 var classOrder = new Dictionary<string, int>
                 {
                     { "First", 1 },
@@ -174,9 +169,13 @@ namespace GUI.Features.Seat.SubFeatures
                     { "Premium Economy", 3 },
                     { "Economy", 4 }
                 };
-                var classes = seats.Select(s => s.ClassName).Distinct()
+
+                var classes = allCabinClasses
+                    .Select(c => c.ClassName)
                     .OrderBy(c => classOrder.ContainsKey(c) ? classOrder[c] : 99)
+                    .ThenBy(c => c)
                     .ToList();
+
                 cbClass.Items.Clear();
                 cbClass.Items.Add("Tất cả");
                 cbClass.Items.AddRange(classes.Cast<object>().ToArray());
@@ -200,6 +199,8 @@ namespace GUI.Features.Seat.SubFeatures
         private void RefreshSeatMap()
         {
             stack.Controls.Clear();
+            stack.RowStyles.Clear();
+            stack.RowCount = 0;
 
             string selectedFlight = cbFlight.SelectedItem?.ToString() ?? "Tất cả";
             string selectedAircraft = cbAircraft.SelectedItem?.ToString() ?? "Tất cả";
@@ -220,13 +221,17 @@ namespace GUI.Features.Seat.SubFeatures
 
             if (list.Count == 0)
             {
-                stack.Controls.Add(new Label
+                var noDataLabel = new Label
                 {
                     Text = "Không có dữ liệu ghế phù hợp với điều kiện tìm kiếm.",
                     Font = new Font("Segoe UI", 12, FontStyle.Italic),
                     AutoSize = true,
-                    Padding = new Padding(8)
-                });
+                    Padding = new Padding(8),
+                    Anchor = AnchorStyles.None
+                };
+                stack.RowCount++;
+                stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+                stack.Controls.Add(noDataLabel, 0, 0);
                 return;
             }
 
@@ -235,179 +240,192 @@ namespace GUI.Features.Seat.SubFeatures
 
         private void BuildCompleteSeatMap(List<FlightSeatDTO> filteredSeats)
         {
-            // Bước 1: Lấy tất cả ghế theo bộ lọc Chuyến bay và Máy bay
-            string selectedFlight = cbFlight.SelectedItem?.ToString() ?? "Tất cả";
-            string selectedAircraft = cbAircraft.SelectedItem?.ToString() ?? "Tất cả";
+            // Nhóm theo Chuyến bay và Máy bay
+            var groupedByFlightAndAircraft = filteredSeats
+                .GroupBy(s => new { s.FlightId, s.FlightName, s.AircraftId, s.AircraftName, s.AircraftCapacity })
+                .OrderBy(g => g.Key.FlightName)
+                .ThenBy(g => g.Key.AircraftName);
 
-            var baseFilter = seats.AsEnumerable();
-
-            if (selectedFlight != "Tất cả")
-                baseFilter = baseFilter.Where(s => s.FlightName == selectedFlight);
-
-            if (selectedAircraft != "Tất cả")
-                baseFilter = baseFilter.Where(s => s.AircraftName == selectedAircraft);
-
-            var allSeatsInSelection = baseFilter.ToList();
-
-            if (allSeatsInSelection.Count == 0)
+            int rowIndex = 0;
+            foreach (var group in groupedByFlightAndAircraft)
             {
-                stack.Controls.Add(new Label { Text = "Không có dữ liệu ghế.", Font = new Font("Segoe UI", 12, FontStyle.Italic), AutoSize = true, Padding = new Padding(8) });
-                return;
-            }
+                // Lấy tất cả ghế trong nhóm này (không lọc theo Class)
+                string selectedFlight = cbFlight.SelectedItem?.ToString() ?? "Tất cả";
+                string selectedAircraft = cbAircraft.SelectedItem?.ToString() ?? "Tất cả";
 
-            // Bước 2: Dictionary highlight
-            var highlightDict = new Dictionary<string, FlightSeatDTO>();
-            foreach (var seat in filteredSeats)
-            {
-                highlightDict[seat.SeatNumber] = seat;
-            }
+                var baseFilter = seats.AsEnumerable();
 
-            // Bước 3: Cấu hình cột & hàng
-            var firstSeat = allSeatsInSelection.FirstOrDefault();
-            if (firstSeat == null) return;
+                if (selectedFlight != "Tất cả")
+                    baseFilter = baseFilter.Where(s => s.FlightName == selectedFlight);
+                else
+                    baseFilter = baseFilter.Where(s => s.FlightId == group.Key.FlightId);
 
-            char[] standardColumns = { 'A', 'B', 'C', 'D', 'E', 'F' };
-            var sortedCols = standardColumns.ToList();
+                if (selectedAircraft != "Tất cả")
+                    baseFilter = baseFilter.Where(s => s.AircraftName == selectedAircraft);
+                else
+                    baseFilter = baseFilter.Where(s => s.AircraftId == group.Key.AircraftId);
 
-            int seatsPerRow = sortedCols.Count;
-            int estimatedRows = firstSeat.AircraftCapacity > 0
-                ? (int)Math.Ceiling((double)firstSeat.AircraftCapacity / seatsPerRow)
-                : 0;
+                var allSeatsInGroup = baseFilter.ToList();
 
-            int maxRowFromSeats = allSeatsInSelection
-                .Select(s => int.TryParse(new string(s.SeatNumber.TakeWhile(char.IsDigit).ToArray()), out int n) ? n : 0)
-                .DefaultIfEmpty(0)
-                .Max();
-
-            int maxRow = Math.Max(estimatedRows, maxRowFromSeats);
-            if (maxRow == 0) return;
-
-            var sortedRows = Enumerable.Range(1, maxRow).ToList();
-
-            // Bước 4: Tạo header
-            var headerPanel = new FlowLayoutPanel
-            {
-                AutoSize = true,
-                WrapContents = false,
-                Margin = new Padding(0, 0, 0, 12)
-            };
-
-            headerPanel.Controls.Add(new Label { Width = RowLabelWidth, Height = 30, Text = "" });
-
-            int headerAisleIndex = 3;
-            for (int i = 0; i < sortedCols.Count; i++)
-            {
-                if (i == headerAisleIndex) headerPanel.Controls.Add(new Panel { Width = AisleWidth, Height = 1 });
-
-                var colLabel = new Label
+                // Dictionary highlight cho ghế khớp bộ lọc Class
+                var highlightDict = new Dictionary<string, FlightSeatDTO>();
+                foreach (var seat in group)
                 {
-                    Text = sortedCols[i].ToString(),
-                    Width = SeatWidth - SeatGap,
-                    Height = 30,
-                    Font = new Font("Segoe UI", 11f, FontStyle.Bold),
-                    TextAlign = ContentAlignment.MiddleCenter,
-                    Margin = new Padding(SeatGap / 2),
-                    ForeColor = Color.FromArgb(66, 66, 66)
+                    highlightDict[seat.SeatNumber] = seat;
+                }
+
+                // Cấu hình cột & hàng
+                char[] standardColumns = { 'A', 'B', 'C', 'D', 'E', 'F' };
+                var sortedCols = standardColumns.ToList();
+
+                int seatsPerRow = sortedCols.Count;
+                int estimatedRows = group.Key.AircraftCapacity > 0
+                    ? (int)Math.Ceiling((double)group.Key.AircraftCapacity / seatsPerRow)
+                    : 0;
+
+                int maxRowFromSeats = allSeatsInGroup
+                    .Select(s => int.TryParse(new string(s.SeatNumber.TakeWhile(char.IsDigit).ToArray()), out int n) ? n : 0)
+                    .DefaultIfEmpty(0)
+                    .Max();
+
+                int maxRow = Math.Max(estimatedRows, maxRowFromSeats);
+                if (maxRow == 0) continue;
+
+                var sortedRows = Enumerable.Range(1, maxRow).ToList();
+
+                // Tạo header
+                var headerPanel = new FlowLayoutPanel
+                {
+                    AutoSize = true,
+                    WrapContents = false,
+                    Margin = new Padding(0, 0, 0, 12)
                 };
-                headerPanel.Controls.Add(colLabel);
-            }
-            stack.Controls.Add(headerPanel);
 
-            // Bước 5: Tạo GroupBox chứa Map
-            // <--- THAY ĐỔI: Style lại GroupBox giống FlightSeatControl --->
-            var allCard = new GroupBox
-            {
-                Text = $"   ✈  {firstSeat.FlightName.ToUpper()}   |   MÁY BAY: {firstSeat.AircraftName.ToUpper()}   ",
-                Font = new Font("Segoe UI", 12f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(0, 51, 102), // Màu xanh đậm
-                Padding = new Padding(10, 40, 10, 20),
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                Margin = new Padding(0, 0, 0, 24),
-                Dock = DockStyle.Fill
-            };
-            // ----------------------------------------------------------------
+                headerPanel.Controls.Add(new Label { Width = RowLabelWidth, Height = 30, Text = "" });
 
-            var grid = new TableLayoutPanel
-            {
-                ColumnCount = sortedCols.Count + 2,
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                BackColor = Color.White
-            };
-
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, RowLabelWidth));
-
-            int gridAisleIndex = 3;
-            for (int i = 0; i < sortedCols.Count; i++)
-            {
-                if (i == gridAisleIndex) grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, AisleWidth));
-                grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, SeatWidth));
-            }
-
-            int rowIdx = 0;
-            foreach (int rowNo in sortedRows)
-            {
-                grid.RowStyles.Add(new RowStyle(SizeType.Absolute, SeatHeight + SeatGap));
-
-                var lb = new Label
+                int headerAisleIndex = 3;
+                for (int i = 0; i < sortedCols.Count; i++)
                 {
-                    Text = rowNo.ToString(),
-                    Width = RowLabelWidth,
-                    Height = SeatHeight,
-                    Font = new Font("Segoe UI", 12f, FontStyle.Bold),
-                    TextAlign = ContentAlignment.MiddleCenter,
-                    Margin = new Padding(0, SeatGap / 2, SeatGap, 0),
-                    ForeColor = Color.FromArgb(66, 66, 66)
-                };
-                grid.Controls.Add(lb, 0, rowIdx);
+                    if (i == headerAisleIndex) headerPanel.Controls.Add(new Panel { Width = AisleWidth, Height = 1 });
 
-                int gridCol = 1;
-                for (int colIndex = 0; colIndex < sortedCols.Count; colIndex++)
-                {
-                    char col = sortedCols[colIndex];
-                    string seatNumber = $"{rowNo}{col}";
-
-                    if (colIndex == gridAisleIndex)
+                    var colLabel = new Label
                     {
-                        grid.Controls.Add(new Panel { Width = AisleWidth, Height = 1, BackColor = Color.Transparent }, gridCol, rowIdx);
+                        Text = sortedCols[i].ToString(),
+                        Width = SeatWidth - SeatGap,
+                        Height = 30,
+                        Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                        TextAlign = ContentAlignment.MiddleCenter,
+                        Margin = new Padding(SeatGap / 2),
+                        ForeColor = Color.FromArgb(66, 66, 66)
+                    };
+                    headerPanel.Controls.Add(colLabel);
+                }
+
+                // Tạo GroupBox
+                var cardGroupBox = new GroupBox
+                {
+                    Text = $"   ✈  {group.Key.FlightName.ToUpper()}   |   MÁY BAY: {group.Key.AircraftName.ToUpper()}   (Capacity: {group.Key.AircraftCapacity})   ",
+                    Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+                    ForeColor = Color.FromArgb(0, 51, 102),
+                    Padding = new Padding(16, 40, 16, 20),
+                    AutoSize = true,
+                    AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                    Margin = new Padding(0, 0, 0, 32),
+                    Anchor = AnchorStyles.None
+                };
+
+                var grid = new TableLayoutPanel
+                {
+                    ColumnCount = sortedCols.Count + 2,
+                    AutoSize = true,
+                    AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                    BackColor = Color.White
+                };
+
+                grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, RowLabelWidth));
+
+                int gridAisleIndex = 3;
+                for (int i = 0; i < sortedCols.Count; i++)
+                {
+                    if (i == gridAisleIndex) grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, AisleWidth));
+                    grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, SeatWidth));
+                }
+
+                int rowIdx = 0;
+                foreach (int rowNo in sortedRows)
+                {
+                    grid.RowStyles.Add(new RowStyle(SizeType.Absolute, SeatHeight + SeatGap));
+
+                    var lb = new Label
+                    {
+                        Text = rowNo.ToString(),
+                        Width = RowLabelWidth,
+                        Height = SeatHeight,
+                        Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+                        TextAlign = ContentAlignment.MiddleCenter,
+                        Margin = new Padding(0, SeatGap / 2, SeatGap, 0),
+                        ForeColor = Color.FromArgb(66, 66, 66)
+                    };
+                    grid.Controls.Add(lb, 0, rowIdx);
+
+                    int gridCol = 1;
+                    for (int colIndex = 0; colIndex < sortedCols.Count; colIndex++)
+                    {
+                        char col = sortedCols[colIndex];
+                        string seatNumber = $"{rowNo}{col}";
+
+                        if (colIndex == gridAisleIndex)
+                        {
+                            grid.Controls.Add(new Panel { Width = AisleWidth, Height = 1, BackColor = Color.Transparent }, gridCol, rowIdx);
+                            gridCol++;
+                        }
+
+                        if (highlightDict.TryGetValue(seatNumber, out FlightSeatDTO seat))
+                        {
+                            grid.Controls.Add(MakeSeat(seat), gridCol, rowIdx);
+                        }
+                        else if (allSeatsInGroup.Any(s => s.SeatNumber == seatNumber))
+                        {
+                            var dimSeat = allSeatsInGroup.First(s => s.SeatNumber == seatNumber);
+                            grid.Controls.Add(MakeDimmedSeat(dimSeat), gridCol, rowIdx);
+                        }
+                        else
+                        {
+                            grid.Controls.Add(MakeEmptySeat(seatNumber), gridCol, rowIdx);
+                        }
                         gridCol++;
                     }
-
-                    if (highlightDict.TryGetValue(seatNumber, out FlightSeatDTO seat))
-                    {
-                        grid.Controls.Add(MakeSeat(seat), gridCol, rowIdx);
-                    }
-                    else if (allSeatsInSelection.Any(s => s.SeatNumber == seatNumber))
-                    {
-                        var dimSeat = allSeatsInSelection.First(s => s.SeatNumber == seatNumber);
-                        grid.Controls.Add(MakeDimmedSeat(dimSeat), gridCol, rowIdx);
-                    }
-                    else
-                    {
-                        grid.Controls.Add(MakeEmptySeat(seatNumber), gridCol, rowIdx);
-                    }
-                    gridCol++;
+                    rowIdx++;
                 }
-                rowIdx++;
+
+                // Wrapper để căn giữa
+                var contentStack = new FlowLayoutPanel
+                {
+                    FlowDirection = FlowDirection.TopDown,
+                    AutoSize = true,
+                    WrapContents = false
+                };
+                contentStack.Controls.Add(headerPanel);
+                contentStack.Controls.Add(grid);
+
+                var centerWrapper = new TableLayoutPanel
+                {
+                    Dock = DockStyle.Fill,
+                    AutoSize = true,
+                    ColumnCount = 1,
+                    RowCount = 1
+                };
+                centerWrapper.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
+                contentStack.Anchor = AnchorStyles.None;
+                centerWrapper.Controls.Add(contentStack, 0, 0);
+
+                cardGroupBox.Controls.Add(centerWrapper);
+
+                stack.RowCount++;
+                stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+                stack.Controls.Add(cardGroupBox, 0, rowIndex);
+                rowIndex++;
             }
-
-            // <--- THAY ĐỔI: Thêm Wrapper để căn giữa Grid trong GroupBox --->
-            var centerWrapper = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                AutoSize = true,
-                ColumnCount = 1,
-                RowCount = 1
-            };
-            centerWrapper.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
-            grid.Anchor = AnchorStyles.None; // Tự động căn giữa
-            centerWrapper.Controls.Add(grid, 0, 0);
-
-            allCard.Controls.Add(centerWrapper);
-            // ---------------------------------------------------------------
-
-            stack.Controls.Add(allCard);
         }
 
         // --------------------------- SEAT BUTTON ---------------------------
@@ -425,7 +443,7 @@ namespace GUI.Features.Seat.SubFeatures
             btn.Margin = new Padding(SeatGap / 2);
             btn.Font = new Font("Segoe UI", 10f, FontStyle.Bold);
             btn.FlatStyle = FlatStyle.Flat;
-            btn.FlatAppearance.BorderSize = 1;
+            btn.FlatAppearance.BorderSize = 2;
             btn.UseVisualStyleBackColor = false;
             btn.Cursor = Cursors.Hand;
 
@@ -498,20 +516,22 @@ namespace GUI.Features.Seat.SubFeatures
                 btn.BackColor = Color.FromArgb(232, 245, 233);
                 btn.FlatAppearance.BorderColor = Color.FromArgb(76, 175, 80);
                 btn.ForeColor = Color.FromArgb(27, 94, 32);
+                btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(200, 230, 201);
             }
             else if (status == "BOOKED")
             {
                 btn.BackColor = Color.FromArgb(236, 239, 241);
                 btn.FlatAppearance.BorderColor = Color.FromArgb(176, 190, 197);
                 btn.ForeColor = Color.FromArgb(55, 71, 79);
+                btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(220, 225, 228);
             }
             else // BLOCKED
             {
                 btn.BackColor = Color.FromArgb(255, 235, 238);
                 btn.FlatAppearance.BorderColor = Color.FromArgb(229, 115, 115);
                 btn.ForeColor = Color.FromArgb(183, 28, 28);
+                btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(255, 205, 210);
             }
-            btn.FlatAppearance.MouseOverBackColor = btn.BackColor;
             btn.FlatAppearance.MouseDownBackColor = btn.BackColor;
         }
     }
