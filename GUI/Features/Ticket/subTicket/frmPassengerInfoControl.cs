@@ -489,18 +489,18 @@ namespace GUI.Features.Ticket.subTicket
         /// <summary>
         /// Tính tổng giá vé hiện tại (ghế + hành lý)
         /// </summary>
-        private decimal CalculateTicketPrice()
-        {
-            decimal seatPrice = _selectedSeatPrice;
-            decimal baggagePrice = 0;
+        //private decimal CalculateTicketPrice()
+        //{
+        //    decimal seatPrice = _selectedSeatPrice;
+        //    decimal baggagePrice = 0;
 
-            if (cboBaggageTicket.SelectedItem is CheckedBaggageDTO baggage)
-            {
-                baggagePrice = baggage.Price;
-            }
+        //    if (cboBaggageTicket.SelectedItem is CheckedBaggageDTO baggage)
+        //    {
+        //        baggagePrice = baggage.Price;
+        //    }
 
-            return seatPrice + baggagePrice;
-        }
+        //    return seatPrice + baggagePrice;
+        //}
 
         /// <summary>
         /// Hiển thị chi tiết giá vé trước khi lưu

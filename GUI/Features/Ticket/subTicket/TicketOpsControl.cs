@@ -251,7 +251,12 @@ namespace GUI.Features.Ticket.subTicket
 
             else if (colName == "btnView")
             {
-                MessageBox.Show($"Xem vé: {dto.TicketNumber}");
+                var detail = new TicketDetailBUS()
+                    .GetTicketDetail(dto.TicketId);
+
+                using var frm = new frmTicketDetail();
+                frm.LoadData(detail);
+                frm.ShowDialog();
             }
             else if (colName == "btnBaggage")
             {
