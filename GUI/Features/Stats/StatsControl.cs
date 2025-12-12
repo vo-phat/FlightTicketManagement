@@ -330,7 +330,9 @@ namespace GUI.Features.Stats
             lblRevenueSummary.AutoSize = false;
             lblRevenueSummary.Height = 30;
             lblRevenueSummary.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            lblRevenueSummary.Text = "Chọn năm/tháng và nhấn 'Tải dữ liệu'";
+            lblRevenueSummary.Text = "";
+            lblRevenueSummary.Visible = true; // Show at bottom
+            lblRevenueSummary.BackColor = System.Drawing.Color.FromArgb(245, 248, 250);
             
             lblFlightSummary.AutoSize = false;
             lblFlightSummary.Height = 30;
