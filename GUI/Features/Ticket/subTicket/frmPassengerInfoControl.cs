@@ -64,6 +64,7 @@ namespace GUI.Features.Ticket.subTicket
             InitGrid();
             LoadCheckBaggage();
             LoadNationality();
+            LoadCabinClasses();
             carryOnList = _carryOnBaggageBUS.GetAll();
             dgvPassengerListTicket.DataError += (s, e) => { e.ThrowException = false; };
         }
@@ -84,6 +85,15 @@ namespace GUI.Features.Ticket.subTicket
             cboNationalityTicket.DataSource = list;
             cboNationalityTicket.DisplayMember = "DisplayName";
             cboNationalityTicket.ValueMember = "CountryName";
+        }
+
+        private void LoadCabinClasses()
+        {
+            var cabinBus = new BUS.CabinClass.CabinClassBUS();
+            var cabinClasses = cabinBus.GetAllCabinClasses();
+            cboCabinClassTicket.DataSource = cabinClasses;
+            cboCabinClassTicket.DisplayMember = "ClassName";
+            cboCabinClassTicket.ValueMember = "ClassId";
         }
 
         private void LoadInfomationAccount(int _accountID)
@@ -795,10 +805,10 @@ namespace GUI.Features.Ticket.subTicket
             // =====================================================
             // CHIỀU ĐI
             // =====================================================
-            var (flightId, cabinClass, ticketCount, _) = outbound.GetBookingInfo();
+            var (flightId, _, ticketCount, _) = outbound.GetBookingInfo();
             _flightId = flightId;
-            _classId = cabinClass;
             _ticketCount = ticketCount;
+            // NOTE: Không set _classId nữa - mỗi hành khách chọn riêng
 
             // =====================================================
             // CHIỀU VỀ (NẾU LÀ VÉ KHỨ HỒI)
@@ -806,9 +816,9 @@ namespace GUI.Features.Ticket.subTicket
             _isRoundTrip = inbound != null;
             if (_isRoundTrip)
             {
-                var (reFlightId, reClassId, _, _) = inbound.GetBookingInfo();
+                var (reFlightId, _, _, _) = inbound.GetBookingInfo();
                 _returnFlightId = reFlightId;
-                _returnClassId = reClassId;
+                // NOTE: Không set _returnClassId nữa - mỗi hành khách chọn riêng
             }
 
             dtpFlightDateTicket.Value = outbound.DepartureTime ?? DateTime.Now;
@@ -850,7 +860,7 @@ namespace GUI.Features.Ticket.subTicket
                 var outbound = _outboundPassengers[_editingIndex];
                 MapFormToDto(outbound, false);
                 outbound.FlightId = _flightId;
-                outbound.ClassId = _classId;
+                outbound.ClassId = (int)cboCabinClassTicket.SelectedValue; // Lấy từ ComboBox
                 outbound.FlightDate = _outboundBooking.DepartureTime;
 
                 // Nếu là round-trip → CHỈ sync thông tin cơ bản sang inbound
@@ -885,7 +895,7 @@ namespace GUI.Features.Ticket.subTicket
             var newOutbound = new TicketBookingRequestDTO();
             MapFormToDto(newOutbound, false);
             newOutbound.FlightId = _flightId;
-            newOutbound.ClassId = _classId;
+            newOutbound.ClassId = (int)cboCabinClassTicket.SelectedValue; // Lấy từ ComboBox
             newOutbound.FlightDate = _outboundBooking.DepartureTime;
 
             // 🔥 LOCK GHẾ — đặt ở đây!
@@ -943,7 +953,7 @@ namespace GUI.Features.Ticket.subTicket
                 var inbound = _inboundPassengers[_editingIndex];
                 MapFormToDto(inbound, true);
                 inbound.FlightId = _returnFlightId;
-                inbound.ClassId = _returnClassId;
+                inbound.ClassId = (int)cboCabinClassTicket.SelectedValue; // Lấy từ ComboBox
                 inbound.FlightDate = _returnBooking.DepartureTime;
                 _inboundPassengers.ResetItem(_editingIndex);
 
@@ -976,7 +986,7 @@ namespace GUI.Features.Ticket.subTicket
             var newInbound = new TicketBookingRequestDTO();
             MapFormToDto(newInbound, true);
             newInbound.FlightId = _returnFlightId;
-            newInbound.ClassId = _returnClassId;
+            newInbound.ClassId = (int)cboCabinClassTicket.SelectedValue; // Lấy từ ComboBox
             newInbound.FlightDate = _returnBooking.DepartureTime;
             _inboundPassengers.Add(newInbound);
             if (!_takenInboundSeats.Contains(newInbound.FlightSeatId))
