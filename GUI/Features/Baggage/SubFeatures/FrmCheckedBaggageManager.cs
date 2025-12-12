@@ -19,6 +19,13 @@ namespace GUI.Features.Baggage.SubFeatures
         public FrmCheckedBaggageManager()
         {
             InitializeComponent();
+            txtCheckedId.PlaceholderText = "___";
+
+            txtWeightKg.PlaceholderText = "VD: 20";
+
+            txtPrice.PlaceholderText = "VD: 500,000";
+
+            txtDescription.PlaceholderText = "Nhập quy định chi tiết...";
         }
 
         private void FrmCheckedBaggageManager_Load(object sender, EventArgs e)

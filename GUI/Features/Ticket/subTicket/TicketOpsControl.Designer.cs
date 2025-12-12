@@ -28,164 +28,140 @@
         /// </summary>
         private void InitializeComponent()
         {
+            // 1. Style Grid
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
-            dgvTicketOpsControl = new GUI.Components.Tables.TableCustom();
-            txtSearchTicket = new GUI.Components.Inputs.UnderlinedTextField();
-            cboSearchTicket = new GUI.Components.Inputs.UnderlinedComboBox();
-            btnSearchTicket = new GUI.Components.Buttons.PrimaryButton();
-            ((System.ComponentModel.ISupportInitialize)dgvTicketOpsControl).BeginInit();
-            SuspendLayout();
+
+            // 2. Init Controls
+            this.dgvTicketOpsControl = new GUI.Components.Tables.TableCustom();
+            this.txtSearchTicket = new GUI.Components.Inputs.UnderlinedTextField();
+            this.cboSearchTicket = new GUI.Components.Inputs.UnderlinedComboBox();
+            this.btnSearchTicket = new GUI.Components.Buttons.PrimaryButton();
+
+            // --- 3. CONTAINER BỐ CỤC ---
+            System.Windows.Forms.Panel pnlTopContainer = new System.Windows.Forms.Panel();
+            System.Windows.Forms.TableLayoutPanel tlpSearch = new System.Windows.Forms.TableLayoutPanel();
+
+            ((System.ComponentModel.ISupportInitialize)(this.dgvTicketOpsControl)).BeginInit();
+            this.SuspendLayout();
+
             // 
-            // dgvTicketOpsControl
+            // === 1. PANEL CONTAINER (TOP) ===
             // 
-            dgvTicketOpsControl.AllowUserToResizeRows = false;
-            dataGridViewCellStyle1.BackColor = Color.FromArgb(248, 250, 252);
-            dgvTicketOpsControl.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
-            dgvTicketOpsControl.BackgroundColor = Color.White;
-            dgvTicketOpsControl.BorderColor = Color.FromArgb(40, 40, 40);
-            dgvTicketOpsControl.BorderStyle = BorderStyle.None;
-            dgvTicketOpsControl.BorderThickness = 2;
-            dgvTicketOpsControl.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            dgvTicketOpsControl.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = Color.White;
-            dataGridViewCellStyle2.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            dataGridViewCellStyle2.ForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle2.Padding = new Padding(12, 10, 12, 10);
-            dataGridViewCellStyle2.SelectionBackColor = Color.White;
-            dataGridViewCellStyle2.SelectionForeColor = Color.FromArgb(126, 185, 232);
-            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
-            dgvTicketOpsControl.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
-            dgvTicketOpsControl.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvTicketOpsControl.CornerRadius = 16;
-            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = Color.White;
-            dataGridViewCellStyle3.Font = new Font("Segoe UI", 10F);
-            dataGridViewCellStyle3.ForeColor = Color.FromArgb(33, 37, 41);
-            dataGridViewCellStyle3.Padding = new Padding(12, 6, 12, 6);
-            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(155, 209, 243);
-            dataGridViewCellStyle3.SelectionForeColor = Color.White;
-            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
-            dgvTicketOpsControl.DefaultCellStyle = dataGridViewCellStyle3;
-            dgvTicketOpsControl.EnableHeadersVisualStyles = false;
-            dgvTicketOpsControl.GridColor = Color.FromArgb(230, 235, 240);
-            dgvTicketOpsControl.HeaderBackColor = Color.White;
-            dgvTicketOpsControl.HeaderForeColor = Color.FromArgb(126, 185, 232);
-            dgvTicketOpsControl.HoverBackColor = Color.FromArgb(232, 245, 255);
-            dgvTicketOpsControl.Location = new Point(3, 245);
-            dgvTicketOpsControl.MultiSelect = false;
-            dgvTicketOpsControl.Name = "dgvTicketOpsControl";
-            dgvTicketOpsControl.RowAltBackColor = Color.FromArgb(248, 250, 252);
-            dgvTicketOpsControl.RowBackColor = Color.White;
-            dgvTicketOpsControl.RowForeColor = Color.FromArgb(33, 37, 41);
-            dgvTicketOpsControl.RowHeadersVisible = false;
-            dgvTicketOpsControl.RowHeadersWidth = 51;
-            dgvTicketOpsControl.RowTemplate.Height = 40;
-            dgvTicketOpsControl.SelectionBackColor = Color.FromArgb(155, 209, 243);
-            dgvTicketOpsControl.SelectionForeColor = Color.White;
-            dgvTicketOpsControl.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvTicketOpsControl.Size = new Size(1451, 329);
-            dgvTicketOpsControl.TabIndex = 3;
-            dgvTicketOpsControl.CellContentClick += dgvTicketNumberHistory_CellContentClick;
+            pnlTopContainer.Dock = DockStyle.Top;
+            pnlTopContainer.Height = 100; // Chiều cao gọn gàng cho 1 hàng
+            pnlTopContainer.BackColor = Color.FromArgb(240, 242, 245); // Xám nhạt
+            pnlTopContainer.Padding = new Padding(20, 15, 20, 15);
+
             // 
+            // === 2. TABLE LAYOUT (3 CỘT: TỪ KHÓA - LOẠI - NÚT) ===
+            // 
+            tlpSearch.Dock = DockStyle.Fill;
+            tlpSearch.ColumnCount = 3;
+            // Cột 1 (Input): 45%
+            tlpSearch.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45F));
+            // Cột 2 (Combo): 35%
+            tlpSearch.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+            // Cột 3 (Button): 20%
+            tlpSearch.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            tlpSearch.RowCount = 1;
+            tlpSearch.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            // 
+            // === 3. CẤU HÌNH INPUTS ===
+            // 
+            Color grayBg = Color.FromArgb(240, 242, 245);
+            Padding inputMargin = new Padding(0, 0, 15, 0); // Khoảng cách phải
+
             // txtSearchTicket
-            // 
-            txtSearchTicket.BackColor = Color.Transparent;
-            txtSearchTicket.FocusedLineThickness = 3;
-            txtSearchTicket.InheritParentBackColor = true;
-            txtSearchTicket.LabelForeColor = Color.FromArgb(70, 70, 70);
-            txtSearchTicket.LabelText = "Nhãn";
+            txtSearchTicket.LabelText = "Từ khóa tìm kiếm";
+            txtSearchTicket.PlaceholderText = "Nhập mã vé, tên khách hàng...";
+            txtSearchTicket.Dock = DockStyle.Fill;
+            txtSearchTicket.Margin = inputMargin;
+            txtSearchTicket.BackColor = grayBg;
             txtSearchTicket.LineColor = Color.FromArgb(40, 40, 40);
             txtSearchTicket.LineColorFocused = Color.FromArgb(0, 92, 175);
-            txtSearchTicket.LineThickness = 2;
-            txtSearchTicket.Location = new Point(74, 118);
-            txtSearchTicket.Name = "txtSearchTicket";
-            txtSearchTicket.Padding = new Padding(0, 4, 0, 8);
-            txtSearchTicket.PasswordChar = '\0';
-            txtSearchTicket.PlaceholderText = "Placeholder";
-            txtSearchTicket.ReadOnly = false;
-            txtSearchTicket.ReadOnlyLineColor = Color.FromArgb(200, 200, 200);
-            txtSearchTicket.ReadOnlyTextColor = Color.FromArgb(90, 90, 90);
-            txtSearchTicket.Size = new Size(188, 70);
-            txtSearchTicket.TabIndex = 4;
-            txtSearchTicket.TextForeColor = Color.FromArgb(30, 30, 30);
-            txtSearchTicket.UnderlineSpacing = 2;
-            txtSearchTicket.UseSystemPasswordChar = false;
+            // Events
             txtSearchTicket.Load += txtSearchTicket_Load;
             txtSearchTicket.KeyUp += KeyUp_ticket;
-            // 
+
             // cboSearchTicket
-            // 
-            cboSearchTicket.BackColor = Color.Transparent;
-            cboSearchTicket.DataSource = null;
-            cboSearchTicket.DisplayMember = "";
-            cboSearchTicket.DropDownStyle = ComboBoxStyle.DropDown;
-            cboSearchTicket.LabelText = "Label";
-            cboSearchTicket.Location = new Point(316, 118);
-            cboSearchTicket.MinimumSize = new Size(140, 56);
-            cboSearchTicket.Name = "cboSearchTicket";
-            cboSearchTicket.SelectedIndex = -1;
-            cboSearchTicket.SelectedItem = null;
-            cboSearchTicket.SelectedText = "";
-            cboSearchTicket.SelectedValue = null;
-            cboSearchTicket.Size = new Size(188, 70);
-            cboSearchTicket.TabIndex = 5;
-            cboSearchTicket.ValueMember = "";
+            cboSearchTicket.LabelText = "Tiêu chí lọc / Trạng thái";
+            cboSearchTicket.Dock = DockStyle.Fill;
+            cboSearchTicket.Margin = inputMargin;
+            cboSearchTicket.BackColor = grayBg;
+            // Events
             cboSearchTicket.SelectedIndexChanged += cbo_changedIndex;
             cboSearchTicket.Load += underlinedComboBox1_Load;
+
             // 
-            // btnSearchTicket
+            // === 4. CẤU HÌNH BUTTON ===
             // 
-            btnSearchTicket.AutoSize = true;
-            btnSearchTicket.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            btnSearchTicket.BackColor = Color.FromArgb(155, 209, 243);
+            btnSearchTicket.Text = "🔍 Tra cứu";
+            btnSearchTicket.Size = new Size(140, 45);
+            // Căn nút xuống dưới một chút để thẳng hàng với Textbox (do Textbox có label)
+            btnSearchTicket.Margin = new Padding(0, 12, 0, 0);
+            btnSearchTicket.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+
+            btnSearchTicket.BackColor = Color.FromArgb(0, 92, 175);
+            btnSearchTicket.ForeColor = Color.White;
             btnSearchTicket.BorderColor = Color.FromArgb(40, 40, 40);
             btnSearchTicket.BorderThickness = 2;
             btnSearchTicket.CornerRadius = 22;
-            btnSearchTicket.EnableHoverEffects = true;
-            btnSearchTicket.FlatAppearance.BorderSize = 0;
-            btnSearchTicket.FlatStyle = FlatStyle.Flat;
-            btnSearchTicket.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            btnSearchTicket.ForeColor = Color.White;
-            btnSearchTicket.HoverBackColor = Color.White;
-            btnSearchTicket.HoverBorderColor = Color.FromArgb(0, 92, 175);
-            btnSearchTicket.HoverForeColor = Color.FromArgb(0, 92, 175);
-            btnSearchTicket.Icon = null;
-            btnSearchTicket.IconSize = new Size(22, 22);
-            btnSearchTicket.IconSpacing = 10;
-            btnSearchTicket.Location = new Point(627, 136);
-            btnSearchTicket.Name = "btnSearchTicket";
-            btnSearchTicket.NormalBackColor = Color.FromArgb(155, 209, 243);
-            btnSearchTicket.NormalBorderColor = Color.FromArgb(40, 40, 40);
-            btnSearchTicket.NormalForeColor = Color.White;
-            btnSearchTicket.Padding = new Padding(24, 10, 24, 10);
-            btnSearchTicket.PreferredMaxWidth = 0;
-            btnSearchTicket.PressedBackColor = Color.FromArgb(225, 240, 255);
-            btnSearchTicket.PressedBorderColor = Color.FromArgb(0, 92, 175);
-            btnSearchTicket.PressedForeColor = Color.FromArgb(0, 92, 175);
-            btnSearchTicket.Size = new Size(143, 52);
-            btnSearchTicket.TabIndex = 6;
-            btnSearchTicket.Text = "Search";
-            btnSearchTicket.TextAlign = ContentAlignment.MiddleLeft;
-            btnSearchTicket.UseVisualStyleBackColor = false;
-            btnSearchTicket.WordWrap = false;
             btnSearchTicket.Click += primaryButton1_Click;
+
             // 
-            // TicketOpsControl
+            // === 5. CẤU HÌNH GRID ===
             // 
-            AutoScaleDimensions = new SizeF(8F, 20F);
-            AutoScaleMode = AutoScaleMode.Font;
-            Controls.Add(btnSearchTicket);
-            Controls.Add(cboSearchTicket);
-            Controls.Add(txtSearchTicket);
-            Controls.Add(dgvTicketOpsControl);
-            Name = "TicketOpsControl";
-            Size = new Size(1457, 577);
-            ((System.ComponentModel.ISupportInitialize)dgvTicketOpsControl).EndInit();
-            ResumeLayout(false);
-            PerformLayout();
+            dgvTicketOpsControl.Dock = DockStyle.Fill;
+            dgvTicketOpsControl.BackgroundColor = Color.White;
+            dgvTicketOpsControl.BorderStyle = BorderStyle.None;
+            dgvTicketOpsControl.BorderColor = Color.FromArgb(240, 240, 240);
+            dgvTicketOpsControl.BorderThickness = 1;
+            dgvTicketOpsControl.RowHeadersVisible = false;
+            dgvTicketOpsControl.RowTemplate.Height = 45;
+            dgvTicketOpsControl.ColumnHeadersHeight = 50;
+
+            // Style
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = Color.White;
+            dataGridViewCellStyle1.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            dataGridViewCellStyle1.ForeColor = Color.FromArgb(100, 100, 100);
+            dataGridViewCellStyle1.Padding = new Padding(10, 0, 0, 0);
+            dgvTicketOpsControl.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = Color.White;
+            dataGridViewCellStyle3.Font = new Font("Segoe UI", 10F);
+            dataGridViewCellStyle3.ForeColor = Color.FromArgb(50, 50, 50);
+            dataGridViewCellStyle3.Padding = new Padding(10, 0, 0, 0);
+            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(235, 245, 255);
+            dataGridViewCellStyle3.SelectionForeColor = Color.FromArgb(0, 92, 175);
+            dgvTicketOpsControl.DefaultCellStyle = dataGridViewCellStyle3;
+
+            dgvTicketOpsControl.CellContentClick += dgvTicketNumberHistory_CellContentClick;
+
+            // 
+            // === 6. LẮP RÁP FORM ===
+            // 
+
+            // Add Controls vào Table
+            tlpSearch.Controls.Add(txtSearchTicket, 0, 0);
+            tlpSearch.Controls.Add(cboSearchTicket, 1, 0);
+            tlpSearch.Controls.Add(btnSearchTicket, 2, 0);
+
+            // Add Table vào Panel
+            pnlTopContainer.Controls.Add(tlpSearch);
+
+            // Add vào Form
+            this.Controls.Add(dgvTicketOpsControl); // Fill
+            this.Controls.Add(pnlTopContainer);     // Top
+
+            this.Name = "TicketOpsControl";
+            this.Size = new Size(1200, 700);
+            ((System.ComponentModel.ISupportInitialize)(this.dgvTicketOpsControl)).EndInit();
+            this.ResumeLayout(false);
         }
 
         #endregion

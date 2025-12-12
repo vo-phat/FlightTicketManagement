@@ -72,25 +72,78 @@ namespace GUI.Features.Baggage.SubFeatures
         {
             LoadBaggageList();
         }
-
         // ============================
-        // LOAD DANH SÁCH HÀNH LÝ THEO VÉ
+        // LOAD DANH SÁCH HÀNH LÝ THEO VÉ (ĐÃ CHỈNH GIÃN BẢNG)
         // ============================
         private void LoadTicketBaggage()
         {
+            // 1. Gán dữ liệu
             dgvTicketBaggage.DataSource = tbBus.GetByTicketId(_ticketId);
 
-            dgvTicketBaggage.Columns["Id"].HeaderText = "ID";
-            dgvTicketBaggage.Columns["BaggageType"].HeaderText = "Type";
-            dgvTicketBaggage.Columns["Kg"].HeaderText = "Kg";
-            dgvTicketBaggage.Columns["Price"].HeaderText = "Price";
-            dgvTicketBaggage.Columns["Quantity"].HeaderText = "Qty";
-            dgvTicketBaggage.Columns["Description"].HeaderText = "Description";
-            dgvTicketBaggage.Columns["Note"].HeaderText = "Note";
+            // 2. CẤU HÌNH QUAN TRỌNG: Giãn bảng ra toàn màn hình
+            dgvTicketBaggage.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvTicketBaggage.RowHeadersVisible = false; // Ẩn cột thừa bên trái cho đẹp
 
-            dgvTicketBaggage.Columns["TicketId"].Visible = false;
-            dgvTicketBaggage.Columns["CarryOnId"].Visible = false;
-            dgvTicketBaggage.Columns["CheckedId"].Visible = false;
+            // 3. Cấu hình cột (Dùng FillWeight để chia tỷ lệ phần trăm)
+            // Tổng FillWeight không nhất thiết phải là 100, nó là tỷ lệ tương đối.
+
+            // ID: Nhỏ (10%)
+            if (dgvTicketBaggage.Columns["Id"] != null)
+            {
+                dgvTicketBaggage.Columns["Id"].HeaderText = "Mã";
+                dgvTicketBaggage.Columns["Id"].FillWeight = 10;
+            }
+
+            // Type: Vừa (15%)
+            if (dgvTicketBaggage.Columns["BaggageType"] != null)
+            {
+                dgvTicketBaggage.Columns["BaggageType"].HeaderText = "Loại";
+                dgvTicketBaggage.Columns["BaggageType"].FillWeight = 15;
+            }
+
+            // Kg: Nhỏ (10%)
+            if (dgvTicketBaggage.Columns["Kg"] != null)
+            {
+                dgvTicketBaggage.Columns["Kg"].HeaderText = "Kg";
+                dgvTicketBaggage.Columns["Kg"].FillWeight = 10;
+            }
+
+            // Price: Vừa (15%)
+            if (dgvTicketBaggage.Columns["Price"] != null)
+            {
+                dgvTicketBaggage.Columns["Price"].HeaderText = "Đơn giá";
+                dgvTicketBaggage.Columns["Price"].DefaultCellStyle.Format = "N0"; // 100,000
+                dgvTicketBaggage.Columns["Price"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+                dgvTicketBaggage.Columns["Price"].FillWeight = 15;
+            }
+
+            // Quantity: Nhỏ (10%)
+            if (dgvTicketBaggage.Columns["Quantity"] != null)
+            {
+                dgvTicketBaggage.Columns["Quantity"].HeaderText = "SL";
+                dgvTicketBaggage.Columns["Quantity"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                dgvTicketBaggage.Columns["Quantity"].FillWeight = 10;
+            }
+
+            // Description: Rất Lớn (30%) - Để hiển thị tên gói dài
+            if (dgvTicketBaggage.Columns["Description"] != null)
+            {
+                dgvTicketBaggage.Columns["Description"].HeaderText = "Tên gói hành lý";
+                dgvTicketBaggage.Columns["Description"].FillWeight = 30;
+                dgvTicketBaggage.Columns["Description"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            }
+
+            // Note: Lớn (25%)
+            if (dgvTicketBaggage.Columns["Note"] != null)
+            {
+                dgvTicketBaggage.Columns["Note"].HeaderText = "Ghi chú";
+                dgvTicketBaggage.Columns["Note"].FillWeight = 25;
+            }
+
+            // Ẩn các cột ID khóa ngoại
+            if (dgvTicketBaggage.Columns["TicketId"] != null) dgvTicketBaggage.Columns["TicketId"].Visible = false;
+            if (dgvTicketBaggage.Columns["CarryOnId"] != null) dgvTicketBaggage.Columns["CarryOnId"].Visible = false;
+            if (dgvTicketBaggage.Columns["CheckedId"] != null) dgvTicketBaggage.Columns["CheckedId"].Visible = false;
         }
 
         // ============================

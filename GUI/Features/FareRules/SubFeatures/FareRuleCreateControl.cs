@@ -17,15 +17,18 @@ namespace GUI.Features.FareRules.SubFeatures
 {
     public class FareRuleCreateControl : UserControl
     {
+        // --- Controls ---
         private TableCustom table;
         private UnderlinedComboBox cbRoute, cbCabin, cbFareType, cbSeason;
         private UnderlinedTextField txtPrice, txtDescription;
         private UnderlinedDatePicker dtEffective, dtExpiry;
+        private PrimaryButton btnAdd;
+        private SecondaryButton btnEdit, btnDelete, btnClear;
 
+        // --- Data ---
         private List<RouteDTO> routes;
         private List<CabinClassDTO> cabins;
-
-        private int? selectedRuleId = null; // lưu rule_id đang chọn
+        private int? selectedRuleId = null;
         public static event Action OnFareRuleAdded;
 
         public FareRuleCreateControl()
@@ -35,6 +38,9 @@ namespace GUI.Features.FareRules.SubFeatures
             LoadFareRuleTable();
         }
 
+        // ==========================================
+        // 1. INNER CLASSES (HELPER)
+        // ==========================================
         private class RouteItem
         {
             public int Id { get; }
@@ -43,6 +49,7 @@ namespace GUI.Features.FareRules.SubFeatures
             public override string ToString() => Text;
         }
 
+        // Cập nhật DatePicker để đẹp hơn trên nền xám
         private class UnderlinedDatePicker : UserControl
         {
             private Label lbl;
@@ -55,20 +62,18 @@ namespace GUI.Features.FareRules.SubFeatures
                 set => picker.Value = value;
             }
 
-            public UnderlinedDatePicker(string label, DateTime? defaultDate = null)
+            public UnderlinedDatePicker(string label)
             {
-                Height = 64;
-                Width = 300;
-                Margin = new Padding(0, 6, 24, 6);
-                BackColor = Color.Transparent;
-
+                Height = 60; 
+                BackColor = Color.FromArgb(240, 242, 245); 
                 lbl = new Label
                 {
                     Text = label,
                     Dock = DockStyle.Top,
-                    Height = 20,
-                    Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                    ForeColor = Color.FromArgb(40, 40, 40)
+                    Height = 25,
+                    Font = new Font("Segoe UI", 9F, FontStyle.Regular), 
+                    ForeColor = Color.Gray,
+                    Padding = new Padding(0, 5, 0, 0)
                 };
 
                 picker = new DateTimePicker
@@ -76,180 +81,202 @@ namespace GUI.Features.FareRules.SubFeatures
                     Dock = DockStyle.Top,
                     Format = DateTimePickerFormat.Custom,
                     CustomFormat = "dd/MM/yyyy",
-                    Font = new Font("Segoe UI", 10),
-                    Value = defaultDate ?? DateTime.Today
+                    Font = new Font("Segoe UI", 11F),
+                    Height = 30,
+                    BackColor = Color.FromArgb(240, 242, 245) 
                 };
 
                 underline = new Panel
                 {
                     Dock = DockStyle.Top,
                     Height = 2,
-                    BackColor = Color.FromArgb(180, 180, 180)
+                    BackColor = Color.FromArgb(40, 40, 40) 
                 };
 
-                Controls.Add(underline);
-                Controls.Add(picker);
-                Controls.Add(lbl);
+                this.Controls.Add(underline);
+                this.Controls.Add(picker);
+                this.Controls.Add(lbl);
 
-                picker.Enter += (s, e) => underline.BackColor = Color.FromArgb(0, 120, 215);
-                picker.Leave += (s, e) => underline.BackColor = Color.FromArgb(180, 180, 180);
+                // Hiệu ứng focus
+                picker.Enter += (s, e) => underline.BackColor = Color.FromArgb(0, 92, 175);
+                picker.Leave += (s, e) => underline.BackColor = Color.FromArgb(40, 40, 40);
             }
         }
 
+        // ==========================================
+        // 2. GIAO DIỆN (INITIALIZE)
+        // ==========================================
         private void InitializeComponent()
         {
-            Dock = DockStyle.Fill;
-            BackColor = Color.FromArgb(232, 240, 252);
+            this.Dock = DockStyle.Fill;
+            this.BackColor = Color.White;
 
-            // ===== Title =====
-            var titlePanel = new Panel { Dock = DockStyle.Top, Padding = new Padding(24, 20, 24, 0), Height = 60 };
-            var lblTitle = new Label { Text = "➕ Tạo quy tắc vé", AutoSize = true, Font = new Font("Segoe UI", 20, FontStyle.Bold) };
-            titlePanel.Controls.Add(lblTitle);
-
-            // ===== Inputs =====
-            var inputs = new TableLayoutPanel
+            // --- A. CONTAINER NHẬP LIỆU (TOP) ---
+            var pnlTopContainer = new Panel
             {
                 Dock = DockStyle.Top,
-                Padding = new Padding(24, 12, 24, 0),
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                ColumnCount = 2,
-                RowCount = 4
+                Height = 260, 
+                BackColor = Color.FromArgb(240, 242, 245), 
+                Padding = new Padding(20)
             };
-            inputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-            inputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
 
-            cbRoute = new UnderlinedComboBox("Tuyến bay", Array.Empty<object>()) { Width = 300, Margin = new Padding(0, 6, 24, 6) };
-            cbCabin = new UnderlinedComboBox("Hạng vé (Cabin Class)", Array.Empty<object>()) { Width = 300, Margin = new Padding(0, 6, 24, 6) };
-            cbFareType = new UnderlinedComboBox("Loại vé", new object[] { "Standard", "Flex", "Saver", "Promo" }) { Width = 300, Margin = new Padding(0, 6, 24, 6) };
-            cbSeason = new UnderlinedComboBox("Mùa", new object[] { "PEAK", "NORMAL", "OFFPEAK" }) { Width = 300, Margin = new Padding(0, 6, 24, 6) };
+            // --- B. GRID INPUTS (4 CỘT) ---
+            var tlpInputs = new TableLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                Height = 150,
+                ColumnCount = 4,
+                RowCount = 2,
+                Margin = new Padding(0)
+            };
+            tlpInputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            tlpInputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            tlpInputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            tlpInputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            tlpInputs.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tlpInputs.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
 
-            dtEffective = new UnderlinedDatePicker("Ngày hiệu lực");
-            dtExpiry = new UnderlinedDatePicker("Ngày hết hạn");
+            // --- C. KHỞI TẠO CONTROLS ---
+            Color grayBg = Color.FromArgb(240, 242, 245);
+            Padding inputMargin = new Padding(10, 5, 10, 5);
 
-            txtPrice = new UnderlinedTextField("Giá", "") { Width = 300, Margin = new Padding(0, 6, 24, 6) };
+            // Row 1
+            cbRoute = CreateCombo("Tuyến bay", grayBg, inputMargin);
+            cbCabin = CreateCombo("Hạng vé (Cabin Class)", grayBg, inputMargin);
+            cbFareType = CreateCombo("Loại vé", grayBg, inputMargin);
+            cbFareType.Items.AddRange(new object[] { "Standard", "Flex", "Saver", "Promo" });
+
+            cbSeason = CreateCombo("Mùa", grayBg, inputMargin);
+            cbSeason.Items.AddRange(new object[] { "PEAK", "NORMAL", "OFFPEAK" });
+
+            // Row 2
+            dtEffective = new UnderlinedDatePicker("Ngày hiệu lực") { Dock = DockStyle.Fill, Margin = inputMargin };
+            dtExpiry = new UnderlinedDatePicker("Ngày hết hạn") { Dock = DockStyle.Fill, Margin = inputMargin };
+
+            txtPrice = CreateText("Giá vé (VNĐ)", grayBg, inputMargin);
             txtPrice.KeyPress += (s, e) => { if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar)) e.Handled = true; };
 
-            txtDescription = new UnderlinedTextField("Mô tả", "") { Width = 300, Margin = new Padding(0, 6, 24, 6) };
+            txtDescription = CreateText("Mô tả / Ghi chú", grayBg, inputMargin);
 
-            inputs.Controls.Add(cbRoute, 0, 0);
-            inputs.Controls.Add(cbCabin, 1, 0);
-            inputs.Controls.Add(cbFareType, 0, 1);
-            inputs.Controls.Add(cbSeason, 1, 1);
-            inputs.Controls.Add(dtEffective, 0, 2);
-            inputs.Controls.Add(dtExpiry, 1, 2);
-            inputs.Controls.Add(txtPrice, 0, 3);
-            inputs.Controls.Add(txtDescription, 1, 3);
+            // Add vào Grid
+            tlpInputs.Controls.Add(cbRoute, 0, 0);
+            tlpInputs.Controls.Add(cbCabin, 1, 0);
+            tlpInputs.Controls.Add(cbFareType, 2, 0);
+            tlpInputs.Controls.Add(cbSeason, 3, 0);
 
-            // ===== Buttons =====
-            var btnAdd = new PrimaryButton("➕ Thêm mới") { Width = 140, Height = 40, Margin = new Padding(0, 12, 12, 12) };
-            var btnEdit = new SecondaryButton("✏️ Sửa") { Width = 100, Height = 40, Margin = new Padding(0, 12, 12, 12) };
-            var btnDelete = new SecondaryButton("❌ Xóa") { Width = 100, Height = 40, Margin = new Padding(0, 12, 12, 12), BackColor = Color.Red, ForeColor = Color.White }; // Nút Xóa
+            tlpInputs.Controls.Add(dtEffective, 0, 1);
+            tlpInputs.Controls.Add(dtExpiry, 1, 1);
+            tlpInputs.Controls.Add(txtPrice, 2, 1);
+            tlpInputs.Controls.Add(txtDescription, 3, 1);
 
-            btnAdd.Click += BtnAdd_Click;
-            btnEdit.Click += BtnEdit_Click;
-            btnDelete.Click += BtnDelete_Click; // Gắn sự kiện Click cho nút Xóa
-
-            var buttonRow = new FlowLayoutPanel
+            // --- D. ACTION BUTTONS (FLOW LAYOUT) ---
+            var flpActions = new FlowLayoutPanel
             {
-                Dock = DockStyle.Top,
+                Dock = DockStyle.Bottom,
+                Height = 70,
                 FlowDirection = FlowDirection.RightToLeft,
-                AutoSize = true,
-                Padding = new Padding(24, 0, 24, 0)
+                Padding = new Padding(0, 5, 10, 0),
+                BackColor = Color.Transparent
             };
-            buttonRow.Controls.Add(btnAdd);
-            buttonRow.Controls.Add(btnEdit);
-            buttonRow.Controls.Add(btnDelete); // Thêm nút Xóa vào panel
 
-            // ===== Table =====
+            // Init Buttons
+            Size btnSize = new Size(110, 40);
+
+            btnClear = new SecondaryButton("Làm mới") { Size = btnSize, Margin = new Padding(5) };
+            btnClear.Click += (s, e) => RefreshFields();
+
+            btnDelete = new SecondaryButton("Xóa") { Size = btnSize, Margin = new Padding(5), BackColor = Color.FromArgb(255, 235, 238), ForeColor = Color.Red, BorderColor = Color.Red };
+            btnDelete.Click += BtnDelete_Click;
+
+            btnEdit = new SecondaryButton("Sửa") { Size = btnSize, Margin = new Padding(5) };
+            btnEdit.Click += BtnEdit_Click;
+
+            btnAdd = new PrimaryButton("Thêm") { Size = btnSize, Margin = new Padding(5) };
+            btnAdd.Click += BtnAdd_Click;
+
+            flpActions.Controls.Add(btnClear);
+            flpActions.Controls.Add(btnDelete);
+            flpActions.Controls.Add(btnEdit);
+            flpActions.Controls.Add(btnAdd);
+
+            // Lắp ráp Top Panel
+            pnlTopContainer.Controls.Add(flpActions); // Dưới
+            pnlTopContainer.Controls.Add(tlpInputs);  // Trên
+
+            // --- E. DATA GRID (FILL) ---
             table = new TableCustom
             {
                 Dock = DockStyle.Fill,
-                Margin = new Padding(24, 12, 24, 4),
-                AllowUserToAddRows = false,
-                ReadOnly = true,
+                BackgroundColor = Color.White,
+                BorderColor = Color.FromArgb(240, 240, 240),
+                BorderThickness = 1,
+                ShowCellToolTips = false,
                 RowHeadersVisible = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White
+                AllowUserToResizeRows = false,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
             };
 
-            table.Columns.Add("ruleId", "Mã Quy tắc");
-            table.Columns.Add("route", "Tuyến");
-            table.Columns.Add("cabin", "Hạng vé");
-            table.Columns.Add("fareType", "Loại vé");
-            table.Columns.Add("season", "Mùa");
-            table.Columns.Add("effective", "Hiệu lực");
-            table.Columns.Add("expiry", "Hết hạn");
-            table.Columns.Add("price", "Giá (₫)");
+            // Style Grid Columns
+            table.Columns.Add(CreateCol("ruleId", "ID", 5));
+            table.Columns.Add(CreateCol("route", "Tuyến bay", 15));
+            table.Columns.Add(CreateCol("cabin", "Hạng vé", 10));
+            table.Columns.Add(CreateCol("fareType", "Loại", 10));
+            table.Columns.Add(CreateCol("season", "Mùa", 8));
+            table.Columns.Add(CreateCol("effective", "Hiệu lực", 10));
+            table.Columns.Add(CreateCol("expiry", "Hết hạn", 10));
+
+            var colPrice = CreateCol("price", "Giá (VNĐ)", 12);
+            colPrice.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            table.Columns.Add(colPrice);
 
             table.CellClick += Table_CellClick;
 
-            var main = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4 };
-            main.Controls.Add(titlePanel, 0, 0);
-            main.Controls.Add(inputs, 0, 1);
-            main.Controls.Add(buttonRow, 0, 2);
-            main.Controls.Add(table, 0, 3);
-            Controls.Add(main);
+            // --- F. ADD TO CONTROL ---
+            this.Controls.Add(table);           // Fill
+            this.Controls.Add(pnlTopContainer); // Top
         }
-
-        private void Table_CellClick(object sender, DataGridViewCellEventArgs e)
+        private UnderlinedComboBox CreateCombo(string label, Color bg, Padding margin)
         {
-            if (e.RowIndex >= 0 && e.RowIndex < table.Rows.Count)
+            return new UnderlinedComboBox
             {
-                var row = table.Rows[e.RowIndex];
-                selectedRuleId = Convert.ToInt32(row.Cells["ruleId"].Value);
-
-                string routeName = row.Cells["route"].Value?.ToString();
-                string cabinName = row.Cells["cabin"].Value?.ToString();
-                string fareType = row.Cells["fareType"].Value?.ToString();
-                string season = row.Cells["season"].Value?.ToString();
-
-                // --- Route ---
-                for (int i = 0; i < cbRoute.Items.Count; i++)
-                {
-                    if (cbRoute.Items[i].ToString().Equals(routeName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        cbRoute.SelectedIndex = i;
-                        break;
-                    }
-                }
-
-                // --- Cabin ---
-                for (int i = 0; i < cbCabin.Items.Count; i++)
-                {
-                    if (cbCabin.Items[i].ToString().Equals(cabinName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        cbCabin.SelectedIndex = i;
-                        break;
-                    }
-                }
-
-                // --- FareType và Season ---
-                cbFareType.SelectedItem = fareType;
-                cbSeason.SelectedItem = season;
-
-                // --- Date ---
-                if (DateTime.TryParseExact(row.Cells["effective"].Value?.ToString(), "dd/MM/yyyy",
-                    null, System.Globalization.DateTimeStyles.None, out DateTime eff))
-                    dtEffective.Value = eff;
-
-                if (DateTime.TryParseExact(row.Cells["expiry"].Value?.ToString(), "dd/MM/yyyy",
-                    null, System.Globalization.DateTimeStyles.None, out DateTime exp))
-                    dtExpiry.Value = exp;
-
-                // --- Price ---
-                var priceStr = row.Cells["price"].Value?.ToString().Replace("₫", "").Replace(",", "").Trim();
-                if (decimal.TryParse(priceStr, out decimal price))
-                    txtPrice.Text = price.ToString();
-
-                // --- Description ---
-                var bus = new FareRuleBUS();
-                var dto = bus.GetById(selectedRuleId.Value);
-                txtDescription.Text = dto?.Description ?? "";
-            }
+                LabelText = label,
+                Dock = DockStyle.Fill,
+                BackColor = bg,
+                Margin = margin,
+                DropDownStyle = ComboBoxStyle.DropDown
+            };
         }
 
+        private UnderlinedTextField CreateText(string label, Color bg, Padding margin)
+        {
+            return new UnderlinedTextField
+            {
+                LabelText = label,
+                Dock = DockStyle.Fill,
+                BackColor = bg,
+                Margin = margin,
+                LineColor = Color.FromArgb(40, 40, 40),
+                LineColorFocused = Color.FromArgb(0, 92, 175)
+            };
+        }
 
+        // Thêm tham số 'align' vào cuối, mặc định là MiddleCenter (Căn giữa)
+        private DataGridViewTextBoxColumn CreateCol(string name, string header, float weight,
+            DataGridViewContentAlignment align = DataGridViewContentAlignment.MiddleLeft)
+        {
+            return new DataGridViewTextBoxColumn
+            {
+                Name = name,
+                HeaderText = header,
+                FillWeight = weight,
+                // Cài đặt căn lề ở đây
+                DefaultCellStyle = new DataGridViewCellStyle { Alignment = align }
+            };
+        }
+
+        // ==========================================
+        // 3. LOGIC XỬ LÝ (GIỮ NGUYÊN LOGIC CŨ)
+        // ==========================================
 
         private void LoadComboBoxes()
         {
@@ -270,7 +297,7 @@ namespace GUI.Features.FareRules.SubFeatures
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi khi tải combobox:\n" + ex.Message);
+                MessageBox.Show("Lỗi tải dữ liệu: " + ex.Message);
             }
         }
 
@@ -290,165 +317,154 @@ namespace GUI.Features.FareRules.SubFeatures
                                    $"{item.Price:N0}");
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) { MessageBox.Show("Lỗi tải bảng: " + ex.Message); }
+        }
+
+        private void Table_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0 && e.RowIndex < table.Rows.Count)
             {
-                MessageBox.Show("Lỗi khi tải dữ liệu quy tắc vé:\n" + ex.Message);
+                var row = table.Rows[e.RowIndex];
+                selectedRuleId = Convert.ToInt32(row.Cells["ruleId"].Value);
+
+                string routeName = row.Cells["route"].Value?.ToString();
+                string cabinName = row.Cells["cabin"].Value?.ToString();
+                string fareType = row.Cells["fareType"].Value?.ToString();
+                string season = row.Cells["season"].Value?.ToString();
+
+                // Set Combo Route
+                for (int i = 0; i < cbRoute.Items.Count; i++)
+                {
+                    if (cbRoute.Items[i].ToString().Equals(routeName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        cbRoute.SelectedIndex = i; break;
+                    }
+                }
+                // Set Combo Cabin
+                for (int i = 0; i < cbCabin.Items.Count; i++)
+                {
+                    if (cbCabin.Items[i].ToString().Equals(cabinName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        cbCabin.SelectedIndex = i; break;
+                    }
+                }
+
+                cbFareType.SelectedItem = fareType;
+                cbSeason.SelectedItem = season;
+
+                if (DateTime.TryParseExact(row.Cells["effective"].Value?.ToString(), "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out DateTime eff))
+                    dtEffective.Value = eff;
+                if (DateTime.TryParseExact(row.Cells["expiry"].Value?.ToString(), "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out DateTime exp))
+                    dtExpiry.Value = exp;
+
+                var priceStr = row.Cells["price"].Value?.ToString().Replace("₫", "").Replace(",", "").Trim();
+                if (decimal.TryParse(priceStr, out decimal price))
+                    txtPrice.Text = price.ToString();
+
+                var bus = new FareRuleBUS();
+                var dto = bus.GetById(selectedRuleId.Value);
+                txtDescription.Text = dto?.Description ?? "";
             }
         }
 
         private void BtnAdd_Click(object sender, EventArgs e)
         {
+            if (!ValidateInput()) return;
             try
             {
-                if (!(cbRoute.SelectedItem is RouteItem selRoute))
-                {
-                    MessageBox.Show("Vui lòng chọn tuyến bay!");
-                    return;
-                }
-                if (cbCabin.SelectedIndex < 0)
-                {
-                    MessageBox.Show("Vui lòng chọn hạng vé!");
-                    return;
-                }
-
-                int routeId = selRoute.Id;
-                int classId = cabins[cbCabin.SelectedIndex].ClassId;
-
-                var dto = new FareRuleDTO
-                {
-                    RouteId = routeId,
-                    ClassId = classId,
-                    FareType = cbFareType.SelectedItem?.ToString() ?? "",
-                    Season = cbSeason.SelectedItem?.ToString() ?? "",
-                    EffectiveDate = dtEffective.Value,
-                    ExpiryDate = dtExpiry.Value,
-                    Price = decimal.TryParse(txtPrice.Text, out var p) ? p : 0,
-                    Description = txtDescription.Text
-                };
-
+                var dto = BuildDTOFromForm();
                 var bus = new FareRuleBUS();
-                bool ok = bus.Insert(dto);
-
-                if (ok)
+                if (bus.Insert(dto))
                 {
-                    MessageBox.Show("Thêm quy tắc vé thành công!");
-                    LoadFareRuleTable();
-                    OnFareRuleAdded?.Invoke();
-                    RefreshFields();
+                    MessageBox.Show("Thêm thành công!");
+                    ReloadData();
                 }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi khi thêm quy tắc vé:\n" + ex.Message);
-            }
+            catch (Exception ex) { MessageBox.Show("Lỗi thêm: " + ex.Message); }
         }
 
         private void BtnEdit_Click(object sender, EventArgs e)
         {
+            if (selectedRuleId == null) { MessageBox.Show("Chọn dòng cần sửa!"); return; }
+            if (!ValidateInput()) return;
             try
             {
-                if (selectedRuleId == null)
-                {
-                    MessageBox.Show("Vui lòng chọn dòng cần sửa!");
-                    return;
-                }
-
-                if (!(cbRoute.SelectedItem is RouteItem selRoute))
-                {
-                    MessageBox.Show("Vui lòng chọn tuyến bay!");
-                    return;
-                }
-
-                int routeId = selRoute.Id;
-                int classId = cabins[cbCabin.SelectedIndex].ClassId;
-
-                var dto = new FareRuleDTO
-                {
-                    RuleId = selectedRuleId.Value,
-                    RouteId = routeId,
-                    ClassId = classId,
-                    FareType = cbFareType.SelectedItem?.ToString() ?? "",
-                    Season = cbSeason.SelectedItem?.ToString() ?? "",
-                    EffectiveDate = dtEffective.Value,
-                    ExpiryDate = dtExpiry.Value,
-                    Price = decimal.TryParse(txtPrice.Text, out var p) ? p : 0,
-                    Description = txtDescription.Text
-                };
-
+                var dto = BuildDTOFromForm();
+                dto.RuleId = selectedRuleId.Value;
                 var bus = new FareRuleBUS();
-                bool ok = bus.Update(dto);
-
-                if (ok)
+                if (bus.Update(dto))
                 {
                     MessageBox.Show("Cập nhật thành công!");
-                    LoadFareRuleTable();
-                    selectedRuleId = null;
-                    OnFareRuleAdded?.Invoke();
-                    RefreshFields();
+                    ReloadData();
                 }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi khi cập nhật:\n" + ex.Message);
-            }
+            catch (Exception ex) { MessageBox.Show("Lỗi sửa: " + ex.Message); }
         }
 
         private void BtnDelete_Click(object sender, EventArgs e)
         {
-            if (selectedRuleId == null)
-            {
-                MessageBox.Show("Vui lòng chọn dòng cần xóa!");
-                return;
-            }
-
-            // Hiển thị hộp thoại xác nhận trước khi xóa
-            var result = MessageBox.Show(
-                $"Bạn có chắc chắn muốn xóa Quy tắc vé #{selectedRuleId} này không?",
-                "Xác nhận Xóa",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Warning);
-
-            if (result == DialogResult.Yes)
+            if (selectedRuleId == null) { MessageBox.Show("Chọn dòng cần xóa!"); return; }
+            if (MessageBox.Show("Bạn chắc chắn muốn xóa?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                 try
                 {
                     var bus = new FareRuleBUS();
-                    bool ok = bus.Delete(selectedRuleId.Value);
-
-                    if (ok)
+                    if (bus.Delete(selectedRuleId.Value))
                     {
-                        MessageBox.Show("Xóa quy tắc vé thành công!");
-                        LoadFareRuleTable();
-                        selectedRuleId = null; // Xóa ID đang chọn
-                        OnFareRuleAdded?.Invoke();
-                        RefreshFields(); // Làm mới các trường nhập liệu
-                    }
-                    else
-                    {
-                        MessageBox.Show("Không thể xóa quy tắc vé. Có thể đã bị xóa trước đó.");
+                        MessageBox.Show("Xóa thành công!");
+                        ReloadData();
                     }
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Lỗi khi xóa quy tắc vé:\n" + ex.Message);
-                }
+                catch (Exception ex) { MessageBox.Show("Lỗi xóa: " + ex.Message); }
             }
         }
+
         private void RefreshFields()
         {
-            selectedRuleId = null; // xóa lựa chọn dòng hiện tại
-
+            selectedRuleId = null;
             cbRoute.SelectedIndex = -1;
             cbCabin.SelectedIndex = -1;
             cbFareType.SelectedIndex = -1;
             cbSeason.SelectedIndex = -1;
-
             dtEffective.Value = DateTime.Today;
             dtExpiry.Value = DateTime.Today;
-
             txtPrice.Text = "";
             txtDescription.Text = "";
+            table.ClearSelection();
         }
 
+        private void ReloadData()
+        {
+            LoadFareRuleTable();
+            OnFareRuleAdded?.Invoke();
+            RefreshFields();
+        }
+
+        private bool ValidateInput()
+        {
+            if (cbRoute.SelectedItem == null) { MessageBox.Show("Chọn tuyến bay!"); return false; }
+            if (cbCabin.SelectedIndex < 0) { MessageBox.Show("Chọn hạng vé!"); return false; }
+            if (string.IsNullOrWhiteSpace(txtPrice.Text)) { MessageBox.Show("Nhập giá vé!"); return false; }
+            return true;
+        }
+
+        private FareRuleDTO BuildDTOFromForm()
+        {
+            var selRoute = cbRoute.SelectedItem as RouteItem;
+            int routeId = selRoute.Id;
+            int classId = cabins[cbCabin.SelectedIndex].ClassId;
+
+            return new FareRuleDTO
+            {
+                RouteId = routeId,
+                ClassId = classId,
+                FareType = cbFareType.SelectedItem?.ToString() ?? "",
+                Season = cbSeason.SelectedItem?.ToString() ?? "",
+                EffectiveDate = dtEffective.Value,
+                ExpiryDate = dtExpiry.Value,
+                Price = decimal.TryParse(txtPrice.Text, out var p) ? p : 0,
+                Description = txtDescription.Text
+            };
+        }
     }
 }
