@@ -18,7 +18,18 @@ namespace GUI.Features.Stats
             InitializeFilterControls();
             InitializeSummaryLabels();
             StyleControls(); // Apply visual styling
+            ForceResponsiveLayout(); // Force panels to fill screen
+            
+            // Wire up button click events
             btnLoad.Click += btnLoad_Click;
+            btnRevenue.Click += btnRevenue_Click;
+            btnFlights.Click += btnFlights_Click;
+            btnPayments.Click += btnPayments_Click;
+            btnRoutes.Click += btnRoutes_Click;
+            btnAirplanes.Click += btnAirplanes_Click;
+            
+            // Show Revenue view by default
+            ShowView("Revenue");
             
             // Auto-load data for current month/year
             LoadCurrentData();
@@ -54,6 +65,224 @@ namespace GUI.Features.Stats
                 {
                     area.BackColor = System.Drawing.Color.White;
                 }
+            }
+        }
+
+        private void ForceResponsiveLayout()
+        {
+            // FIX: Make StatsControl fill parent container
+            // Don't set Size.Empty as it causes Chart height = 0 crash!
+            this.Dock = DockStyle.Fill; // Fill parent container
+            this.MinimumSize = new System.Drawing.Size(0, 0);
+            this.AutoSize = false;
+            
+            // COMPLETE REBUILD of Flights panel to ensure responsiveness
+            // Clear existing controls from pnlFlights
+            pnlFlights.Controls.Clear();
+            pnlFlights.SuspendLayout();
+            
+            // Rebuild with TableLayoutPanel for guaranteed responsive behavior
+            var tableLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 2,
+                BackColor = System.Drawing.Color.White
+            };
+            
+            // Define rows: Summary (30px), DataGrid (fill remaining)
+            tableLayout.RowStyles.Clear();
+            tableLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40)); // Summary row
+            tableLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); // Grid fills rest
+            
+            // Column takes 100% width
+            tableLayout.ColumnStyles.Clear();
+            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            
+            // Add summary label to row 0
+            lblFlightSummary.Dock = DockStyle.Fill;
+            lblFlightSummary.Padding = new System.Windows.Forms.Padding(10, 5, 10, 5);
+            lblFlightSummary.AutoSize = false;
+            lblFlightSummary.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            tableLayout.Controls.Add(lblFlightSummary, 0, 0);
+            
+            // Add DataGridView to row 1
+            dgvFlights.Dock = DockStyle.Fill;
+            dgvFlights.MinimumSize = new System.Drawing.Size(0, 0);
+            dgvFlights.AutoSize = false;
+            tableLayout.Controls.Add(dgvFlights, 0, 1);
+            
+            // Add table layout to panel
+            pnlFlights.Controls.Add(tableLayout);
+            pnlFlights.ResumeLayout();
+            
+            // Apply same approach to other panels
+            // Force all panels to be responsive
+            pnlContentStats.MinimumSize = new System.Drawing.Size(0, 0);
+            pnlContentStats.AutoSize = false;
+            
+            // All stats panels
+            Panel[] panels = { pnlRevenue, pnlFlights, pnlPayments, pnlRoutes, pnlAirplanes };
+            foreach (var panel in panels)
+            {
+                panel.MinimumSize = new System.Drawing.Size(0, 0);
+                panel.AutoSize = false;
+                panel.Dock = DockStyle.Fill;
+            }
+            
+            // Charts
+            Chart[] charts = { chartRevenue, chartPayments };
+            foreach (var chart in charts)
+            {
+                chart.Dock = DockStyle.Top;
+                chart.Height = 250;
+            }
+        }
+
+        private void ShowView(string viewName)
+        {
+            // Hide all panels
+            pnlRevenue.Visible = false;
+            pnlFlights.Visible = false;
+            pnlPayments.Visible = false;
+            pnlRoutes.Visible = false;
+            pnlAirplanes.Visible = false;
+
+            // Reset all buttons to secondary style (white background, blue text)
+            // Both PrimaryButton and SecondaryButton use NormalBackColor/NormalForeColor
+            btnRevenue.NormalBackColor = System.Drawing.Color.White;
+            btnRevenue.NormalForeColor = System.Drawing.Color.FromArgb(155, 209, 243);
+            btnRevenue.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            btnRevenue.Invalidate();
+            
+            btnFlights.NormalBackColor = System.Drawing.Color.White;
+            btnFlights.NormalForeColor = System.Drawing.Color.FromArgb(155, 209, 243);
+            btnFlights.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            btnFlights.Invalidate();
+            
+            btnPayments.NormalBackColor = System.Drawing.Color.White;
+            btnPayments.NormalForeColor = System.Drawing.Color.FromArgb(155, 209, 243);
+            btnPayments.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            btnPayments.Invalidate();
+            
+            btnRoutes.NormalBackColor = System.Drawing.Color.White;
+            btnRoutes.NormalForeColor = System.Drawing.Color.FromArgb(155, 209, 243);
+            btnRoutes.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            btnRoutes.Invalidate();
+            
+            btnAirplanes.NormalBackColor = System.Drawing.Color.White;
+            btnAirplanes.NormalForeColor = System.Drawing.Color.FromArgb(155, 209, 243);
+            btnAirplanes.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            btnAirplanes.Invalidate();
+
+            // Show selected panel and highlight selected button (blue background, white text, bold font)
+            // Also auto-load data if not already loaded
+            switch (viewName)
+            {
+                case "Revenue":
+                    pnlRevenue.Visible = true;
+                    btnRevenue.NormalBackColor = System.Drawing.Color.FromArgb(155, 209, 243);
+                    btnRevenue.NormalForeColor = System.Drawing.Color.White;
+                    btnRevenue.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+                    btnRevenue.Invalidate();
+                    // Auto-load revenue data if not loaded
+                    if (dgvRevenueRoutes.Rows.Count == 0 && comboBoxYear.SelectedItem != null)
+                    {
+                        int year = (int)comboBoxYear.SelectedItem;
+                        LoadRevenueReport(year);
+                    }
+                    break;
+                case "Flights":
+                    pnlFlights.Visible = true;
+                    btnFlights.NormalBackColor = System.Drawing.Color.FromArgb(155, 209, 243);
+                    btnFlights.NormalForeColor = System.Drawing.Color.White;
+                    btnFlights.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+                    btnFlights.Invalidate();
+                    // Auto-load flights data if not loaded
+                    if (dgvFlights.Rows.Count == 0 && comboBoxYear.SelectedItem != null && comboBoxMonth.SelectedItem != null)
+                    {
+                        int year = (int)comboBoxYear.SelectedItem;
+                        int month = ((dynamic)comboBoxMonth.SelectedItem).Value;
+                        LoadFlightStatsReport(year, month);
+                    }
+                    break;
+                case "Payments":
+                    pnlPayments.Visible = true;
+                    btnPayments.NormalBackColor = System.Drawing.Color.FromArgb(155, 209, 243);
+                    btnPayments.NormalForeColor = System.Drawing.Color.White;
+                    btnPayments.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+                    btnPayments.Invalidate();
+                    // Auto-load payments data if not loaded
+                    if (dgvPayments.Rows.Count == 0 && comboBoxYear.SelectedItem != null && comboBoxMonth.SelectedItem != null)
+                    {
+                        int year = (int)comboBoxYear.SelectedItem;
+                        int month = ((dynamic)comboBoxMonth.SelectedItem).Value;
+                        LoadPaymentStatsReport(year, month);
+                    }
+                    break;
+                case "Routes":
+                    pnlRoutes.Visible = true;
+                    btnRoutes.NormalBackColor = System.Drawing.Color.FromArgb(155, 209, 243);
+                    btnRoutes.NormalForeColor = System.Drawing.Color.White;
+                    btnRoutes.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+                    btnRoutes.Invalidate();
+                    // Auto-load routes data if not loaded
+                    if (dgvTopRoutes.Rows.Count == 0 && comboBoxYear.SelectedItem != null)
+                    {
+                        int year = (int)comboBoxYear.SelectedItem;
+                        LoadRoutesReport(year);
+                    }
+                    break;
+                case "Airplanes":
+                    pnlAirplanes.Visible = true;
+                    btnAirplanes.NormalBackColor = System.Drawing.Color.FromArgb(155, 209, 243);
+                    btnAirplanes.NormalForeColor = System.Drawing.Color.White;
+                    btnAirplanes.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+                    btnAirplanes.Invalidate();
+                    // Auto-load aircrafts data if not loaded
+                    if (dgvTopAircrafts.Rows.Count == 0 && comboBoxYear.SelectedItem != null)
+                    {
+                        int year = (int)comboBoxYear.SelectedItem;
+                        LoadAircraftsReport(year);
+                    }
+                    break;
+            }
+        }
+
+        private void btnRevenue_Click(object sender, EventArgs e)
+        {
+            ShowView("Revenue");
+        }
+
+        private void btnFlights_Click(object sender, EventArgs e)
+        {
+            ShowView("Flights");
+        }
+
+        private void btnPayments_Click(object sender, EventArgs e)
+        {
+            ShowView("Payments");
+        }
+
+        private void btnRoutes_Click(object sender, EventArgs e)
+        {
+            ShowView("Routes");
+            // Load routes data if not already loaded
+            if (dgvTopRoutes.Rows.Count == 0 && comboBoxYear.SelectedItem != null)
+            {
+                int year = (int)comboBoxYear.SelectedItem;
+                LoadRoutesReport(year);
+            }
+        }
+
+        private void btnAirplanes_Click(object sender, EventArgs e)
+        {
+            ShowView("Airplanes");
+            // Load airplanes data if not already loaded
+            if (dgvTopAircrafts.Rows.Count == 0 && comboBoxYear.SelectedItem != null)
+            {
+                int year = (int)comboBoxYear.SelectedItem;
+                LoadAircraftsReport(year);
             }
         }
 
@@ -112,6 +341,16 @@ namespace GUI.Features.Stats
             lblPaymentSummary.Height = 30;
             lblPaymentSummary.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             lblPaymentSummary.Text = "Chọn năm/tháng và nhấn 'Tải dữ liệu'";
+            
+            lblRoutesSummary.AutoSize = false;
+            lblRoutesSummary.Height = 30;
+            lblRoutesSummary.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            lblRoutesSummary.Text = "Thống kê tuyến bay";
+            
+            lblAircraftsSummary.AutoSize = false;
+            lblAircraftsSummary.Height = 30;
+            lblAircraftsSummary.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            lblAircraftsSummary.Text = "Thống kê máy bay";
         }
 
         private void LoadCurrentData()
@@ -154,7 +393,8 @@ namespace GUI.Features.Stats
             LoadRevenueReport(year);
             LoadFlightStatsReport(year, month);
             LoadPaymentStatsReport(year, month);
-            LoadRoutesAndAircraftsReport(year);
+            LoadRoutesReport(year);
+            LoadAircraftsReport(year);
         }
 
         private void LoadRevenueReport(int year)
@@ -230,38 +470,37 @@ namespace GUI.Features.Stats
             if (result.Success && result.Data is FlightStatsReportViewModel report)
             {
                 // Update summary label
-                lblFlightSummary.Text = $"Tổng chuyến bay: {report.TotalFlights:N0}  |  " +
-                                       $"Tổng hành khách: {report.TotalPassengers:N0}  |  " +
-                                       $"Tỷ lệ lấp đầy TB: {report.AverageOccupancyRate:N2}%  |  " +
+                lblFlightSummary.Text = $"📊 Tháng {month}/{year}  •  " +
+                                       $"Tổng chuyến bay: {report.TotalFlights:N0}  •  " +
+                                       $"Tổng hành khách: {report.TotalPassengers:N0}  •  " +
+                                       $"Tỷ lệ lấp đầy TB: {report.AverageOccupancyRate:N2}%  •  " +
                                        $"Doanh thu: {report.TotalRevenue:N0} VND";
                 
                 dgvFlights.DataSource = report.FlightDetails;
                 
-                // Customize column headers if needed
+                // Simplified column configuration - auto-fill like Routes table
                 if (dgvFlights.Columns.Count > 0)
                 {
-                    dgvFlights.Columns["FlightId"].HeaderText = "ID";
-                    dgvFlights.Columns["FlightId"].Width = 50;
-                    dgvFlights.Columns["FlightCode"].HeaderText = "Mã CB";
-                    dgvFlights.Columns["FlightCode"].Width = 80;
-                    dgvFlights.Columns["Route"].HeaderText = "Tuyến";
-                    dgvFlights.Columns["Route"].Width = 100;
-                    dgvFlights.Columns["DepartureTime"].HeaderText = "Giờ đi";
-                    dgvFlights.Columns["DepartureTime"].Width = 120;
+                    // Hide unnecessary columns
+                    dgvFlights.Columns["FlightId"].Visible = false;
+                    dgvFlights.Columns["TotalPassengers"].Visible = false;
+                    
+                    // Set Vietnamese headers with formatting
+                    dgvFlights.Columns["FlightCode"].HeaderText = "Số hiệu CB";
+                    dgvFlights.Columns["Route"].HeaderText = "Tuyến bay";
+                    dgvFlights.Columns["DepartureTime"].HeaderText = "Giờ khởi hành";
+                    dgvFlights.Columns["DepartureTime"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm";
                     dgvFlights.Columns["ArrivalTime"].HeaderText = "Giờ đến";
-                    dgvFlights.Columns["ArrivalTime"].Width = 120;
+                    dgvFlights.Columns["ArrivalTime"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm";
                     dgvFlights.Columns["TotalSeats"].HeaderText = "Tổng ghế";
-                    dgvFlights.Columns["TotalSeats"].Width = 70;
                     dgvFlights.Columns["BookedSeats"].HeaderText = "Đã đặt";
-                    dgvFlights.Columns["BookedSeats"].Width = 70;
-                    dgvFlights.Columns["OccupancyRate"].HeaderText = "Lấp đầy (%)";
+                    dgvFlights.Columns["OccupancyRate"].HeaderText = "Lấp đầy %";
                     dgvFlights.Columns["OccupancyRate"].DefaultCellStyle.Format = "N2";
-                    dgvFlights.Columns["OccupancyRate"].Width = 80;
-                    dgvFlights.Columns["TotalPassengers"].HeaderText = "Hành khách";
-                    dgvFlights.Columns["TotalPassengers"].Width = 80;
-                    dgvFlights.Columns["Revenue"].HeaderText = "Doanh thu";
+                    dgvFlights.Columns["Revenue"].HeaderText = "Doanh thu (VND)";
                     dgvFlights.Columns["Revenue"].DefaultCellStyle.Format = "N0";
-                    dgvFlights.Columns["Revenue"].Width = 100;
+                    
+                    // Auto-fill columns to use available width
+                    dgvFlights.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
                 }
             }
             else
@@ -278,37 +517,39 @@ namespace GUI.Features.Stats
             if (result.Success && result.Data is FlightStatsReportViewModel report)
             {
                 // Update summary label for yearly view
-                lblFlightSummary.Text = $"[NĂM {year}] Tổng chuyến bay: {report.TotalFlights:N0}  |  " +
-                                       $"Tổng hành khách: {report.TotalPassengers:N0}  |  " +
-                                       $"Tỷ lệ lấp đầy TB: {report.AverageOccupancyRate:N2}%  |  " +
+                lblFlightSummary.Text = $"📊 CẢ NĂM {year}  •  " +
+                                       $"Tổng chuyến bay: {report.TotalFlights:N0}  •  " +
+                                       $"Tổng hành khách: {report.TotalPassengers:N0}  •  " +
+                                       $"Tỷ lệ lấp đầy TB: {report.AverageOccupancyRate:N2}%  •  " +
                                        $"Doanh thu: {report.TotalRevenue:N0} VND";
                 
                 dgvFlights.DataSource = report.FlightDetails;
                 
+                // Disable AutoSizeColumnsMode to use fixed widths
+                dgvFlights.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+                
                 if (dgvFlights.Columns.Count > 0)
                 {
-                    dgvFlights.Columns["FlightId"].HeaderText = "ID";
-                    dgvFlights.Columns["FlightId"].Width = 50;
-                    dgvFlights.Columns["FlightCode"].HeaderText = "Mã CB";
-                    dgvFlights.Columns["FlightCode"].Width = 80;
-                    dgvFlights.Columns["Route"].HeaderText = "Tuyến";
-                    dgvFlights.Columns["Route"].Width = 100;
-                    dgvFlights.Columns["DepartureTime"].HeaderText = "Giờ đi";
-                    dgvFlights.Columns["DepartureTime"].Width = 120;
+                    // Hide unnecessary columns
+                    dgvFlights.Columns["FlightId"].Visible = false;
+                    dgvFlights.Columns["TotalPassengers"].Visible = false;
+                    
+                    // Set Vietnamese headers with formatting (same as monthly view)
+                    dgvFlights.Columns["FlightCode"].HeaderText = "Số hiệu CB";
+                    dgvFlights.Columns["Route"].HeaderText = "Tuyến bay";
+                    dgvFlights.Columns["DepartureTime"].HeaderText = "Giờ khởi hành";
+                    dgvFlights.Columns["DepartureTime"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm";
                     dgvFlights.Columns["ArrivalTime"].HeaderText = "Giờ đến";
-                    dgvFlights.Columns["ArrivalTime"].Width = 120;
+                    dgvFlights.Columns["ArrivalTime"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm";
                     dgvFlights.Columns["TotalSeats"].HeaderText = "Tổng ghế";
-                    dgvFlights.Columns["TotalSeats"].Width = 70;
                     dgvFlights.Columns["BookedSeats"].HeaderText = "Đã đặt";
-                    dgvFlights.Columns["BookedSeats"].Width = 70;
-                    dgvFlights.Columns["OccupancyRate"].HeaderText = "Lấp đầy (%)";
+                    dgvFlights.Columns["OccupancyRate"].HeaderText = "Lấp đầy %";
                     dgvFlights.Columns["OccupancyRate"].DefaultCellStyle.Format = "N2";
-                    dgvFlights.Columns["OccupancyRate"].Width = 80;
-                    dgvFlights.Columns["TotalPassengers"].HeaderText = "Hành khách";
-                    dgvFlights.Columns["TotalPassengers"].Width = 80;
-                    dgvFlights.Columns["Revenue"].HeaderText = "Doanh thu";
+                    dgvFlights.Columns["Revenue"].HeaderText = "Doanh thu (VND)";
                     dgvFlights.Columns["Revenue"].DefaultCellStyle.Format = "N0";
-                    dgvFlights.Columns["Revenue"].Width = 100;
+                    
+                    // Auto-fill columns to use available width
+                    dgvFlights.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
                 }
             }
             else
@@ -499,11 +740,10 @@ namespace GUI.Features.Stats
             }
         }
 
-        private void LoadRoutesAndAircraftsReport(int year)
+        private void LoadRoutesReport(int year)
         {
             try
             {
-                // Top Routes
                 var topRoutesResult = StatsBUS.Instance.GetTopRoutesByFlightCount(year);
                 if (topRoutesResult.Success)
                 {
@@ -516,13 +756,23 @@ namespace GUI.Features.Stats
                         dgvTopRoutes.Columns["duration_minutes"].HeaderText = "Thời gian bay (phút)";
                         dgvTopRoutes.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
                     }
+                    lblRoutesSummary.Text = $"Top tuyến bay năm {year}";
                 }
                 else
                 {
                     MessageBox.Show(topRoutesResult.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Đã xảy ra lỗi: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
 
-                // Top Aircrafts
+        private void LoadAircraftsReport(int year)
+        {
+            try
+            {
                 var topAircraftsResult = StatsBUS.Instance.GetTopAircraftsByFlightCount(year);
                 if (topAircraftsResult.Success)
                 {
@@ -535,6 +785,7 @@ namespace GUI.Features.Stats
                         dgvTopAircrafts.Columns["flight_count"].HeaderText = "Số chuyến bay";
                         dgvTopAircrafts.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
                     }
+                    lblAircraftsSummary.Text = $"Top máy bay năm {year}";
                 }
                 else
                 {
@@ -545,6 +796,12 @@ namespace GUI.Features.Stats
             {
                 MessageBox.Show($"Đã xảy ra lỗi: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void LoadRoutesAndAircraftsReport(int year)
+        {
+            LoadRoutesReport(year);
+            LoadAircraftsReport(year);
         }
     }
 }
