@@ -278,7 +278,7 @@ namespace GUI.Features.Payments.SubFeatures
 
             // --- KIỂM TRA ĐIỀU KIỆN ---
             bool isPaymentPending = payment.Status.Equals(STATUS_PENDING, StringComparison.OrdinalIgnoreCase);
-            bool isBookingConfirmed = payment.BookingStatus.Equals(STATUS_CONFIRMED, StringComparison.OrdinalIgnoreCase);
+            bool isBookingConfirmed = payment.BookingStatus.Equals(STATUS_PENDING, StringComparison.OrdinalIgnoreCase);
 
             if (!isPaymentPending)
             {
@@ -290,7 +290,7 @@ namespace GUI.Features.Payments.SubFeatures
             if (!isBookingConfirmed)
             {
                 MessageBox.Show($"Hóa đơn hiện đang ở trạng thái '{payment.GetBookingStatusDisplay()}'.\n" +
-                                "Chỉ có thể thanh toán cho các Hóa đơn đã được XÁC NHẬN (CONFIRMED).",
+                                "Chỉ có thể thanh toán cho các Hóa đơn đã được ĐANG CHỜ (PENDING).",
                                 "Không thể thanh toán", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }

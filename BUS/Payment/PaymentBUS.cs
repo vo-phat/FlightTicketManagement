@@ -12,7 +12,7 @@ namespace BUS.Payment
 
         // Constants trạng thái để tránh hardcode string (Nên đưa vào class Constant chung)
         private const string STATUS_PENDING = "PENDING";
-        private const string STATUS_CONFIRMED = "CONFIRMED";
+        // private const string STATUS_CONFIRMED = "CONFIRMED";
         private const string STATUS_SUCCESS = "SUCCESS";
         private const string STATUS_FAILED = "FAILED";
 
@@ -110,11 +110,13 @@ namespace BUS.Payment
                 }
 
                 // 2.2. Booking phải ĐÃ ĐƯỢC XÁC NHẬN (CONFIRMED) thì mới thu tiền
-                if (!payment.BookingStatus.Equals(STATUS_CONFIRMED, StringComparison.OrdinalIgnoreCase))
+                if (payment.BookingStatus.Equals(STATUS_PENDING, StringComparison.OrdinalIgnoreCase))
                 {
-                    message = $"Không thể thanh toán. Booking chưa được xác nhận (Trạng thái hiện tại: {payment.BookingStatus}).";
-                    return false;
+                    //message = $"Không thể thanh toán. Booking chưa được xác nhận (Trạng thái hiện tại: {payment.BookingStatus}).";
+                    return true;
                 }
+                
+     
 
                 // Bước 3: Kiểm tra số tiền (Cảnh báo nếu không khớp, nhưng không chặn)
                 if (payment.Amount != payment.BookingTotalAmount)
@@ -275,11 +277,11 @@ namespace BUS.Payment
                 }
 
                 // 2. Không xóa payment của Booking đã Confirmed (vì Booking này đã giữ chỗ)
-                if (payment.BookingStatus.Equals(STATUS_CONFIRMED, StringComparison.OrdinalIgnoreCase))
-                {
-                    message = "Không thể xóa thanh toán của Booking đã xác nhận!";
-                    return false;
-                }
+                // if (payment.BookingStatus.Equals(STATUS_CONFIRMED, StringComparison.OrdinalIgnoreCase))
+                // {
+                //     message = "Không thể xóa thanh toán của Booking đã xác nhận!";
+                //     return false;
+                // }
 
                 bool result = _paymentDAO.DeletePayment(paymentId);
                 if (result)
@@ -368,14 +370,19 @@ namespace BUS.Payment
             message = string.Empty;
             try
             {
+                //normalized != STATUS_PENDING && 
                 string normalized = newStatus.Trim().ToUpper();
-                if (normalized != STATUS_PENDING && normalized != STATUS_SUCCESS && normalized != STATUS_FAILED)
+                if (normalized != STATUS_SUCCESS && normalized != STATUS_FAILED)
                 {
                     message = "Trạng thái không hợp lệ.";
                     return false;
                 }
+                else
+                {
+                    return true;
+                }
 
-                bool result = _paymentDAO.UpdatePaymentStatus(paymentId, normalized);
+                    bool result = _paymentDAO.UpdatePaymentStatus(paymentId, normalized);
                 if (result)
                 {
                     message = $"Cập nhật trạng thái thành {normalized}!";
