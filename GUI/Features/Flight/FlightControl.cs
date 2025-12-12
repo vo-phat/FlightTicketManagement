@@ -80,8 +80,8 @@ namespace GUI.Features.Flight
 
         private void OnListEditRequested(DTO.Flight.FlightWithDetailsDTO dto)
         {
-            // Chỉ Admin mới được sửa chuyến bay
-            if (UserSession.CurrentAppRole != AppRole.Admin)
+            // Chỉ Admin và Staff mới được sửa chuyến bay (User không được)
+            if (UserSession.CurrentAppRole == AppRole.User)
             {
                 MessageBox.Show("Bạn không có quyền sửa chuyến bay.", "Thông báo", 
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
