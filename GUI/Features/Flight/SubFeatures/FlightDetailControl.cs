@@ -287,48 +287,49 @@ namespace GUI.Features.Flight.SubFeatures
 
             card.Controls.Add(grid);
 
-            // Bottom buttons
+            // Bottom buttons - properly aligned
             var bottom = new FlowLayoutPanel
             {
                 Dock = DockStyle.Bottom,
-                FlowDirection = FlowDirection.RightToLeft,
+                FlowDirection = FlowDirection.LeftToRight,
                 AutoSize = true,
-                Padding = new Padding(0, 12, 0, 0)
+                Padding = new Padding(0, 16, 0, 0)
             };
-
-            var btnClose = new Button
-            {
-                Text = "← Quay lại",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 10f),
-                BackColor = Color.FromArgb(200, 200, 200),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Padding = new Padding(16, 8, 16, 8),
-                Cursor = Cursors.Hand
-            };
-            btnClose.FlatAppearance.BorderSize = 0;
-            btnClose.Click += (_, __) => CloseRequested?.Invoke(this, EventArgs.Empty);
-            bottom.Controls.Add(btnClose);
 
             // Nút "Đặt vé" - chỉ hiển thị cho User và Staff
             btnBookFlight = new Button
             {
                 Text = "🎫 Đặt vé",
                 AutoSize = true,
-                Font = new Font("Segoe UI", 10f, FontStyle.Bold),
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
                 BackColor = Color.FromArgb(46, 125, 50),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Padding = new Padding(16, 8, 16, 8),
+                Padding = new Padding(20, 10, 20, 10),
                 Cursor = Cursors.Hand,
-                Margin = new Padding(8, 0, 0, 0)
+                Margin = new Padding(0, 0, 12, 0),
+                MinimumSize = new Size(120, 40)
             };
             btnBookFlight.FlatAppearance.BorderSize = 0;
             btnBookFlight.Click += BtnBookFlight_Click;
-            
-            // Thêm nút vào bottom
             bottom.Controls.Add(btnBookFlight);
+            
+            var btnClose = new Button
+            {
+                Text = "← Quay lại",
+                AutoSize = true,
+                Font = new Font("Segoe UI", 11f),
+                BackColor = Color.FromArgb(200, 200, 200),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Padding = new Padding(20, 10, 20, 10),
+                Cursor = Cursors.Hand,
+                Margin = new Padding(0),
+                MinimumSize = new Size(120, 40)
+            };
+            btnClose.FlatAppearance.BorderSize = 0;
+            btnClose.Click += (_, __) => CloseRequested?.Invoke(this, EventArgs.Empty);
+            bottom.Controls.Add(btnClose);
             
             // Chỉ User và Staff mới thấy nút Đặt vé (Admin không thấy)
             btnBookFlight.Visible = (UserSession.CurrentAppRole == AppRole.User || UserSession.CurrentAppRole == AppRole.Staff);
