@@ -49,7 +49,6 @@
             this.btnNextToPayment = new GUI.Components.Buttons.PrimaryButton();
             this.btnAddOutbound = new GUI.Components.Buttons.PrimaryButton();
             this.btnAddInbound = new GUI.Components.Buttons.PrimaryButton();
-            this.cboCabinClassTicket = new GUI.Components.Inputs.UnderlinedComboBox();
 
             // --- 3. CONTAINER BỐ CỤC MỚI ---
             System.Windows.Forms.Panel pnlTopContainer = new System.Windows.Forms.Panel();
@@ -146,12 +145,6 @@
             txtSeatTicket.BackColor = grayBg;
             txtSeatTicket.PlaceholderText = "Vui lòng chọn ghế ->";
 
-            cboCabinClassTicket.LabelText = "Hạng vé";
-            cboCabinClassTicket.Dock = DockStyle.Fill;
-            cboCabinClassTicket.Margin = new Padding(10);
-            cboCabinClassTicket.BackColor = grayBg;
-            cboCabinClassTicket.DropDownStyle = ComboBoxStyle.DropDownList;
-
             // 
             // === 5. CẤU HÌNH BUTTONS ===
             // 
@@ -236,11 +229,10 @@
             tlpInputs.Controls.Add(cboBaggageTicket, 2, 1);
             tlpInputs.Controls.Add(txtNoteBaggage, 3, 1);
 
-            // Hàng 3 (Ghế + Hạng vé + Nút chọn ghế)
+            // Hàng 3 (Ghế + Nút chọn ghế)
             tlpInputs.Controls.Add(txtSeatTicket, 0, 2);
-            tlpInputs.Controls.Add(cboCabinClassTicket, 1, 2);
-            tlpInputs.Controls.Add(btnSelectSeatTicket, 2, 2);
-            // Ô (3,2) để trống
+            tlpInputs.Controls.Add(btnSelectSeatTicket, 1, 2);
+            // Ô (2,2) và (3,2) để trống
 
             // Flow Buttons (Phải -> Trái)
             flpActions.Controls.Add(btnNextToPayment);
@@ -279,6 +271,5 @@
         private Components.Buttons.PrimaryButton btnNextToPayment;
         private Components.Buttons.PrimaryButton btnAddOutbound;
         private Components.Buttons.PrimaryButton btnAddInbound;
-        private Components.Inputs.UnderlinedComboBox cboCabinClassTicket;
     }
 }

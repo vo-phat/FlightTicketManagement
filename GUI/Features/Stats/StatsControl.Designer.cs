@@ -496,7 +496,7 @@ namespace GUI.Features.Stats
             // 
             // lblRevenueSummary
             // 
-            this.lblRevenueSummary.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.lblRevenueSummary.Dock = System.Windows.Forms.DockStyle.Top;
             this.lblRevenueSummary.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold);
             this.lblRevenueSummary.Location = new System.Drawing.Point(0, 200);
             this.lblRevenueSummary.Name = "lblRevenueSummary";

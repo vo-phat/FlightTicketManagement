@@ -33,18 +33,17 @@ namespace DAO.Stats
             decimal localRevenue = 0;
             int localTransactions = 0;
 
-            // Calculate from tickets instead of payments
             string query = @"
                 SELECT 
-                    COALESCE(SUM(t.total_price), 0) AS TotalRevenue,
-                    COUNT(DISTINCT t.ticket_id) AS TotalTransactions
+                    SUM(p.amount) AS TotalRevenue,
+                    COUNT(p.payment_id) AS TotalTransactions
                 FROM 
-                    Tickets t
-                JOIN Flight_Seats fs ON t.flight_seat_id = fs.flight_seat_id
-                JOIN Flights f ON fs.flight_id = f.flight_id
+                    Payments p
+                JOIN Bookings b ON p.booking_id = b.booking_id
                 WHERE 
-                    t.status IN ('CONFIRMED', 'CHECKED_IN', 'BOARDED')
-                    AND YEAR(f.departure_time) = @year";
+                    UPPER(p.status) = 'SUCCESS' 
+                    AND UPPER(b.status) IN ('CONFIRMED')
+                    AND YEAR(p.payment_date) = @year";
 
             var parameters = new Dictionary<string, object> { { "@year", year } };
 
@@ -69,7 +68,6 @@ namespace DAO.Stats
             {
                 totalRevenue = 0;
                 totalTransactions = 0;
-                Console.WriteLine($"ERROR in GetRevenueSummary: {ex.Message}");
                 throw new Exception($"Lỗi khi lấy tóm tắt doanh thu (DAO): {ex.Message}", ex);
             }
         }
