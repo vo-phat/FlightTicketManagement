@@ -436,6 +436,8 @@ namespace GUI.Features.Seat.SubFeatures
             MessageBox.Show($"Chi tiết ghế {selected.SeatNumber}\nTrạng thái: {selected.SeatStatus}\nGiá: {selected.BasePrice:#,0}đ", "Thông tin");
         }
 
+        // ✅ MÉTHODE CORRIGÉE - Remplacer dans FlightSeatControl.cs
+
         private void HandleEdit(FlightSeatDTO selected)
         {
             try
@@ -454,8 +456,8 @@ namespace GUI.Features.Seat.SubFeatures
                         selected.FlightSeatId,
                         selected.FlightId,
                         selected.AircraftId,
-                        editForm.SelectedSeatId,
-                        selected.ClassId,
+                        editForm.SelectedSeatId,  // ✅ Nouveau seat_id
+                        selected.ClassId,          // ⚠️ Sera mis à jour automatiquement par le DAO
                         editForm.NewPrice,
                         selected.SeatStatus,
                         selected.FlightName,
@@ -470,15 +472,21 @@ namespace GUI.Features.Seat.SubFeatures
                     if (_bus.UpdateFlightSeat(updated, out string msg))
                     {
                         System.Diagnostics.Debug.WriteLine($"[UPDATE SUCCESS] Message: {msg}");
-                        System.Diagnostics.Debug.WriteLine($"[AFTER UPDATE] ClassId={updated.ClassId}, ClassName={updated.ClassName}");
 
                         MessageBox.Show("✅ " + msg, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                        System.Diagnostics.Debug.WriteLine("[CALLING LoadData()]");
+                        // ✅ FIX CRITIQUE 3: Reset les filtres avant de recharger
+                        cbFlight.SelectedIndex = 0;
+                        cbAircraft.SelectedIndex = 0;
+                        cbClass.SelectedIndex = 0;
+
+                        System.Diagnostics.Debug.WriteLine("[CALLING LoadData() with filters reset]");
                         LoadData();
 
                         System.Diagnostics.Debug.WriteLine($"[AFTER LoadData] Total seats: {datasource.Count}");
-                        ApplyFilter();
+
+                        // ✅ Pas besoin d'ApplyFilter() car les filtres sont à "Tất cả"
+                        // Tous les sièges sont déjà affichés
                     }
                     else
                     {

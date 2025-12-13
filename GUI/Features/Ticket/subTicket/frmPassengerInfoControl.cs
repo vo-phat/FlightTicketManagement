@@ -174,10 +174,10 @@ namespace GUI.Features.Ticket.subTicket
                 dgvPassengerListTicket.Columns.Add(colSeatIn);
 
                 // 7. Nút Sửa Đi
-                AddButtonColumn("colEditOutbound", "", "✎ Sửa Đi");
+                AddButtonColumn("colEditOutbound", "Sửa đi", "✎ Sửa Đi");
 
                 // 8. Nút Sửa Về
-                AddButtonColumn("colEditInbound", "", "✎ Sửa Về").Visible = false;
+                AddButtonColumn("colEditInbound", "Sửa về", "✎ Sửa Về").Visible = false;
 
                 // --- Load Data Source ---
                 AddHiddenColumns(); // (Giữ nguyên hàm thêm cột ẩn của bạn)
@@ -839,20 +839,10 @@ namespace GUI.Features.Ticket.subTicket
             btnAddOutbound.Visible = true;
             btnAddInbound.Visible = _isRoundTrip;
 
-            // Thêm cột sửa chiều về nếu là round-trip
-            if (_isRoundTrip)
+            // ===== HIỂN THỊ CỘT "SỬA VỀ" CHỈ KHI LÀ VÉ KHỨ HỒI =====
+            if (dgvPassengerListTicket.Columns.Contains("colEditInbound"))
             {
-                if (!dgvPassengerListTicket.Columns.Contains("colEditInbound"))
-                {
-                    dgvPassengerListTicket.Columns.Add(new DataGridViewButtonColumn
-                    {
-                        Name = "colEditInbound",
-                        HeaderText = "Sửa về",
-                        Text = "Sửa về",
-                        UseColumnTextForButtonValue = true,
-                        AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells
-                    });
-                }
+                dgvPassengerListTicket.Columns["colEditInbound"].Visible = _isRoundTrip;
             }
         }
 
