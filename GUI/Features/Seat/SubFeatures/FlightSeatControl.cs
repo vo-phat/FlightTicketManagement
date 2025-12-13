@@ -512,18 +512,7 @@ namespace GUI.Features.Seat.SubFeatures
 
                         System.Diagnostics.Debug.WriteLine($"[AFTER LoadData] Total seats: {datasource.Count}");
 
-                        // ✅ Tìm parent SeatControl và gọi RefreshSeatList() trực tiếp
-                        Control parent = this.Parent;
-                        while (parent != null)
-                        {
-                            if (parent is SeatControl seatControl)
-                            {
-                                System.Diagnostics.Debug.WriteLine("[FlightSeatControl] Found parent SeatControl, calling RefreshSeatList()");
-                                seatControl.RefreshSeatList();
-                                break;
-                            }
-                            parent = parent.Parent;
-                        }
+                        // ✅ Removed: RefreshSeatList (SeatListControl removed)
                     }
                     else
                     {

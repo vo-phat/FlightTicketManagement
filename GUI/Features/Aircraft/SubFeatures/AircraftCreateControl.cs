@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -6,6 +7,10 @@ using GUI.Components.Inputs;
 using GUI.Components.Buttons;
 using DTO.Aircraft;
 using BUS.Aircraft;
+// ✅ Added for seat generation
+using BUS.Seat;
+using BUS.CabinClass;
+using DTO.Seat;
 
 namespace GUI.Features.Aircraft.SubFeatures
 {
@@ -154,12 +159,12 @@ namespace GUI.Features.Aircraft.SubFeatures
                 Dock = DockStyle.Fill,
                 Margin = new Padding(0, 8, 0, 8),
                 Font = new Font("Segoe UI", 11f),
-                Minimum = 1,
+                Minimum = 6,  // ✅ Min 6
                 Maximum = 850,  // Max for largest commercial aircraft
-                Value = 180,
+                Value = 18,  // ✅ Default 18
                 DecimalPlaces = 0,
                 ThousandsSeparator = false,
-                Increment = 10
+                Increment = 6  // ✅ Step by 6
             };
             grid.Controls.Add(nudCapacity, 1, row++);
 
@@ -279,6 +284,14 @@ namespace GUI.Features.Aircraft.SubFeatures
                     return;
                 }
 
+                // ✅ Validate: Capacity must be multiple of 6
+                if (capacity % 6 != 0)
+                {
+                    MessageBox.Show("Sức chứa phải là bội số của 6 (ví dụ: 6, 12, 18, 24, 30...).\n\nĐiều này đảm bảo số ghế phù hợp với cấu hình hàng ghế.", 
+                                    "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
                 AircraftDTO dto;
                 string message;
                 bool ok;
@@ -288,10 +301,13 @@ namespace GUI.Features.Aircraft.SubFeatures
                 {
                     // Create new
                     dto = new AircraftDTO(VIETNAM_AIRLINES_ID, model, manufacturer, capacity);
-                    ok = _bus.AddAircraft(dto, out message);
-                    if (ok)
+                    int newAircraftId = _bus.AddAircraft(dto, out message);
+                    if (newAircraftId > 0)
                     {
-                        MessageBox.Show(message, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        // ✅ Auto-generate seats for new aircraft
+                        GenerateSeatsForNewAircraft(newAircraftId, capacity);
+                        
+                        MessageBox.Show(message + "\n\nGhế đã được tạo tự động!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         DataSaved?.Invoke(this, EventArgs.Empty);
                         ClearAndReset();
                     }
@@ -331,7 +347,7 @@ namespace GUI.Features.Aircraft.SubFeatures
             cbModel.InnerCombo.Text = "";
             cbManu.InnerCombo.SelectedIndex = -1;
             cbManu.InnerCombo.Text = "";
-            nudCapacity.Value = 180;
+            nudCapacity.Value = 18;  // ✅ Default 18
             _editingId = 0;
             lblTitle.Text = "🛩️ Tạo máy bay mới";
             btnSave.Text = "💾 Lưu máy bay";
@@ -352,10 +368,114 @@ namespace GUI.Features.Aircraft.SubFeatures
             
             cbModel.InnerCombo.Text = dto.Model ?? "";
             cbManu.InnerCombo.Text = dto.Manufacturer ?? "";
-            nudCapacity.Value = dto.Capacity ?? 180;
+            nudCapacity.Value = dto.Capacity ?? 18;  // ✅ Default 18
             
             lblTitle.Text = $"✏️ Chỉnh sửa máy bay #{dto.AircraftId}";
             btnSave.Text = "💾 Cập nhật";
+        }
+
+        // ✅ Auto-generate seats for newly created aircraft
+        private void GenerateSeatsForNewAircraft(int aircraftId, int capacity)
+        {
+            try
+            {
+                var seatBUS = new SeatBUS();
+                var cabinClassBUS = new CabinClassBUS();
+                
+                // Get cabin class IDs
+                var allClasses = cabinClassBUS.GetAllCabinClasses();
+                var firstClass = allClasses.FirstOrDefault(c => c.ClassName == "First");
+                var businessClass = allClasses.FirstOrDefault(c => c.ClassName == "Business");
+                var economyClass = allClasses.FirstOrDefault(c => c.ClassName == "Economy");
+
+                if (economyClass == null)
+                {
+                    MessageBox.Show("Không tìm thấy hạng ghế Economy trong database!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                int firstRows = 0, businessRows = 0, economyRows = 0;
+                int firstCols = 4;  // A B C D
+                int businessCols = 4; // A B C D
+                int economyCols = 6; // A B C D E F
+
+                // Determine seat configuration based on capacity
+                if (capacity < 100)
+                {
+                    // Small aircraft: Economy only
+                    economyRows = (int)Math.Ceiling(capacity / (double)economyCols);
+                }
+                else if (capacity <= 200)
+                {
+                    // Medium aircraft: 15% Business, 85% Economy
+                    int businessSeats = (int)(capacity * 0.15);
+                    businessRows = (int)Math.Ceiling(businessSeats / (double)businessCols);
+                    int remainingSeats = capacity - (businessRows * businessCols);
+                    economyRows = (int)Math.Ceiling(remainingSeats / (double)economyCols);
+                }
+                else
+                {
+                    // Large aircraft: 5% First, 15% Business, 80% Economy
+                    int firstSeats = (int)(capacity * 0.05);
+                    firstRows = Math.Max(1, (int)Math.Ceiling(firstSeats / (double)firstCols));
+                    
+                    int businessSeats = (int)(capacity * 0.15);
+                    businessRows = (int)Math.Ceiling(businessSeats / (double)businessCols);
+                    
+                    int remainingSeats = capacity - (firstRows * firstCols) - (businessRows * businessCols);
+                    economyRows = (int)Math.Ceiling(remainingSeats / (double)economyCols);
+                }
+
+                int currentRow = 1;
+
+                // Generate First class seats
+                if (firstRows > 0 && firstClass != null)
+                {
+                    for (int row = 0; row < firstRows; row++)
+                    {
+                        for (char col = 'A'; col <= 'D'; col++)
+                        {
+                            string seatNumber = $"{currentRow}{col}";
+                            var seat = new SeatDTO(0, aircraftId, seatNumber, firstClass.ClassId);
+                            seatBUS.AddSeat(seat, out _);
+                        }
+                        currentRow++;
+                    }
+                }
+
+                // Generate Business class seats
+                if (businessRows > 0 && businessClass != null)
+                {
+                    for (int row = 0; row < businessRows; row++)
+                    {
+                        for (char col = 'A'; col <= 'D'; col++)
+                        {
+                            string seatNumber = $"{currentRow}{col}";
+                            var seat = new SeatDTO(0, aircraftId, seatNumber, businessClass.ClassId);
+                            seatBUS.AddSeat(seat, out _);
+                        }
+                        currentRow++;
+                    }
+                }
+
+                // Generate Economy class seats
+                for (int row = 0; row < economyRows; row++)
+                {
+                    for (char col = 'A'; col <= 'F'; col++)
+                    {
+                        string seatNumber = $"{currentRow}{col}";
+                        var seat = new SeatDTO(0, aircraftId, seatNumber, economyClass.ClassId);
+                        seatBUS.AddSeat(seat, out _);
+                    }
+                    currentRow++;
+                }
+
+                System.Diagnostics.Debug.WriteLine($"[Auto Seat Generation] Created seats for aircraft {aircraftId}: {firstRows}F + {businessRows}B + {economyRows}E");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi tạo ghế tự động: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

@@ -50,10 +50,11 @@ namespace DAO.Aircraft
         #endregion
 
         #region Thêm máy bay mới
-        public bool InsertAircraft(AircraftDTO aircraft)
+        public int InsertAircraft(AircraftDTO aircraft)
         {
             string query = @"INSERT INTO aircrafts (airline_id, model, manufacturer, capacity)
-                             VALUES (@airline_id, @model, @manufacturer, @capacity)";
+                             VALUES (@airline_id, @model, @manufacturer, @capacity);
+                             SELECT LAST_INSERT_ID();";
 
             try
             {
@@ -68,8 +69,9 @@ namespace DAO.Aircraft
                         command.Parameters.AddWithValue("@manufacturer", (object)aircraft.Manufacturer ?? DBNull.Value);
                         command.Parameters.AddWithValue("@capacity", (object)aircraft.Capacity ?? DBNull.Value);
 
-                        int rows = command.ExecuteNonQuery();
-                        return rows > 0;
+                        // ✅ Return the auto-generated aircraft_id
+                        object result = command.ExecuteScalar();
+                        return result != null ? Convert.ToInt32(result) : 0;
                     }
                 }
             }

@@ -40,6 +40,13 @@ namespace GUI.Features.Seat.SubFeatures
         public event Action<int> ViewOrEditRequested;
         public event Action<int> EditRequested;
 
+        // ✅ FIX 2: Race condition prevention
+        private bool _isLoading = false;
+        private readonly object _loadLock = new object();
+        
+        // ✅ FIX 8: Thread-safe debounce
+        private CancellationTokenSource _filterCts;
+
         private TableLayoutPanel root, filterWrap, formPanel, contentLayout;
         private FlowLayoutPanel filterLeft, filterRight, legend;
         private Label lblTitle, lblFormTitle;
@@ -318,8 +325,19 @@ namespace GUI.Features.Seat.SubFeatures
             return p;
         }
 
+        // ✅ FIX 2: Race condition prevention with lock
         public async void LoadData()
         {
+            lock (_loadLock)
+            {
+                if (_isLoading)
+                {
+                    System.Diagnostics.Debug.WriteLine("[SeatListControl] LoadData already in progress, skipping...");
+                    return;
+                }
+                _isLoading = true;
+            }
+
             try
             {
                 System.Diagnostics.Debug.WriteLine("[SeatListControl] LoadData() called - refreshing from database...");
@@ -333,9 +351,26 @@ namespace GUI.Features.Seat.SubFeatures
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Không thể tải dữ liệu ghế: " + ex.Message, "Lỗi Database", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // ✅ FIX 7: Better exception handling
+                System.Diagnostics.Debug.WriteLine($"[SeatListControl] LoadData() failed: {ex}");
+                
+                #if DEBUG
+                MessageBox.Show($"Database Error:\n{ex.Message}\n\nStack:{ex.StackTrace}", 
+                                "Debug Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                #else
+                MessageBox.Show("Không thể tải dữ liệu ghế. Vui lòng thử lại sau hoặc liên hệ IT support.", 
+                                "Lỗi Database", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                #endif
+                
                 datasource = new List<SeatDTO>();
                 ApplyFilter();
+            }
+            finally
+            {
+                lock (_loadLock)
+                {
+                    _isLoading = false;
+                }
             }
         }
 
@@ -343,9 +378,9 @@ namespace GUI.Features.Seat.SubFeatures
         {
             try
             {
-                // Load Aircraft từ seats
+                // ✅ Load Aircraft - chỉ dùng Model
                 _aircraftItems = allSeats
-                    .Select(s => new { s.AircraftId, Name = $"{s.AircraftManufacturer} {s.AircraftModel}" })
+                    .Select(s => new { s.AircraftId, Name = s.AircraftModel })  // Không ghép Manufacturer
                     .Distinct()
                     .Select(a => new ComboboxItem { Id = a.AircraftId, Name = a.Name })
                     .OrderBy(a => a.Name)
@@ -481,9 +516,11 @@ namespace GUI.Features.Seat.SubFeatures
                 return;
             }
 
-            if (!Regex.IsMatch(seatNumber, @"^[1-9]\d*[A-F]$"))
+            // ✅ FIX 6: Relaxed validation - Allow columns beyond F (G, H, I, etc.)
+            if (!Regex.IsMatch(seatNumber, @"^[1-9]\d*[A-Z]$"))
             {
-                MessageBox.Show("Số ghế không hợp lệ. Ví dụ: 12A.", "Lỗi định dạng", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Số ghế không hợp lệ. Format: [Số hàng][Cột chữ]. VD: 1A, 12F, 32K", 
+                                "Lỗi định dạng", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -522,79 +559,94 @@ namespace GUI.Features.Seat.SubFeatures
             }
         }
 
+        // ✅ FIX 4: Data consistency - Only show aircraft/classes with seats
         private void UpdateFilterComboBoxes(List<SeatDTO> data)
         {
             cbAircraft.SelectedIndexChanged -= (_, __) => ApplyFilter();
             cbClass.SelectedIndexChanged -= (_, __) => ApplyFilter();
 
-            // ✅ FIX: Load ALL aircraft from AircraftBUS, not just aircraft with seats
             try
             {
-                var aircraftBus = new BUS.Aircraft.AircraftBUS();
-                var allAircrafts = aircraftBus.GetAllAircrafts();
-                
-                var aircrafts = allAircrafts
-                    .Where(a => a.AirlineId == 1)  // Vietnam Airlines only
-                    .Select(a => $"{a.Manufacturer} {a.Model}")
+                // ✅ Chỉ hiển thị Model (đã chứa Manufacturer)
+                var aircraftsWithSeats = data
+                    .Select(x => x.AircraftModel)  // Không cần ghép Manufacturer
                     .Distinct()
                     .OrderBy(x => x)
                     .ToList();
                 
                 cbAircraft.Items.Clear();
                 cbAircraft.Items.Add("Tất cả");
-                cbAircraft.Items.AddRange(aircrafts.Cast<object>().ToArray());
+                cbAircraft.Items.AddRange(aircraftsWithSeats.Cast<object>().ToArray());
                 cbAircraft.SelectedIndex = 0;
+                
+                // Load only classes that have seats in datasource
+                var classesWithSeats = data
+                    .Select(x => x.ClassName)
+                    .Distinct()
+                    .ToList();
+                
+                // Sort by standard order
+                var classOrder = new Dictionary<string, int>
+                {
+                    { "First", 1 },
+                    { "Business", 2 },
+                    { "Premium Economy", 3 },
+                    { "Economy", 4 }
+                };
+                
+                classesWithSeats = classesWithSeats
+                    .OrderBy(c => classOrder.ContainsKey(c) ? classOrder[c] : 99)
+                    .ThenBy(c => c)
+                    .ToList();
+
+                cbClass.Items.Clear();
+                cbClass.Items.Add("Tất cả");
+                cbClass.Items.AddRange(classesWithSeats.Cast<object>().ToArray());
+                cbClass.SelectedIndex = 0;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[SeatListControl] Error loading aircraft: {ex.Message}");
-                // Fallback to seats-based list
-                var aircrafts = data.Select(x => $"{x.AircraftManufacturer} {x.AircraftModel}").Distinct().OrderBy(x => x).ToList();
+                System.Diagnostics.Debug.WriteLine($"[SeatListControl] Error updating filters: {ex.Message}");
                 cbAircraft.Items.Clear();
                 cbAircraft.Items.Add("Tất cả");
-                cbAircraft.Items.AddRange(aircrafts.Cast<object>().ToArray());
                 cbAircraft.SelectedIndex = 0;
+                cbClass.Items.Clear();
+                cbClass.Items.Add("Tất cả");
+                cbClass.SelectedIndex = 0;
             }
-            
-            var allCabinClasses = _cabinClassBUS.GetAllCabinClasses();
-            var classOrder = new Dictionary<string, int>
+            finally
             {
-                { "First", 1 },
-                { "Business", 2 },
-                { "Premium Economy", 3 },
-                { "Economy", 4 }
-            };
-            var classes = allCabinClasses
-                .Select(c => c.ClassName)
-                .OrderBy(c => classOrder.ContainsKey(c) ? classOrder[c] : 99)
-                .ThenBy(c => c)
-                .ToList();
-
-            var cabinBus = new CabinClassBUS();
-            var cabins = cabinBus.GetAllCabinClasses();
-
-            cbClass.Items.Clear();
-            cbClass.Items.Add("Tất cả");
-            foreach (var c in cabins)
-                cbClass.Items.Add(c.ClassName);
-            cbClass.SelectedIndex = 0;
-
-            cbAircraft.SelectedIndexChanged += (_, __) => ApplyFilter();
-            cbClass.SelectedIndexChanged += (_, __) => ApplyFilter();
+                cbAircraft.SelectedIndexChanged += (_, __) => ApplyFilter();
+                cbClass.SelectedIndexChanged += (_, __) => ApplyFilter();
+            }
         }
 
-        // --- NEW: Clear and dispose controls properly to avoid handle leak ---
+        // ✅ FIX 1: Memory leak - Proper disposal
         private void ClearStackControls()
         {
             if (stack == null) return;
             stack.SuspendLayout();
 
-            // Copy to list to avoid collection modification while iterating
             var old = stack.Controls.OfType<Control>().ToList();
             foreach (var c in old)
             {
-                // remove then dispose (dispose will cascade to children)
                 stack.Controls.Remove(c);
+                
+                // Dispose tooltip if attached
+                if (c is Button btn && tip != null)
+                {
+                    tip.SetToolTip(btn, null);
+                }
+                
+                //Note: Event handlers will be automatically cleaned up when button is disposed
+                
+                // Dispose context menu
+                if (c.ContextMenuStrip != null)
+                {
+                    c.ContextMenuStrip.Dispose();
+                    c.ContextMenuStrip = null;
+                }
+                
                 try
                 {
                     c.Dispose();
@@ -603,6 +655,21 @@ namespace GUI.Features.Seat.SubFeatures
             }
 
             stack.ResumeLayout();
+        }
+
+        // ✅ FIX 1: Override Dispose to cleanup resources
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _filterCts?.Cancel();
+                _filterCts?.Dispose();
+                debounce?.Stop();
+                debounce?.Dispose();
+                tip?.Dispose();
+                ClearStackControls();
+            }
+            base.Dispose(disposing);
         }
 
         private void ApplyFilter()
@@ -616,7 +683,8 @@ namespace GUI.Features.Seat.SubFeatures
 
             var q = datasource.AsEnumerable();
 
-            if (ac != "Tất cả") q = q.Where(x => $"{x.AircraftManufacturer} {x.AircraftModel}" == ac);
+            // ✅ So sánh chỉ với Model
+            if (ac != "Tất cả") q = q.Where(x => x.AircraftModel == ac);
             if (cl != "Tất cả") q = q.Where(x => x.ClassName == cl);
             if (!string.IsNullOrEmpty(key)) q = q.Where(x => x.SeatNumber.Contains(key));
 
@@ -658,7 +726,7 @@ namespace GUI.Features.Seat.SubFeatures
                 : allSeatsInSelection)
                 .GroupBy(s => new
                 {
-                    AircraftName = $"{s.AircraftManufacturer} {s.AircraftModel}",
+                    AircraftName = s.AircraftModel,  // ✅ Chỉ dùng Model
                     s.AircraftId
                 })
                 .OrderBy(g => g.Key.AircraftName);
@@ -696,7 +764,7 @@ namespace GUI.Features.Seat.SubFeatures
                 // === THÊM TÊN MÁY BAY Ở TRÊN ===
                 var aircraftLabel = new Label
                 {
-                    Text = $"✈️ {aircraftGroup.Key.AircraftName}",
+                    Text = $"✈️ {firstSeat.AircraftModel}",  // ✅ Chỉ Model
                     Font = new Font("Segoe UI", 14f, FontStyle.Bold),
                     ForeColor = Color.FromArgb(33, 37, 41),
                     AutoSize = true,

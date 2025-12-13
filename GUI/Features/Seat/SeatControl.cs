@@ -13,10 +13,11 @@ namespace GUI.Features.Seat
         private FlowLayoutPanel tabs;
 
         private int currentIndex = 0;
-        private const int DETAIL_TAB_INDEX = 3; // Chỉ mục ẩn cho màn hình chi tiết
+        private const int DETAIL_TAB_INDEX = 3; // ✅ Updated: 2->3 (now 3 tabs)
 
         private Control current;
-        private SubFeatures.SeatListControl seatList;
+        // ✅ ADDED: AircraftListControl
+        private SubFeatures.AircraftListControl aircraftList;
         private SubFeatures.FlightSeatControl flightSeats;
         private SubFeatures.SeatMapControl seatMap;
         private SubFeatures.SeatDetailControl seatDetail;
@@ -30,8 +31,8 @@ namespace GUI.Features.Seat
 
         private void InitializeComponent()
         {
-            // Khởi tạo các Sub Controls
-            seatList = new SubFeatures.SeatListControl { Dock = DockStyle.Fill };
+            // ✅ Added: aircraftList initialization
+            aircraftList = new SubFeatures.AircraftListControl { Dock = DockStyle.Fill };
             flightSeats = new SubFeatures.FlightSeatControl { Dock = DockStyle.Fill };
             seatMap = new SubFeatures.SeatMapControl { Dock = DockStyle.Fill };
             seatDetail = new SubFeatures.SeatDetailControl { Dock = DockStyle.Fill };
@@ -39,23 +40,11 @@ namespace GUI.Features.Seat
             header = new Panel();
             tabs = new FlowLayoutPanel();
 
-            // ĐĂNG KÝ SỰ KIỆN:
-
-            // 1. Từ List -> Detail (VIEW)
-            seatList.ViewOrEditRequested += (seatId) => SwitchToDetailTab(seatId);
-
-            // 2. Từ List -> Edit (EDIT) - Không cần nữa vì đã gộp vào SeatListControl
-            // seatList.EditRequested sẽ được xử lý nội bộ trong SeatListControl
-
-            // 3. Từ Detail -> List (Đóng)
+            // ✅ Wire-up: AircraftList -> Detail view
+            aircraftList.SeatSelected += (seatId) => SwitchToDetailTab(seatId);
+            
+            // 1. Từ Detail -> List (Đóng)
             seatDetail.CloseRequested += SeatDetail_CloseRequested;
-
-            // 4. Từ FlightSeats -> Refresh SeatList (Khi update class_id)
-            flightSeats.DataUpdated += (s, e) =>
-            {
-                System.Diagnostics.Debug.WriteLine("[SeatControl] DataUpdated event received, refreshing SeatListControl...");
-                seatList.LoadData();
-            };
 
             header.SuspendLayout();
             SuspendLayout();
@@ -81,8 +70,9 @@ namespace GUI.Features.Seat
             tabs.TabIndex = 0;
 
             // Setup Sub Controls
-            seatList.BackColor = Color.FromArgb(232, 240, 252);
-            seatList.Dock = DockStyle.Fill;
+            // ✅ Added: aircraftList setup
+            aircraftList.BackColor = Color.FromArgb(232, 240, 252);
+            aircraftList.Dock = DockStyle.Fill;
             flightSeats.BackColor = Color.FromArgb(232, 240, 252);
             flightSeats.Dock = DockStyle.Fill;
             seatMap.BackColor = Color.FromArgb(232, 240, 252);
@@ -92,7 +82,8 @@ namespace GUI.Features.Seat
             // Main Container
             BackColor = Color.White;
             Controls.Add(header);
-            Controls.Add(seatList);
+            // ✅ Added: Controls.Add(aircraftList)
+            Controls.Add(aircraftList);
             Controls.Add(flightSeats);
             Controls.Add(seatMap);
             Controls.Add(seatDetail);
@@ -109,12 +100,7 @@ namespace GUI.Features.Seat
             SwitchTab(0); // Chuyển trở lại tab danh sách (index 0)
         }
 
-        // ✅ Public method để refresh SeatListControl từ FlightSeatControl
-        public void RefreshSeatList()
-        {
-            System.Diagnostics.Debug.WriteLine("[SeatControl] RefreshSeatList() called");
-            seatList?.LoadData();
-        }
+        // ✅ Removed: RefreshSeatList() - no seatList to refresh
 
         private void RebuildTabs()
         {
@@ -142,10 +128,10 @@ namespace GUI.Features.Seat
                 return b;
             }
 
-            // Render các tab chính (không còn tab "Tạo ghế" nữa)
-            tabs.Controls.Add(MakeTabButton("Danh sách ghế", 0));
-            tabs.Controls.Add(MakeTabButton("Ghế theo chuyến", 1));
-            tabs.Controls.Add(MakeTabButton("Sơ đồ ghế", 2));
+            // ✅ Now 3 tabs: 0=Danh sách máy bay, 1=Ghế theo chuyến, 2=Sơ đồ ghế
+            tabs.Controls.Add(MakeTabButton("✈️ Danh sách máy bay", 0));
+            tabs.Controls.Add(MakeTabButton("🎫 Ghế theo chuyến", 1));
+            tabs.Controls.Add(MakeTabButton("🗺️ Sơ đồ ghế", 2));
 
             tabs.ResumeLayout(true);
         }
@@ -163,20 +149,21 @@ namespace GUI.Features.Seat
             // Hiển thị nội dung tương ứng
             if (current != null) current.Visible = false;
 
+            // ✅ Updated indices: 0=AircraftList, 1=FlightSeats, 2=SeatMap
             current = idx switch
             {
-                0 => seatList,
+                0 => aircraftList,
                 1 => flightSeats,
                 2 => seatMap,
                 DETAIL_TAB_INDEX => seatDetail,
-                _ => seatList
+                _ => aircraftList  // Default to AircraftList
             };
 
             // ✅ Tự động refresh khi chuyển vào các tab
-            if (idx == 0 && seatList != null)
+            if (idx == 0 && aircraftList != null)
             {
-                System.Diagnostics.Debug.WriteLine("[SeatControl] Switching to SeatListControl, calling LoadData()...");
-                seatList.LoadData();
+                System.Diagnostics.Debug.WriteLine("[SeatControl] Switching to AircraftListControl, calling LoadData()...");
+                aircraftList.LoadData();
             }
             else if (idx == 2 && seatMap != null)
             {

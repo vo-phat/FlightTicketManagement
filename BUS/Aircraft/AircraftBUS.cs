@@ -29,7 +29,7 @@ namespace BUS.Aircraft
         #endregion
 
         #region Thêm máy bay mới
-        public bool AddAircraft(AircraftDTO aircraft, out string message)
+        public int AddAircraft(AircraftDTO aircraft, out string message)
         {
             message = string.Empty;
 
@@ -37,19 +37,27 @@ namespace BUS.Aircraft
             if (!aircraft.IsValid(out string validationError))
             {
                 message = validationError;
-                return false;
+                return 0;
             }
 
             try
             {
-                bool result = aircraftDAO.InsertAircraft(aircraft);
-                message = result ? "Thêm máy bay thành công" : "Không thể thêm máy bay";
-                return result;
+                int newAircraftId = aircraftDAO.InsertAircraft(aircraft);
+                if (newAircraftId > 0)
+                {
+                    message = "Thêm máy bay thành công";
+                    return newAircraftId;
+                }
+                else
+                {
+                    message = "Không thể thêm máy bay";
+                    return 0;
+                }
             }
             catch (Exception ex)
             {
                 message = "Lỗi khi thêm máy bay: " + ex.Message;
-                return false;
+                return 0;
             }
         }
         #endregion

@@ -175,6 +175,17 @@ namespace BUS.Flight
                 long newId = _flightDAO.Insert(flight);
                 if (newId > 0)
                 {
+                    // ✅ Auto-generate seats for new flight
+                    try
+                    {
+                        GenerateSeatsForNewFlight((int)newId, flight.AircraftId, flight.BasePrice);
+                    }
+                    catch (Exception seatEx)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[CreateFlight] Warning: Could not auto-generate seats: {seatEx.Message}");
+                        warnings.Add($"Chuyến bay đã tạo nhưng không thể tự động tạo ghế: {seatEx.Message}");
+                    }
+
                     message = "Tạo chuyến bay thành công!";
                     return true;
                 }
@@ -644,6 +655,128 @@ namespace BUS.Flight
             catch (Exception ex)
             {
                 throw new Exception($"BUS: Lỗi khi lấy báo cáo doanh thu chuyến bay: {ex.Message}", ex);
+            }
+        }
+        #endregion
+
+        #region Seat Generation
+        /// <summary>
+        /// Auto-generate Seats and FlightSeats for a new flight
+        /// </summary>
+        private void GenerateSeatsForNewFlight(int flightId, int aircraftId, decimal basePrice)
+        {
+            try
+            {
+                // Import necessary namespaces at method level
+                var seatBUS = new BUS.Seat.SeatBUS();
+                var aircraftBUS = new BUS.Aircraft.AircraftBUS();
+                var cabinClassBUS = new BUS.CabinClass.CabinClassBUS();
+
+                // 1. Get aircraft capacity
+                var aircraft = aircraftBUS.GetAllAircrafts().FirstOrDefault(a => a.AircraftId == aircraftId);
+                if (aircraft == null || !aircraft.Capacity.HasValue)
+                {
+                    throw new Exception($"Không tìm thấy máy bay ID {aircraftId} hoặc không có thông tin capacity");
+                }
+
+                int capacity = aircraft.Capacity.Value;
+
+                // 2. Check if aircraft already has seats
+                var existingSeats = seatBUS.GetAllSeats().Where(s => s.AircraftId == aircraftId).ToList();
+                
+                if (existingSeats.Count == 0)
+                {
+                    // 3. Create Seats for aircraft (similar to GenerateSeatsForNewAircraft)
+                    var allClasses = cabinClassBUS.GetAllCabinClasses();
+                    var businessClass = allClasses.FirstOrDefault(c => c.ClassName == "Business");
+                    var economyClass = allClasses.FirstOrDefault(c => c.ClassName == "Economy");
+
+                    if (economyClass == null)
+                    {
+                        throw new Exception("Không tìm thấy hạng ghế Economy");
+                    }
+
+                    int businessRows = 0, economyRows = 0;
+                    int businessCols = 4; // A B C D
+                    int economyCols = 6; // A B C D E F
+
+                    // Determine seat configuration based on capacity
+                    if (capacity < 100)
+                    {
+                        // Small aircraft: Economy only
+                        economyRows = (int)Math.Ceiling(capacity / (double)economyCols);
+                    }
+                    else
+                    {
+                        // Medium/Large: 15% Business, 85% Economy
+                        int businessSeats = (int)(capacity * 0.15);
+                        businessRows = (int)Math.Ceiling(businessSeats / (double)businessCols);
+                        int remainingSeats = capacity - (businessRows * businessCols);
+                        economyRows = (int)Math.Ceiling(remainingSeats / (double)economyCols);
+                    }
+
+                    int currentRow = 1;
+                    var createdSeatIds = new List<int>();
+
+                    // Generate Business class seats
+                    if (businessRows > 0 && businessClass != null)
+                    {
+                        for (int row = 0; row < businessRows; row++)
+                        {
+                            for (char col = 'A'; col <= 'D'; col++)
+                            {
+                                string seatNumber = $"{currentRow}{col}";
+                                var seat = new DTO.Seat.SeatDTO(0, aircraftId, seatNumber, businessClass.ClassId);
+                                seatBUS.AddSeat(seat, out _); // ✅ AddSeat returns bool
+                            }
+                            currentRow++;
+                        }
+                    }
+
+                    // Generate Economy class seats
+                    for (int row = 0; row < economyRows; row++)
+                    {
+                        for (char col = 'A'; col <= 'F'; col++)
+                        {
+                            string seatNumber = $"{currentRow}{col}";
+                            var seat = new DTO.Seat.SeatDTO(0, aircraftId, seatNumber, economyClass.ClassId);
+                            seatBUS.AddSeat(seat, out _); // ✅ AddSeat returns bool
+                        }
+                        currentRow++;
+                    }
+
+                    System.Diagnostics.Debug.WriteLine($"[GenerateSeatsForNewFlight] Created Seats for aircraft {aircraftId}");
+                    
+                    // Refresh seat list
+                    existingSeats = seatBUS.GetAllSeats().Where(s => s.AircraftId == aircraftId).ToList();
+                }
+
+                // 4. Create FlightSeats from Aircraft Seats
+                using (var conn = DAO.Database.DatabaseConnection.GetConnection())
+                {
+                    conn.Open();
+
+                    foreach (var seat in existingSeats)
+                    {
+                        string insertQuery = @"
+                            INSERT INTO flight_seats (flight_id, seat_id, base_price, seat_status)
+                            VALUES (@flightId, @seatId, @basePrice, 'AVAILABLE')";
+
+                        using (var cmd = new MySqlConnector.MySqlCommand(insertQuery, conn))
+                        {
+                            cmd.Parameters.AddWithValue("@flightId", flightId);
+                            cmd.Parameters.AddWithValue("@seatId", seat.SeatId);
+                            cmd.Parameters.AddWithValue("@basePrice", basePrice);
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+
+                    System.Diagnostics.Debug.WriteLine($"[GenerateSeatsForNewFlight] Created {existingSeats.Count} FlightSeats for flight {flightId}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi tự động tạo ghế cho chuyến bay: {ex.Message}", ex);
             }
         }
         #endregion
