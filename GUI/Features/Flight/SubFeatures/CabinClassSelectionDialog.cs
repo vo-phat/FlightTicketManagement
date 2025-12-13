@@ -404,10 +404,9 @@ namespace GUI.Features.Flight.SubFeatures
                 ctrl.Visible = false;
             }
 
-            // Update title and size
+            // Update title
             Text = "Chọn chuyến bay chiều về";
-            Size = new Size(600, 550); // Ensure dialog is tall enough for buttons
-            
+
             // Title label
             var lblTitle = new Label
             {
