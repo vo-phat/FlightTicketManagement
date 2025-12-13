@@ -36,15 +36,14 @@ namespace GUI.Features.Ticket {
             pnlHeaderTicket.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             pnlHeaderTicket.BackColor = Color.White;
             pnlHeaderTicket.Controls.Add(btnFrmPassengerInfoTiket);
-            pnlHeaderTicket.Controls.Add(btnOpsTicket);
             pnlHeaderTicket.Controls.Add(btnHistoryTicketAdmin);
+            pnlHeaderTicket.Controls.Add(btnOpsTicket);
             pnlHeaderTicket.Dock = DockStyle.Top;
             pnlHeaderTicket.Location = new Point(0, 0);
             pnlHeaderTicket.Name = "pnlHeaderTicket";
             pnlHeaderTicket.Padding = new Padding(24, 12, 0, 0);
             pnlHeaderTicket.Size = new Size(1649, 70);
             pnlHeaderTicket.TabIndex = 1;
-            pnlHeaderTicket.WrapContents = false;
             // 
             // btnFrmPassengerInfoTiket
             // 
@@ -100,7 +99,7 @@ namespace GUI.Features.Ticket {
             btnOpsTicket.Icon = null;
             btnOpsTicket.IconSize = new Size(22, 22);
             btnOpsTicket.IconSpacing = 10;
-            btnOpsTicket.Location = new Point(175, 15);
+            btnOpsTicket.Location = new Point(355, 15);
             btnOpsTicket.Name = "btnOpsTicket";
             btnOpsTicket.NormalBackColor = Color.White;
             btnOpsTicket.NormalBorderColor = Color.FromArgb(40, 40, 40);
@@ -110,12 +109,13 @@ namespace GUI.Features.Ticket {
             btnOpsTicket.PressedBackColor = Color.FromArgb(120, 191, 239);
             btnOpsTicket.PressedBorderColor = Color.FromArgb(31, 111, 178);
             btnOpsTicket.PressedForeColor = Color.White;
-            btnOpsTicket.Size = new Size(181, 52);
+            btnOpsTicket.Size = new Size(171, 52);
             btnOpsTicket.TabIndex = 1;
             btnOpsTicket.Text = "Quản lý vé";
             btnOpsTicket.TextAlign = ContentAlignment.MiddleLeft;
             btnOpsTicket.UseVisualStyleBackColor = false;
-            btnOpsTicket.WordWrap = false;
+            btnOpsTicket.Visible = false;
+            btnOpsTicket.WordWrap = true;
             btnOpsTicket.Click += btnOpsTicket_Click;
             // 
             // btnHistoryTicketAdmin
@@ -136,7 +136,7 @@ namespace GUI.Features.Ticket {
             btnHistoryTicketAdmin.Icon = null;
             btnHistoryTicketAdmin.IconSize = new Size(22, 22);
             btnHistoryTicketAdmin.IconSpacing = 10;
-            btnHistoryTicketAdmin.Location = new Point(362, 15);
+            btnHistoryTicketAdmin.Location = new Point(175, 15);
             btnHistoryTicketAdmin.Name = "btnHistoryTicketAdmin";
             btnHistoryTicketAdmin.NormalBackColor = Color.White;
             btnHistoryTicketAdmin.NormalBorderColor = Color.FromArgb(40, 40, 40);

@@ -228,23 +228,23 @@ namespace GUI.MainApp {
                 new() {
                     Key = NavKey.BookingsTickets, Text = "🎟 Đặt chỗ & Vé",
                     IsVisible = r =>
-                        HasPerm(Perm.Tickets_CreateSearch) ||
+                        //HasPerm(Perm.Tickets_CreateSearch) ||
                         HasPerm(Perm.Tickets_Mine) ||
-                        HasPerm(Perm.Tickets_Operate) ||
-                        HasPerm(Perm.Tickets_History),
+                        HasPerm(Perm.Tickets_Operate),
+                        //HasPerm(Perm.Tickets_History),
                     SubItems = {
-                        ("Tạo/Tìm đặt chỗ",
-                            r => HasPerm(Perm.Tickets_CreateSearch),
-                            () => OpenBookingSearch()),
-                        ("Đặt chỗ của tôi",
+                        //("Tạo/Tìm đặt chỗ",
+                        //    r => HasPerm(Perm.Tickets_CreateSearch),
+                        //    () => OpenBookingSearch()),
+                        ("Nhập thông tin hành khách",
                             r => HasPerm(Perm.Tickets_Mine),
                             () => OpenMyBookings()),
-                        ("Quản lý vé (check-in/đổi trạng thái)",
+                        ("Vé của tôi",
                             r => HasPerm(Perm.Tickets_Operate),
                             () => OpenTicketOps()),
-                        ("Lịch sử vé",
-                            r => HasPerm(Perm.Tickets_History),
-                            () => OpenTicketHistory())
+                        //("Lịch sử vé",
+                        //    r => HasPerm(Perm.Tickets_History),
+                        //    () => OpenTicketHistory())
                     }
                 },
 
@@ -543,7 +543,7 @@ namespace GUI.MainApp {
 
         private void OpenTicketOps() {
             var control = new TicketControl();
-            control.switchTab(2);
+            control.switchTab(1);
             LoadControl(control);
             //MessageBox.Show("Quản lý vé (Staff/Admin) – check-in/đổi trạng thái.", "Ticket Ops");
         }

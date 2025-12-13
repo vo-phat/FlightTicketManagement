@@ -50,7 +50,7 @@ namespace DAO.TicketDAO
                             Amount = totalAmount,
                             PaymentMethod = "CREDIT_CARD", // hoặc lấy từ UI
                             PaymentDate = DateTime.Now,
-                            Status = "SUCCESS"
+                            Status = "PENDING"
                         };
 
                         new PaymentDAO().RecordPayment(paymentDto, tran);
@@ -119,7 +119,7 @@ namespace DAO.TicketDAO
                             Amount = totalAmount,
                             PaymentMethod = "CREDIT_CARD",
                             PaymentDate = DateTime.Now,
-                            Status = "SUCCESS"
+                            Status = "PENDING"
                         };
 
                         new PaymentDAO().RecordPayment(paymentDto, tran);

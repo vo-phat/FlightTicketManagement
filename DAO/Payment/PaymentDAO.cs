@@ -472,9 +472,6 @@ namespace DAO.Payment
                 throw new Exception($"Lỗi khi xử lý thanh toán (ID: {paymentId}): " + ex.Message, ex);
             }
         }
-        #endregion
-
-
         public bool RecordPayment(PaymentDTO payment, MySqlTransaction tran)
         {
             string query = @"
@@ -492,7 +489,6 @@ namespace DAO.Payment
                 return command.ExecuteNonQuery() > 0;
             }
         }
-
-
+        #endregion
     }
 }

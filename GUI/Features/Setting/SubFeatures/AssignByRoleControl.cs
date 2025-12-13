@@ -207,6 +207,7 @@ namespace GUI.Features.Setting.SubFeatures {
                     };
                 }
 
+
                 table.Columns.Add(col);
             }
         }
