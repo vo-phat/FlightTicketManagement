@@ -100,6 +100,7 @@ FROM roles r
 JOIN permissions p ON p.permission_code IN (
     'home.view',
     'tickets.create_search',
+    'tickets.history',
     'tickets.mine',
     'tickets.operate',
     'customers.profiles',
