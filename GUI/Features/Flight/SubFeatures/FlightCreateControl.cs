@@ -71,6 +71,15 @@ namespace GUI.Features.Flight.SubFeatures
             LoadAirportCodes();
             InitializeComponent();
             LoadComboBoxData();
+
+            // ✅ Auto-reset form when control becomes visible
+            this.VisibleChanged += (s, e) =>
+            {
+                if (this.Visible && !_isEditMode)
+                {
+                    ClearForm();
+                }
+            };
         }
 
         private Label CreateKeyLabel(string text)
