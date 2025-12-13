@@ -8,20 +8,19 @@ namespace DTO.FlightSeat
         private int _flightSeatId;
         private int _flightId;
         private int _seatId;
+        private int _classId;  // THÊM private field cho ClassId
         private decimal _basePrice;
         private string _seatStatus;
         #endregion
 
         #region Public Display Properties (Dùng cho JOIN)
         public int AircraftId { get; set; }
-        public int AircraftCapacity { get; set; } = 0;    // THÊM: Sức chứa máy bay
-        public string AircraftName { get; set; } = "";    // Tên máy bay (Manufacturer Model)
-        public string SeatNumber { get; set; } = "";      // Số ghế
+        public int AircraftCapacity { get; set; } = 0;
+        public string AircraftName { get; set; } = "";
+        public string SeatNumber { get; set; } = "";
         public string ClassName { get; set; } = "";
-        public string FlightName { get; set; } = "";      // Tên chuyến bay (ví dụ: VN123)
+        public string FlightName { get; set; } = "";
         #endregion
-
-        public int ClassId { get; set; }
 
         #region Public Properties (Chính)
         public int FlightSeatId
@@ -54,6 +53,18 @@ namespace DTO.FlightSeat
                 if (value <= 0)
                     throw new ArgumentException("Seat ID không hợp lệ");
                 _seatId = value;
+            }
+        }
+
+        // THÊM: Property với validation cho ClassId
+        public int ClassId
+        {
+            get => _classId;
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentException("Class ID không thể âm");
+                _classId = value;
             }
         }
 
@@ -143,7 +154,7 @@ namespace DTO.FlightSeat
             ClassName = className;
         }
 
-        // THÊM: Constructor với AircraftCapacity
+        // Constructor với AircraftCapacity (12 tham số)
         public FlightSeatDTO(int flightSeatId, int flightId, int aircraftId, int seatId, int classId,
             decimal basePrice, string seatStatus,
             string flightName, string aircraftName, int aircraftCapacity, string seatNumber, string className)

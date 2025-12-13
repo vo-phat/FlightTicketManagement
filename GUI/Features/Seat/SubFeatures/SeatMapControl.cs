@@ -196,8 +196,17 @@ namespace GUI.Features.Seat.SubFeatures
         }
 
         // --------------------------- BUILD MAP ---------------------------
+        // --------------------------- BUILD MAP ---------------------------
         private void RefreshSeatMap()
         {
+            // BƯỚC QUAN TRỌNG: Giải phóng Handle Win32 của các controls cũ
+            // Đây là bước khắc phục lỗi 'Error creating window handle.'
+            foreach (Control control in stack.Controls)
+            {
+                // Gọi Dispose() cho các control trước khi xóa
+                control.Dispose();
+            }
+
             stack.Controls.Clear();
             stack.RowStyles.Clear();
             stack.RowCount = 0;
@@ -237,7 +246,6 @@ namespace GUI.Features.Seat.SubFeatures
 
             BuildCompleteSeatMap(list);
         }
-
         private void BuildCompleteSeatMap(List<FlightSeatDTO> filteredSeats)
         {
             // Nhóm theo Chuyến bay và Máy bay

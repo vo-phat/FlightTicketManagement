@@ -119,22 +119,25 @@ namespace DAO.FlightSeat
         }
         #endregion
 
-        #region Cập nhật toàn bộ thông tin ghế trong bảng flight_seats
+
         public bool UpdateFlightSeat(FlightSeatDTO dto)
         {
             const string query = @"
-                UPDATE flight_seats
-                SET 
-                    flight_id = @flightId,
-                    seat_id = @seatId,
-                    base_price = @price,
-                    seat_status = @status
-                WHERE flight_seat_id = @id";
+        UPDATE flight_seats
+        SET 
+            flight_id = @flightId,
+            seat_id = @seatId,
+            base_price = @price,
+            seat_status = @status
+        WHERE flight_seat_id = @id";
 
             try
             {
                 using var conn = DatabaseConnection.GetConnection();
                 conn.Open();
+
+                // [DEBUG] In ra giá trị trước khi UPDATE
+                System.Diagnostics.Debug.WriteLine($"[BEFORE UPDATE] FlightSeatId: {dto.FlightSeatId}, SeatId: {dto.SeatId}, ClassId: {dto.ClassId}");
 
                 using var cmd = new MySqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@flightId", dto.FlightId);
@@ -143,14 +146,60 @@ namespace DAO.FlightSeat
                 cmd.Parameters.AddWithValue("@status", dto.SeatStatus);
                 cmd.Parameters.AddWithValue("@id", dto.FlightSeatId);
 
-                return cmd.ExecuteNonQuery() > 0;
+                int rowsAffected = cmd.ExecuteNonQuery();
+                System.Diagnostics.Debug.WriteLine($"[UPDATE] Rows affected: {rowsAffected}");
+
+                // Nếu cập nhật thành công, lấy lại class_id từ seat_id mới
+                if (rowsAffected > 0)
+                {
+                    const string getClassQuery = @"
+                SELECT s.class_id, cc.class_name, s.seat_number
+                FROM seats s
+                JOIN cabin_classes cc ON s.class_id = cc.class_id
+                WHERE s.seat_id = @seatId";
+
+                    using var classCmd = new MySqlCommand(getClassQuery, conn);
+                    classCmd.Parameters.AddWithValue("@seatId", dto.SeatId);
+
+                    System.Diagnostics.Debug.WriteLine($"[SELECT] Querying for seat_id: {dto.SeatId}");
+
+                    using var reader = classCmd.ExecuteReader();
+                    if (reader.Read())
+                    {
+                        int oldClassId = dto.ClassId;
+                        int newClassId = reader.GetInt32("class_id");
+                        string newClassName = reader.GetString("class_name");
+                        string newSeatNumber = reader.GetString("seat_number");
+
+                        System.Diagnostics.Debug.WriteLine($"[FOUND] Old ClassId: {oldClassId} → New ClassId: {newClassId}");
+                        System.Diagnostics.Debug.WriteLine($"[FOUND] New ClassName: {newClassName}, SeatNumber: {newSeatNumber}");
+
+                        // Cập nhật lại class_id trong DTO
+                        dto.ClassId = newClassId;
+                        dto.ClassName = newClassName;
+                        dto.SeatNumber = newSeatNumber;
+
+                        System.Diagnostics.Debug.WriteLine($"[AFTER UPDATE] ClassId in DTO: {dto.ClassId}, ClassName: {dto.ClassName}");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[ERROR] Không tìm thấy seat với seat_id = {dto.SeatId}");
+                    }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("[ERROR] UPDATE không ảnh hưởng dòng nào!");
+                }
+
+                return rowsAffected > 0;
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"[EXCEPTION] {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[EXCEPTION] StackTrace: {ex.StackTrace}");
                 throw new Exception($"Lỗi khi cập nhật thông tin ghế flight_seats: {ex.Message}", ex);
             }
         }
-        #endregion
 
         public List<FlightSeatDTO> GetAllFlightSeats()
         {
@@ -174,6 +223,7 @@ namespace DAO.FlightSeat
         JOIN aircrafts a ON f.aircraft_id = a.aircraft_id
         JOIN seats s ON fs.seat_id = s.seat_id
         JOIN cabin_classes c ON s.class_id = c.class_id
+        WHERE f.is_deleted = FALSE
         ORDER BY f.flight_number, s.seat_number";
 
             try
@@ -184,9 +234,11 @@ namespace DAO.FlightSeat
                 using var cmd = new MySqlCommand(query, conn);
                 using var reader = cmd.ExecuteReader();
 
+                int rowCount = 0;
                 while (reader.Read())
                 {
-                    list.Add(new FlightSeatDTO(
+                    rowCount++;
+                    var dto = new FlightSeatDTO(
                         reader.GetInt32("flight_seat_id"),
                         reader.GetInt32("flight_id"),
                         reader.GetInt32("aircraft_id"),
@@ -196,14 +248,32 @@ namespace DAO.FlightSeat
                         reader.GetString("SeatStatus"),
                         reader.GetString("FlightName"),
                         reader.GetString("AircraftName"),
-                        reader.GetInt32("AircraftCapacity"),  // ✅ THÊM capacity
+                        reader.GetInt32("AircraftCapacity"),
                         reader.GetString("SeatNumber"),
                         reader.GetString("ClassName")
-                    ));
+                    );
+
+                    list.Add(dto);
+
+                    // [DEBUG] Log 5 dòng đầu
+                    if (rowCount <= 5)
+                    {
+                        System.Diagnostics.Debug.WriteLine(
+                            $"[GetAllFlightSeats] Row {rowCount}: " +
+                            $"FlightSeatId={dto.FlightSeatId}, " +
+                            $"SeatId={dto.SeatId}, " +
+                            $"ClassId={dto.ClassId}, " +
+                            $"SeatNumber={dto.SeatNumber}, " +
+                            $"ClassName={dto.ClassName}"
+                        );
+                    }
                 }
+
+                System.Diagnostics.Debug.WriteLine($"[GetAllFlightSeats] Total rows: {rowCount}");
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"[GetAllFlightSeats] Exception: {ex.Message}");
                 throw new Exception($"Lỗi khi tải danh sách ghế máy bay: {ex.Message}", ex);
             }
 

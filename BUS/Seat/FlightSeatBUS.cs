@@ -114,10 +114,22 @@ namespace BUS.FlightSeat
                 return false;
             }
 
+            // Chuẩn hóa trạng thái trước khi gửi xuống DAO
+            dto.SeatStatus = statusUpper;
+
             try
             {
                 bool result = _dao.UpdateFlightSeat(dto);
-                message = result ? "Cập nhật thông tin ghế thành công!" : "Không thể cập nhật thông tin ghế.";
+
+                if (result)
+                {
+                    message = $"Cập nhật thông tin ghế thành công! Hạng ghế: {dto.ClassName}";
+                }
+                else
+                {
+                    message = "Không thể cập nhật thông tin ghế.";
+                }
+
                 return result;
             }
             catch (Exception ex)
@@ -127,7 +139,6 @@ namespace BUS.FlightSeat
             }
         }
         #endregion
-
         #region Xem sơ đồ ghế
         public List<FlightSeatDTO> GetSeatMap(int? flightId, int? aircraftId, int? classId)
         {
