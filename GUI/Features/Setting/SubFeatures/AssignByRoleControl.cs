@@ -199,7 +199,16 @@ namespace GUI.Features.Setting.SubFeatures {
                 bool isAdmin = IsAdminRole(role);
                 if (isAdmin) {
                     col.ReadOnly = true; // không cho thay đổi checkbox
+                    col.DefaultCellStyle = new DataGridViewCellStyle
+                    {
+                        BackColor = SystemColors.Control,            // nền giống control disabled
+                        ForeColor = SystemColors.GrayText,           // text mờ
+                        SelectionBackColor = SystemColors.Control,   // khi chọn không đổi màu
+                        Alignment = DataGridViewContentAlignment.MiddleCenter
+                    };
+
                 }
+
 
                 table.Columns.Add(col);
             }

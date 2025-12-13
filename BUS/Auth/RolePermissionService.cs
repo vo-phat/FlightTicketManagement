@@ -86,8 +86,8 @@ namespace BUS.Auth {
                 throw new Exception("Vai trò không tồn tại.");
 
             // Detect admin via role_code
-            if (IsAdminRole(role))
-                throw new Exception("Không thể thay đổi quyền cho vai trò ADMIN.");
+            //if (IsAdminRole(role))
+            //    throw new Exception("Không thể thay đổi quyền cho vai trò ADMIN.");
 
             // Validate permission ids are valid
             var allPermIds = _repo.GetAllPermissions().Select(p => p.PermissionId).ToHashSet();
