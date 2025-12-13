@@ -145,6 +145,14 @@ namespace GUI.Features.Ticket.subTicket
             dgvTickets.DataSource = _allTickets;
         }
 
+        /// <summary>
+        /// Public method để refresh data từ bên ngoài
+        /// </summary>
+        public void RefreshData()
+        {
+            LoadTicketHistory();
+        }
+
         private void btnFilter_click(object sender, EventArgs e)
         {
             ApplyFilter();

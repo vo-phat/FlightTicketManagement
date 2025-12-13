@@ -186,6 +186,7 @@ namespace GUI.Features.Ticket.subTicket
 
                 // Event
                 dgvPassengerListTicket.CellContentClick += dgvPassengerListTicket_CellContentClick;
+                dgvPassengerListTicket.DataBindingComplete += dgvPassengerListTicket_DataBindingComplete;
             }
 
             // Helper thêm cột text nhanh
@@ -302,6 +303,36 @@ namespace GUI.Features.Ticket.subTicket
                 var dto = _inboundPassengers[e.RowIndex];
                 LoadInboundToForm(dto);
                 return;
+            }
+        }
+
+        /// <summary>
+        /// Populate cột "Ghế về" từ dữ liệu _inboundPassengers
+        /// </summary>
+        private void dgvPassengerListTicket_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
+        {
+            UpdateReturnSeatColumn();
+        }
+
+        /// <summary>
+        /// Helper method để update cột "Ghế về" manually
+        /// </summary>
+        private void UpdateReturnSeatColumn()
+        {
+            // Chỉ populate khi là vé khứ hồi
+            if (!_isRoundTrip) return;
+
+            for (int i = 0; i < dgvPassengerListTicket.Rows.Count; i++)
+            {
+                if (i < _inboundPassengers.Count)
+                {
+                    var inboundPassenger = _inboundPassengers[i];
+                    dgvPassengerListTicket.Rows[i].Cells["colSeatIn"].Value = inboundPassenger.SeatNumber ?? "";
+                }
+                else
+                {
+                    dgvPassengerListTicket.Rows[i].Cells["colSeatIn"].Value = "";
+                }
             }
         }
 
@@ -958,6 +989,9 @@ namespace GUI.Features.Ticket.subTicket
                 inbound.ClassId = _returnClassId;
                 inbound.FlightDate = _returnBooking.DepartureTime;
                 _inboundPassengers.ResetItem(_editingIndex);
+
+                // ✅ Update cột "Ghế về" sau khi sửa
+                UpdateReturnSeatColumn();
 
                 // ⭐ TỰ ĐỘNG chuyển sang hành khách tiếp theo
                 int nextIndex = _editingIndex + 1;

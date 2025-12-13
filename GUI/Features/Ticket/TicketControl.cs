@@ -128,6 +128,8 @@ namespace GUI.Features.Ticket {
         // ==========================
 
         private void btnHistoryTicketAdmin_Click(object sender, EventArgs e) {
+            // Refresh data trước khi hiển thị
+            historyTicketControl.RefreshData();
             switchTab(TAB_HISTORY);
         }
 
