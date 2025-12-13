@@ -25,6 +25,9 @@ namespace GUI.Features.Seat.SubFeatures
         private readonly CabinClassBUS _cabinClassBUS = new();
         private List<FlightSeatDTO> datasource = new();
 
+        // ✅ Event để notify các view khác cần refresh
+        public event EventHandler? DataUpdated;
+
         // --- UI Elements ---
         private TableLayoutPanel root, filterWrap;
         private FlowLayoutPanel filterLeft, filterRight, legend;
@@ -417,15 +420,24 @@ namespace GUI.Features.Seat.SubFeatures
 
             if (seat.SeatStatus == "AVAILABLE")
             {
+                // AVAILABLE -> BLOCKED
                 var itemBlock = new ToolStripMenuItem("🔒 Chặn ghế này") { ForeColor = Color.FromArgb(220, 53, 69) };
                 itemBlock.Click += (_, __) => HandleBlock(seat);
                 menu.Items.Add(itemBlock);
             }
             else if (seat.SeatStatus == "BLOCKED")
             {
+                // BLOCKED -> AVAILABLE
                 var itemUnblock = new ToolStripMenuItem("🔓 Mở khóa ghế này") { ForeColor = Color.FromArgb(40, 167, 69) };
                 itemUnblock.Click += (_, __) => HandleUnblock(seat);
                 menu.Items.Add(itemUnblock);
+            }
+            else if (seat.SeatStatus == "BOOKED")
+            {
+                // BOOKED -> AVAILABLE
+                var itemUnbook = new ToolStripMenuItem("❌ Hủy đặt ghế") { ForeColor = Color.FromArgb(255, 193, 7) };
+                itemUnbook.Click += (_, __) => HandleUnbook(seat);
+                menu.Items.Add(itemUnbook);
             }
 
             menu.Show(anchor, 0, anchor.Height);
@@ -444,20 +456,35 @@ namespace GUI.Features.Seat.SubFeatures
             {
                 System.Diagnostics.Debug.WriteLine($"[BEFORE EDIT] FlightSeatId={selected.FlightSeatId}, SeatId={selected.SeatId}, ClassName={selected.ClassName}");
 
+                // ✅ Truyền đầy đủ tham số: seatId, seatNumber, classId, price
                 var editForm = new EditFlightSeatForm(
                     selected.FlightSeatId,
                     selected.SeatId,
+                    selected.SeatNumber,
+                    selected.ClassId,
                     selected.BasePrice
                 );
 
                 if (editForm.ShowDialog() == DialogResult.OK)
                 {
+                    // ✅ BƯỚC 1: Cập nhật class_id trong bảng Seats (nếu thay đổi)
+                    if (editForm.SelectedClassId != selected.ClassId)
+                    {
+                        if (!_bus.UpdateSeatClass(selected.SeatId, editForm.SelectedClassId, out string seatMsg))
+                        {
+                            MessageBox.Show("❌ " + seatMsg, "Lỗi cập nhật hạng ghế", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
+                        System.Diagnostics.Debug.WriteLine($"[SEAT UPDATE] seat_id={selected.SeatId}, new class_id={editForm.SelectedClassId}");
+                    }
+
+                    // ✅ BƯỚC 2: Cập nhật giá trong bảng Flight_Seats (giữ nguyên seat_id)
                     var updated = new FlightSeatDTO(
                         selected.FlightSeatId,
                         selected.FlightId,
                         selected.AircraftId,
-                        editForm.SelectedSeatId,  // ✅ Nouveau seat_id
-                        selected.ClassId,          // ⚠️ Sera mis à jour automatiquement par le DAO
+                        selected.SeatId,  // ✅ Giữ nguyên seat_id
+                        editForm.SelectedClassId,  // ✅ Class ID mới
                         editForm.NewPrice,
                         selected.SeatStatus,
                         selected.FlightName,
@@ -469,13 +496,13 @@ namespace GUI.Features.Seat.SubFeatures
 
                     System.Diagnostics.Debug.WriteLine($"[SENDING TO BUS] FlightSeatId={updated.FlightSeatId}, SeatId={updated.SeatId}");
 
-                    if (_bus.UpdateFlightSeat(updated, out string msg))
+                    if (_bus.UpdateFlightSeatPrice(updated.FlightSeatId, updated.BasePrice, out string msg))
                     {
                         System.Diagnostics.Debug.WriteLine($"[UPDATE SUCCESS] Message: {msg}");
 
                         MessageBox.Show("✅ " + msg, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                        // ✅ FIX CRITIQUE 3: Reset les filtres avant de recharger
+                        // ✅ FIX: Reset filters và reload data
                         cbFlight.SelectedIndex = 0;
                         cbAircraft.SelectedIndex = 0;
                         cbClass.SelectedIndex = 0;
@@ -485,8 +512,18 @@ namespace GUI.Features.Seat.SubFeatures
 
                         System.Diagnostics.Debug.WriteLine($"[AFTER LoadData] Total seats: {datasource.Count}");
 
-                        // ✅ Pas besoin d'ApplyFilter() car les filtres sont à "Tất cả"
-                        // Tous les sièges sont déjà affichés
+                        // ✅ Tìm parent SeatControl và gọi RefreshSeatList() trực tiếp
+                        Control parent = this.Parent;
+                        while (parent != null)
+                        {
+                            if (parent is SeatControl seatControl)
+                            {
+                                System.Diagnostics.Debug.WriteLine("[FlightSeatControl] Found parent SeatControl, calling RefreshSeatList()");
+                                seatControl.RefreshSeatList();
+                                break;
+                            }
+                            parent = parent.Parent;
+                        }
                     }
                     else
                     {
@@ -530,6 +567,23 @@ namespace GUI.Features.Seat.SubFeatures
                 else
                 {
                     MessageBox.Show(" " + msg, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void HandleUnbook(FlightSeatDTO selected)
+        {
+            if (MessageBox.Show($"Bạn có chắc chắn muốn HỦY ĐẶT ghế {selected.SeatNumber}?\n\nGhế sẽ chuyển sang trạng thái AVAILABLE.", "Xác nhận hủy đặt", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+            {
+                if (_bus.UpdateSeatStatus(selected.FlightSeatId, "AVAILABLE", out string msg))
+                {
+                    MessageBox.Show("✅ Đã hủy đặt ghế thành công.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    LoadData();
+                    ApplyFilter();
+                }
+                else
+                {
+                    MessageBox.Show("❌ " + msg, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }

@@ -66,7 +66,7 @@ INSERT INTO permissions (permission_code, permission_name) VALUES
 ('fare_rules.manage',     	'Quản lý quy tắc giá vé'),
 ('tickets.create_search', 	'Đặt chỗ'),
 ('tickets.mine',          	'Xem đặt chỗ của tôi'),
-('tickets.operate',       	'Vận hành vé'),
+('tickets.operate',       	'Vé của tôi'),
 ('tickets.history',       	'Xem lịch sử vé'),
 ('baggage.checkin',       	'Check-in hành lý'),
 ('baggage.track',         	'Theo dõi hành lý'),
@@ -101,6 +101,7 @@ JOIN permissions p ON p.permission_code IN (
     'home.view',
     'tickets.create_search',
     'tickets.mine',
+    'tickets.operate',
     'customers.profiles',
     'notifications.read'
 )

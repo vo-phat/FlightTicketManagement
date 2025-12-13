@@ -4,22 +4,22 @@ using System.Linq;
 using System.Windows.Forms;
 using GUI.Components.Inputs;
 using GUI.Components.Buttons;
-using GUI.Components.Tables;
 using DTO.Aircraft;
 using BUS.Aircraft;
-// ĐÃ XÓA: using BUS.Airline; - Không còn quản lý Airlines
-// ĐÃ XÓA: using DTO.Airline; - Không còn quản lý Airlines
 
 namespace GUI.Features.Aircraft.SubFeatures
 {
     public class AircraftCreateControl : UserControl
     {
-        // ĐÃ XÓA: _cbAirline, _airlineBus - Không còn quản lý Airlines
-        private UnderlinedTextField _txtRegNum, _txtModel, _txtManu, _txtCap, _txtYear;
-        private UnderlinedComboBox _cbStatus;
-        private PrimaryButton _btnSave;
-        private SecondaryButton _btnCancel;
-        private TableCustom _table;
+        private const int VIETNAM_AIRLINES_ID = 1;
+        
+        private Label lblTitle = null!;
+        private UnderlinedTextField txtRegNum = null!;
+        private UnderlinedComboBox cbModel = null!;
+        private UnderlinedComboBox cbManu = null!;
+        private NumericUpDown nudCapacity = null!;
+        private PrimaryButton btnSave = null!;
+        private SecondaryButton btnCancel = null!;
 
         private readonly AircraftBUS _bus = new AircraftBUS();
         private int _editingId = 0;
@@ -30,121 +30,225 @@ namespace GUI.Features.Aircraft.SubFeatures
         public AircraftCreateControl()
         {
             InitializeComponent();
-            LoadAircraftList();
+            LoadExistingData();
+        }
+
+        private Label CreateKeyLabel(string text)
+        {
+            return new Label
+            {
+                Text = text,
+                AutoSize = true,
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(40, 55, 77),
+                Margin = new Padding(0, 10, 0, 0),
+                Padding = new Padding(0, 10, 0, 0)
+            };
         }
 
         private void InitializeComponent()
         {
+            SuspendLayout();
+
             Dock = DockStyle.Fill;
             BackColor = Color.FromArgb(232, 240, 252);
+            AutoScroll = true;
 
-            // --- Title ---
-            var titlePanel = new Panel { Dock = DockStyle.Top, Padding = new Padding(24, 20, 24, 0), Height = 60 };
-            var lblTitle = new Label
+            // Title
+            lblTitle = new Label
             {
-                Text = "➕ Tạo máy bay mới",
+                Text = "🛩️ Tạo máy bay mới",
+                Font = new Font("Segoe UI", 20F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(40, 55, 77),
                 AutoSize = true,
-                Font = new Font("Segoe UI", 20, FontStyle.Bold)
+                Padding = new Padding(24, 20, 24, 12),
+                Dock = DockStyle.Top
             };
-            titlePanel.Controls.Add(lblTitle);
 
-            // --- Inputs ---
-            var inputs = new TableLayoutPanel
+            // Main card panel
+            var containerPanel = new Panel
             {
-                Dock = DockStyle.Top,
-                Padding = new Padding(24, 12, 24, 0),
-                AutoSize = true,
-                ColumnCount = 2
+                BackColor = Color.White,
+                Padding = new Padding(24),
+                Margin = new Padding(24, 8, 24, 24),
+                Dock = DockStyle.Fill,
+                AutoScroll = true
             };
-            inputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
-            inputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
 
-            // ĐÃ XÓA: _cbAirline - Chỉ quản lý Vietnam Airlines
-            _txtRegNum = new UnderlinedTextField("Số hiệu đăng ký (VN-A###)", "");
-            _txtModel = new UnderlinedTextField("Model", "");
-            _txtManu = new UnderlinedTextField("Hãng sản xuất", "");
-            _txtCap = new UnderlinedTextField("Sức chứa (ghế)", "");
-            _txtYear = new UnderlinedTextField("Năm sản xuất", "");
-            
-            _cbStatus = new UnderlinedComboBox("Trạng thái", new[] { "Active", "Maintenance", "Retired" });
-            _cbStatus.InnerComboBox.SelectedIndex = 0;
-
-            inputs.Controls.Add(_txtRegNum, 0, 0);
-            inputs.Controls.Add(_txtModel, 1, 0);
-            inputs.Controls.Add(_txtManu, 0, 1);
-            inputs.Controls.Add(_txtCap, 1, 1);
-            inputs.Controls.Add(_txtYear, 0, 2);
-            inputs.Controls.Add(_cbStatus, 1, 2);
-
-            // --- Buttons ---
-            _btnSave = new PrimaryButton("💾 Lưu máy bay") { Width = 160, Height = 40, Margin = new Padding(4) };
-            _btnCancel = new SecondaryButton("Hủy") { Width = 90, Height = 40, Margin = new Padding(4) };
-            _btnSave.Click += BtnSave_Click;
-            _btnCancel.Click += (_, __) => ClearAndReset();
-
-            var btnPanel = new FlowLayoutPanel
+            // Info grid using TableLayoutPanel
+            var grid = new TableLayoutPanel
             {
                 Dock = DockStyle.Top,
-                FlowDirection = FlowDirection.RightToLeft,
                 AutoSize = true,
-                Padding = new Padding(24, 0, 24, 0)
+                ColumnCount = 2,
+                Padding = new Padding(0, 0, 0, 16)
             };
-            btnPanel.Controls.AddRange(new Control[] { _btnSave, _btnCancel });
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 220));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
-            // --- Table ---
-            _table = new TableCustom
+            int row = 0;
+
+            // ===== SECTION: THÔNG TIN MÁY BAY =====
+            var lblSection = new Label
+            {
+                Text = "📋 THÔNG TIN MÁY BAY",
+                AutoSize = true,
+                Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 92, 175),
+                Margin = new Padding(0, 0, 0, 12),
+                Dock = DockStyle.Top
+            };
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(lblSection, 0, row);
+            grid.SetColumnSpan(lblSection, 2);
+            row++;
+
+            // Registration Number (Auto-generated, read-only)
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(CreateKeyLabel("Số hiệu đăng ký:"), 0, row);
+            txtRegNum = new UnderlinedTextField("", "VN-A###") 
+            { 
+                Dock = DockStyle.Fill, 
+                Margin = new Padding(0, 8, 0, 8),
+                Enabled = false  // Read-only
+            };
+            grid.Controls.Add(txtRegNum, 1, row++);
+
+            // Model (ComboBox)
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(CreateKeyLabel("Model: *"), 0, row);
+            cbModel = new UnderlinedComboBox("", Array.Empty<object>()) 
+            { 
+                Dock = DockStyle.Fill, 
+                Margin = new Padding(0, 8, 0, 8) 
+            };
+            if (cbModel.InnerCombo is ComboBox rawModel)
+            {
+                rawModel.DropDownStyle = ComboBoxStyle.DropDown;
+                rawModel.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+                rawModel.AutoCompleteSource = AutoCompleteSource.ListItems;
+            }
+            grid.Controls.Add(cbModel, 1, row++);
+
+            // Manufacturer (ComboBox)
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(CreateKeyLabel("Hãng sản xuất: *"), 0, row);
+            cbManu = new UnderlinedComboBox("", Array.Empty<object>()) 
+            { 
+                Dock = DockStyle.Fill, 
+                Margin = new Padding(0, 8, 0, 8) 
+            };
+            if (cbManu.InnerCombo is ComboBox rawManu)
+            {
+                rawManu.DropDownStyle = ComboBoxStyle.DropDown;
+                rawManu.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+                rawManu.AutoCompleteSource = AutoCompleteSource.ListItems;
+            }
+            grid.Controls.Add(cbManu, 1, row++);
+
+            // Capacity (NumericUpDown)
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(CreateKeyLabel("Sức chứa (ghế): *"), 0, row);
+            nudCapacity = new NumericUpDown
             {
                 Dock = DockStyle.Fill,
-                ReadOnly = true,
-                AllowUserToAddRows = false,
-                RowHeadersVisible = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White
+                Margin = new Padding(0, 8, 0, 8),
+                Font = new Font("Segoe UI", 11f),
+                Minimum = 1,
+                Maximum = 850,  // Max for largest commercial aircraft
+                Value = 180,
+                DecimalPlaces = 0,
+                ThousandsSeparator = false,
+                Increment = 10
             };
-            _table.Columns.Add("registration", "Số hiệu đăng ký");
-            _table.Columns.Add("model", "Model");
-            _table.Columns.Add("manufacturer", "Hãng sản xuất");
-            _table.Columns.Add("capacity", "Sức chứa");
-            _table.Columns.Add("year", "Năm SX");
-            _table.Columns.Add("status", "Trạng thái");
+            grid.Controls.Add(nudCapacity, 1, row++);
 
-            // --- Main layout ---
-            var main = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 4 };
-            main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            main.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            main.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
+            // Separator
+            var separator = new Panel 
+            { 
+                Height = 2, 
+                BackColor = Color.FromArgb(220, 220, 220), 
+                Margin = new Padding(0, 16, 0, 16), 
+                Dock = DockStyle.Top 
+            };
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(separator, 0, row);
+            grid.SetColumnSpan(separator, 2);
+            row++;
 
-            main.Controls.Add(titlePanel, 0, 0);
-            main.Controls.Add(inputs, 0, 1);
-            main.Controls.Add(btnPanel, 0, 2);
-            main.Controls.Add(_table, 0, 3);
+            // Action buttons
+            var actionPanel = new FlowLayoutPanel
+            {
+                AutoSize = true,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false,
+                Dock = DockStyle.Top,
+                Padding = new Padding(0, 16, 0, 0)
+            };
 
-            Controls.Add(main);
+            btnSave = new PrimaryButton
+            {
+                Text = "💾 Lưu máy bay",
+                Width = 160,
+                Height = 45
+            };
+            btnSave.Click += BtnSave_Click;
+
+            btnCancel = new SecondaryButton
+            {
+                Text = "❌ Hủy bỏ",
+                Width = 130,
+                Height = 45,
+                Margin = new Padding(10, 0, 0, 0)
+            };
+            btnCancel.Click += BtnCancel_Click;
+
+            actionPanel.Controls.Add(btnSave);
+            actionPanel.Controls.Add(btnCancel);
+
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(actionPanel, 0, row);
+            grid.SetColumnSpan(actionPanel, 2);
+
+            containerPanel.Controls.Add(grid);
+            Controls.Add(containerPanel);
+            Controls.Add(lblTitle);
+
+            ResumeLayout(false);
+            PerformLayout();
         }
 
-        // ĐÃ XÓA: LoadAirlines() - Không còn quản lý Airlines
-
-        public void LoadAircraftList()
+        private void LoadExistingData()
         {
             try
             {
-                var list = _bus.GetAllAircrafts();
-
-                _table.Rows.Clear();
-                foreach (var a in list)
-                {
-                    _table.Rows.Add(
-                        a.AirlineId?.ToString() ?? "N/A",
-                        a.Model ?? "N/A",
-                        a.Manufacturer ?? "N/A",
-                        a.Capacity?.ToString() ?? "N/A"
-                    );
-                }
+                var allAircrafts = _bus.GetAllAircrafts();
+                
+                // Load unique Models
+                var models = allAircrafts
+                    .Where(a => !string.IsNullOrWhiteSpace(a.Model))
+                    .Select(a => a.Model!)
+                    .Distinct()
+                    .OrderBy(m => m)
+                    .ToList();
+                
+                cbModel.InnerCombo.Items.Clear();
+                cbModel.InnerCombo.Items.AddRange(models.Cast<object>().ToArray());
+                
+                // Load unique Manufacturers
+                var manufacturers = allAircrafts
+                    .Where(a => !string.IsNullOrWhiteSpace(a.Manufacturer))
+                    .Select(a => a.Manufacturer!)
+                    .Distinct()
+                    .OrderBy(m => m)
+                    .ToList();
+                
+                cbManu.InnerCombo.Items.Clear();
+                cbManu.InnerCombo.Items.AddRange(manufacturers.Cast<object>().ToArray());
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi khi tải danh sách máy bay: " + ex.Message);
+                MessageBox.Show("Lỗi khi tải dữ liệu máy bay hiện có: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -152,60 +256,43 @@ namespace GUI.Features.Aircraft.SubFeatures
         {
             try
             {
-                // ĐÃ XÓA: Airline validation - Chỉ quản lý Vietnam Airlines
+                // Get values from ComboBox
+                var model = cbModel.InnerCombo.Text?.Trim();
+                var manufacturer = cbManu.InnerCombo.Text?.Trim();
                 
-                var regNum = _txtRegNum.Text?.Trim();
-                if (string.IsNullOrWhiteSpace(regNum))
+                if (string.IsNullOrWhiteSpace(model))
                 {
-                    MessageBox.Show("Vui lòng nhập số hiệu đăng ký (VN-A###).", "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Vui lòng nhập Model máy bay.", "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
-                int? capacity = null;
-                if (!string.IsNullOrWhiteSpace(_txtCap.Text))
+                if (string.IsNullOrWhiteSpace(manufacturer))
                 {
-                    if (!int.TryParse(_txtCap.Text, out int capValue) || capValue < 1)
-                    {
-                        MessageBox.Show("Sức chứa phải là số nguyên dương hoặc để trống.",
-                            "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return;
-                    }
-                    capacity = capValue;
+                    MessageBox.Show("Vui lòng nhập Hãng sản xuất.", "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
                 }
 
-                int? year = null;
-                if (!string.IsNullOrWhiteSpace(_txtYear.Text))
+                int capacity = (int)nudCapacity.Value;
+                if (capacity < 1)
                 {
-                    if (!int.TryParse(_txtYear.Text, out int yearValue))
-                    {
-                        MessageBox.Show("Năm sản xuất phải là số nguyên.",
-                            "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return;
-                    }
-                    year = yearValue;
+                    MessageBox.Show("Sức chứa phải lớn hơn 0.", "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
                 }
-
-                var model = _txtModel.Text?.Trim();
-                var manufacturer = _txtManu.Text?.Trim();
-                var status = _cbStatus.InnerComboBox.SelectedItem?.ToString();
 
                 AircraftDTO dto;
                 string message;
                 bool ok;
 
-                int? airlineId = null;
-                if (!string.IsNullOrWhiteSpace(regNum) && int.TryParse(regNum, out int aid))
-                    airlineId = aid;
-
+                // HARDCODE: airline_id = 1 (Vietnam Airlines)
                 if (_editingId == 0)
                 {
-                    dto = new AircraftDTO(airlineId, model, manufacturer, capacity);
+                    // Create new
+                    dto = new AircraftDTO(VIETNAM_AIRLINES_ID, model, manufacturer, capacity);
                     ok = _bus.AddAircraft(dto, out message);
                     if (ok)
                     {
                         MessageBox.Show(message, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         DataSaved?.Invoke(this, EventArgs.Empty);
-                        LoadAircraftList();
                         ClearAndReset();
                     }
                     else
@@ -213,13 +300,13 @@ namespace GUI.Features.Aircraft.SubFeatures
                 }
                 else
                 {
-                    dto = new AircraftDTO(_editingId, airlineId, model, manufacturer, capacity);
+                    // Update
+                    dto = new AircraftDTO(_editingId, VIETNAM_AIRLINES_ID, model, manufacturer, capacity);
                     ok = _bus.UpdateAircraft(dto, out message);
                     if (ok)
                     {
                         MessageBox.Show(message, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         DataUpdated?.Invoke(this, EventArgs.Empty);
-                        LoadAircraftList();
                         ClearAndReset();
                     }
                     else
@@ -232,16 +319,22 @@ namespace GUI.Features.Aircraft.SubFeatures
             }
         }
 
+        private void BtnCancel_Click(object? sender, EventArgs e)
+        {
+            ClearAndReset();
+        }
+
         private void ClearAndReset()
         {
+            txtRegNum.Text = "VN-A###";
+            cbModel.InnerCombo.SelectedIndex = -1;
+            cbModel.InnerCombo.Text = "";
+            cbManu.InnerCombo.SelectedIndex = -1;
+            cbManu.InnerCombo.Text = "";
+            nudCapacity.Value = 180;
             _editingId = 0;
-            _txtRegNum.Text = "";
-            _txtModel.Text = "";
-            _txtManu.Text = "";
-            _txtCap.Text = "";
-            _txtYear.Text = "";
-            _cbStatus.InnerComboBox.SelectedIndex = 0;
-            _btnSave.Text = "💾 Lưu máy bay";
+            lblTitle.Text = "🛩️ Tạo máy bay mới";
+            btnSave.Text = "💾 Lưu máy bay";
         }
 
         public void LoadForEdit(AircraftDTO dto)
@@ -253,13 +346,16 @@ namespace GUI.Features.Aircraft.SubFeatures
             }
 
             _editingId = dto.AircraftId;
-            _txtRegNum.Text = dto.AirlineId?.ToString() ?? ""; // AirlineId thay vì RegistrationNumber
-            _txtModel.Text = dto.Model ?? "";
-            _txtManu.Text = dto.Manufacturer ?? "";
-            _txtCap.Text = dto.Capacity?.ToString() ?? "";
-            _txtYear.Text = ""; // Không còn ManufactureYear
-            _cbStatus.InnerComboBox.SelectedItem = "Active"; // Không còn Status field
-            _btnSave.Text = $"✍️ Cập nhật #{dto.AircraftId}";
+            
+            // Auto-generate registration number
+            txtRegNum.Text = $"VN-A{dto.AircraftId:000}";
+            
+            cbModel.InnerCombo.Text = dto.Model ?? "";
+            cbManu.InnerCombo.Text = dto.Manufacturer ?? "";
+            nudCapacity.Value = dto.Capacity ?? 180;
+            
+            lblTitle.Text = $"✏️ Chỉnh sửa máy bay #{dto.AircraftId}";
+            btnSave.Text = "💾 Cập nhật";
         }
     }
 }

@@ -42,6 +42,12 @@ namespace GUI.Features.Seat.SubFeatures
             LoadData();
         }
 
+        // ✅ Public method để refresh từ bên ngoài
+        public void Refresh()
+        {
+            RefreshSeatMap();
+        }
+
         // --------------------------- INIT ---------------------------
         private void InitializeComponent()
         {
@@ -196,55 +202,68 @@ namespace GUI.Features.Seat.SubFeatures
         }
 
         // --------------------------- BUILD MAP ---------------------------
-        // --------------------------- BUILD MAP ---------------------------
         private void RefreshSeatMap()
         {
-            // BƯỚC QUAN TRỌNG: Giải phóng Handle Win32 của các controls cũ
-            // Đây là bước khắc phục lỗi 'Error creating window handle.'
-            foreach (Control control in stack.Controls)
+            try
             {
-                // Gọi Dispose() cho các control trước khi xóa
-                control.Dispose();
-            }
+                // ✅ QUAN TRỌNG: Reload dữ liệu từ database trước khi rebuild UI
+                System.Diagnostics.Debug.WriteLine("[SeatMapControl] RefreshSeatMap() - Reloading data from database...");
+                seats = _bus.GetAllWithDetails();
+                System.Diagnostics.Debug.WriteLine($"[SeatMapControl] Loaded {seats.Count} flight seats from database");
 
-            stack.Controls.Clear();
-            stack.RowStyles.Clear();
-            stack.RowCount = 0;
-
-            string selectedFlight = cbFlight.SelectedItem?.ToString() ?? "Tất cả";
-            string selectedAircraft = cbAircraft.SelectedItem?.ToString() ?? "Tất cả";
-            string selectedClass = cbClass.SelectedItem?.ToString() ?? "Tất cả";
-
-            var filtered = seats.AsEnumerable();
-
-            if (selectedFlight != "Tất cả")
-                filtered = filtered.Where(s => s.FlightName == selectedFlight);
-
-            if (selectedAircraft != "Tất cả")
-                filtered = filtered.Where(s => s.AircraftName == selectedAircraft);
-
-            if (selectedClass != "Tất cả")
-                filtered = filtered.Where(s => s.ClassName == selectedClass);
-
-            var list = filtered.ToList();
-
-            if (list.Count == 0)
-            {
-                var noDataLabel = new Label
+                // BƯỚC QUAN TRỌNG: Giải phóng Handle Win32 của các controls cũ
+                // Đây là bước khắc phục lỗi 'Error creating window handle.'
+                foreach (Control control in stack.Controls)
                 {
-                    Text = "Không có dữ liệu ghế phù hợp với điều kiện tìm kiếm.",
-                    Font = new Font("Segoe UI", 12, FontStyle.Italic),
-                    AutoSize = true,
-                    Padding = new Padding(8),
-                    Anchor = AnchorStyles.None
-                };
-                stack.RowCount++;
-                stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-                stack.Controls.Add(noDataLabel, 0, 0);
-                return;
-            }
+                    // Gọi Dispose() cho các control trước khi xóa
+                    control.Dispose();
+                }
 
-            BuildCompleteSeatMap(list);
+                stack.Controls.Clear();
+                stack.RowStyles.Clear();
+                stack.RowCount = 0;
+
+                string selectedFlight = cbFlight.SelectedItem?.ToString() ?? "Tất cả";
+                string selectedAircraft = cbAircraft.SelectedItem?.ToString() ?? "Tất cả";
+                string selectedClass = cbClass.SelectedItem?.ToString() ?? "Tất cả";
+
+                var filtered = seats.AsEnumerable();
+
+                if (selectedFlight != "Tất cả")
+                    filtered = filtered.Where(s => s.FlightName == selectedFlight);
+
+                if (selectedAircraft != "Tất cả")
+                    filtered = filtered.Where(s => s.AircraftName == selectedAircraft);
+
+                if (selectedClass != "Tất cả")
+                    filtered = filtered.Where(s => s.ClassName == selectedClass);
+
+                var list = filtered.ToList();
+
+                if (list.Count == 0)
+                {
+                    var noDataLabel = new Label
+                    {
+                        Text = "Không có dữ liệu ghế phù hợp với điều kiện tìm kiếm.",
+                        Font = new Font("Segoe UI", 12, FontStyle.Italic),
+                        AutoSize = true,
+                        Padding = new Padding(8),
+                        Anchor = AnchorStyles.None
+                    };
+                    stack.RowCount++;
+                    stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+                    stack.Controls.Add(noDataLabel, 0, 0);
+                    return;
+                }
+
+                BuildCompleteSeatMap(list);
+                System.Diagnostics.Debug.WriteLine("[SeatMapControl] RefreshSeatMap() completed successfully");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi làm mới sơ đồ ghế:\n{ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                System.Diagnostics.Debug.WriteLine($"[SeatMapControl] RefreshSeatMap() error: {ex.Message}");
+            }
         }
         private void BuildCompleteSeatMap(List<FlightSeatDTO> filteredSeats)
         {

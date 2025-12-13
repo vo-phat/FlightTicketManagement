@@ -1,4 +1,5 @@
-﻿using BUS.Ticket;
+﻿using BUS.Auth;
+using BUS.Ticket;
 using DTO.Ticket;
 using GUI.Features.Ticket.subTicket;
 using GUI.Features.Baggage.SubFeatures;
@@ -192,17 +193,21 @@ namespace GUI.Features.Ticket {
             pnlHeaderTicket.Controls.Add(btnFrmPassengerInfoTiket);
 
             // --- Tab: Quản lý vé (idx = 2) ---
-            if (activeIndex == TAB_TICKET_OPS)
+            // Chỉ hiển thị cho Staff và Admin, ẩn với User (khách hàng)
+            if (UserSession.CurrentAppRole != DTO.Auth.AppRole.User)
             {
-                btnOpsTicket = new SecondaryButton("Quản lý vé");
-                //btnOpsTicket = new PrimaryButton("Quản lý vé");
-            }
-            else
-                btnOpsTicket = new SecondaryButton("Quản lý vé");
+                if (activeIndex == TAB_TICKET_OPS)
+                {
+                    btnOpsTicket = new SecondaryButton("Quản lý vé");
+                    //btnOpsTicket = new PrimaryButton("Quản lý vé");
+                }
+                else
+                    btnOpsTicket = new SecondaryButton("Quản lý vé");
 
-            btnOpsTicket.AutoSize = true;
-            btnOpsTicket.Click += btnOpsTicket_Click;
-            pnlHeaderTicket.Controls.Add(btnOpsTicket);
+                btnOpsTicket.AutoSize = true;
+                btnOpsTicket.Click += btnOpsTicket_Click;
+                pnlHeaderTicket.Controls.Add(btnOpsTicket);
+            }
 
             // --- Tab: Lịch sử vé (idx = 1) ---
             if (activeIndex == TAB_HISTORY)

@@ -78,6 +78,74 @@ namespace BUS.FlightSeat
         }
         #endregion
 
+        #region Cập nhật hạng ghế trong bảng Seats
+        /// <summary>
+        /// Cập nhật class_id trong bảng Seats (ảnh hưởng tất cả chuyến bay dùng máy bay này)
+        /// </summary>
+        public bool UpdateSeatClass(int seatId, int newClassId, out string message)
+        {
+            message = string.Empty;
+
+            if (seatId <= 0)
+            {
+                message = "ID ghế không hợp lệ";
+                return false;
+            }
+
+            if (newClassId <= 0)
+            {
+                message = "Hạng ghế không hợp lệ";
+                return false;
+            }
+
+            try
+            {
+                bool result = _dao.UpdateSeatClass(seatId, newClassId);
+                message = result ? "Cập nhật hạng ghế thành công" : "Không thể cập nhật hạng ghế";
+                return result;
+            }
+            catch (Exception ex)
+            {
+                message = $"Lỗi khi cập nhật hạng ghế: {ex.Message}";
+                return false;
+            }
+        }
+        #endregion
+
+        #region Cập nhật giá ghế trong Flight_Seats
+        /// <summary>
+        /// Cập nhật chỉ giá trong bảng Flight_Seats
+        /// </summary>
+        public bool UpdateFlightSeatPrice(int flightSeatId, decimal newPrice, out string message)
+        {
+            message = string.Empty;
+
+            if (flightSeatId <= 0)
+            {
+                message = "ID ghế chuyến bay không hợp lệ";
+                return false;
+            }
+
+            if (newPrice < 0)
+            {
+                message = "Giá không thể âm";
+                return false;
+            }
+
+            try
+            {
+                bool result = _dao.UpdateFlightSeatPrice(flightSeatId, newPrice);
+                message = result ? "Cập nhật giá ghế thành công" : "Không thể cập nhật giá";
+                return result;
+            }
+            catch (Exception ex)
+            {
+                message = $"Lỗi khi cập nhật giá ghế: {ex.Message}";
+                return false;
+            }
+        }
+        #endregion
+
         #region Cập nhật đầy đủ thông tin ghế (flight_id, seat_id, base_price, seat_status)
         public bool UpdateFlightSeat(FlightSeatDTO dto, out string message)
         {

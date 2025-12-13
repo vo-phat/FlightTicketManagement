@@ -50,6 +50,13 @@ namespace GUI.Features.Seat
             // 3. Từ Detail -> List (Đóng)
             seatDetail.CloseRequested += SeatDetail_CloseRequested;
 
+            // 4. Từ FlightSeats -> Refresh SeatList (Khi update class_id)
+            flightSeats.DataUpdated += (s, e) =>
+            {
+                System.Diagnostics.Debug.WriteLine("[SeatControl] DataUpdated event received, refreshing SeatListControl...");
+                seatList.LoadData();
+            };
+
             header.SuspendLayout();
             SuspendLayout();
 
@@ -100,6 +107,13 @@ namespace GUI.Features.Seat
         private void SeatDetail_CloseRequested(object sender, EventArgs e)
         {
             SwitchTab(0); // Chuyển trở lại tab danh sách (index 0)
+        }
+
+        // ✅ Public method để refresh SeatListControl từ FlightSeatControl
+        public void RefreshSeatList()
+        {
+            System.Diagnostics.Debug.WriteLine("[SeatControl] RefreshSeatList() called");
+            seatList?.LoadData();
         }
 
         private void RebuildTabs()
@@ -157,6 +171,18 @@ namespace GUI.Features.Seat
                 DETAIL_TAB_INDEX => seatDetail,
                 _ => seatList
             };
+
+            // ✅ Tự động refresh khi chuyển vào các tab
+            if (idx == 0 && seatList != null)
+            {
+                System.Diagnostics.Debug.WriteLine("[SeatControl] Switching to SeatListControl, calling LoadData()...");
+                seatList.LoadData();
+            }
+            else if (idx == 2 && seatMap != null)
+            {
+                System.Diagnostics.Debug.WriteLine("[SeatControl] Switching to SeatMapControl, calling Refresh()...");
+                seatMap.Refresh();
+            }
 
             // Đảm bảo Header luôn nằm trên các tab nội dung
             current.Visible = true;

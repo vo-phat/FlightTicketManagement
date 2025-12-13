@@ -87,9 +87,10 @@ namespace GUI.Features.Seat.SubFeatures
 
             // Filters
             filterLeft = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, WrapContents = false };
-            cbAircraft = new UnderlinedComboBox("Máy bay", new object[] { "Tất cả" }) { Width = 180, Margin = new Padding(0, 0, 24, 0) };
-            cbClass = new UnderlinedComboBox("Hạng", new object[] { "Tất cả" }) { Width = 180, Margin = new Padding(0, 0, 24, 0) };
+            cbAircraft = new UnderlinedComboBox("Máy bay", new object[] { }) { Width = 180, Margin = new Padding(0, 0, 24, 0) };
+            cbClass = new UnderlinedComboBox("Hạng", new object[] { }) { Width = 180, Margin = new Padding(0, 0, 24, 0) };
             txtSeat = new UnderlinedTextField("Số ghế (VD: 12A)", "") { Width = 160, Margin = new Padding(0, 0, 24, 0) };
+            
             filterLeft.Controls.AddRange(new Control[] { cbAircraft, cbClass, txtSeat });
 
             filterRight = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, FlowDirection = FlowDirection.RightToLeft, WrapContents = false };
@@ -321,11 +322,14 @@ namespace GUI.Features.Seat.SubFeatures
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine("[SeatListControl] LoadData() called - refreshing from database...");
                 var seatsWithDetails = _seatBUS.GetAllSeatsWithDetails();
                 datasource = seatsWithDetails;
+                System.Diagnostics.Debug.WriteLine($"[SeatListControl] Loaded {seatsWithDetails.Count} seats from database");
                 UpdateFilterComboBoxes(seatsWithDetails);
                 LoadFormComboboxData(seatsWithDetails);
                 ApplyFilter();
+                System.Diagnostics.Debug.WriteLine("[SeatListControl] LoadData() completed successfully");
             }
             catch (Exception ex)
             {
@@ -523,11 +527,35 @@ namespace GUI.Features.Seat.SubFeatures
             cbAircraft.SelectedIndexChanged -= (_, __) => ApplyFilter();
             cbClass.SelectedIndexChanged -= (_, __) => ApplyFilter();
 
-            var aircrafts = data.Select(x => $"{x.AircraftManufacturer} {x.AircraftModel}").Distinct().OrderBy(x => x).ToList();
-            cbAircraft.Items.Clear();
-            cbAircraft.Items.Add("Tất cả");
-            cbAircraft.Items.AddRange(aircrafts.Cast<object>().ToArray());
-            cbAircraft.SelectedIndex = 0;
+            // ✅ FIX: Load ALL aircraft from AircraftBUS, not just aircraft with seats
+            try
+            {
+                var aircraftBus = new BUS.Aircraft.AircraftBUS();
+                var allAircrafts = aircraftBus.GetAllAircrafts();
+                
+                var aircrafts = allAircrafts
+                    .Where(a => a.AirlineId == 1)  // Vietnam Airlines only
+                    .Select(a => $"{a.Manufacturer} {a.Model}")
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .ToList();
+                
+                cbAircraft.Items.Clear();
+                cbAircraft.Items.Add("Tất cả");
+                cbAircraft.Items.AddRange(aircrafts.Cast<object>().ToArray());
+                cbAircraft.SelectedIndex = 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[SeatListControl] Error loading aircraft: {ex.Message}");
+                // Fallback to seats-based list
+                var aircrafts = data.Select(x => $"{x.AircraftManufacturer} {x.AircraftModel}").Distinct().OrderBy(x => x).ToList();
+                cbAircraft.Items.Clear();
+                cbAircraft.Items.Add("Tất cả");
+                cbAircraft.Items.AddRange(aircrafts.Cast<object>().ToArray());
+                cbAircraft.SelectedIndex = 0;
+            }
+            
             var allCabinClasses = _cabinClassBUS.GetAllCabinClasses();
             var classOrder = new Dictionary<string, int>
             {

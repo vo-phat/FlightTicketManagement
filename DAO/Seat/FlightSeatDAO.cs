@@ -119,10 +119,61 @@ namespace DAO.FlightSeat
         }
         #endregion
 
+        #region Cập nhật hạng ghế trong bảng Seats
+        public bool UpdateSeatClass(int seatId, int newClassId)
+        {
+            const string query = @"UPDATE seats SET class_id = @classId WHERE seat_id = @seatId";
+
+            try
+            {
+                using var conn = DatabaseConnection.GetConnection();
+                conn.Open();
+
+                using var cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@classId", newClassId);
+                cmd.Parameters.AddWithValue("@seatId", seatId);
+
+                return cmd.ExecuteNonQuery() > 0;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi cập nhật hạng ghế trong bảng Seats: {ex.Message}", ex);
+            }
+        }
+        #endregion
+
+        #region Cập nhật giá trong Flight_Seats
+        public bool UpdateFlightSeatPrice(int flightSeatId, decimal newPrice)
+        {
+            const string query = @"UPDATE flight_seats SET base_price = @price WHERE flight_seat_id = @id";
+
+            try
+            {
+                using var conn = DatabaseConnection.GetConnection();
+                conn.Open();
+
+                using var cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@price", newPrice);
+                cmd.Parameters.AddWithValue("@id", flightSeatId);
+
+                return cmd.ExecuteNonQuery() > 0;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi cập nhật giá ghế: {ex.Message}", ex);
+            }
+        }
+        #endregion
 
         public bool UpdateFlightSeat(FlightSeatDTO dto)
         {
-            const string query = @"
+            const string checkTicketsQuery = @"
+        SELECT COUNT(*) 
+        FROM tickets t
+        JOIN booking_passengers bp ON t.ticket_passenger_id = bp.booking_passenger_id
+        WHERE t.flight_seat_id = @flightSeatId";
+
+            const string updateQuery = @"
         UPDATE flight_seats
         SET 
             flight_id = @flightId,
@@ -136,10 +187,34 @@ namespace DAO.FlightSeat
                 using var conn = DatabaseConnection.GetConnection();
                 conn.Open();
 
+                // ✅ KIỂM TRA: Nếu ghế đã có vé đặt, KHÔNG CHO PHÉP thay đổi seat_id
+                using (var checkCmd = new MySqlCommand(checkTicketsQuery, conn))
+                {
+                    checkCmd.Parameters.AddWithValue("@flightSeatId", dto.FlightSeatId);
+                    int ticketCount = Convert.ToInt32(checkCmd.ExecuteScalar());
+
+                    if (ticketCount > 0)
+                    {
+                        // Lấy seat_id hiện tại để so sánh
+                        const string getCurrentSeatQuery = "SELECT seat_id FROM flight_seats WHERE flight_seat_id = @id";
+                        using var getCurrentCmd = new MySqlCommand(getCurrentSeatQuery, conn);
+                        getCurrentCmd.Parameters.AddWithValue("@id", dto.FlightSeatId);
+                        int currentSeatId = Convert.ToInt32(getCurrentCmd.ExecuteScalar());
+
+                        // Nếu đang cố thay đổi seat_id (tức là đổi sang ghế khác/hạng khác)
+                        if (currentSeatId != dto.SeatId)
+                        {
+                            throw new Exception(
+                                $"❌ Không thể thay đổi hạng ghế vì đã có {ticketCount} vé được đặt cho ghế này!\n\n" +
+                                "Vui lòng chỉ cập nhật giá hoặc hủy các vé trước khi thay đổi hạng ghế.");
+                        }
+                    }
+                }
+
                 // [DEBUG] In ra giá trị trước khi UPDATE
                 System.Diagnostics.Debug.WriteLine($"[BEFORE UPDATE] FlightSeatId: {dto.FlightSeatId}, SeatId: {dto.SeatId}, ClassId: {dto.ClassId}");
 
-                using var cmd = new MySqlCommand(query, conn);
+                using var cmd = new MySqlCommand(updateQuery, conn);
                 cmd.Parameters.AddWithValue("@flightId", dto.FlightId);
                 cmd.Parameters.AddWithValue("@seatId", dto.SeatId);
                 cmd.Parameters.AddWithValue("@price", dto.BasePrice);
