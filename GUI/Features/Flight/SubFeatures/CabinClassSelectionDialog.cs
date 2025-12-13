@@ -469,8 +469,8 @@ namespace GUI.Features.Flight.SubFeatures
             var btnContinue = new Button
             {
                 Text = "Tiếp tục →",
-                Size = new Size(150, 45),
-                Location = new Point(340, 460),
+                Size = new Size(120, 45),
+                Location = new Point(320, 460),
                 BackColor = Color.FromArgb(46, 125, 50),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
@@ -506,8 +506,8 @@ namespace GUI.Features.Flight.SubFeatures
             var btnCancel = new Button
             {
                 Text = "Hủy",
-                Size = new Size(120, 45),
-                Location = new Point(500, 460),
+                Size = new Size(100, 45),
+                Location = new Point(460, 460),
                 BackColor = Color.FromArgb(200, 200, 200),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
