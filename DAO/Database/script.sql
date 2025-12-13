@@ -1129,3 +1129,54 @@ CREATE INDEX idx_flights_is_deleted ON Flights(is_deleted);
 UPDATE Flights SET is_deleted = FALSE WHERE is_deleted IS NULL;
 
 SELECT 'Migration completed successfully!' AS Status;
+
+--
+-- Cấu trúc bảng cho bảng `ticket_refund_policy`
+--
+
+CREATE TABLE `ticket_refund_policy` (
+  `policy_id` int(11) NOT NULL,
+  `class_id` int(11) NOT NULL,
+  `is_refundable` tinyint(1) NOT NULL,
+  `refund_fee_percent` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `ticket_refund_policy`
+--
+
+INSERT INTO `ticket_refund_policy` (`policy_id`, `class_id`, `is_refundable`, `refund_fee_percent`) VALUES
+(1, 1, 1, 0),
+(2, 2, 1, 10),
+(3, 3, 1, 20),
+(4, 4, 0, 100);
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `ticket_status_history`
+--
+
+CREATE TABLE `ticket_status_history` (
+  `id` int(11) NOT NULL,
+  `ticket_id` int(11) NOT NULL,
+  `old_status` enum('BOOKED','CONFIRMED','CHECKED_IN','BOARDED','CANCELLED','REFUNDED') DEFAULT NULL,
+  `new_status` enum('BOOKED','CONFIRMED','CHECKED_IN','BOARDED','CANCELLED','REFUNDED') DEFAULT NULL,
+  `changed_by` int(11) DEFAULT NULL,
+  `change_reason` varchar(255) DEFAULT NULL,
+  `changed_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+--
+-- Các ràng buộc cho bảng `ticket_refund_policy`
+--
+ALTER TABLE `ticket_refund_policy`
+  ADD CONSTRAINT `fk_trp_class` FOREIGN KEY (`class_id`) REFERENCES `cabin_classes` (`class_id`);
+
+--
+-- Các ràng buộc cho bảng `ticket_status_history`
+--
+ALTER TABLE `ticket_status_history`
+  ADD CONSTRAINT `ticket_status_history_ibfk_1` FOREIGN KEY (`ticket_id`) REFERENCES `tickets` (`ticket_id`);
+COMMIT;

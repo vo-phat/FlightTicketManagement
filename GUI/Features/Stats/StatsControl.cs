@@ -402,8 +402,9 @@ namespace GUI.Features.Stats
             var result = StatsBUS.Instance.GetRevenueReport(year);
             if (result.Success && result.Data is RevenueReportViewModel report)
             {
-                // Update summary label
-                lblRevenueSummary.Text = $"Tổng doanh thu: {report.TotalRevenue:N0} VND  |  Tổng giao dịch: {report.TotalTransactions:N0}";
+                // Update summary label - REMOVED as per user request
+                // lblRevenueSummary.Text = $"Tổng doanh thu: {report.TotalRevenue:N0} VND  |  Tổng giao dịch: {report.TotalTransactions:N0}";
+                lblRevenueSummary.Visible = false; // Hide the label
                 
                 // Chart
                 chartRevenue.Series.Clear();
