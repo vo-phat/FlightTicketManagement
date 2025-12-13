@@ -111,7 +111,7 @@ namespace GUI.Features.Aircraft.SubFeatures
             // Registration Number (Auto-generated, read-only)
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             grid.Controls.Add(CreateKeyLabel("Số hiệu đăng ký:"), 0, row);
-            txtRegNum = new UnderlinedTextField("", "VN-A###") 
+            txtRegNum = new UnderlinedTextField("", "Sinh tự động") 
             { 
                 Dock = DockStyle.Fill, 
                 Margin = new Padding(0, 8, 0, 8),
@@ -342,7 +342,7 @@ namespace GUI.Features.Aircraft.SubFeatures
 
         private void ClearAndReset()
         {
-            txtRegNum.Text = "VN-A###";
+            txtRegNum.Text = "Sinh tự động";
             cbModel.InnerCombo.SelectedIndex = -1;
             cbModel.InnerCombo.Text = "";
             cbManu.InnerCombo.SelectedIndex = -1;

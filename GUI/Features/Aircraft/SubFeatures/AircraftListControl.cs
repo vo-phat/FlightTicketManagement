@@ -17,7 +17,6 @@ namespace GUI.Features.Aircraft.SubFeatures
         
         // Controls
         private Panel headerPanel;
-        private Label lblTitle;
         private Panel searchPanel;
         private TextBox txtSearch;
         private ComboBox cboStatus;
@@ -57,15 +56,6 @@ namespace GUI.Features.Aircraft.SubFeatures
                 Dock = DockStyle.Top,
                 Height = 80,
                 BackColor = Color.Transparent
-            };
-
-            lblTitle = new Label
-            {
-                Text = "✈️ Quản Lý Máy Bay",
-                Font = new Font("Segoe UI", 24F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(31, 31, 31),
-                AutoSize = true,
-                Location = new Point(0, 15)
             };
 
             // === SEARCH PANEL ===
@@ -180,7 +170,6 @@ namespace GUI.Features.Aircraft.SubFeatures
             };
 
             // Add controls
-            headerPanel.Controls.Add(lblTitle);
             searchPanel.Controls.AddRange(new Control[] { 
                 txtSearch, btnSearch, btnClear, btnAddNew 
             });
