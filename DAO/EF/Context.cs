@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using DAO.Database;
+using DTO.Ticket;
 
 namespace DAO.EF {
     public class Context : DbContext {
@@ -8,6 +9,8 @@ namespace DAO.EF {
         public DbSet<AccountRole> AccountRoles => Set<AccountRole>();
         public DbSet<Permission> Permissions => Set<Permission>();
         public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+        public DbSet<TicketHistory> TicketsHistory { get; set; }
+        public DbSet<Tickets> Tickets { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
             if (!optionsBuilder.IsConfigured) {
@@ -88,6 +91,12 @@ namespace DAO.EF {
                       .WithMany(p => p.RolePermissions)
                       .HasForeignKey(rp => rp.PermissionId);
             });
+            modelBuilder.Entity<TicketHistory>()
+                .HasNoKey()
+                .ToTable("ticket_history"); // Tên bảng thật trong DB
+            modelBuilder.Entity<Tickets>()
+                .HasNoKey()
+                .ToTable("tickets"); // Tên bảng thật trong DB
         }
     }
 }

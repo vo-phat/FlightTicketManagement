@@ -31,7 +31,7 @@ namespace GUI.Features.Setting.SubFeatures {
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
-            ClientSize = new Size(640, 500);
+            ClientSize = new Size(700, 500);
 
             // Lấy danh sách role từ BUS (EF + LINQ)
             _allRoles = _service.GetAllRoles();
@@ -108,7 +108,7 @@ namespace GUI.Features.Setting.SubFeatures {
             pwdLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
             var lblPwd = new Label {
-                Text = "Mật khẩu mới (tùy chọn):",
+                Text = "Mật khẩu mới:",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
                 Margin = new Padding(0, 6, 8, 0)

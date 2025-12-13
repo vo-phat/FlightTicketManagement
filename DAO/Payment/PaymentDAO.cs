@@ -473,5 +473,26 @@ namespace DAO.Payment
             }
         }
         #endregion
+
+
+        public bool RecordPayment(PaymentDTO payment, MySqlTransaction tran)
+        {
+            string query = @"
+        INSERT INTO payments (booking_id, amount, payment_method, payment_date, status)
+        VALUES (@booking_id, @amount, @method, @date, @status)";
+
+            using (var command = new MySqlCommand(query, tran.Connection, tran))
+            {
+                command.Parameters.AddWithValue("@booking_id", payment.BookingId);
+                command.Parameters.AddWithValue("@amount", payment.Amount);
+                command.Parameters.AddWithValue("@method", payment.PaymentMethod);
+                command.Parameters.AddWithValue("@date", payment.PaymentDate);
+                command.Parameters.AddWithValue("@status", payment.Status);
+
+                return command.ExecuteNonQuery() > 0;
+            }
+        }
+
+
     }
 }

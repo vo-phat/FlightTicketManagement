@@ -157,7 +157,7 @@ namespace GUI.Features.CabinClass.SubFeatures
             }
         }
 
-        // ... (Các phương thức vẽ và xử lý click giữ nguyên) ...
+
         private (Rectangle rcView, Rectangle rcEdit, Rectangle rcDel) GetRects(Rectangle b, Font f)
         {
             int pad = 6, x = b.Left + pad, y = b.Top + (b.Height - f.Height) / 2;
@@ -226,9 +226,17 @@ namespace GUI.Features.CabinClass.SubFeatures
                 {
                     string message;
                     bool ok = _bus.DeleteCabinClass(id, out message);
-                    MessageBox.Show(message, ok ? "Thành công" : "Lỗi",
-                        MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
-                    if (ok) RefreshList();
+
+                    if (ok)
+                    {
+                        MessageBox.Show(message, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        RefreshList();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Không thể xóa vì hạng ghế đang được sử dụng", "Không thể xóa",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
                 }
             }
         }

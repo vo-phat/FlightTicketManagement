@@ -114,10 +114,22 @@ namespace BUS.FlightSeat
                 return false;
             }
 
+            // Chuẩn hóa trạng thái trước khi gửi xuống DAO
+            dto.SeatStatus = statusUpper;
+
             try
             {
                 bool result = _dao.UpdateFlightSeat(dto);
-                message = result ? "Cập nhật thông tin ghế thành công!" : "Không thể cập nhật thông tin ghế.";
+
+                if (result)
+                {
+                    message = $"Cập nhật thông tin ghế thành công! Hạng ghế: {dto.ClassName}";
+                }
+                else
+                {
+                    message = "Không thể cập nhật thông tin ghế.";
+                }
+
                 return result;
             }
             catch (Exception ex)
@@ -127,7 +139,6 @@ namespace BUS.FlightSeat
             }
         }
         #endregion
-
         #region Xem sơ đồ ghế
         public List<FlightSeatDTO> GetSeatMap(int? flightId, int? aircraftId, int? classId)
         {
@@ -152,6 +163,25 @@ namespace BUS.FlightSeat
             catch (Exception ex)
             {
                 throw new Exception($"Lỗi khi tải danh sách ghế theo máy bay: {ex.Message}", ex);
+            }
+        }
+        #endregion
+
+        #region Lấy số ghế trống theo hạng vé
+        /// <summary>
+        /// Lấy số ghế trống (AVAILABLE) cho chuyến bay theo từng hạng vé
+        /// </summary>
+        /// <param name="flightId">Mã chuyến bay</param>
+        /// <returns>Dictionary với key = class_id, value = số ghế AVAILABLE</returns>
+        public Dictionary<int, int> GetAvailableSeatsByClass(int flightId)
+        {
+            try
+            {
+                return _dao.GetAvailableSeatsByClass(flightId);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi lấy số ghế trống theo hạng vé: {ex.Message}", ex);
             }
         }
         #endregion

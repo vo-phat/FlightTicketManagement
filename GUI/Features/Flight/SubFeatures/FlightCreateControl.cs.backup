@@ -1,0 +1,646 @@
+using System;
+using System.Drawing;
+using System.Linq;
+using System.Windows.Forms;
+using GUI.Components.Inputs;
+using GUI.Components.Buttons;
+using DTO.Flight;
+using DTO.Aircraft;
+using DTO.Route;
+using BUS.Flight;
+using BUS.Aircraft;
+using BUS.Route;
+using BUS.Airport;
+
+namespace GUI.Features.Flight.SubFeatures
+{
+    public class FlightCreateControl : UserControl
+    {
+        private UnderlinedTextField _txtFlightNumber;
+        private UnderlinedComboBox _cbAircraft;
+        private UnderlinedComboBox _cbRoute;
+        private UnderlinedComboBox _cbStatus;
+        private DateTimePickerCustom _dtpDepartureTime;
+        private DateTimePickerCustom _dtpArrivalTime;
+        private PrimaryButton _btnSave;
+        private SecondaryButton _btnCancel;
+        private Label _lblTitle;
+        private Label _lblAircraftInfo;
+        private Label _lblRouteInfo;
+        private Label _lblDuration;
+        private Panel _infoPanel;
+
+        private readonly FlightBUS _flightBus = FlightBUS.Instance;
+        private readonly AircraftBUS _aircraftBus = new AircraftBUS();
+        private readonly RouteBUS _routeBus = new RouteBUS();
+        private readonly AirportBUS _airportBus = new AirportBUS();
+
+        private int _editingFlightId = 0;
+        private bool _isEditMode = false;
+
+        public event EventHandler? FlightSaved;
+        public event EventHandler? FlightSavedUpdated;
+
+        public FlightCreateControl()
+        {
+            InitializeComponent();
+            LoadComboBoxData();
+            SetCreateMode();
+        }
+
+        private void InitializeComponent()
+        {
+            Dock = DockStyle.Fill;
+            BackColor = Color.FromArgb(240, 244, 248);
+
+            // Title Panel
+            var titlePanel = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 80,
+                BackColor = Color.White,
+                Padding = new Padding(30, 20, 30, 12)
+            };
+
+            _lblTitle = new Label
+            {
+                Text = "✈️ Tạo chuyến bay mới",
+                Font = new Font("Segoe UI", 22F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(30, 58, 138),
+                AutoSize = true
+            };
+            
+            var lblSubtitle = new Label
+            {
+                Text = "Nhập thông tin chi tiết để tạo chuyến bay mới",
+                Font = new Font("Segoe UI", 10F),
+                ForeColor = Color.FromArgb(100, 116, 139),
+                AutoSize = true,
+                Location = new Point(30, 52)
+            };
+            
+            titlePanel.Controls.Add(_lblTitle);
+            titlePanel.Controls.Add(lblSubtitle);
+
+            // Main Scroll Panel
+            var scrollPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = Color.FromArgb(240, 244, 248),
+                Padding = new Padding(30, 20, 30, 20)
+            };
+            // Section: Basic Information
+            var lblSection1 = new Label
+            {
+                Text = "📋 THÔNG TIN CƠ BẢN",
+                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(51, 65, 85),
+                AutoSize = true,
+                Margin = new Padding(0, 10, 0, 15)
+            };
+            formPanel.Controls.Add(lblSection1, 0, 0);
+            formPanel.SetColumnSpan(lblSection1, 2);
+
+            // Input Controls with improved spacing
+            _txtFlightNumber = new UnderlinedTextField("Số hiệu chuyến bay *", "VD: VN123")
+            {
+                Width = 360,
+                Margin = new Padding(0, 5, 15, 20)
+            };
+
+            _cbStatus = new UnderlinedComboBox("Trạng thái *", new[] { "SCHEDULED", "DELAYED", "CANCELLED", "COMPLETED" })
+            {
+                Width = 360,
+                Margin = new Padding(15, 5, 0, 20)
+            };
+            _cbStatus.InnerComboBox.SelectedIndex = 0;
+
+            formPanel.Controls.Add(_txtFlightNumber, 0, 1);
+            formPanel.Controls.Add(_cbStatus, 1, 1);
+
+            // Section: Aircraft & Route
+            var lblSection2 = new Label
+            {
+                Text = "✈️ MÁY BAY & TUYẾN BAY",
+                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(51, 65, 85),
+                AutoSize = true,
+                Margin = new Padding(0, 15, 0, 15)
+            };
+            formPanel.Controls.Add(lblSection2, 0, 2);
+            formPanel.SetColumnSpan(lblSection2, 2);
+
+            _cbAircraft = new UnderlinedComboBox("Máy bay *", Array.Empty<string>())
+            {
+                Width = 360,
+                Margin = new Padding(0, 5, 15, 10)
+            };
+            _cbAircraft.InnerComboBox.SelectedIndexChanged += (s, e) => UpdateAircraftInfo();
+
+            _lblAircraftInfo = new Label
+            {
+                Text = "ℹ️ Chọn máy bay để xem thông tin chi tiết",
+                Font = new Font("Segoe UI", 9F, FontStyle.Italic),
+                ForeColor = Color.FromArgb(100, 116, 139),
+                AutoSize = false,
+                Width = 360,
+                Height = 40,
+                Margin = new Padding(0, 0, 15, 20)
+            };
+
+            _cbRoute = new UnderlinedComboBox("Tuyến bay *", Array.Empty<string>())
+            {
+                Width = 360,
+                Margin = new Padding(15, 5, 0, 10)
+            };
+            _cbRoute.InnerComboBox.SelectedIndexChanged += (s, e) => UpdateRouteInfo();
+
+            _lblRouteInfo = new Label
+            {
+                Text = "ℹ️ Chọn tuyến bay để xem thông tin chi tiết",
+                Font = new Font("Segoe UI", 9F, FontStyle.Italic),
+                ForeColor = Color.FromArgb(100, 116, 139),
+                AutoSize = false,
+                Width = 360,
+                Height = 40,
+                Margin = new Padding(15, 0, 0, 20)
+            };
+
+            // Info Panel - Quick Summary
+            _infoPanel = new Panel
+            {
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                BackColor = Color.FromArgb(239, 246, 255),
+                Padding = new Padding(20),
+                Margin = new Padding(0, 20, 0, 0),
+                Visible = false
+            };
+
+            var lblInfoTitle = new Label
+            {
+                Text = "📊 TÓM TẮT CHUYẾN BAY",
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(30, 58, 138),
+                AutoSize = true,
+                Location = new Point(20, 20)
+            };
+            _infoPanel.Controls.Add(lblInfoTitle);
+
+            formCard.Controls.Add(_infoPanel);
+            formCard.Controls.Add(formPanel);
+
+            // Button Panel
+            var buttonPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                FlowDirection = FlowDirection.RightToLeft,
+                AutoSize = true,
+                Padding = new Padding(0, 25, 0, 0),
+                BackColor = Color.Transparent
+            };
+
+            _btnSave = new PrimaryButton("💾 Lưu chuyến bay")
+            {
+                Width = 180,
+                Height = 45,
+                Margin = new Padding(0, 0, 10, 0),
+                Font = new Font("Segoe UI", 11F, FontStyle.Bold)
+            };
+            _btnSave.Click += BtnSave_Click;
+
+            _btnCancel = new SecondaryButton("✖ Hủy")
+            {
+                Width = 120,
+                Height = 45,
+                Margin = new Padding(0),
+                Font = new Font("Segoe UI", 11F)
+            };
+            _btnCancel.Click += BtnCancel_Click;
+
+            buttonPanel.Controls.Add(_btnSave);
+            buttonPanel.Controls.Add(_btnCancel);
+
+            formCard.Controls.Add(buttonPanel);
+            
+            // Layout Assembly
+            scrollPanel.Controls.Add(formCard);
+            Controls.Add(scrollPanel);
+            Controls.Add(titlePanel);
+        }
+
+        private void UpdateAircraftInfo()
+        {
+            if (_cbAircraft.InnerComboBox.SelectedIndex < 0)
+            {
+                _lblAircraftInfo.Text = "ℹ️ Chọn máy bay để xem thông tin chi tiết";
+                _lblAircraftInfo.ForeColor = Color.FromArgb(100, 116, 139);
+                return;
+            }
+
+            try
+            {
+                int aircraftId = Convert.ToInt32(_cbAircraft.InnerComboBox.SelectedValue);
+                var aircraft = _aircraftBus.GetAllAircrafts().FirstOrDefault(a => a.AircraftId == aircraftId);
+                
+                if (aircraft != null)
+                {
+                    _lblAircraftInfo.Text = $"✓ {aircraft.Model} | {aircraft.Manufacturer}\n" +
+                                          $"   Sức chứa: {aircraft.Capacity} ghế | Năm SX: {aircraft.ManufactureYear}";
+                    _lblAircraftInfo.ForeColor = Color.FromArgb(34, 197, 94);
+                }
+            }
+            catch { }
+        }
+
+        private void UpdateRouteInfo()
+        {
+            if (_cbRoute.InnerComboBox.SelectedIndex < 0)
+            {
+                _lblRouteInfo.Text = "ℹ️ Chọn tuyến bay để xem thông tin chi tiết";
+                _lblRouteInfo.ForeColor = Color.FromArgb(100, 116, 139);
+                return;
+            }
+
+            try
+            {
+                int routeId = Convert.ToInt32(_cbRoute.InnerComboBox.SelectedValue);
+                var route = _routeBus.GetAllRoutes().FirstOrDefault(r => r.RouteId == routeId);
+                
+                if (route != null)
+                {
+                    var airports = _airportBus.GetAllAirports();
+                    var depAirport = airports.FirstOrDefault(a => a.AirportId == route.DeparturePlaceId);
+                    var arrAirport = airports.FirstOrDefault(a => a.AirportId == route.ArrivalPlaceId);
+                    
+                    _lblRouteInfo.Text = $"✓ {depAirport?.City} → {arrAirport?.City}\n" +
+                                        $"   Khoảng cách: {route.DistanceKm ?? 0} km | Thời gian dự kiến: {route.DurationMinutes ?? 0} phút";
+                    _lblRouteInfo.ForeColor = Color.FromArgb(34, 197, 94);
+                }
+            }
+            catch { }
+        }
+
+        private void CalculateDuration()
+        {
+            if (_dtpDepartureTime.Value != null && _dtpArrivalTime.Value != null)
+            {
+                var departure = _dtpDepartureTime.Value.Value;
+                var arrival = _dtpArrivalTime.Value.Value;
+                
+                if (arrival > departure)
+                {
+                    var duration = arrival - departure;
+                    var hours = (int)duration.TotalHours;
+                    var minutes = duration.Minutes;
+                    
+                    _lblDuration.Text = $"⏱️ Thời gian bay: {hours} giờ {minutes} phút";
+                    _lblDuration.ForeColor = Color.FromArgb(34, 197, 94);
+                    _infoPanel.Visible = true;
+                }
+                else
+                {
+                    _lblDuration.Text = "⚠️ Thời gian đến phải sau thời gian khởi hành!";
+                    _lblDuration.ForeColor = Color.FromArgb(239, 68, 68);
+                }
+            }
+            else
+            {
+                _lblDuration.Text = "⏱️ Thời gian bay: Chưa tính toán";
+                _lblDuration.ForeColor = Color.FromArgb(59, 130, 246);
+            }
+        }   _lblDuration = new Label
+            {
+                Text = "⏱️ Thời gian bay: Chưa tính toán",
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(59, 130, 246),
+                AutoSize = true,
+                Margin = new Padding(0, 5, 0, 20)
+            };
+            formPanel.Controls.Add(_lblDuration, 0, 7);
+            formPanel.SetColumnSpan(_lblDuration, 2); Array.Empty<string>())
+            {
+                Width = 350,
+                Margin = new Padding(0, 0, 12, 16)
+            };
+
+            _cbStatus = new UnderlinedComboBox("Trạng thái", new[] { "SCHEDULED", "DELAYED", "CANCELLED", "COMPLETED" })
+            {
+        private void SetCreateMode()
+        {
+            _isEditMode = false;
+            _editingFlightId = 0;
+            _lblTitle.Text = "✈️ Tạo chuyến bay mới";
+            _btnSave.Text = "💾 Lưu chuyến bay";
+            _infoPanel.Visible = false;
+            ClearForm();
+        }       Width = 350,
+        public void LoadForEdit(FlightWithDetailsDTO dto)
+        {
+            _isEditMode = true;
+            _editingFlightId = dto.FlightId;
+            _lblTitle.Text = $"✏️ Chỉnh sửa chuyến bay #{dto.FlightId}";
+            _btnSave.Text = "💾 Cập nhật chuyến bay";
+            _infoPanel.Visible = true;
+
+            // Populate form fields
+            _txtFlightNumber.Text = dto.FlightNumber;
+            // Add controls to form
+            formPanel.Controls.Add(_txtFlightNumber, 0, 0);
+            formPanel.Controls.Add(_cbAircraft, 1, 0);
+            formPanel.Controls.Add(_cbRoute, 0, 1);
+            formPanel.Controls.Add(_cbStatus, 1, 1);
+            formPanel.Controls.Add(_dtpDepartureTime, 0, 2);
+            formPanel.Controls.Add(_dtpArrivalTime, 1, 2);
+
+            // Button Panel
+            var buttonPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                FlowDirection = FlowDirection.RightToLeft,
+                AutoSize = true,
+                Padding = new Padding(24, 0, 24, 20),
+                BackColor = Color.Transparent
+            };
+
+            _btnSave = new PrimaryButton("💾 Lưu chuyến bay")
+            {
+                Width = 160,
+                Height = 40,
+                Margin = new Padding(4)
+            };
+            _btnSave.Click += BtnSave_Click;
+
+            _btnCancel = new SecondaryButton("Hủy")
+            {
+                Width = 100,
+                Height = 40,
+                Margin = new Padding(4)
+            };
+            _btnCancel.Click += BtnCancel_Click;
+
+            buttonPanel.Controls.Add(_btnSave);
+            buttonPanel.Controls.Add(_btnCancel);
+
+            // Layout
+            scrollPanel.Controls.Add(buttonPanel);
+            scrollPanel.Controls.Add(formPanel);
+
+            Controls.Add(scrollPanel);
+            Controls.Add(titlePanel);
+        }
+
+        private void LoadComboBoxData()
+        {
+            try
+            {
+                // Load Aircraft
+                var aircrafts = _aircraftBus.GetAllAircrafts();
+                var activeAircrafts = aircrafts.Where(a => a.Status == "ACTIVE").ToList();
+                
+                var aircraftList = activeAircrafts.Select(a => new
+                {
+                    a.AircraftId,
+                    Display = $"{a.RegistrationNumber} - {a.Model}"
+                }).ToList();
+
+                _cbAircraft.InnerComboBox.DataSource = aircraftList;
+                _cbAircraft.InnerComboBox.DisplayMember = "Display";
+                _cbAircraft.InnerComboBox.ValueMember = "AircraftId";
+                _cbAircraft.InnerComboBox.SelectedIndex = -1;
+
+                // Load Route
+                var routes = _routeBus.GetAllRoutes();
+                var airports = _airportBus.GetAllAirports();
+                
+                var routeList = routes.Select(r =>
+                {
+                    var depAirport = airports.FirstOrDefault(a => a.AirportId == r.DeparturePlaceId);
+                    var arrAirport = airports.FirstOrDefault(a => a.AirportId == r.ArrivalPlaceId);
+                    return new
+                    {
+                        r.RouteId,
+                        Display = $"{depAirport?.AirportCode ?? "N/A"} ({depAirport?.AirportName ?? "N/A"}) → {arrAirport?.AirportCode ?? "N/A"} ({arrAirport?.AirportName ?? "N/A"})"
+                    };
+                }).ToList();
+
+                _cbRoute.InnerComboBox.DataSource = routeList;
+                _cbRoute.InnerComboBox.DisplayMember = "Display";
+                _cbRoute.InnerComboBox.ValueMember = "RouteId";
+                _cbRoute.InnerComboBox.SelectedIndex = -1;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi tải dữ liệu: {ex.Message}", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void SetCreateMode()
+        {
+            _isEditMode = false;
+            _editingFlightId = 0;
+            _lblTitle.Text = "✈️ Tạo chuyến bay mới";
+            _btnSave.Text = "💾 Lưu chuyến bay";
+            ClearForm();
+        }
+
+        public void LoadForEdit(FlightWithDetailsDTO dto)
+        {
+            _isEditMode = true;
+            _editingFlightId = dto.FlightId;
+            _lblTitle.Text = "✏️ Chỉnh sửa chuyến bay";
+            _btnSave.Text = "💾 Cập nhật";
+
+            // Populate form fields
+            _txtFlightNumber.Text = dto.FlightNumber;
+
+            // Select Aircraft
+            var aircraftItem = ((System.Collections.IList)_cbAircraft.InnerComboBox.DataSource)
+                .Cast<dynamic>()
+                .FirstOrDefault(x => x.AircraftId == dto.AircraftId);
+            if (aircraftItem != null)
+            {
+                _cbAircraft.InnerComboBox.SelectedItem = aircraftItem;
+            }
+
+            // Select Route
+            var routeItem = ((System.Collections.IList)_cbRoute.InnerComboBox.DataSource)
+                .Cast<dynamic>()
+                .FirstOrDefault(x => x.RouteId == dto.RouteId);
+            if (routeItem != null)
+            {
+                _cbRoute.InnerComboBox.SelectedItem = routeItem;
+            }
+
+            // Set Status
+            _cbStatus.InnerComboBox.SelectedItem = dto.Status.ToString();
+
+            // Set Times
+            if (dto.DepartureTime.HasValue)
+            {
+                _dtpDepartureTime.Value = dto.DepartureTime.Value;
+            }
+            {
+                _dtpArrivalTime.Value = dto.ArrivalTime.Value;
+            }
+
+            // Update info displays
+            UpdateAircraftInfo();
+            UpdateRouteInfo();
+            CalculateDuration();
+        }       _dtpArrivalTime.Value = dto.ArrivalTime.Value;
+            }
+        }
+
+        private void BtnSave_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                // Validate inputs
+                if (string.IsNullOrWhiteSpace(_txtFlightNumber.Text))
+                {
+                    MessageBox.Show("Vui lòng nhập số hiệu chuyến bay", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    _txtFlightNumber.Focus();
+                    return;
+                }
+
+                if (_cbAircraft.InnerComboBox.SelectedIndex < 0)
+                {
+                    MessageBox.Show("Vui lòng chọn máy bay", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                if (_cbRoute.InnerComboBox.SelectedIndex < 0)
+                {
+                    MessageBox.Show("Vui lòng chọn tuyến bay", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                if (_dtpDepartureTime.Value == null || _dtpArrivalTime.Value == null)
+                {
+                    MessageBox.Show("Vui lòng chọn thời gian khởi hành và đến", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Validate time logic
+                if (_dtpDepartureTime.Value >= _dtpArrivalTime.Value)
+                {
+                    MessageBox.Show("Thời gian đến phải sau thời gian khởi hành", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Get selected values
+                int aircraftId = Convert.ToInt32(_cbAircraft.InnerComboBox.SelectedValue);
+                int routeId = Convert.ToInt32(_cbRoute.InnerComboBox.SelectedValue);
+                string status = _cbStatus.InnerComboBox.SelectedItem?.ToString() ?? "SCHEDULED";
+
+                FlightStatus flightStatus = status switch
+                {
+                    "SCHEDULED" => FlightStatus.SCHEDULED,
+                    "DELAYED" => FlightStatus.DELAYED,
+                    "CANCELLED" => FlightStatus.CANCELLED,
+                    "COMPLETED" => FlightStatus.COMPLETED,
+                    _ => FlightStatus.SCHEDULED
+                };
+
+                bool success;
+                string message;
+
+                if (_isEditMode)
+                {
+                    // Update existing flight
+                    var flight = new FlightDTO(
+                        _editingFlightId,
+                        _txtFlightNumber.Text.Trim(),
+                        aircraftId,
+                        routeId,
+                        _dtpDepartureTime.Value,
+                        _dtpArrivalTime.Value,
+                        flightStatus
+                    );
+
+                    success = _flightBus.UpdateFlight(flight, out message);
+                    if (success)
+                    {
+                        MessageBox.Show(message, "Thành công",
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        FlightSavedUpdated?.Invoke(this, EventArgs.Empty);
+                        SetCreateMode(); // Reset to create mode
+                    }
+                    else
+                    {
+                        MessageBox.Show(message, "Lỗi",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                else
+                {
+                    // Create new flight
+                    var flight = new FlightDTO(
+                        _txtFlightNumber.Text.Trim(),
+                        aircraftId,
+                        routeId,
+                        _dtpDepartureTime.Value,
+                        _dtpArrivalTime.Value
+                    );
+                    flight.Status = flightStatus; // Set status after creation
+
+                    success = _flightBus.CreateFlight(flight, out message);
+                    if (success)
+                    {
+                        MessageBox.Show(message, "Thành công",
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        FlightSaved?.Invoke(this, EventArgs.Empty);
+                        ClearForm();
+                    }
+                    else
+                    {
+                        MessageBox.Show(message, "Lỗi",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi: {ex.Message}", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnCancel_Click(object? sender, EventArgs e)
+        {
+            if (_isEditMode)
+            {
+                SetCreateMode();
+        private void ClearForm()
+        {
+            _txtFlightNumber.Text = "";
+            _cbAircraft.InnerComboBox.SelectedIndex = -1;
+            _cbRoute.InnerComboBox.SelectedIndex = -1;
+            _cbStatus.InnerComboBox.SelectedIndex = 0; // SCHEDULED
+            _dtpDepartureTime.Value = DateTime.Now.AddHours(1);
+            _dtpArrivalTime.Value = DateTime.Now.AddHours(3);
+            _lblAircraftInfo.Text = "ℹ️ Chọn máy bay để xem thông tin chi tiết";
+            _lblAircraftInfo.ForeColor = Color.FromArgb(100, 116, 139);
+            _lblRouteInfo.Text = "ℹ️ Chọn tuyến bay để xem thông tin chi tiết";
+            _lblRouteInfo.ForeColor = Color.FromArgb(100, 116, 139);
+            _lblDuration.Text = "⏱️ Thời gian bay: Chưa tính toán";
+            _lblDuration.ForeColor = Color.FromArgb(59, 130, 246);
+            _infoPanel.Visible = false;
+        }
+            _txtFlightNumber.Text = "";
+            _cbAircraft.InnerComboBox.SelectedIndex = -1;
+            _cbRoute.InnerComboBox.SelectedIndex = -1;
+            _cbStatus.InnerComboBox.SelectedIndex = 0; // SCHEDULED
+            _dtpDepartureTime.Value = DateTime.Now.AddHours(1);
+            _dtpArrivalTime.Value = DateTime.Now.AddHours(3);
+        }
+    }
+}

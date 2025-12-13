@@ -1,92 +1,189 @@
-﻿using System;
-using System.Drawing;
+﻿using GUI.Features.Baggage.SubFeatures;
+using System;
 using System.Windows.Forms;
 using GUI.Components.Buttons;
-using GUI.Features.Baggage.SubFeatures;
 
 namespace GUI.Features.Baggage {
-    public class BaggageControl : UserControl {
-        private Button btnList;
-        private Button btnCheckin;
-        private Button btnDetail;
+    public partial class BaggageControl : UserControl {
+        // Child controls
+        //private BaggageCheckinControl baggageCheckinControl;
+        //private BaggageDetailControl baggageDetailsControl;
+        //private BaggageListControl baggageListControl;
+        //private BaggageLostReportControl baggageLostReportControl;
+        private FrmCarryOnManager frmCarryOnManager;
+        private FrmCheckedBaggageManager frmCheckedBaggageManager;
 
-        private BaggageListControl listControl;
-        private BaggageCheckinControl checkinControl;
-        private BaggageDetailControl detailControl;
+        // Tab index
+        private const int TAB_CHECKED = 0;
+        private const int TAB_CARRYON = 1;
+        private const int TAB_LIST = 2;
+        private const int TAB_LOST = 3;
+
 
         public BaggageControl() {
             InitializeComponent();
+            InitializeChildControls();
+
+            // Mặc định: mở tab Checkin
+            SwitchTab(TAB_CHECKED);
         }
 
-        private void InitializeComponent() {
-            Dock = DockStyle.Fill;
-            BackColor = Color.WhiteSmoke;
+        /// <summary>
+        /// Khởi tạo các UserControl con và gắn vào panel.
+        /// </summary>
+        private void InitializeChildControls() {
+            // Nếu sau này cần thì mở lại 4 control con này
+            //baggageCheckinControl = new BaggageCheckinControl();
+            //baggageDetailsControl = new BaggageDetailControl();
+            //baggageListControl = new BaggageListControl();
+            //baggageLostReportControl = new BaggageLostReportControl();
 
-            btnList = new PrimaryButton("Danh sách hành lý");
-            btnCheckin = new SecondaryButton("Gán tag / Check-in");
-            btnDetail = new SecondaryButton("Theo dõi / Chi tiết");
+            frmCarryOnManager = new FrmCarryOnManager();
+            frmCheckedBaggageManager = new FrmCheckedBaggageManager();
 
-            btnList.Click += (s, e) => SwitchTab(0);
-            btnCheckin.Click += (s, e) => SwitchTab(1);
-            btnDetail.Click += (s, e) => SwitchTab(2);
+            // Panel nội dung Dock Fill
+            pnlCheckin.Dock = DockStyle.Fill;
+            pnlDetail.Dock = DockStyle.Fill;
+            pnlList.Dock = DockStyle.Fill;
+            pnlLost.Dock = DockStyle.Fill;
 
-            var buttonPanel = new FlowLayoutPanel {
-                Dock = DockStyle.Top,
-                Height = 56,
-                BackColor = Color.White,
-                Padding = new Padding(24, 12, 0, 0),
-                AutoSize = true
-            };
-            buttonPanel.Controls.AddRange(new Control[] { btnList, btnCheckin, btnDetail });
+            // Gắn control Checkin
+            frmCarryOnManager.Dock = DockStyle.Fill;
+            pnlCheckin.Controls.Clear();
+            pnlCheckin.Controls.Add(frmCarryOnManager);
 
-            listControl = new BaggageListControl { Dock = DockStyle.Fill };
-            checkinControl = new BaggageCheckinControl { Dock = DockStyle.Fill };
-            detailControl = new BaggageDetailControl { Dock = DockStyle.Fill };
+            // Lost -> FrmCheckedBaggageManager
+            frmCheckedBaggageManager.Dock = DockStyle.Fill;
+            pnlLost.Controls.Clear();
+            pnlLost.Controls.Add(frmCheckedBaggageManager);
 
-            Controls.Add(listControl);
-            Controls.Add(checkinControl);
-            Controls.Add(detailControl);
-            Controls.Add(buttonPanel);
 
-            // Điều hướng giữa các tab khi user thao tác
-            listControl.OnViewRequested += data => { detailControl.LoadBaggageInfo(data); SwitchTab(2); };
-            checkinControl.OnCreated += data => {
-                var row = new BaggageListControl.BaggageRow {
-                    BaggageId = data.BaggageId,
-                    BaggageTag = data.BaggageTag,
-                    Type = data.Type,
-                    WeightKg = data.WeightKg,
-                    AllowedWeightKg = data.AllowedWeightKg,
-                    Fee = data.Fee,
-                    Status = data.Status,
-                    FlightId = data.FlightId,
-                    TicketId = data.TicketId
-                };
-                detailControl.LoadBaggageInfo(row);
-                SwitchTab(2);
-            };
+            // Detail/List tạm thời chưa gắn gì
+            //pnlDetail.Controls.Add(baggageDetailsControl);
+            //pnlList.Controls.Add(baggageListControl);
 
-            SwitchTab(0);
+
+            // Content + Header layout
+            pnlContentBaggage.Dock = DockStyle.Fill;
+            pnlHeaderBaggage.Dock = DockStyle.Top;
+            pnlHeaderBaggage.Height = 60;
         }
 
-        public void SwitchTab(int idx) {
-            listControl.Visible = (idx == 0);
-            checkinControl.Visible = (idx == 1);
-            detailControl.Visible = (idx == 2);
+        // ==========================
+        // EVENT HANDLER CÁC NÚT TAB
+        // ==========================
 
-            var panel = btnList.Parent as FlowLayoutPanel;
-            if (panel != null) {
-                panel.Controls.Clear();
-                btnList = (idx == 0) ? new PrimaryButton("Danh sách hành lý") : new SecondaryButton("Danh sách hành lý");
-                btnCheckin = (idx == 1) ? new PrimaryButton("Gán tag / Check-in") : new SecondaryButton("Gán tag / Check-in");
-                btnDetail = (idx == 2) ? new PrimaryButton("Theo dõi / Chi tiết") : new SecondaryButton("Theo dõi / Chi tiết");
+        private void btnCheckinBaggage_Click(object sender, EventArgs e) {
+            SwitchTab(TAB_CARRYON);
+        }
 
-                btnList.Click += (s, e) => SwitchTab(0);
-                btnCheckin.Click += (s, e) => SwitchTab(1);
-                btnDetail.Click += (s, e) => SwitchTab(2);
+        private void btnDetailBaggage_Click(object sender, EventArgs e) {
+            SwitchTab(TAB_CHECKED);
+        }
 
-                panel.Controls.AddRange(new Control[] { btnList, btnCheckin, btnDetail });
+        private void btnListBaggage_Click(object sender, EventArgs e) {
+            SwitchTab(TAB_LIST);
+        }
+
+        private void btnLostBaggage_Click(object sender, EventArgs e) {
+            SwitchTab(TAB_LOST);
+        }
+
+        // ==========================
+        // SWITCH TAB
+        // ==========================
+
+        public void SwitchTab(int index) {
+            // Ẩn tất cả
+            pnlCheckin.Visible = false;
+            pnlDetail.Visible = false;
+            pnlList.Visible = false;
+            pnlLost.Visible = false;
+
+            switch (index) {
+                case TAB_CARRYON:
+                    pnlCheckin.Visible = true;
+                    break;
+
+                //case TAB_DETAIL:
+                //    pnlDetail.Visible = true;
+                //    break;
+
+                //case TAB_LIST:
+                //    pnlList.Visible = true;
+                //    break;
+
+                case TAB_CHECKED:
+                    pnlLost.Visible = true;
+                    break;
+
+                //default:
+                //    // có thể log lỗi, nhưng không cần MessageBox cho UI chính
+                //    break;
             }
+
+            // Đổi Primary/Secondary cho nút theo tab đang chọn
+            RebuildHeaderButtons(index);
+        }
+
+        // ==========================
+        // HEADER BUTTONS (Primary/Secondary)
+        // ==========================
+
+        private void RebuildHeaderButtons(int activeIndex) {
+            pnlHeaderBaggage.Controls.Clear();
+
+            // --- Tab 0: Danh sách hành lý ---
+            if (activeIndex == TAB_LIST)
+                btnListBaggage = new PrimaryButton("Danh sách hành lý");
+            else
+                //btnListBaggage = new SecondaryButton("Danh sách hành lý");
+                btnListBaggage = new PrimaryButton("Danh sách hành lý");
+
+            btnListBaggage.AutoSize = true;
+            btnListBaggage.Click += btnListBaggage_Click;
+            // nếu hiện tại bạn chưa muốn show tab List:
+            // btnListBaggage.Visible = false;
+            pnlHeaderBaggage.Controls.Add(btnListBaggage);
+            btnListBaggage.Visible = false;
+
+            // --- Tab 1: Gắn tag / Checkin ---
+            if (activeIndex == TAB_CARRYON)
+                btnCheckinBaggage = new PrimaryButton("Hành lý sách tay");
+            else
+                //btnCheckinBaggage = new SecondaryButton("Gắn tag/ Checkin");
+                btnCheckinBaggage = new PrimaryButton("Hành lý sách tay");
+
+            btnCheckinBaggage.AutoSize = true;
+            btnCheckinBaggage.Click += btnCheckinBaggage_Click;
+            pnlHeaderBaggage.Controls.Add(btnCheckinBaggage);
+
+            // --- Tab 2: Theo dõi / Chi tiết ---
+            if (activeIndex == TAB_CHECKED)
+                btnDetailBaggage = new PrimaryButton("Hành lý ký gửi");
+            //else
+            //    btnDetailBaggage = new SecondaryButton("Theo dõi/ Chi tiết");
+                btnDetailBaggage = new PrimaryButton("Hành lý ký gửi");
+
+            btnDetailBaggage.AutoSize = true;
+            btnDetailBaggage.Click += btnDetailBaggage_Click;
+            pnlHeaderBaggage.Controls.Add(btnDetailBaggage);
+
+            // --- Tab 3: Báo cáo thất lạc ---
+            if (activeIndex == TAB_LOST)
+                btnLostBaggage = new PrimaryButton("Báo cáo thất lạc");
+            else
+                //btnLostBaggage = new SecondaryButton("Báo cáo thất lạc");
+                btnLostBaggage = new PrimaryButton("Báo cáo thất lạc");
+
+            btnLostBaggage.AutoSize = true;
+            btnLostBaggage.Click += btnLostBaggage_Click;
+            // nếu muốn ẩn tab Lost giống code cũ:
+             btnLostBaggage.Visible = false;
+            pnlHeaderBaggage.Controls.Add(btnLostBaggage);
+        }
+
+        private void pnlDetail_Paint(object sender, PaintEventArgs e) {
         }
     }
 }

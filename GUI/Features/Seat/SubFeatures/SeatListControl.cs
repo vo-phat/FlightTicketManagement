@@ -1,3 +1,8 @@
+using BUS.CabinClass;
+using BUS.Seat;
+using DTO.Seat;
+using GUI.Components.Buttons;
+using GUI.Components.Inputs;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -9,7 +14,6 @@ using GUI.Components.Inputs;
 using BUS.Seat;
 using BUS.CabinClass;
 using DTO.Seat;
-
 namespace GUI.Features.Seat.SubFeatures
 {
     // DTO tạm thời cho ComboBox (chứa cả tên và ID)
@@ -95,8 +99,8 @@ namespace GUI.Features.Seat.SubFeatures
             btnGenerate = new PrimaryButton("⚙️ Sinh ghế tự động") { Width = 170, Height = 36, Margin = new Padding(12, 0, 0, 0) };
             filterRight.Controls.Add(btnSearch);
             filterRight.Controls.Add(btnClear);
-            filterRight.Controls.Add(btnToggleForm);
-            filterRight.Controls.Add(btnGenerate);
+            //filterRight.Controls.Add(btnToggleForm);
+            //filterRight.Controls.Add(btnGenerate);
 
             filterWrap = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(24, 16, 24, 0), ColumnCount = 2 };
             filterWrap.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
@@ -524,8 +528,6 @@ namespace GUI.Features.Seat.SubFeatures
             cbAircraft.Items.Add("Tất cả");
             cbAircraft.Items.AddRange(aircrafts.Cast<object>().ToArray());
             cbAircraft.SelectedIndex = 0;
-
-            // Load Classes từ database thay vì từ data
             var allCabinClasses = _cabinClassBUS.GetAllCabinClasses();
             var classOrder = new Dictionary<string, int>
             {
@@ -540,9 +542,13 @@ namespace GUI.Features.Seat.SubFeatures
                 .ThenBy(c => c)
                 .ToList();
 
+            var cabinBus = new CabinClassBUS();
+            var cabins = cabinBus.GetAllCabinClasses();
+
             cbClass.Items.Clear();
             cbClass.Items.Add("Tất cả");
-            cbClass.Items.AddRange(classes.Cast<object>().ToArray());
+            foreach (var c in cabins)
+                cbClass.Items.Add(c.ClassName);
             cbClass.SelectedIndex = 0;
 
             cbAircraft.SelectedIndexChanged += (_, __) => ApplyFilter();

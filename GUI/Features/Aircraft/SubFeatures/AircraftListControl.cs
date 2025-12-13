@@ -2,316 +2,505 @@
 using DTO.Aircraft;
 using GUI.Components.Buttons;
 using GUI.Components.Inputs;
-using GUI.Components.Tables;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 
 namespace GUI.Features.Aircraft.SubFeatures
 {
-    public class AircraftListControl : UserControl
+    public partial class AircraftListControl : UserControl
     {
         private readonly AircraftBUS _bus = new AircraftBUS();
-        private DataGridView table;
-
-        // Khai báo các control tìm kiếm
-        private UnderlinedTextField txtAirlineId, txtModel, txtManufacturer, txtCapacity;
-        private PrimaryButton btnSearch;
-        private PrimaryButton btnAdd;
-
-        private const string ACTION_COL = "Action";
-        private const string TXT_VIEW = "Xem";
-        private const string TXT_EDIT = "Sửa";
-        private const string TXT_DEL = "Xóa";
-        private const string SEP = " / ";
-
-        // Sự kiện giao tiếp với Control cha
+        
+        // Controls
+        private Panel headerPanel;
+        private Label lblTitle;
+        private Panel searchPanel;
+        private TextBox txtSearch;
+        private ComboBox cboStatus;
+        private Button btnSearch;
+        private Button btnClear;
+        private Button btnAddNew;
+        private FlowLayoutPanel aircraftContainer;
+        private Label lblNoData;
+        
+        // Events
         public event Action<AircraftDTO>? ViewRequested;
         public event Action<AircraftDTO>? RequestEdit;
         public event Action? DataChanged;
 
+        private List<AircraftDTO> _allAircrafts = new List<AircraftDTO>();
+        private const int CARD_WIDTH = 380;
+        private const int CARD_HEIGHT = 280;
+
         public AircraftListControl()
         {
             InitializeComponent();
-            RefreshList();
+            LoadData();
         }
 
         private void InitializeComponent()
         {
             SuspendLayout();
-            BackColor = Color.FromArgb(232, 240, 252);
+            
+            BackColor = Color.FromArgb(245, 247, 250);
             Dock = DockStyle.Fill;
+            Padding = new Padding(30, 20, 30, 20);
             AutoScroll = true;
 
-            // === TIÊU ĐỀ ===
-            var lblTitle = new Label
-            {
-                Text = "🛩 Danh sách máy bay",
-                Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point),
-                ForeColor = Color.FromArgb(40, 55, 77),
-                AutoSize = true,
-                Dock = DockStyle.Top,
-                Padding = new Padding(24, 20, 0, 12)
-            };
-
-            // === PANEL BỘ LỌC (NHIỀU INPUT) ===
-            var filterPanel = new FlowLayoutPanel
+            // === HEADER PANEL ===
+            headerPanel = new Panel
             {
                 Dock = DockStyle.Top,
+                Height = 80,
+                BackColor = Color.Transparent
+            };
+
+            lblTitle = new Label
+            {
+                Text = "✈️ Quản Lý Máy Bay",
+                Font = new Font("Segoe UI", 24F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(31, 31, 31),
                 AutoSize = true,
-                Padding = new Padding(24, 8, 24, 8),
-                FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = false,
-                BackColor = Color.FromArgb(250, 253, 255)
+                Location = new Point(0, 15)
             };
 
-            // --- INPUTS TÙY CHỈNH ---
-            txtAirlineId = new UnderlinedTextField("Mã hãng (ID)", "")
+            // === SEARCH PANEL ===
+            searchPanel = new Panel
             {
-                Width = 140,
-                Margin = new Padding(6, 4, 6, 4),
-                InheritParentBackColor = true,
-                LineThickness = 1
-            };
-            txtModel = new UnderlinedTextField("Model", "")
-            {
-                Width = 180,
-                Margin = new Padding(6, 4, 6, 4),
-                InheritParentBackColor = true,
-                LineThickness = 1
-            };
-            txtManufacturer = new UnderlinedTextField("Hãng sản xuất", "")
-            {
-                Width = 180,
-                Margin = new Padding(6, 4, 6, 4),
-                InheritParentBackColor = true,
-                LineThickness = 1
-            };
-            txtCapacity = new UnderlinedTextField("Sức chứa", "")
-            {
-                Width = 120,
-                Margin = new Padding(6, 4, 6, 4),
-                InheritParentBackColor = true,
-                LineThickness = 1
+                Dock = DockStyle.Top,
+                Height = 80,
+                BackColor = Color.White,
+                Padding = new Padding(20, 15, 20, 15)
             };
 
-            btnSearch = new PrimaryButton("🔍 Tìm")
+            // Search textbox
+            txtSearch = new TextBox
             {
-                Width = 90,
-                Height = 40,
-                Margin = new Padding(10, 6, 6, 6),
+                Location = new Point(20, 20),
+                Size = new Size(300, 35),
+                Font = new Font("Segoe UI", 11F),
+                ForeColor = Color.FromArgb(70, 70, 70)
             };
+            txtSearch.Text = "🔍 Tìm kiếm theo tên, model, hãng...";
+            txtSearch.ForeColor = Color.Gray;
+            txtSearch.GotFocus += (s, e) => {
+                if (txtSearch.Text == "🔍 Tìm kiếm theo tên, model, hãng...")
+                {
+                    txtSearch.Text = "";
+                    txtSearch.ForeColor = Color.FromArgb(70, 70, 70);
+                }
+            };
+            txtSearch.LostFocus += (s, e) => {
+                if (string.IsNullOrWhiteSpace(txtSearch.Text))
+                {
+                    txtSearch.Text = "🔍 Tìm kiếm theo tên, model, hãng...";
+                    txtSearch.ForeColor = Color.Gray;
+                }
+            };
+            txtSearch.TextChanged += (s, e) => FilterAircrafts();
 
-            btnAdd = new PrimaryButton("➕ Thêm")
+            // Status filter
+            cboStatus = new ComboBox
             {
-                Width = 110,
-                Height = 40,
-                Margin = new Padding(6),
+                Location = new Point(340, 20),
+                Size = new Size(180, 35),
+                Font = new Font("Segoe UI", 10F),
+                DropDownStyle = ComboBoxStyle.DropDownList
             };
+            cboStatus.Items.AddRange(new object[] { "Tất cả trạng thái", "ACTIVE", "MAINTENANCE", "RETIRED" });
+            cboStatus.SelectedIndex = 0;
+            cboStatus.SelectedIndexChanged += (s, e) => FilterAircrafts();
 
-            // Gọi RefreshList() khi bấm Tìm
-            btnSearch.Click += (s, e) => RefreshList();
-            btnAdd.Click += (s, e) => RequestEdit?.Invoke(new AircraftDTO());
+            // Search button
+            btnSearch = new Button
+            {
+                Location = new Point(540, 18),
+                Size = new Size(120, 38),
+                Text = "🔍 Tìm kiếm",
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                BackColor = Color.FromArgb(0, 123, 255),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            btnSearch.FlatAppearance.BorderSize = 0;
+            btnSearch.Click += (s, e) => FilterAircrafts();
 
-            filterPanel.Controls.AddRange(new Control[] {
-                txtAirlineId, txtModel, txtManufacturer, txtCapacity, btnSearch, btnAdd
-            });
+            // Clear button
+            btnClear = new Button
+            {
+                Location = new Point(670, 18),
+                Size = new Size(100, 38),
+                Text = "↻ Làm mới",
+                Font = new Font("Segoe UI", 10F),
+                BackColor = Color.FromArgb(108, 117, 125),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            btnClear.FlatAppearance.BorderSize = 0;
+            btnClear.Click += BtnClear_Click;
 
-            // === BẢNG DANH SÁCH TÙY CHỈNH (TableCustom) ===
-            table = new TableCustom
+            // Add new button
+            btnAddNew = new Button
+            {
+                Location = new Point(790, 18),
+                Size = new Size(150, 38),
+                Text = "➕ Thêm máy bay",
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                BackColor = Color.FromArgb(40, 167, 69),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            btnAddNew.FlatAppearance.BorderSize = 0;
+            btnAddNew.Click += (s, e) => RequestEdit?.Invoke(new AircraftDTO());
+
+            // === AIRCRAFT CONTAINER ===
+            aircraftContainer = new FlowLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                ReadOnly = true,
-                AllowUserToAddRows = false,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                CornerRadius = 16,
-                BorderThickness = 2,
-                BorderColor = Color.FromArgb(200, 200, 200),
+                AutoScroll = true,
+                BackColor = Color.Transparent,
+                Padding = new Padding(10),
+                WrapContents = true
             };
 
-            // 1. Cấu hình các Cột (Giữ nguyên)
-            table.Columns.Add("airlineId", "Mã hãng");
-            table.Columns.Add("model", "Model");
-            table.Columns.Add("manufacturer", "Hãng sản xuất");
-            table.Columns.Add("capacity", "Sức chứa");
-            table.Columns.Add(ACTION_COL, "Thao tác");
-            table.Columns[ACTION_COL].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-            table.Columns[ACTION_COL].Width = 160;
-            table.Columns.Add("aircraftIdHidden", "ID");
-            table.Columns["aircraftIdHidden"].Visible = false;
+            lblNoData = new Label
+            {
+                Text = "📭 Không tìm thấy máy bay nào",
+                Font = new Font("Segoe UI", 14F, FontStyle.Italic),
+                ForeColor = Color.Gray,
+                AutoSize = true,
+                Visible = false
+            };
 
-            table.CellPainting += Table_CellPainting;
-            table.CellMouseMove += Table_CellMouseMove;
-            table.CellMouseClick += Table_CellMouseClick;
-
-            // === GHÉP TOÀN BỘ GIAO DIỆN ===
-            Controls.Clear();
-            Controls.Add(table);
-            Controls.Add(filterPanel);
-            Controls.Add(lblTitle);
+            // Add controls
+            headerPanel.Controls.Add(lblTitle);
+            searchPanel.Controls.AddRange(new Control[] { 
+                txtSearch, btnSearch, btnClear, btnAddNew 
+            });
+            
+            Controls.Add(aircraftContainer);
+            Controls.Add(searchPanel);
+            Controls.Add(headerPanel);
+            aircraftContainer.Controls.Add(lblNoData);
 
             ResumeLayout(false);
+            PerformLayout();
         }
 
-        private bool _isRefreshing = false;
-
-        // Phương thức Tải danh sách và LỌC ĐA TIÊU CHÍ
-        public void RefreshList()
+        private void LoadData()
         {
-            if (_isRefreshing) return;
-            _isRefreshing = true;
-
             try
             {
-                // 1. Lấy toàn bộ danh sách (hoặc chỉ cần lấy 1 lần nếu cache)
-                List<AircraftDTO> filteredList = _bus.GetAllAircrafts();
-
-                // 2. Lấy giá trị tìm kiếm
-                string searchAirline = txtAirlineId.Text?.Trim().ToLower() ?? "";
-                string searchModel = txtModel.Text?.Trim().ToLower() ?? "";
-                string searchManu = txtManufacturer.Text?.Trim().ToLower() ?? "";
-                string searchCap = txtCapacity.Text?.Trim().ToLower() ?? "";
-
-                // 3. Thực hiện LỌC BẰNG LINQ (từng thuộc tính)
-
-                // Lọc theo Airline ID (chuyển đổi ID thành chuỗi để so sánh)
-                if (!string.IsNullOrWhiteSpace(searchAirline))
-                {
-                    filteredList = filteredList
-                        .Where(a => a.AirlineId.ToString().Contains(searchAirline))
-                        .ToList();
-                }
-
-                // Lọc theo Model
-                if (!string.IsNullOrWhiteSpace(searchModel))
-                {
-                    filteredList = filteredList
-                        .Where(a => a.Model != null && a.Model.ToLower().Contains(searchModel))
-                        .ToList();
-                }
-
-                // Lọc theo Manufacturer
-                if (!string.IsNullOrWhiteSpace(searchManu))
-                {
-                    filteredList = filteredList
-                        .Where(a => a.Manufacturer != null && a.Manufacturer.ToLower().Contains(searchManu))
-                        .ToList();
-                }
-
-                // Lọc theo Capacity (chuyển đổi Capacity sang chuỗi để so sánh)
-                if (!string.IsNullOrWhiteSpace(searchCap))
-                {
-                    filteredList = filteredList
-                        .Where(a => a.Capacity.HasValue && a.Capacity.Value.ToString().Contains(searchCap))
-                        .ToList();
-                }
-
-                // 4. Đổ dữ liệu đã lọc vào bảng
-                table.Rows.Clear();
-                foreach (var a in filteredList)
-                {
-                    table.Rows.Add(
-                        a.AirlineId,
-                        a.Model ?? "N/A",
-                        a.Manufacturer ?? "N/A",
-                        a.Capacity.HasValue ? a.Capacity.Value.ToString() : "N/A",
-                        null,
-                        a.AircraftId
-                    );
-                }
-                table.InvalidateColumn(table.Columns[ACTION_COL].Index);
+                _allAircrafts = _bus.GetAllAircrafts();
+                DisplayAircrafts(_allAircrafts);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi khi tải dữ liệu: " + ex.Message);
-            }
-            finally
-            {
-                _isRefreshing = false;
+                MessageBox.Show($"Lỗi tải dữ liệu: {ex.Message}", "Lỗi", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        // ======= Các phương thức vẽ và xử lý click giữ nguyên (GetRects, Table_CellPainting, Table_CellMouseMove, Table_CellMouseClick) =======
-
-        private (Rectangle rcView, Rectangle rcEdit, Rectangle rcDel) GetRects(Rectangle b, Font f)
+        private void FilterAircrafts()
         {
-            int pad = 6, x = b.Left + pad, y = b.Top + (b.Height - f.Height) / 2;
-            var flags = TextFormatFlags.NoPadding;
-            var szV = TextRenderer.MeasureText(TXT_VIEW, f, Size.Empty, flags);
-            var szS = TextRenderer.MeasureText(SEP, f, Size.Empty, flags);
-            var szE = TextRenderer.MeasureText(TXT_EDIT, f, Size.Empty, flags);
-            var szD = TextRenderer.MeasureText(TXT_DEL, f, Size.Empty, flags);
-            var rcV = new Rectangle(new Point(x, y), szV); x += szV.Width + szS.Width;
-            var rcE = new Rectangle(new Point(x, y), szE); x += szE.Width + szS.Width;
-            var rcD = new Rectangle(new Point(x, y), szD);
-            return (rcV, rcE, rcD);
-        }
+            string searchText = txtSearch.Text.ToLower();
+            if (searchText == "🔍 tìm kiếm theo tên, model, hãng...")
+                searchText = "";
 
-        private void Table_CellPainting(object? s, DataGridViewCellPaintingEventArgs e)
-        {
-            if (e.RowIndex < 0 || table.Columns[e.ColumnIndex].Name != ACTION_COL) return;
-            e.Handled = true;
-            e.Paint(e.ClipBounds, DataGridViewPaintParts.Background | DataGridViewPaintParts.Border);
-            var f = e.CellStyle.Font ?? table.Font;
-            var r = GetRects(e.CellBounds, f);
-            Color link = Color.FromArgb(0, 92, 175), sep = Color.FromArgb(120, 120, 120), del = Color.FromArgb(220, 53, 69);
-            TextRenderer.DrawText(e.Graphics, TXT_VIEW, f, r.rcView.Location, link, TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(e.Graphics, SEP, f, new Point(r.rcView.Right, r.rcView.Top), sep, TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(e.Graphics, TXT_EDIT, f, r.rcEdit.Location, link, TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(e.Graphics, SEP, f, new Point(r.rcEdit.Right, r.rcEdit.Top), sep, TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(e.Graphics, TXT_DEL, f, r.rcDel.Location, del, TextFormatFlags.NoPadding);
-        }
+            string statusFilter = cboStatus.SelectedIndex == 0 ? "" : cboStatus.SelectedItem.ToString();
 
-        private void Table_CellMouseMove(object? s, DataGridViewCellMouseEventArgs e)
-        {
-            if (e.RowIndex < 0 || e.ColumnIndex < 0) { table.Cursor = Cursors.Default; return; }
-            if (table.Columns[e.ColumnIndex].Name != ACTION_COL) { table.Cursor = Cursors.Default; return; }
-            var rect = table.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, false);
-            var f = table[e.ColumnIndex, e.RowIndex].InheritedStyle?.Font ?? table.Font;
-            var r = GetRects(rect, f);
-            var p = new Point(e.Location.X + rect.Left, e.Location.Y + rect.Top);
-            table.Cursor = (r.rcView.Contains(p) || r.rcEdit.Contains(p) || r.rcDel.Contains(p)) ? Cursors.Hand : Cursors.Default;
-        }
-
-        private void Table_CellMouseClick(object? s, DataGridViewCellMouseEventArgs e)
-        {
-            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
-            if (table.Columns[e.ColumnIndex].Name != ACTION_COL) return;
-
-            var rect = table.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, false);
-            var f = table[e.ColumnIndex, e.RowIndex].InheritedStyle?.Font ?? table.Font;
-            var r = GetRects(rect, f);
-            var p = new Point(e.Location.X + rect.Left, e.Location.Y + rect.Top);
-
-            var row = table.Rows[e.RowIndex];
-            int id = Convert.ToInt32(row.Cells["aircraftIdHidden"].Value);
-            int airlineId = Convert.ToInt32(row.Cells["airlineId"].Value);
-            string model = row.Cells["model"].Value?.ToString();
-            string manufacturer = row.Cells["manufacturer"].Value?.ToString();
-            string capacityStr = row.Cells["capacity"].Value?.ToString();
-            int? capacity = capacityStr != "N/A" && int.TryParse(capacityStr, out int cap) ? cap : (int?)null;
-
-            var dto = new AircraftDTO(id, airlineId, model, manufacturer, capacity);
-
-            if (r.rcView.Contains(p))
-                ViewRequested?.Invoke(dto);
-            else if (r.rcEdit.Contains(p))
-                RequestEdit?.Invoke(dto);
-            else if (r.rcDel.Contains(p))
+            var filtered = _allAircrafts.Where(a =>
             {
-                if (MessageBox.Show($"Bạn có chắc muốn xóa máy bay '{model}'?", "Xác nhận xóa",
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                bool matchSearch = string.IsNullOrWhiteSpace(searchText) ||
+                    (a.Model?.ToLower().Contains(searchText) ?? false) ||
+                    (a.Manufacturer?.ToLower().Contains(searchText) ?? false);
+
+                return matchSearch; // Không cần filter Status nữa
+            }).ToList();
+
+            DisplayAircrafts(filtered);
+        }
+
+        private void DisplayAircrafts(List<AircraftDTO> aircrafts)
+        {
+            aircraftContainer.Controls.Clear();
+
+            if (aircrafts == null || aircrafts.Count == 0)
+            {
+                lblNoData.Visible = true;
+                lblNoData.Location = new Point(
+                    (aircraftContainer.Width - lblNoData.Width) / 2,
+                    (aircraftContainer.Height - lblNoData.Height) / 2
+                );
+                aircraftContainer.Controls.Add(lblNoData);
+                return;
+            }
+
+            lblNoData.Visible = false;
+
+            foreach (var aircraft in aircrafts)
+            {
+                aircraftContainer.Controls.Add(CreateAircraftCard(aircraft));
+            }
+        }
+
+        private Panel CreateAircraftCard(AircraftDTO aircraft)
+        {
+            var card = new Panel
+            {
+                Size = new Size(CARD_WIDTH, CARD_HEIGHT),
+                BackColor = Color.White,
+                Margin = new Padding(10),
+                Cursor = Cursors.Hand
+            };
+            card.Paint += (s, e) => DrawCardBorder(e.Graphics, card);
+
+            // Aircraft icon/image placeholder
+            var iconPanel = new Panel
+            {
+                Location = new Point(20, 20),
+                Size = new Size(80, 80),
+                BackColor = Color.FromArgb(0, 123, 255) // Màu mặc định
+            };
+            iconPanel.Paint += (s, e) =>
+            {
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                using (var path = GetRoundedRectPath(iconPanel.ClientRectangle, 12))
+                {
+                    e.Graphics.FillPath(new SolidBrush(iconPanel.BackColor), path);
+                    
+                    // Draw airplane icon
+                    var iconFont = new Font("Segoe UI Emoji", 32F);
+                    var iconText = "✈️";
+                    var iconSize = e.Graphics.MeasureString(iconText, iconFont);
+                    var iconX = (iconPanel.Width - iconSize.Width) / 2;
+                    var iconY = (iconPanel.Height - iconSize.Height) / 2;
+                    e.Graphics.DrawString(iconText, iconFont, Brushes.White, iconX, iconY);
+                }
+            };
+
+            // Airline ID (main title)
+            var lblRegNum = new Label
+            {
+                Text = aircraft.AirlineId.HasValue ? $"Airline ID: {aircraft.AirlineId.Value}" : "N/A",
+                Location = new Point(115, 25),
+                Size = new Size(240, 30),
+                Font = new Font("Segoe UI", 16F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(31, 31, 31)
+            };
+
+            // Model
+            var lblModel = new Label
+            {
+                Text = $"📋 Model: {aircraft.Model ?? "N/A"}",
+                Location = new Point(115, 60),
+                Size = new Size(240, 22),
+                Font = new Font("Segoe UI", 10F),
+                ForeColor = Color.FromArgb(100, 100, 100)
+            };
+
+            // Model badge (thay thế Status badge)
+            var statusBadge = new Label
+            {
+                Text = aircraft.Model ?? "N/A",
+                Location = new Point(115, 85),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                ForeColor = Color.White,
+                BackColor = Color.FromArgb(0, 123, 255),
+                Padding = new Padding(8, 4, 8, 4)
+            };
+            statusBadge.Paint += (s, e) =>
+            {
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                using (var path = GetRoundedRectPath(statusBadge.ClientRectangle, 6))
+                {
+                    e.Graphics.FillPath(new SolidBrush(statusBadge.BackColor), path);
+                }
+                TextRenderer.DrawText(e.Graphics, statusBadge.Text, statusBadge.Font,
+                    statusBadge.ClientRectangle, statusBadge.ForeColor,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            };
+
+            // Divider line
+            var divider = new Panel
+            {
+                Location = new Point(20, 120),
+                Size = new Size(CARD_WIDTH - 40, 1),
+                BackColor = Color.FromArgb(230, 230, 230)
+            };
+
+            // Manufacturer info
+            var lblManufacturer = new Label
+            {
+                Text = $"🏭 Hãng: {aircraft.Manufacturer ?? "N/A"}",
+                Location = new Point(20, 135),
+                Size = new Size(CARD_WIDTH - 40, 25),
+                Font = new Font("Segoe UI", 10F),
+                ForeColor = Color.FromArgb(70, 70, 70)
+            };
+
+            // Capacity info
+            var lblCapacity = new Label
+            {
+                Text = $"💺 Sức chứa: {aircraft.Capacity?.ToString() ?? "N/A"} ghế",
+                Location = new Point(20, 165),
+                Size = new Size(CARD_WIDTH - 40, 25),
+                Font = new Font("Segoe UI", 10F),
+                ForeColor = Color.FromArgb(70, 70, 70)
+            };
+
+            // Capacity info
+            var lblYear = new Label
+            {
+                Text = aircraft.Capacity.HasValue 
+                    ? $"💺 Sức chứa: {aircraft.Capacity.Value} ghế"
+                    : "💺 Sức chứa: N/A",
+                Location = new Point(20, 195),
+                Size = new Size(CARD_WIDTH - 40, 25),
+                Font = new Font("Segoe UI", 10F),
+                ForeColor = Color.FromArgb(70, 70, 70)
+            };
+
+            // Action buttons
+            var btnView = CreateActionButton("👁️ Xem", 20, CARD_HEIGHT - 50, 100, 
+                Color.FromArgb(0, 123, 255));
+            btnView.Click += (s, e) => ViewRequested?.Invoke(aircraft);
+
+            var btnEdit = CreateActionButton("✏️ Sửa", 130, CARD_HEIGHT - 50, 100, 
+                Color.FromArgb(255, 193, 7));
+            btnEdit.Click += (s, e) => RequestEdit?.Invoke(aircraft);
+
+            var btnDelete = CreateActionButton("🗑️ Xóa", 240, CARD_HEIGHT - 50, 100, 
+                Color.FromArgb(220, 53, 69));
+            btnDelete.Click += (s, e) => DeleteAircraft(aircraft);
+
+            // Add all controls to card
+            card.Controls.AddRange(new Control[]
+            {
+                iconPanel, lblRegNum, lblModel, statusBadge, divider,
+                lblManufacturer, lblCapacity, lblYear,
+                btnView, btnEdit, btnDelete
+            });
+
+            return card;
+        }
+
+        private Button CreateActionButton(string text, int x, int y, int width, Color color)
+        {
+            var btn = new Button
+            {
+                Text = text,
+                Location = new Point(x, y),
+                Size = new Size(width, 35),
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                BackColor = color,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            btn.FlatAppearance.BorderSize = 0;
+            return btn;
+        }
+
+        private void DrawCardBorder(Graphics g, Panel card)
+        {
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            using (var path = GetRoundedRectPath(card.ClientRectangle, 12))
+            {
+                g.FillPath(Brushes.White, path);
+                g.DrawPath(new Pen(Color.FromArgb(220, 220, 220), 2), path);
+            }
+        }
+
+        private GraphicsPath GetRoundedRectPath(Rectangle rect, int radius)
+        {
+            var path = new GraphicsPath();
+            path.AddArc(rect.X, rect.Y, radius, radius, 180, 90);
+            path.AddArc(rect.Right - radius, rect.Y, radius, radius, 270, 90);
+            path.AddArc(rect.Right - radius, rect.Bottom - radius, radius, radius, 0, 90);
+            path.AddArc(rect.X, rect.Bottom - radius, radius, radius, 90, 90);
+            path.CloseFigure();
+            return path;
+        }
+
+        private Color GetStatusColor(string status)
+        {
+            return status?.ToUpper() switch
+            {
+                "ACTIVE" => Color.FromArgb(40, 167, 69),
+                "MAINTENANCE" => Color.FromArgb(255, 193, 7),
+                "RETIRED" => Color.FromArgb(108, 117, 125),
+                _ => Color.Gray
+            };
+        }
+
+        private string GetStatusText(string status)
+        {
+            return status?.ToUpper() switch
+            {
+                "ACTIVE" => "🟢 Hoạt động",
+                "MAINTENANCE" => "🟡 Bảo trì",
+                "RETIRED" => "⚫ Ngừng hoạt động",
+                _ => "❓ Không xác định"
+            };
+        }
+
+        private void DeleteAircraft(AircraftDTO aircraft)
+        {
+            var result = MessageBox.Show(
+                $"Bạn có chắc chắn muốn xóa máy bay '{aircraft.Model}'?\n\n" +
+                $"Hãng: {aircraft.Manufacturer}\n" +
+                $"Sức chứa: {aircraft.Capacity ?? 0} ghế",
+                "⚠️ Xác nhận xóa",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning
+            );
+
+            if (result == DialogResult.Yes)
+            {
+                try
                 {
                     string message;
-                    bool ok = _bus.DeleteAircraft(id, out message);
-                    MessageBox.Show(message, ok ? "Thành công" : "Lỗi",
-                        MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
-                    if (ok) RefreshList();
+                    bool success = _bus.DeleteAircraft(aircraft.AircraftId, out message);
+                    
+                    MessageBox.Show(message, 
+                        success ? "✅ Thành công" : "❌ Lỗi",
+                        MessageBoxButtons.OK,
+                        success ? MessageBoxIcon.Information : MessageBoxIcon.Error);
+
+                    if (success)
+                    {
+                        LoadData();
+                        DataChanged?.Invoke();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi khi xóa: {ex.Message}", "❌ Lỗi",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+        }
+
+        private void BtnClear_Click(object sender, EventArgs e)
+        {
+            txtSearch.Text = "🔍 Tìm kiếm theo tên, model, hãng...";
+            txtSearch.ForeColor = Color.Gray;
+            cboStatus.SelectedIndex = 0;
+            LoadData();
+        }
+
+        public void RefreshList()
+        {
+            LoadData();
         }
     }
 }

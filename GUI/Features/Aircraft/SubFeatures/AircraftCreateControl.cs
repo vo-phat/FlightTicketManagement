@@ -7,21 +7,21 @@ using GUI.Components.Buttons;
 using GUI.Components.Tables;
 using DTO.Aircraft;
 using BUS.Aircraft;
-using BUS.Airline;
-using DTO.Airline;
+// ĐÃ XÓA: using BUS.Airline; - Không còn quản lý Airlines
+// ĐÃ XÓA: using DTO.Airline; - Không còn quản lý Airlines
 
 namespace GUI.Features.Aircraft.SubFeatures
 {
     public class AircraftCreateControl : UserControl
     {
-        private UnderlinedComboBox _cbAirline; // ✅ Dùng combo tùy chỉnh
-        private UnderlinedTextField _txtModel, _txtManu, _txtCap;
+        // ĐÃ XÓA: _cbAirline, _airlineBus - Không còn quản lý Airlines
+        private UnderlinedTextField _txtRegNum, _txtModel, _txtManu, _txtCap, _txtYear;
+        private UnderlinedComboBox _cbStatus;
         private PrimaryButton _btnSave;
         private SecondaryButton _btnCancel;
         private TableCustom _table;
 
         private readonly AircraftBUS _bus = new AircraftBUS();
-        private readonly AirlineBUS _airlineBus = new AirlineBUS();
         private int _editingId = 0;
 
         public event EventHandler? DataSaved;
@@ -30,7 +30,6 @@ namespace GUI.Features.Aircraft.SubFeatures
         public AircraftCreateControl()
         {
             InitializeComponent();
-            LoadAirlines();
             LoadAircraftList();
         }
 
@@ -60,19 +59,22 @@ namespace GUI.Features.Aircraft.SubFeatures
             inputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
             inputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
 
-            // ✅ Dùng UnderlinedComboBox thay vì ComboBox thường
-            _cbAirline = new UnderlinedComboBox("Hãng hàng không", Array.Empty<string>());
-            _cbAirline.Width = 250;
-
+            // ĐÃ XÓA: _cbAirline - Chỉ quản lý Vietnam Airlines
+            _txtRegNum = new UnderlinedTextField("Số hiệu đăng ký (VN-A###)", "");
             _txtModel = new UnderlinedTextField("Model", "");
             _txtManu = new UnderlinedTextField("Hãng sản xuất", "");
             _txtCap = new UnderlinedTextField("Sức chứa (ghế)", "");
+            _txtYear = new UnderlinedTextField("Năm sản xuất", "");
+            
+            _cbStatus = new UnderlinedComboBox("Trạng thái", new[] { "Active", "Maintenance", "Retired" });
+            _cbStatus.InnerComboBox.SelectedIndex = 0;
 
-            inputs.Controls.Add(_cbAirline, 0, 0);
-            inputs.SetColumnSpan(_cbAirline, 2); // cho rộng ra 2 cột
-            inputs.Controls.Add(_txtModel, 0, 1);
-            inputs.Controls.Add(_txtManu, 1, 1);
-            inputs.Controls.Add(_txtCap, 0, 2);
+            inputs.Controls.Add(_txtRegNum, 0, 0);
+            inputs.Controls.Add(_txtModel, 1, 0);
+            inputs.Controls.Add(_txtManu, 0, 1);
+            inputs.Controls.Add(_txtCap, 1, 1);
+            inputs.Controls.Add(_txtYear, 0, 2);
+            inputs.Controls.Add(_cbStatus, 1, 2);
 
             // --- Buttons ---
             _btnSave = new PrimaryButton("💾 Lưu máy bay") { Width = 160, Height = 40, Margin = new Padding(4) };
@@ -99,10 +101,12 @@ namespace GUI.Features.Aircraft.SubFeatures
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
                 BackgroundColor = Color.White
             };
-            _table.Columns.Add("airline", "Hãng hàng không");
+            _table.Columns.Add("registration", "Số hiệu đăng ký");
             _table.Columns.Add("model", "Model");
             _table.Columns.Add("manufacturer", "Hãng sản xuất");
             _table.Columns.Add("capacity", "Sức chứa");
+            _table.Columns.Add("year", "Năm SX");
+            _table.Columns.Add("status", "Trạng thái");
 
             // --- Main layout ---
             var main = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 4 };
@@ -119,39 +123,19 @@ namespace GUI.Features.Aircraft.SubFeatures
             Controls.Add(main);
         }
 
-        // ✅ Load danh sách hãng hiển thị "ID - Tên hãng"
-        private void LoadAirlines()
-        {
-            try
-            {
-                var list = _airlineBus.GetAllAirlines(); // List<AirlineDTO>
-
-                _cbAirline.InnerComboBox.DataSource = list;
-                _cbAirline.InnerComboBox.DisplayMember = "DisplayText";
-                _cbAirline.InnerComboBox.ValueMember = "AirlineId";
-                _cbAirline.InnerComboBox.SelectedIndex = -1;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi khi tải danh sách hãng: " + ex.Message,
-                    "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
+        // ĐÃ XÓA: LoadAirlines() - Không còn quản lý Airlines
 
         public void LoadAircraftList()
         {
             try
             {
                 var list = _bus.GetAllAircrafts();
-                var airlines = _airlineBus.GetAllAirlines();
 
                 _table.Rows.Clear();
                 foreach (var a in list)
                 {
-                    string airlineName = airlines.FirstOrDefault(al => al.AirlineId == a.AirlineId)?.AirlineName ?? "N/A";
                     _table.Rows.Add(
-                        $"{a.AirlineId} - {airlineName}",
+                        a.AirlineId?.ToString() ?? "N/A",
                         a.Model ?? "N/A",
                         a.Manufacturer ?? "N/A",
                         a.Capacity?.ToString() ?? "N/A"
@@ -168,14 +152,14 @@ namespace GUI.Features.Aircraft.SubFeatures
         {
             try
             {
-                var combo = _cbAirline.InnerComboBox;
-                if (combo.SelectedValue == null)
+                // ĐÃ XÓA: Airline validation - Chỉ quản lý Vietnam Airlines
+                
+                var regNum = _txtRegNum.Text?.Trim();
+                if (string.IsNullOrWhiteSpace(regNum))
                 {
-                    MessageBox.Show("Vui lòng chọn hãng hàng không.", "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Vui lòng nhập số hiệu đăng ký (VN-A###).", "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
-
-                int airlineId = (int)combo.SelectedValue;
 
                 int? capacity = null;
                 if (!string.IsNullOrWhiteSpace(_txtCap.Text))
@@ -189,12 +173,29 @@ namespace GUI.Features.Aircraft.SubFeatures
                     capacity = capValue;
                 }
 
+                int? year = null;
+                if (!string.IsNullOrWhiteSpace(_txtYear.Text))
+                {
+                    if (!int.TryParse(_txtYear.Text, out int yearValue))
+                    {
+                        MessageBox.Show("Năm sản xuất phải là số nguyên.",
+                            "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    year = yearValue;
+                }
+
                 var model = _txtModel.Text?.Trim();
                 var manufacturer = _txtManu.Text?.Trim();
+                var status = _cbStatus.InnerComboBox.SelectedItem?.ToString();
 
                 AircraftDTO dto;
                 string message;
                 bool ok;
+
+                int? airlineId = null;
+                if (!string.IsNullOrWhiteSpace(regNum) && int.TryParse(regNum, out int aid))
+                    airlineId = aid;
 
                 if (_editingId == 0)
                 {
@@ -234,11 +235,12 @@ namespace GUI.Features.Aircraft.SubFeatures
         private void ClearAndReset()
         {
             _editingId = 0;
-            _cbAirline.InnerComboBox.Enabled = true;
-            _cbAirline.InnerComboBox.SelectedIndex = -1;
+            _txtRegNum.Text = "";
             _txtModel.Text = "";
             _txtManu.Text = "";
             _txtCap.Text = "";
+            _txtYear.Text = "";
+            _cbStatus.InnerComboBox.SelectedIndex = 0;
             _btnSave.Text = "💾 Lưu máy bay";
         }
 
@@ -251,11 +253,12 @@ namespace GUI.Features.Aircraft.SubFeatures
             }
 
             _editingId = dto.AircraftId;
-            _cbAirline.InnerComboBox.SelectedValue = dto.AirlineId;
-            _cbAirline.InnerComboBox.Enabled = false;
+            _txtRegNum.Text = dto.AirlineId?.ToString() ?? ""; // AirlineId thay vì RegistrationNumber
             _txtModel.Text = dto.Model ?? "";
             _txtManu.Text = dto.Manufacturer ?? "";
             _txtCap.Text = dto.Capacity?.ToString() ?? "";
+            _txtYear.Text = ""; // Không còn ManufactureYear
+            _cbStatus.InnerComboBox.SelectedItem = "Active"; // Không còn Status field
             _btnSave.Text = $"✍️ Cập nhật #{dto.AircraftId}";
         }
     }

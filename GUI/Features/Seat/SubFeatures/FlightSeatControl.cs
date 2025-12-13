@@ -440,6 +440,8 @@ namespace GUI.Features.Seat.SubFeatures
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine($"[BEFORE EDIT] FlightSeatId={selected.FlightSeatId}, SeatId={selected.SeatId}, ClassName={selected.ClassName}");
+
                 var editForm = new EditFlightSeatForm(
                     selected.FlightSeatId,
                     selected.SeatId,
@@ -451,15 +453,31 @@ namespace GUI.Features.Seat.SubFeatures
                     var updated = new FlightSeatDTO(
                         selected.FlightSeatId,
                         selected.FlightId,
+                        selected.AircraftId,
                         editForm.SelectedSeatId,
+                        selected.ClassId,
                         editForm.NewPrice,
-                        selected.SeatStatus
+                        selected.SeatStatus,
+                        selected.FlightName,
+                        selected.AircraftName,
+                        selected.AircraftCapacity,
+                        selected.SeatNumber,
+                        selected.ClassName
                     );
+
+                    System.Diagnostics.Debug.WriteLine($"[SENDING TO BUS] FlightSeatId={updated.FlightSeatId}, SeatId={updated.SeatId}");
 
                     if (_bus.UpdateFlightSeat(updated, out string msg))
                     {
+                        System.Diagnostics.Debug.WriteLine($"[UPDATE SUCCESS] Message: {msg}");
+                        System.Diagnostics.Debug.WriteLine($"[AFTER UPDATE] ClassId={updated.ClassId}, ClassName={updated.ClassName}");
+
                         MessageBox.Show("✅ " + msg, "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                        System.Diagnostics.Debug.WriteLine("[CALLING LoadData()]");
                         LoadData();
+
+                        System.Diagnostics.Debug.WriteLine($"[AFTER LoadData] Total seats: {datasource.Count}");
                         ApplyFilter();
                     }
                     else
@@ -470,23 +488,23 @@ namespace GUI.Features.Seat.SubFeatures
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"[HandleEdit Exception] {ex.Message}");
                 MessageBox.Show("Lỗi khi mở form sửa: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
         private void HandleBlock(FlightSeatDTO selected)
         {
             if (MessageBox.Show($"Bạn có chắc chắn muốn CHẶN ghế {selected.SeatNumber}?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                 if (_bus.UpdateSeatStatus(selected.FlightSeatId, "BLOCKED", out string msg))
                 {
-                    MessageBox.Show("✅ Đã chặn ghế thành công.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(" Đã chặn ghế thành công.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     LoadData();
                     ApplyFilter();
                 }
                 else
                 {
-                    MessageBox.Show("❌ " + msg, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(" " + msg, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
@@ -497,13 +515,13 @@ namespace GUI.Features.Seat.SubFeatures
             {
                 if (_bus.UpdateSeatStatus(selected.FlightSeatId, "AVAILABLE", out string msg))
                 {
-                    MessageBox.Show("✅ Đã mở khóa ghế thành công.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(" Đã mở khóa ghế thành công.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     LoadData();
                     ApplyFilter();
                 }
                 else
                 {
-                    MessageBox.Show("❌ " + msg, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(" " + msg, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
