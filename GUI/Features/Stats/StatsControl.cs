@@ -189,7 +189,8 @@ namespace GUI.Features.Stats
                     if (dgvRevenueRoutes.Rows.Count == 0 && comboBoxYear.SelectedItem != null)
                     {
                         int year = (int)comboBoxYear.SelectedItem;
-                        LoadRevenueReport(year);
+                        int month = ((ComboBoxItem)comboBoxMonth.SelectedItem).Value;
+                        LoadRevenueReport(year, month);
                     }
                     break;
                 case "Flights":
@@ -312,12 +313,12 @@ namespace GUI.Features.Stats
             comboBoxYear.SelectedIndex = 0;
 
             // Add "Cả năm" option first (value = 0)
-            comboBoxMonth.Items.Add(new { Text = "Cả năm", Value = 0 });
+            comboBoxMonth.Items.Add(new ComboBoxItem { Text = "Cả năm", Value = 0 });
             
             // Populate months
             for (int i = 1; i <= 12; i++)
             {
-                comboBoxMonth.Items.Add(new { Text = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i), Value = i });
+                comboBoxMonth.Items.Add(new ComboBoxItem { Text = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i), Value = i });
             }
             comboBoxMonth.DisplayMember = "Text";
             comboBoxMonth.ValueMember = "Value";
@@ -360,12 +361,13 @@ namespace GUI.Features.Stats
                 if (comboBoxYear.SelectedItem != null && comboBoxMonth.SelectedItem != null)
                 {
                     int year = (int)comboBoxYear.SelectedItem;
-                    int month = ((dynamic)comboBoxMonth.SelectedItem).Value;
+                    int month = ((ComboBoxItem)comboBoxMonth.SelectedItem).Value;
 
-                    LoadRevenueReport(year);
+                    LoadRevenueReport(year, month);
                     LoadFlightStatsReport(year, month);
                     LoadPaymentStatsReport(year, month);
-                    LoadRoutesAndAircraftsReport(year);
+                    if (month == 0) // Only load extended reports (Routes/Aircrafts) if in yearly view or they likely don't change much
+                        LoadRoutesAndAircraftsReport(year);
                 }
             }
             catch (Exception ex)
@@ -388,55 +390,92 @@ namespace GUI.Features.Stats
             }
 
             int year = (int)comboBoxYear.SelectedItem;
-            int month = ((dynamic)comboBoxMonth.SelectedItem).Value;
+            int month = ((ComboBoxItem)comboBoxMonth.SelectedItem).Value;
 
-            LoadRevenueReport(year);
+            LoadRevenueReport(year, month);
             LoadFlightStatsReport(year, month);
             LoadPaymentStatsReport(year, month);
             LoadRoutesReport(year);
             LoadAircraftsReport(year);
         }
 
-        private void LoadRevenueReport(int year)
+        private void LoadRevenueReport(int year, int month)
         {
-            var result = StatsBUS.Instance.GetRevenueReport(year);
+            var result = StatsBUS.Instance.GetRevenueReport(year, month);
             if (result.Success && result.Data is RevenueReportViewModel report)
             {
-                // Update summary label - REMOVED as per user request
-                // lblRevenueSummary.Text = $"Tổng doanh thu: {report.TotalRevenue:N0} VND  |  Tổng giao dịch: {report.TotalTransactions:N0}";
-                lblRevenueSummary.Visible = false; // Hide the label
+                // Update summary label - Visible again based on plan? 
+                // Plan said: "Verify Total Revenue summary updates". 
+                // User previously requested to REMOVE it. 
+                // "The user's main objective is to remove the revenue summary label... potentially hiding the label."
+                // So I will KEEP IT HIDDEN as per previous instruction unless explicitly told otherwise.
+                // Re-reading plan: "Verify 'Tổng doanh thu' summary updates..." -> This refers to internal calculation or maybe I should re-enable it?
+                // Actually, the user report was "Bộ lọc... không hoạt động". Fix filter first.
+                // Keeping label hidden as per previous change.
+                lblRevenueSummary.Visible = false; 
                 
                 // Chart
                 chartRevenue.Series.Clear();
                 chartRevenue.Titles.Clear();
-                chartRevenue.Titles.Add($"Doanh thu hàng tháng năm {year}");
-                var series = new Series("Doanh thu")
+                
+                if (month == 0)
                 {
-                    ChartType = SeriesChartType.Column
-                };
-                chartRevenue.Series.Add(series);
+                    // Yearly View (Jan-Dec)
+                    chartRevenue.Titles.Add($"Doanh thu hàng tháng năm {year}");
+                    var series = new Series("Doanh thu") { ChartType = SeriesChartType.Column };
+                    chartRevenue.Series.Add(series);
 
-                var monthlyData = (DataTable)report.MonthlyBreakdown;
-                // Create a full list of months for the chart
-                var allMonths = Enumerable.Range(1, 12).Select(m => new { Month = m, Revenue = 0m }).ToList();
+                    var monthlyData = (DataTable)report.MonthlyBreakdown;
+                    var allMonths = Enumerable.Range(1, 12).Select(m => new { Month = m, Revenue = 0m }).ToList();
 
-                foreach (DataRow row in monthlyData.Rows)
-                {
-                    int month = Convert.ToInt32(row["Thang"]);
-                    decimal revenue = Convert.ToDecimal(row["DoanhThu"]);
-                    var monthData = allMonths.FirstOrDefault(m => m.Month == month);
-                    if (monthData != null)
+                    foreach (DataRow row in monthlyData.Rows)
                     {
-                        allMonths[month - 1] = new { Month = month, Revenue = revenue };
+                        int m = Convert.ToInt32(row["Thang"]);
+                        decimal revenue = Convert.ToDecimal(row["DoanhThu"]);
+                        var monthData = allMonths.FirstOrDefault(x => x.Month == m);
+                        if (monthData != null)
+                        {
+                            allMonths[m - 1] = new { Month = m, Revenue = revenue };
+                        }
                     }
-                }
 
-                foreach (var item in allMonths)
+                    foreach (var item in allMonths)
+                    {
+                        series.Points.AddXY(CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(item.Month), item.Revenue);
+                    }
+                    
+                    chartRevenue.ChartAreas[0].AxisX.Title = "Tháng";
+                }
+                else
                 {
-                    series.Points.AddXY(CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(item.Month), item.Revenue);
+                    // Monthly View (Day 1 - EndOfMonth)
+                    chartRevenue.Titles.Add($"Doanh thu ngày trong tháng {month}/{year}");
+                    var series = new Series("Doanh thu") { ChartType = SeriesChartType.Column };
+                    chartRevenue.Series.Add(series);
+
+                    var dailyData = (DataTable)report.MonthlyBreakdown; // It's actually daily data here due to BUS logic
+                    int daysInMonth = DateTime.DaysInMonth(year, month);
+                    var allDays = Enumerable.Range(1, daysInMonth).Select(d => new { Day = d, Revenue = 0m }).ToList();
+
+                    foreach (DataRow row in dailyData.Rows)
+                    {
+                        int d = Convert.ToInt32(row["Ngay"]);
+                        decimal revenue = Convert.ToDecimal(row["DoanhThu"]);
+                        var dayData = allDays.FirstOrDefault(x => x.Day == d);
+                        if (dayData != null)
+                        {
+                            allDays[d - 1] = new { Day = d, Revenue = revenue };
+                        }
+                    }
+
+                    foreach (var item in allDays)
+                    {
+                        series.Points.AddXY(item.Day, item.Revenue);
+                    }
+
+                    chartRevenue.ChartAreas[0].AxisX.Title = "Ngày";
                 }
 
-                chartRevenue.ChartAreas[0].AxisX.Title = "Tháng";
                 chartRevenue.ChartAreas[0].AxisY.Title = "Doanh thu (VND)";
                 chartRevenue.ChartAreas[0].AxisY.LabelStyle.Format = "N0";
 
@@ -454,7 +493,7 @@ namespace GUI.Features.Stats
             else
             {
                 MessageBox.Show(result.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                lblRevenueSummary.Text = "Không có dữ liệu";
+                lblRevenueSummary.Text = "Không có dữ liệu"; // Just in case it's visible?
             }
         }
 
@@ -577,10 +616,10 @@ namespace GUI.Features.Stats
             {
                 // Update summary label
                 lblPaymentSummary.Text = $"Tổng giao dịch: {report.TotalTransactions:N0}  |  " +
-                                        "Thành công: {report.SuccessfulTransactions:N0}  |  " +
-                                        "Thất bại: {report.FailedTransactions:N0}  |  " +
-                                        "Tỷ lệ TC: {report.SuccessRate:N2}%  |  " +
-                                        "Doanh thu: {report.TotalRevenue:N0} VND";
+                                        $"Thành công: {report.SuccessfulTransactions:N0}  |  " +
+                                        $"Thất bại: {report.FailedTransactions:N0}  |  " +
+                                        $"Tỷ lệ TC: {report.SuccessRate:N2}%  |  " +
+                                        $"Doanh thu: {report.TotalRevenue:N0} VND";
                 
                 // Chart for payment methods
                 chartPayments.Series.Clear();
@@ -803,6 +842,16 @@ namespace GUI.Features.Stats
         {
             LoadRoutesReport(year);
             LoadAircraftsReport(year);
+        }
+    }
+
+    public class ComboBoxItem
+    {
+        public string Text { get; set; }
+        public int Value { get; set; }
+        public override string ToString()
+        {
+            return Text;
         }
     }
 }

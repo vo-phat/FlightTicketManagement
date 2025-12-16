@@ -1,3 +1,0 @@
-- Vai trò: Quản trị viên
- + Tài khoản: admin
- + Mật khẩu : admin

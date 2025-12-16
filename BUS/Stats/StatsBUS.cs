@@ -30,7 +30,10 @@ namespace BUS.Stats
         /// <summary>
         /// Lấy báo cáo doanh thu chi tiết theo Năm
         /// </summary>
-        public BusinessResult GetRevenueReport(int year)
+        /// <summary>
+        /// Lấy báo cáo doanh thu chi tiết theo Năm và Tháng (tùy chọn)
+        /// </summary>
+        public BusinessResult GetRevenueReport(int year, int month)
         {
             try
             {
@@ -39,15 +42,22 @@ namespace BUS.Stats
                 // 1. Lấy dữ liệu tóm tắt
                 decimal localTotalRevenue;
                 int localTotalTransactions;
-                StatsDAO.Instance.GetRevenueSummary(year, out localTotalRevenue, out localTotalTransactions);
+                StatsDAO.Instance.GetRevenueSummary(year, month, out localTotalRevenue, out localTotalTransactions);
                 report.TotalRevenue = localTotalRevenue;
                 report.TotalTransactions = localTotalTransactions;
 
-                // 2. Lấy breakdown theo tháng
-                report.MonthlyBreakdown = StatsDAO.Instance.GetMonthlyRevenue(year);
+                // 2. Lấy breakdown (Nếu chọn cả năm -> theo tháng; Nếu chọn tháng -> theo ngày)
+                if (month > 0)
+                {
+                    report.MonthlyBreakdown = StatsDAO.Instance.GetDailyRevenue(year, month);
+                }
+                else
+                {
+                    report.MonthlyBreakdown = StatsDAO.Instance.GetMonthlyRevenue(year);
+                }
 
-                // 3. Lấy breakdown theo chuyến bay (top 5)
-                report.RouteBreakdown = StatsDAO.Instance.GetRevenueByRoute(year, 5);
+                // 3. Lấy breakdown theo chuyến bay (top 5), có lọc theo tháng
+                report.RouteBreakdown = StatsDAO.Instance.GetRevenueByRoute(year, month, 5);
 
                 return BusinessResult.SuccessResult("Tải báo cáo thành công.", report);
             }

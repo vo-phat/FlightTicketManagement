@@ -24,7 +24,6 @@ namespace GUI.Features.Flight.SubFeatures
         private UnderlinedComboBox cbStatus = null!;
         private DateTimePickerCustom dtpFromDate = null!;
         private DateTimePickerCustom dtpToDate = null!;
-        private CheckBox chkEnableDateFilter = null!;
         private Button btnSearch = null!;
         private Button btnClear = null!;
         private const string ACTION_COL = "Actions";
@@ -82,36 +81,52 @@ namespace GUI.Features.Flight.SubFeatures
             txtGlobalSearch.TextChanged += (s, e) => RefreshList();
             
             // === PANEL BỘ LỌC CHI TIẾT ===
-            var filterPanel = new FlowLayoutPanel
+            // === PANEL BỘ LỌC CHI TIẾT ===
+            var filterPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Top,
                 AutoSize = true,
-                Padding = new Padding(0),
-                FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = true,
+                ColumnCount = 4,
+                RowCount = 2,
+                Padding = new Padding(24, 8, 24, 8),
+                BackColor = Color.FromArgb(250, 253, 255)
             };
+
+            // Thiết lập các cột có độ rộng đều nhau
+            filterPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            filterPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            filterPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            filterPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+
+            // Thiết lập các hàng tự động điều chỉnh
+            filterPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            filterPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
+            // --- CHIỀU CAO THỐNG NHẤT ---
+            const int CONTROL_HEIGHT = 50;
 
             // --- INPUTS TÙY CHỈNH ---
             txtFlightNumber = new UnderlinedTextField("Số hiệu chuyến bay", "VN123")
             {
-                Width = 220,
+                Dock = DockStyle.Fill,
+                Height = CONTROL_HEIGHT,
                 Margin = new Padding(6, 4, 6, 4),
                 InheritParentBackColor = true,
                 LineThickness = 1
             };
-            
-            // Realtime search when user types
             txtFlightNumber.TextChanged += TxtFlightNumber_TextChanged;
 
             cbDepartureAirport = new UnderlinedComboBox("Sân bay đi", Array.Empty<string>())
             {
-                Width = 250,
+                Dock = DockStyle.Fill,
+                Height = CONTROL_HEIGHT,
                 Margin = new Padding(6, 4, 6, 4),
             };
 
             cbArrivalAirport = new UnderlinedComboBox("Sân bay đến", Array.Empty<string>())
             {
-                Width = 250,
+                Dock = DockStyle.Fill,
+                Height = CONTROL_HEIGHT,
                 Margin = new Padding(6, 4, 6, 4),
             };
 
@@ -125,87 +140,58 @@ namespace GUI.Features.Flight.SubFeatures
                 "Trì hoãn" 
             })
             {
-                Width = 200,
+                Dock = DockStyle.Fill,
+                Height = CONTROL_HEIGHT,
                 Margin = new Padding(6, 4, 6, 4),
             };
             cbStatus.SelectedIndex = 0;
 
-            // Date filter with checkbox to enable/disable
-            var dateFilterPanel = new FlowLayoutPanel
-            {
-                FlowDirection = FlowDirection.TopDown,
-                AutoSize = true,
-                Margin = new Padding(6, 4, 6, 4)
-            };
-
-            chkEnableDateFilter = new CheckBox
-            {
-                Text = "Lọc theo khoảng ngày",
-                AutoSize = true,
-                Checked = false,
-                Font = new Font("Segoe UI", 9f),
-                ForeColor = Color.FromArgb(70, 70, 70),
-                Margin = new Padding(0, 0, 0, 4)
-            };
-            
-            var datePickersPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.LeftToRight, AutoSize = true, Margin = new Padding(0), Padding = new Padding(0) };
-
             dtpFromDate = new DateTimePickerCustom("Từ ngày", "")
             {
-                Width = 170,
-                Enabled = false
+                Dock = DockStyle.Fill,
+                Height = CONTROL_HEIGHT,
+                Margin = new Padding(6, 4, 6, 4)
             };
             dtpFromDate.Value = DateTime.Today;
 
             dtpToDate = new DateTimePickerCustom("Đến ngày", "")
             {
-                Width = 170,
-                Margin = new Padding(8, 0, 0, 0),
-                Enabled = false
+                Dock = DockStyle.Fill,
+                Height = CONTROL_HEIGHT,
+                Margin = new Padding(6, 4, 6, 4)
             };
             dtpToDate.Value = DateTime.Today.AddDays(7);
-
-            chkEnableDateFilter.CheckedChanged += (s, e) =>
-            {
-                dtpFromDate.Enabled = chkEnableDateFilter.Checked;
-                dtpToDate.Enabled = chkEnableDateFilter.Checked;
-                RefreshList();
-            };
-
-            datePickersPanel.Controls.Add(dtpFromDate);
-            datePickersPanel.Controls.Add(dtpToDate);
-
-            dateFilterPanel.Controls.Add(chkEnableDateFilter);
-            dateFilterPanel.Controls.Add(datePickersPanel);
 
             // --- BUTTONS TÙY CHỈNH ---
             btnSearch = new PrimaryButton("🔍 Tìm kiếm")
             {
-                Width = 100,
-                Height = 40,
-                Margin = new Padding(10, 6, 6, 6),
+                Dock = DockStyle.Fill,
+                Height = CONTROL_HEIGHT,
+                Margin = new Padding(6, 4, 6, 4)
             };
 
             btnClear = new SecondaryButton("🔄 Làm mới")
             {
-                Width = 100,
-                Height = 40,
-                Margin = new Padding(6),
+                Dock = DockStyle.Fill,
+                Height = CONTROL_HEIGHT,
+                Margin = new Padding(6, 4, 6, 4)
             };
 
             btnSearch.Click += (s, e) => RefreshList();
             btnClear.Click += (s, e) => ClearFilters();
 
-            filterPanel.Controls.AddRange(new Control[] 
-            { 
-                txtFlightNumber, 
-                cbDepartureAirport, 
-                cbArrivalAirport, 
-                cbStatus, 
-                dateFilterPanel,
-                btnSearch, 
-                btnClear 
-            });
+            // Thêm controls vào TableLayoutPanel theo hàng
+            // Hàng 1: Số hiệu, Sân bay đi, Sân bay đến, Trạng thái
+            filterPanel.Controls.Add(txtFlightNumber, 0, 0);
+            filterPanel.Controls.Add(cbDepartureAirport, 1, 0);
+            filterPanel.Controls.Add(cbArrivalAirport, 2, 0);
+            filterPanel.Controls.Add(cbStatus, 3, 0);
+
+            // Hàng 2: Từ ngày, Đến ngày, Tìm kiếm, Làm mới
+            filterPanel.Controls.Add(dtpFromDate, 0, 1);
+            filterPanel.Controls.Add(dtpToDate, 1, 1);
+            filterPanel.Controls.Add(btnSearch, 2, 1);
+            filterPanel.Controls.Add(btnClear, 3, 1);
 
             searchPanel.Controls.Add(filterPanel);
             searchPanel.Controls.Add(txtGlobalSearch);
@@ -306,9 +292,8 @@ namespace GUI.Features.Flight.SubFeatures
                 cbDepartureAirport.Enabled = !isGlobalSearch;
                 cbArrivalAirport.Enabled = !isGlobalSearch;
                 cbStatus.Enabled = !isGlobalSearch;
-                chkEnableDateFilter.Enabled = !isGlobalSearch;
-                dtpFromDate.Enabled = !isGlobalSearch && chkEnableDateFilter.Checked;
-                dtpToDate.Enabled = !isGlobalSearch && chkEnableDateFilter.Checked;
+                dtpFromDate.Enabled = !isGlobalSearch;
+                dtpToDate.Enabled = !isGlobalSearch;
 
 
                 if (isGlobalSearch)
@@ -383,17 +368,14 @@ namespace GUI.Features.Flight.SubFeatures
                         criteria.Status = status;
                     }
 
-                    // Filter by departure date if enabled
-                    if (chkEnableDateFilter.Checked)
+                    // Filter by departure date - always active
+                    if (dtpFromDate.Value.Date > dtpToDate.Value.Date)
                     {
-                        if (dtpFromDate.Value.Date > dtpToDate.Value.Date)
-                        {
-                            MessageBox.Show("Ngày bắt đầu không thể sau ngày kết thúc.", "Lỗi lọc ngày", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            return;
-                        }
-                        criteria.DepartureDateFrom = dtpFromDate.Value.Date;
-                        criteria.DepartureDateTo = dtpToDate.Value.Date.AddDays(1).AddSeconds(-1); // Include the whole "To" day
+                        MessageBox.Show("Ngày bắt đầu không thể sau ngày kết thúc.", "Lỗi lọc ngày", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
                     }
+                    criteria.DepartureDateFrom = dtpFromDate.Value.Date;
+                    criteria.DepartureDateTo = dtpToDate.Value.Date.AddDays(1).AddSeconds(-1); // Include the whole "To" day
 
                     // Set sort order
                     criteria.SortBy = "DepartureTime";
@@ -516,7 +498,6 @@ namespace GUI.Features.Flight.SubFeatures
             cbDepartureAirport.SelectedIndex = 0;
             cbArrivalAirport.SelectedIndex = 0;
             cbStatus.SelectedIndex = 0;
-            chkEnableDateFilter.Checked = false;
             dtpFromDate.Value = DateTime.Today;
             dtpToDate.Value = DateTime.Today.AddDays(7);
             RefreshList();

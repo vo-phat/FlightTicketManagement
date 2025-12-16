@@ -1181,3 +1181,22 @@ ALTER TABLE `ticket_refund_policy`
 ALTER TABLE `ticket_status_history`
   ADD CONSTRAINT `ticket_status_history_ibfk_1` FOREIGN KEY (`ticket_id`) REFERENCES `tickets` (`ticket_id`);
 COMMIT;
+
+INSERT INTO Flight_Seats (flight_id, seat_id, base_price, seat_status)
+SELECT
+    f.flight_id,
+    s.seat_id,
+    CASE s.class_id
+        WHEN 1 THEN 900
+        WHEN 2 THEN 550
+        WHEN 3 THEN 350
+        WHEN 4 THEN 200
+    END AS base_price,
+    'AVAILABLE' AS seat_status
+FROM Flights f
+JOIN Aircrafts a ON f.aircraft_id = a.aircraft_id
+JOIN Seats s ON s.aircraft_id = a.aircraft_id
+LEFT JOIN Flight_Seats fs
+    ON fs.flight_id = f.flight_id
+   AND fs.seat_id = s.seat_id
+WHERE fs.flight_seat_id IS NULL;

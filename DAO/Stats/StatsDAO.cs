@@ -28,7 +28,10 @@ namespace DAO.Stats
         /// <summary>
         /// Lấy dữ liệu tóm tắt (Tổng doanh thu, Tổng giao dịch) theo Năm
         /// </summary>
-        public void GetRevenueSummary(int year, out decimal totalRevenue, out int totalTransactions)
+        /// <summary>
+        /// Lấy dữ liệu tóm tắt (Tổng doanh thu, Tổng giao dịch) theo Năm và Tháng (tùy chọn)
+        /// </summary>
+        public void GetRevenueSummary(int year, int month, out decimal totalRevenue, out int totalTransactions)
         {
             decimal localRevenue = 0;
             int localTransactions = 0;
@@ -43,9 +46,14 @@ namespace DAO.Stats
                 WHERE 
                     UPPER(p.status) = 'SUCCESS' 
                     AND UPPER(b.status) IN ('CONFIRMED')
-                    AND YEAR(p.payment_date) = @year";
+                    AND YEAR(p.payment_date) = @year
+                    AND (@month = 0 OR MONTH(p.payment_date) = @month)";
 
-            var parameters = new Dictionary<string, object> { { "@year", year } };
+            var parameters = new Dictionary<string, object> 
+            { 
+                { "@year", year },
+                { "@month", month }
+            };
 
             try
             {
@@ -62,7 +70,7 @@ namespace DAO.Stats
 
                 totalRevenue = localRevenue;
                 totalTransactions = localTransactions;
-                Console.WriteLine($"GetRevenueSummary: Revenue={localRevenue}, Transactions={localTransactions}");
+                Console.WriteLine($"GetRevenueSummary: Year={year}, Month={month}, Revenue={localRevenue}, Transactions={localTransactions}");
             }
             catch (Exception ex)
             {
@@ -72,6 +80,9 @@ namespace DAO.Stats
             }
         }
 
+        /// <summary>
+        /// Lấy doanh thu (chỉ 'SUCCESS') nhóm theo Tháng của 1 Năm
+        /// </summary>
         /// <summary>
         /// Lấy doanh thu (chỉ 'SUCCESS') nhóm theo Tháng của 1 Năm
         /// </summary>
@@ -106,9 +117,50 @@ namespace DAO.Stats
         }
 
         /// <summary>
+        /// Lấy doanh thu (chỉ 'SUCCESS') nhóm theo Ngày của 1 Tháng cụ thể
+        /// </summary>
+        public DataTable GetDailyRevenue(int year, int month)
+        {
+            string query = @"
+                SELECT 
+                    DAY(p.payment_date) AS 'Ngay',
+                    SUM(p.amount) AS 'DoanhThu'
+                FROM 
+                    Payments p
+                JOIN Bookings b ON p.booking_id = b.booking_id
+                WHERE 
+                    UPPER(p.status) = 'SUCCESS' 
+                    AND UPPER(b.status) IN ('CONFIRMED')
+                    AND YEAR(p.payment_date) = @year
+                    AND MONTH(p.payment_date) = @month
+                GROUP BY 
+                    DAY(p.payment_date)
+                ORDER BY 
+                    Ngay ASC";
+
+            var parameters = new Dictionary<string, object> 
+            { 
+                { "@year", year },
+                { "@month", month }
+            };
+
+            try
+            {
+                return ExecuteQuery(query, parameters);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi lấy doanh thu hàng ngày (DAO): {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
         /// Lấy Top N tuyến bay có doanh thu cao nhất
         /// </summary>
-        public DataTable GetRevenueByRoute(int year, int topN = 5)
+        /// <summary>
+        /// Lấy Top N tuyến bay có doanh thu cao nhất theo Năm và Tháng (tùy chọn)
+        /// </summary>
+        public DataTable GetRevenueByRoute(int year, int month, int topN = 5)
         {
             string query = @"
                 SELECT 
@@ -118,7 +170,9 @@ namespace DAO.Stats
                 FROM Routes r
                 JOIN Airports dep ON r.departure_place_id = dep.airport_id
                 JOIN Airports arr ON r.arrival_place_id = arr.airport_id
-                LEFT JOIN Flights f ON r.route_id = f.route_id AND YEAR(f.departure_time) = @year
+                LEFT JOIN Flights f ON r.route_id = f.route_id 
+                    AND YEAR(f.departure_time) = @year
+                    AND (@month = 0 OR MONTH(f.departure_time) = @month)
                 LEFT JOIN Flight_Seats fs ON f.flight_id = fs.flight_id
                 LEFT JOIN Tickets t ON fs.flight_seat_id = t.flight_seat_id
                 LEFT JOIN Booking_Passengers bp ON t.ticket_passenger_id = bp.booking_passenger_id
@@ -135,6 +189,7 @@ namespace DAO.Stats
             var parameters = new Dictionary<string, object>
             {
                 { "@year", year },
+                { "@month", month },
                 { "@limit", topN }
             };
 
